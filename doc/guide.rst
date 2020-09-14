@@ -39,6 +39,12 @@ shell, and those which apply properties by executing them in a Lisp process
 running on the host.  The keywords ``:posix`` and ``:lisp`` are used to refer
 to these types.
 
+``:posix`` connections can pass input to and return output from processes, but
+cannot start asynchronous processes for interaction with your Lisp functions.
+This is so that ``:posix`` connections can be used to administer hosts for
+which shell multiplexing is not possible, such as with serial connections.
+For asynchronous interaction, use a ``:lisp`` connection.
+
 Deployment
 ----------
 
