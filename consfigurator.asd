@@ -3,4 +3,5 @@
   :depends-on (:cl-ppcre)
   :components ((:file "package")
 	       (:file "util")
-	       (:file "core")))
+	       (:file "core")
+	       (:file "connection/ssh")))
