@@ -20,8 +20,10 @@ properties.
 For example: the presence of some lines in a config file; a package being
 installed or absent; the availability of a website.
 
-A property can have a list of host attributes, which will be added to the
-attributes plist of any host which has the property in its list of properties.
+A property can have a (function returning a) list of host attributes, which
+will be added to the attributes plist of any host which has the property in
+its list of properties.  These attributes can depend on the arguments to the
+property, but should not examine the actual state of the host.
 
 It should also have a check function, which establishes whether the property
 is already applied or not.  If this is absent, it is assumed that the property
