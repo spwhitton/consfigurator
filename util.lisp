@@ -34,3 +34,9 @@ Escapes characters which would be interpreted by the shell."
   "Accept any arguments and do nothing."
   (declare (ignore args))
   (values))
+
+(defun lines (text)
+  (uiop:split-string (uiop:stripln text) :separator '(#\Newline)))
+
+(defun unlines (lines)
+  (format nil "~{~A~%~}" lines))
