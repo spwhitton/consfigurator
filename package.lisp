@@ -9,7 +9,17 @@
 	   #:shellcmd))
 
 (defpackage :consfigurator.core
-  (:use :cl :consfigurator.util))
+  (:use #:cl
+	#:alexandria
+	#:consfigurator.util)
+  (:export #:*connection*
+	   #:connection
+	   #:connection-run
+	   #:connection-readfile
+	   #:connection-writefile
+	   #:connection-upload
+	   #:establish-connection
+	   #:defprop))
 
 (defpackage :consfigurator.connection.ssh
   (:use #:cl #:consfigurator.util #:consfigurator.core))

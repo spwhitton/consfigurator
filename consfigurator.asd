@@ -1,6 +1,7 @@
 (asdf:defsystem :consfigurator
   :serial t
-  :depends-on (:cl-ppcre)
+  :depends-on (#:cl-ppcre
+	       #:alexandria)
   :components ((:file "package")
 	       (:file "util")
 	       (:file "core")
