@@ -1,7 +1,12 @@
 (in-package :cl-user)
 
 (defpackage :consfigurator.util
-  (:use :cl))
+  (:use #:cl)
+  (:export #:concat
+	   #:lines
+	   #:unlines
+	   #:noop
+	   #:shellcmd))
 
 (defpackage :consfigurator.core
   (:use :cl :consfigurator.util))
