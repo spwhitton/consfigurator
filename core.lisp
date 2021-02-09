@@ -129,9 +129,11 @@ deployment: deploying properties to the machine Lisp is running on.")
 	  do (if-let ((slot (getf slots kw)))
 	       (setf (getf slots kw)
 		     `(lambda ,args ,@slot))))
-    `(defparameter ,name
-       (make-instance 'property ,@slots)
-       ,(getf slots :desc))))
+    `(progn
+       (declaim (type property ,name))
+       (defparameter ,name
+	(make-instance 'property ,@slots)
+	,(getf slots :desc)))))
 
 
 ;;;; Hosts
@@ -160,6 +162,8 @@ human-readable description of the host."
     (setf (getf hostattrs :hostname) hostname)
     (when (stringp (car properties))
       (setf (getf hostattrs :desc) (pop properties)))
-    `(defparameter ,hostname-sym
-       (make-instance 'host :attrs ',hostattrs :props ',properties)
-       ,(getf hostattrs :desc))))
+    `(progn
+       (declaim (type host ,hostname-sym))
+       (defparameter ,hostname-sym
+	 (make-instance 'host :attrs ',hostattrs :props ',properties)
+	 ,(getf hostattrs :desc)))))
