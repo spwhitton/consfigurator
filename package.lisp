@@ -21,14 +21,16 @@
 	   #:establish-connection
 	   #:defprop))
 
+(defpackage :consfigurator)
+
 (defpackage :consfigurator.connection.ssh
-  (:use #:cl #:consfigurator.util #:consfigurator.core))
+  (:use #:cl #:consfigurator))
 
 (defpackage :consfigurator.property.file
-  (:use #:cl #:consfigurator.util #:consfigurator.core)
+  (:use #:cl #:consfigurator)
   (:export #:file-has-content
 	   #:file-contains-lines))
 
 (defpackage :consfigurator.property.command
-  (:use #:cl #:consfigurator.util #:consfigurator.core)
+  (:use #:cl #:consfigurator)
   (:export #:shell-command))
