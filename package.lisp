@@ -22,7 +22,7 @@
 	   #:defprop
 	   #:defhost))
 
-(defpackage :consfigurator)
+(defpackage :consfigurator (:use #:cl))
 
 (defpackage :consfigurator.connection.ssh
   (:use #:cl #:consfigurator))
@@ -35,3 +35,9 @@
 (defpackage :consfigurator.property.command
   (:use #:cl #:consfigurator)
   (:export #:shell-command))
+
+(in-package :consfigurator)
+(dolist (package '(:consfigurator.core :consfigurator.util))
+  (use-package package)
+  (do-external-symbols (sym package)
+    (export sym)))
