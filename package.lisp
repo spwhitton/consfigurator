@@ -19,7 +19,8 @@
 	   #:connection-writefile
 	   #:connection-upload
 	   #:establish-connection
-	   #:defprop))
+	   #:defprop
+	   #:defhost))
 
 (defpackage :consfigurator)
 

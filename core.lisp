@@ -132,3 +132,34 @@ deployment: deploying properties to the machine Lisp is running on.")
     `(defparameter ,name
        (make-instance 'property ,@slots)
        ,(getf slots :desc))))
+
+
+;;;; Hosts
+
+(defclass host ()
+  ((hostattrs
+    :initarg :attrs
+    :documentation "Plist of the host's static informational attributes.")
+   (properties
+    :initarg :props
+    :documentation "List of the properties to be applied to the host.")))
+
+(defmacro defhost (hostname &body properties)
+  "Define a host with hostname HOSTNAME and properties PROPERTIES.
+HOSTNAME can be a string or a symbol.  In either case, the host will get a
+static informational property with its hostname as a string, and the symbol
+whose name is the hostname will be bound to the host object.
+
+If the first entry in PROPERTIES is a string, it will be considered a
+human-readable description of the host."
+  (let (hostname-sym hostattrs)
+    (etypecase hostname
+      (string (setq hostname-sym (intern hostname)))
+      (symbol (setq hostname-sym hostname
+		    hostname (string-downcase (symbol-name hostname)))))
+    (setf (getf hostattrs :hostname) hostname)
+    (when (stringp (car properties))
+      (setf (getf hostattrs :desc) (pop properties)))
+    `(defparameter ,hostname-sym
+       (make-instance 'host :attrs ',hostattrs :props ',properties)
+       ,(getf hostattrs :desc))))
