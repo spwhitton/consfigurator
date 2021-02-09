@@ -38,7 +38,7 @@ object representing this new connection."))
    'connection
    :type :lisp
    :run (lambda (shell-cmd &optional input)
-	  (assert (stringp shell-cmd))
+	  (declare (ftype (function (string string) (values string integer))))
 	  ;; assumes a POSIX shell (otherwise we could wrap in 'sh -c')
 	  (multiple-value-bind (output _ exit-code)
 	      (uiop:run-program shell-cmd
