@@ -20,7 +20,8 @@
 	   #:connection-upload
 	   #:establish-connection
 	   #:defprop
-	   #:defhost))
+	   #:defhost
+	   #:get-path-to-concatenated-system))
 
 (defpackage :consfigurator (:use #:cl))
 

@@ -167,3 +167,34 @@ human-readable description of the host."
        (defparameter ,hostname-sym
 	 (make-instance 'host :attrs ',hostattrs :props ',properties)
 	 ,(getf hostattrs :desc)))))
+
+
+;;;; Lisp systems defining host configurations
+
+(defun get-path-to-concatenated-system (system)
+  "Try to concatenate all the source code for SYSTEM, store in the cache and
+return the filename.  If asdf doesn't know about SYSTEM, see if we have a
+concatenation of all the source code in the cache -- this will typically be
+the case when the current Lisp process was launched by a :lisp connection
+initiated on another host."
+  (let* ((cache-dir (concat (or (uiop:getenv "XDG_CACHE_HOME")
+				(concat (uiop:getenv "HOME") "/.cache"))
+			    "/consfigurator/systems"))
+	 ;; TODO encode -- probably want something like propellor's
+	 ;; File.configFileName defined somewhere
+	 (cache-file (concat cache-dir
+			     "/"
+			     (string-downcase (symbol-name system))
+			     ".lisp"))
+	 (op 'asdf:monolithic-concatenate-source-op)
+	 (co (asdf:find-component system nil)))
+    (asdf:initialize-output-translations
+     `(:output-translations
+       (t ,(uiop:parse-unix-namestring cache-dir :type :directory))
+       :disable-cache
+       :ignore-inherited-configuration))
+    (when (asdf:find-system system nil)
+      (asdf:operate op co)
+      (rename-file (asdf:output-file op co) cache-file))
+    (or (probe-file cache-file)
+	(error "Could not find system to concatenate"))))
