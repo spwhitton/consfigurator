@@ -80,46 +80,65 @@ deployment: deploying properties to the machine Lisp is running on.")
   (funcall (slot-value *connection* 'upload) from to))
 
 
-;;;; Properties and property combinators
+;;;; Properties
 
-(defclass property ()
-  ((type
-    :initarg :type
-    :initform (error "Must supply a type.")
-    :documentation "Whether the property is :posix or :lisp.")
-   (desc
-    :initarg :desc
-    :documentation "Human-readable description of the property.")
-   (hostattrs
-    :initarg :hostattrs
-    :initform (lambda (&rest args)
-		(declare (ignore args))
-		nil)
-    :documentation
-    "Subroutine returning plist of host attributes set on hosts with this property.")
-   (check
-    :initarg :check
-    :initform (lambda (&rest args)
-		(declare (ignore args))
-		(values))
-    :documentation "Subroutine to check whether the property is applied.")
-   (apply
-    :initarg :apply
-    :initform (lambda (&rest args)
-		(declare (ignore args))
-		(values))
-    :documentation "Subroutine to apply the property.")
-   (unapply
-    :initarg :unapply
-    :initform (lambda (&rest args)
-		(declare (ignore args))
-		(values))
-    :documentation "Subroutine to unapply the property.")))
+;; Properties are not stored as CLOS objects (or structs) in value cells
+;; because they are immutable -- see "Attempting to work with anonymous
+;; properties or connection types" in the docs.  An alternative would be to
+;; use the function cell to store a function which takes
+;; 'apply/'hostattrs/etc. as its first argument and dispatches, but those
+;; could be flet, which is forbidden.  A determined user could of course edit
+;; the symbol plist entries, but we want to make it difficult for someone who
+;; hasn't read the docs to accidentally violate immutability
 
-;; standard way to write properties is to use this macro, or one of the
-;; property combinator functions
+(defun setprop (sym type &key desc hostattrs check apply unapply)
+  ;; use non-keyword keys to avoid clashes with other packages
+  (when type
+    (setf (get sym 'type) type))
+  (when desc
+    (setf (get sym 'desc) desc))
+  (when hostattrs
+    (setf (get sym 'hostattrs) hostattrs))
+  (when check
+    (setf (get sym 'check) check))
+  (when apply
+    (setf (get sym 'apply) apply))
+  (when unapply
+    (setf (get sym 'unapply) unapply))
+  sym)
+
+(defun proptype (prop)
+  (get prop 'type))
+
+(defun propdesc (prop)
+  (get prop 'desc))
+
+(defun propattrs (prop &rest args)
+  (when-let ((f (get prop 'hostattrs)))
+    (apply f args)))
+
+(defun propcheck (prop &rest args)
+  (apply (get prop 'check (lambda (&rest args)
+			    (declare (ignore args))
+			    (values)))
+	 args))
+
+(defun propapply (prop &rest args)
+  (apply (get prop 'apply (lambda (&rest args)
+			    (declare (ignore args))
+			    (values)))
+	 args))
+
+(defun propunapply (prop &rest args)
+  (apply (get prop 'unapply (lambda (&rest args)
+			      (declare (ignore args))
+			      (values)))
+	 args))
+
+;;; standard way to write properties is to use one of these two macros
+
 (defmacro defprop (name type args &body forms)
-  (let ((slots (list :type type)))
+  (let (slots)
     (when (stringp (car forms))
       (setf (getf slots :desc) (pop forms)))
     (loop for form in forms
@@ -129,11 +148,10 @@ deployment: deploying properties to the machine Lisp is running on.")
 	  do (if-let ((slot (getf slots kw)))
 	       (setf (getf slots kw)
 		     `(lambda ,args ,@slot))))
-    `(progn
-       (declaim (type property ,name))
-       (defparameter ,name
-	(make-instance 'property ,@slots)
-	,(getf slots :desc)))))
+    `(setprop ',name ,type ,@slots)))
+
+(defmacro defproplist (name args &body propspec)
+  "Define a property which applies a property application specification.")
 
 
 ;;;; Property application specifications
