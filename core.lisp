@@ -197,6 +197,12 @@ and pass each of ARGS to the function in the property's apply slot.")))
 			   do (error "~S is not a symbol" prop)
 			 collect `(cons ',prop (mapcar #'eval ',args))))))
 
+(defun propspec->hostattrs (propspec)
+  "Return all the hostattrs which should be applied to the host which has each
+of the properties in PROPSPEC."
+  (loop for (property . args) in (reverse (slot-value propspec 'applications))
+	nconc (apply (slot-value (symbol-value property) 'hostattrs) args)))
+
 
 ;;;; Hosts
 
@@ -204,9 +210,10 @@ and pass each of ARGS to the function in the property's apply slot.")))
   ((hostattrs
     :initarg :attrs
     :documentation "Plist of the host's static informational attributes.")
-   (properties
+   (propspec
     :initarg :props
-    :documentation "List of the properties to be applied to the host.")))
+    :documentation "Property application specification of the properties to
+be applied to the host.")))
 
 (defmacro defhost (hostname &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
@@ -215,7 +222,18 @@ static informational property with its hostname as a string, and the symbol
 whose name is the hostname will be bound to the host object.
 
 If the first entry in PROPERTIES is a string, it will be considered a
-human-readable description of the host."
+human-readable description of the host.
+
+Otherwise, the entries of PROPERTIES are of the form (PROPERTY . ARGS) where
+PROPERTY is a symbol which names a property.  PROPERTIES will be converted
+into a property application specification by evaluating each of ARGS in the
+current environment.
+
+The order of PROPERTIES matters: deployments will apply properties to the host
+in the order specified here, so later properties implicitly depend on earlier
+ones.  In addition, static informational attributes set by later properties
+are allowed to override any attributes with the same name set by earlier
+entries."
   (let (hostname-sym hostattrs)
     (etypecase hostname
       (string (setq hostname-sym (intern hostname)))
@@ -227,7 +245,10 @@ human-readable description of the host."
     `(progn
        (declaim (type host ,hostname-sym))
        (defparameter ,hostname-sym
-	 (make-instance 'host :attrs ',hostattrs :props ',properties)
+	 (let* ((propspec ,(props properties))
+		(hostattrs (nconc (propspec->hostattrs propspec)
+				  ',hostattrs)))
+	   (make-instance 'host :attrs hostattrs :props propspec))
 	 ,(getf hostattrs :desc)))))
 
 
