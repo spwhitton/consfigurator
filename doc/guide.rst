@@ -60,6 +60,12 @@ To deploy single properties, you can use ``host-variant`` to obtain a version
 of a host which has all its usual informational attributes, based on its usual
 list of properties, but with a different list of properties to be applied.
 
+Root Lisp
+---------
+
+The Lisp process you control directly when you execute deployments.  Typically
+running on your development laptop/workstation.
+
 Prerequisite data
 -----------------
 
