@@ -281,11 +281,10 @@ initiated on another host."
   (let* ((cache-dir (concat (or (uiop:getenv "XDG_CACHE_HOME")
 				(concat (uiop:getenv "HOME") "/.cache"))
 			    "/consfigurator/systems"))
-	 ;; TODO encode -- probably want something like propellor's
-	 ;; File.configFileName defined somewhere
 	 (cache-file (concat cache-dir
 			     "/"
-			     (string-downcase (symbol-name system))
+			     (string->filename
+			      (string-downcase (symbol-name system)))
 			     ".lisp"))
 	 (op 'asdf:monolithic-concatenate-source-op)
 	 (co (asdf:find-component system nil)))
