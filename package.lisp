@@ -21,6 +21,7 @@
 	   #:establish-connection
 	   #:defprop
 	   #:defhost
+	   #:setconsfig
 	   #:get-path-to-concatenated-system))
 
 (defpackage :consfigurator (:use #:cl))

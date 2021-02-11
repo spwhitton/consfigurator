@@ -136,6 +136,68 @@ deployment: deploying properties to the machine Lisp is running on.")
 	,(getf slots :desc)))))
 
 
+;;;; Property application specifications
+
+(defvar *consfig* nil
+  "A list of names of the ASDF systems in which you define your hosts,
+site-specific properties and deployments.  These systems should depend on the
+\"consfigurator\" system.
+
+More specifically, in normal usage of Consfigurator, calling
+(mapc #'asdf:require-system *consfig*) should be sufficient to define all the
+properties you intend to apply to hosts.
+
+Use the SETCONSFIG macro at the top of your consfig to set this value.")
+
+(defmacro setconsfig (systems)
+  "Set the value of *consfig*.  SYSTEMS can be a name or a list of names."
+  (when (atom systems)
+    (setq systems (list systems)))
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (setq *consfig* ',systems)))
+
+(defclass propspec ()
+  ((systems
+    :initarg :systems
+    :documentation "List of names of systems, the loading of all of which is
+sufficient to deploy this propspec.")
+   (applications
+    :initarg :props
+    :documentation "Ordered list of property applications.
+Each member is of the form (PROPERTY . ARGS) where PROPERTY is a symbol naming
+a property (typically as defined by DEFPROP) and ARGS is a list of arguments
+to be passed when calling the property's subroutines.  These ARGS will not be
+evaluated before calling the function.
+
+Deployments apply properties in the order specified here, so later entries in
+the list implicitly depend on earlier ones.
+
+Members of ARGS must all be objects which can be serialised.  In particular,
+function objects are not permitted.
+
+The point of this data structure is to be a way to inform a Lisp process
+running on a remote host how it can apply some properties: load each of the
+systems, and then look in the value cell of each PROPERTY to find a property,
+and pass each of ARGS to the function in the property's apply slot.")))
+
+;; for use in macros which need to create property application specifications
+;; by evaluating arguments to properties in the current environment
+(defun props (applications &optional systems)
+  (if systems
+      (when (atom systems)
+	(setq systems (list systems)))
+      (if *consfig*
+	  (setq systems (list *consfig*))
+	  (error "*consfig* not set")))
+  `(make-instance
+    'propspec
+    :systems ',systems
+    :props (list ,@(loop for (prop . args) in applications
+			 unless (symbolp prop)
+			   do (error "~S is not a symbol" prop)
+			 collect `(cons ',prop (mapcar #'eval ',args))))))
+
+
 ;;;; Hosts
 
 (defclass host ()
