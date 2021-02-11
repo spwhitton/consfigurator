@@ -96,7 +96,7 @@ deployment: deploying properties to the machine Lisp is running on.")
 		(declare (ignore args))
 		nil)
     :documentation
-    "Subroutine returning list of host attributes set on hosts with this property.")
+    "Subroutine returning plist of host attributes set on hosts with this property.")
    (check
     :initarg :check
     :initform (lambda (&rest args)
