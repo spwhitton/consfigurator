@@ -12,9 +12,7 @@
   (:use #:cl
 	#:alexandria
 	#:consfigurator.util)
-  (:export #:*connection*
-	   #:connection
-	   #:connection-run
+  (:export #:connection-run
 	   #:connection-readfile
 	   #:connection-writefile
 	   #:connection-upload
