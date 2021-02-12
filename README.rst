@@ -22,6 +22,6 @@ Portabiilty and stability
 - No attempt is made to support Common Lisp implementations other than SBCL,
   though portability patches are welcome.
 
-- No attempt is made to support running on Windows -- we eschew Common Lisp
-  pathnames in favour of simple strings with forward slashes as directory
+- No attempt is made to support running on Windows -- we often eschew Common
+  Lisp pathnames in favour of simple strings with forward slashes as directory
   separators.
