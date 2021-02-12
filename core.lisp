@@ -76,7 +76,7 @@ attributes of the host to which they're being applied.")
 ;; the symbol plist entries, but we want to make it difficult for someone who
 ;; hasn't read the docs to accidentally violate immutability
 
-(defun setprop (sym type &key desc hostattrs check apply unapply)
+(defun setprop (sym type &key args desc hostattrs check apply unapply)
   ;; use non-keyword keys to avoid clashes with other packages
   (when type
     (setf (get sym 'type) type))
@@ -97,6 +97,9 @@ attributes of the host to which they're being applied.")
 
 (defun propdesc (prop)
   (get prop 'desc))
+
+(defun propargs (prop)
+  (get prop 'args))
 
 (defun propattrs (prop &rest args)
   (when-let ((f (get prop 'hostattrs)))
@@ -123,7 +126,7 @@ attributes of the host to which they're being applied.")
 ;;; standard way to write properties is to use one of these two macros
 
 (defmacro defprop (name type args &body forms)
-  (let (slots)
+  (let ((slots (list :args args)))
     (when (stringp (car forms))
       (setf (getf slots :desc) (pop forms)))
     (loop for form in forms
