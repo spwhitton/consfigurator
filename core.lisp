@@ -7,6 +7,8 @@
     :initarg :type
     :initform (error "Must supply a type.")
     :documentation "Whether the connection is :posix or :lisp.")
+
+   ;; er, should each of these rather be a generic function?
    (run
     :initarg :run
     :initform (error "Must supply a run closure.")
@@ -15,6 +17,9 @@
     :initarg :readfile
     :initform (error "Must supply a readfile closure.")
     :documentation "Subroutine to read the contents of files on the host.")
+   ;; only functional difference between writefile and upload is what args
+   ;; they take: a string vs. a path.  they may have same or different
+   ;; implementations
    (writefile
     :initarg :writefile
     :initform (error "Must supply a writefile closure.")
