@@ -186,13 +186,13 @@ Deployments apply properties in the order specified here, so later entries in
 the list implicitly depend on earlier ones.
 
 Members of ARGS must all be objects which can be serialised.  In particular,
-function objects are not permitted.
-
-The point of this data structure is to be a way to inform a Lisp process
+function objects are not permitted."))
+  (:documentation
+   "The point of this data structure is to be a way to inform a Lisp process
 running on a remote host how it can apply some properties: load each of the
 systems, resolve unapply, onchange etc., and then look in the value cell of
-each PROPERTY to find a property, and pass each of ARGS to the function in
-the property's apply slot.")))
+each PROPERTY to find a property, and pass each of ARGS to the function in the
+property's apply slot."))
 
 ;; the following three functions, plus simple concatenation, should be
 ;; everything we need to do with propspecs, so all knowledge of the possible
