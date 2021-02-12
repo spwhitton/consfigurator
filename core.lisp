@@ -38,36 +38,16 @@
    "Within the context of the current connection, connect to a host and return
 object representing this new connection."))
 
-(defvar *connection*
-  (make-instance
-   'connection
-   :type :lisp
-   :run (lambda (shell-cmd &optional input)
-	  (declare (ftype (function (string string) (values string integer))))
-	  ;; assumes a POSIX shell (otherwise we could wrap in 'sh -c')
-	  (multiple-value-bind (output _ exit-code)
-	      (uiop:run-program shell-cmd
-				:force-shell t
-				:input (and input
-					    (make-string-input-stream input))
-				:output :string
-				:error-output :output)
-	    (declare (ignore _))
-	    (values output exit-code)))
-   :readfile (lambda (path)
-	       (uiop:read-file-string path))
-   :writefile (lambda (path contents)
-		(with-open-file (stream
-				 path
-				 :direction :output
-				 :if-exists :supersede)
-		  (write-string contents stream)))
-   :upload #'uiop:copy-file
-   :teardown #'noop)
+(defvar *connection* nil
   "Object representing the currently active connection.
-Deployments bind this variable, but its global value should be regarded as a
-constant.  This constant value is a connection representing the root
-deployment: deploying properties to the machine Lisp is running on.")
+Deployments bind this variable.  Its global value should remain nil.")
+
+(defvar *host* nil
+  "Object representing the host to which we're currently connected.
+Deployments bind this variable.  Its global value should remain nil.
+
+The main point of this is to allow properties to read the static informational
+attributes of the host to which they're being applied.")
 
 
 ;;;; Functions to access the slots of the current connection.
