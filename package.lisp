@@ -6,7 +6,8 @@
 	   #:lines
 	   #:unlines
 	   #:noop
-	   #:shellcmd))
+	   #:shellcmd
+	   #:symbol-named))
 
 (defpackage :consfigurator.core
   (:use #:cl

@@ -41,6 +41,10 @@ Escapes characters which would be interpreted by the shell."
 (defun unlines (lines)
   (format nil "~{~A~%~}" lines))
 
+(defmacro symbol-named (name symbol)
+  `(and (symbolp ,symbol)
+	(string= (symbol-name ',name) (symbol-name ,symbol))))
+
 
 ;;;; Encoding of strings to filenames
 
