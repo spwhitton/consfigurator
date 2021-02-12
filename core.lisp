@@ -153,7 +153,12 @@ More specifically, in normal usage of Consfigurator, calling
 (mapc #'asdf:require-system *consfig*) should be sufficient to define all the
 properties you intend to apply to hosts.
 
-Use the SETCONSFIG macro at the top of your consfig to set this value.")
+Use the SETCONSFIG macro at the top of your consfig to set this value.
+
+Note that you can use Consfigurator without setting this variable, by
+explicitly specifying the names of systems when creating property application
+specifications.  This is useful if you have more than one consfig that you
+want to keep completely independent of each other.")
 
 (defmacro setconsfig (systems)
   "Set the value of *consfig*.  SYSTEMS can be a name or a list of names."
