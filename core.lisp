@@ -182,10 +182,20 @@ sufficient to deploy this propspec.")
    (applications
     :initarg :props
     :documentation "Ordered list of property applications.
-Each member is of the form (PROPERTY . ARGS) where PROPERTY is a symbol naming
-a property (typically as defined by DEFPROP) and ARGS is a list of arguments
-to be passed when calling the property's subroutines.  These ARGS will not be
-evaluated before calling the function.
+The base case valid entry is of the form (PROPERTY . ARGS) where PROPERTY is
+a symbol naming a property (typically as defined by DEFPROP) and ARGS is a
+list of arguments to be passed when calling the property's subroutines.  These
+ARGS will not be evaluated before calling the function.
+
+Additionally, entries can be of the following forms:
+
+    (unapply (PROPERTY . ARGS)) -- unapply the property, if it supports that.
+
+    ((PROPERTY . ARGS) onchange (PROPERTY . ARGS) onchange (PROPERTY . ARGS))
+    -- apply the second and third properties in the case that the first
+       property actually had work to do.
+
+... and combinations thereof.
 
 Deployments apply properties in the order specified here, so later entries in
 the list implicitly depend on earlier ones.
@@ -195,31 +205,57 @@ function objects are not permitted.
 
 The point of this data structure is to be a way to inform a Lisp process
 running on a remote host how it can apply some properties: load each of the
-systems, and then look in the value cell of each PROPERTY to find a property,
-and pass each of ARGS to the function in the property's apply slot.")))
+systems, resolve unapply, onchange etc., and then look in the value cell of
+each PROPERTY to find a property, and pass each of ARGS to the function in
+the property's apply slot.")))
 
-;; for use in macros which need to create property application specifications
-;; by evaluating arguments to properties in the current environment
-(defun props (applications &optional systems)
+;; the following three functions, plus simple concatenation, should be
+;; everything we need to do with propspecs, so all knowledge of the possible
+;; combinator symbols should be confined to these three functions
+
+;; to implement:
+;;
+;; (((file:contains-lines '("foo" "bar"))
+;;   on-change (apt:installed '("sbcl")))
+;;
+;;  (unapply (file:exists "/foo/bar"))
+;;
+;;  (unapply ((foo) onchange (bar)))
+;;
+;;  ((foo) onchange (unapply (bar))))
+
+(defun eval-propspec (propspec)
+  "Apply properties as specified by PROPSPEC."
+  (mapc #'asdf:require-system (slot-value propspec 'systems))
+  (loop for form in (slot-value propspec 'applications)
+	;; do (something)
+	))
+
+(defun propspec->hostattrs (propspec)
+  "Return all the hostattrs which should be applied to the host which has
+PROPSPEC applied.")
+
+(defun props (forms &optional systems)
+  "Where FORMS is the elements of a property application specification, except
+that the arguments to properties are expressions to be evaluated to produce
+the arguments to be passed rather than literal arguments, return code which
+will evaluate the expressions and produce the corresponding property
+application specification.
+
+SYSTEMS is the 'systems attribute of the property application specification
+that the returned code should produce.
+
+Intended for use by macros which allow the user to provide expressions instead
+of values as the arguments to properties when building a property application
+specification."
   (if systems
       (when (atom systems)
 	(setq systems (list systems)))
       (if *consfig*
 	  (setq systems (list *consfig*))
 	  (error "*consfig* not set")))
-  `(make-instance
-    'propspec
-    :systems ',systems
-    :props (list ,@(loop for (prop . args) in applications
-			 unless (symbolp prop)
-			   do (error "~S is not a symbol" prop)
-			 collect `(cons ',prop (mapcar #'eval ',args))))))
-
-(defun propspec->hostattrs (propspec)
-  "Return all the hostattrs which should be applied to the host which has each
-of the properties in PROPSPEC."
-  (loop for (property . args) in (reverse (slot-value propspec 'applications))
-	nconc (apply (slot-value (symbol-value property) 'hostattrs) args)))
+  ;; (something)
+  )
 
 
 ;;;; Hosts
