@@ -66,6 +66,21 @@ Root Lisp
 The Lisp process you control directly when you execute deployments.  Typically
 running on your development laptop/workstation.
 
+Unevaluated property application specification
+----------------------------------------------
+
+A property application specification, except in atomic property applications
+of the form ``(PROPERTY . ARGS)``, ARGS are expressions to be evaluated to
+produce the arguments to pass to PROPERTY, rather than those arguments
+themselves.  An unevaluated property application specification can be
+converted into a property application specification by replacing each ARG of
+ARGS with the result of ``(eval ARG)``.
+
+The main place you will find an unevaluated property application specification
+is in a call to DEFHOST.  That macro converts an unevaluated property
+application specification into code which will produce the corresponding
+property application specification.
+
 Prerequisite data
 -----------------
 

@@ -95,6 +95,15 @@ attributes of the host to which they're being applied.")
 (defun proptype (prop)
   (get prop 'type))
 
+(defun propapptype (propapp)
+  (get (car propapp) 'type))
+
+(defun collapse-types (&rest lists)
+  (if (some (lambda (type) (eq type :posix))
+	    (flatten lists))
+      :posix
+      :lisp))
+
 (defun propdesc (prop)
   (get prop 'desc))
 
@@ -105,11 +114,17 @@ attributes of the host to which they're being applied.")
   (when-let ((f (get prop 'hostattrs)))
     (apply f args)))
 
+(defun propappattrs (propapp)
+  (apply #'propattrs (car propapp) (cdr propapp)))
+
 (defun propcheck (prop &rest args)
   (apply (get prop 'check (lambda (&rest args)
 			    (declare (ignore args))
 			    (values)))
 	 args))
+
+(defun propappcheck (propapp)
+  (apply #'propcheck (car propapp) (cdr propapp)))
 
 (defun propapply (prop &rest args)
   (apply (get prop 'apply (lambda (&rest args)
@@ -117,11 +132,17 @@ attributes of the host to which they're being applied.")
 			    (values)))
 	 args))
 
+(defun propappapply (propapp)
+  (apply #'propapply (car propapp) (cdr propapp)))
+
 (defun propunapply (prop &rest args)
   (apply (get prop 'unapply (lambda (&rest args)
 			      (declare (ignore args))
 			      (values)))
 	 args))
+
+(defun propappunapply (propapp)
+  (apply #'propunapply (car propapp) (cdr propapp)))
 
 ;;; standard way to write properties is to use one of these two macros
 
@@ -202,38 +223,90 @@ systems, resolve unapply, onchange etc., and then look in the value cell of
 each PROPERTY to find a property, and pass each of ARGS to the function in the
 property's apply slot."))
 
-;; the following three functions, plus simple concatenation, should be
+;; The following four functions, plus simple concatenation, should be
 ;; everything we need to do with propspecs, so all knowledge of the possible
-;; combinator symbols should be confined to these three functions
+;; combinator symbols should be confined to these four functions -- i.e., if
+;; we are to add any combinators, this is the code that needs to change
 
-;; to implement:
-;;
-;; (((file:contains-lines '("foo" "bar"))
-;;   on-change (apt:installed '("sbcl")))
-;;
-;;  (unapply (file:exists "/foo/bar"))
-;;
-;;  (unapply ((foo) onchange (bar)))
-;;
-;;  ((foo) onchange (unapply (bar))))
+(defun compile-propapp (propapp)
+  "Recursively apply the effects of property combinators in PROPAPP to produce
+an atomic property application."
+  (let ((sym (gensym)))
+    (cond
+      ;; UNAPPLY
+      ((symbol-named unapply (car propapp))
+       (destructuring-bind (psym . args) (compile-propapp (cadr propapp))
+	 (setprop sym (proptype psym)
+		  :desc (concat "Unapply: " (propdesc psym))
+		  :check (complement (get psym 'check))
+		  :apply (get psym 'unapply)
+		  :unapply (get psym 'apply))
+	 (cons sym args)))
+      ;; ON-CHANGE
+      ;; Following pretty much assumes that on-change is our only infix
+      ;; property combinator.
+      ((symbol-named on-change (cadr propapp))
+       (let ((propapps (loop with remaining = (cdr propapp)
+			     with apps
+			     for s = (pop remaining)
+			     for a = (pop remaining)
+			     unless (symbol-named on-change s)
+			       do (error "Invalid on-change expression")
+			     else
+			       do (push (compile-propapp a) apps)
+			     unless remaining return apps)))
+	 (destructuring-bind (psym . args) (compile-propapp (car propapp))
+	   (setprop sym (collapse-types (proptype psym)
+					(mapcar #'propapptype propapps))
+		    :desc (propdesc psym)
+		    :hostattrs (lambda (&rest args)
+				 (nconc (apply #'propattrs psym args)
+					(mapcan #'propappattrs propapps)))
+		    :check (get psym 'check)
+		    :apply (lambda (&rest args)
+			     (unless (eq :nochange
+					 (apply #'propapply psym args))
+			       (loop for propapp in propapps
+				     do (unless (propappcheck propapp)
+					  (propappapply propapp)))))
+		    :unapply (lambda (&rest args)
+			       (unless (eq :nochange
+					   (apply #'propunapply psym args))
+				 (loop for propapp in propapps
+				       do (unless (propappcheck propapp)
+					    (propappapply propapp))))))
+	   (cons sym args))))
+      ;; atomic property application
+      (t
+       propapp))))
 
 (defun eval-propspec (propspec)
   "Apply properties as specified by PROPSPEC."
   (mapc #'asdf:require-system (slot-value propspec 'systems))
   (loop for form in (slot-value propspec 'applications)
-	;; do (something)
-	))
+	for propapp = (compile-propapp form)
+	do (unless (propappcheck propapp)
+	     (propappapply propapp))))
 
 (defun propspec->hostattrs (propspec)
   "Return all the hostattrs which should be applied to the host which has
-PROPSPEC applied.")
+PROPSPEC applied."
+  ;; we need to reverse the plist because hostattrs set by later entries in
+  ;; the propspec should override hostattrs set by earlier entries
+  (do* ((hostattrs (loop for form in (slot-value propspec 'applications)
+			 for propapp = (compile-propapp form)
+			 nconc (propappattrs propapp)))
+	reversed
+	(k (pop hostattrs) (pop hostattrs))
+	(v (pop hostattrs) (pop hostattrs)))
+       ((not k) reversed)
+    (push v reversed)
+    (push k reversed)))
 
 (defun props (forms &optional systems)
-  "Where FORMS is the elements of a property application specification, except
-that the arguments to properties are expressions to be evaluated to produce
-the arguments to be passed rather than literal arguments, return code which
-will evaluate the expressions and produce the corresponding property
-application specification.
+  "Where FORMS is the elements of an unevaluated property application
+specification, return code which will evaluate the expressions and produce the
+corresponding property application specification.
 
 SYSTEMS is the 'systems attribute of the property application specification
 that the returned code should produce.
@@ -247,8 +320,20 @@ specification."
       (if *consfig*
 	  (setq systems (list *consfig*))
 	  (error "*consfig* not set")))
-  ;; (something)
-  )
+  (labels ((make-eval-propspec (form)
+	     (if (atom form)
+		 `(quote ,form)
+		 (destructuring-bind (first . rest) form
+		   (if (and (symbolp first)
+			   (not (member (symbol-name first)
+					'("UNAPPLY")
+					:test #'string=)))
+		       `(cons ',first (mapcar #'eval ',rest))
+		       `(list ,@(mapcar #'make-eval-propspec form)))))))
+    `(make-instance
+      'propspec
+      :systems ',systems
+      :props (list ,@(mapcar #'make-eval-propspec forms)))))
 
 
 ;;;; Hosts
