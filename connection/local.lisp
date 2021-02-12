@@ -1,6 +1,6 @@
 (in-package :consfigurator.connection.local)
 
-(defconstant local-connection
+(defconstant +local-connection+
   (make-instance
    'connection
    :type :lisp
