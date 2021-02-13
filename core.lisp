@@ -390,12 +390,12 @@ static informational property with its hostname as a string, and the symbol
 whose name is the hostname will be bound to the host object.
 
 If the first entry in PROPERTIES is a string, it will be considered a
-human-readable description of the host.
-
-Otherwise, the entries of PROPERTIES are of the form (PROPERTY . ARGS) where
-PROPERTY is a symbol which names a property.  PROPERTIES will be converted
-into a property application specification by evaluating each of ARGS in the
-current environment.
+human-readable description of the host.  Otherwise, PROPERTIES is an
+unevaluated property application specification.  Recall that for atomic
+entries (PROPERTY . ARGS), PROPERTY refers to the property that symbol names
+in the global environment, not whatever it may name in the current dynamic
+and/or lexical environments.  Property application specifications cannot
+close over globally anonymous properties.
 
 The order of PROPERTIES matters: deployments will apply properties to the host
 in the order specified here, so later properties implicitly depend on earlier
