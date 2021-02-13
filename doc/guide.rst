@@ -188,4 +188,6 @@ connection types they are used with.
 Note that you *can* programmatically determine what arguments will get passed
 to properties upon deployment, though each of these arguments needs to be
 serialisable, so you can't pass anonymous functions or objects containing
-those.
+those.  You can work around the latter restriction by defining a new property
+which passes in the desired anonymous function, and then adding the new
+property to your property application specification.
