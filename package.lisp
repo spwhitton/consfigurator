@@ -13,14 +13,32 @@
   (:use #:cl
 	#:alexandria
 	#:consfigurator.util)
-  (:export #:connection-run
+  (:export #:connect-and-apply
+	   #:apply-properties
+	   #:connection
+	   #:lisp-connection
+	   #:posix-connection
+	   #:connection-run
+	   #:run
 	   #:connection-readfile
+	   #:readfile
 	   #:connection-writefile
+	   #:writefile
 	   #:connection-upload
+	   #:upload
+	   #:connection-teardown
+	   #:defconnmethod
+	   #:*host*
 	   #:establish-connection
 	   #:defprop
 	   #:defhost
+	   #:hostattr
 	   #:setconsfig
+	   #:defdeploy
+	   #:defdeploy-these
+	   #:defhostdeploy
+	   #:deploy
+	   #:deploy-these
 	   #:get-path-to-concatenated-system))
 
 (defpackage :consfigurator (:use #:cl))

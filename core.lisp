@@ -2,45 +2,72 @@
 
 ;;;; Connections
 
-(defclass connection ()
-  ((type
-    :initarg :type
-    :initform (error "Must supply a type.")
-    :documentation "Whether the connection is :posix or :lisp.")
-
-   ;; er, should each of these rather be a generic function?
-   (run
-    :initarg :run
-    :initform (error "Must supply a run closure.")
-    :documentation "Subroutine to run shell commands on the host.")
-   (readfile
-    :initarg :readfile
-    :initform (error "Must supply a readfile closure.")
-    :documentation "Subroutine to read the contents of files on the host.")
-   ;; only functional difference between writefile and upload is what args
-   ;; they take: a string vs. a path.  they may have same or different
-   ;; implementations
-   (writefile
-    :initarg :writefile
-    :initform (error "Must supply a writefile closure.")
-    :documentation
-    "Subroutine to replace/create the contents of files on the host.")
-   (upload
-    :initarg :upload
-    :initform (error "Must supply an upload closure.")
-    :documentation "Subroutine to upload files to the host.")
-   (teardown
-    :initarg :teardown
-    :documentation "Subroutine to disconnect from the host.")))
-
-(defgeneric establish-connection (type host &key)
+;; generic function operating on keywords which identify connection types
+(defgeneric connect-and-apply (type host &key)
   (:documentation
-   "Within the context of the current connection, connect to a host and return
-object representing this new connection."))
+   "Within the context of the current connection, connect to HOST by
+establishing a new connection of type TYPE, and apply HOST's properties.
 
+Implementations of this function either instantiate a connection object and
+pass that to APPLY-PROPERTIES, or start up another Lisp process somewhere and
+have it call APPLY-PROPERTIES by means of a :local connection."))
+
+(defun apply-properties (connection host)
+  "In the context of CONNECTION, apply HOST's properties to HOST.
+
+This function is called by implementations of CONNECT-AND-APPLY."
+  (let ((*host* host)
+	(*connection* connection))
+    (eval-propspec (slot-value host 'propspec))
+    (connection-teardown connection)))
+
+(defclass connection ()
+  ((parent
+    :init-arg :parent
+    :documentation
+    "The value of *CONNECTION* at the time this connection was established.")))
+
+(defclass lisp-connection (connection))
+
+(defclass posix-connection (connection))
+
+;;; generic functions to operate on subclasses of CONNECTION
+
+(defgeneric connection-run (connection cmd &optional input)
+  (:documentation "Subroutine to run shell commands on the host."))
+
+(defgeneric connection-readfile (connection path)
+  (:documentation "Subroutine to read the contents of files on the host."))
+
+;; only functional difference between writefile and upload is what args they
+;; take: a string vs. a path.  they may have same or different implementations
+
+(defgeneric connection-writefile (connection path contents)
+  (:documentation
+   "Subroutine to replace/create the contents of files on the host."))
+
+(defgeneric connection-upload (connection from to)
+  (:documentation "Subroutine to upload files to the host."))
+
+(defgeneric connection-teardown (connection)
+  (:documentation "Subroutine to disconnect from the host."))
+
+;; many connection types don't need anything to be done to disconnect
+(defmethod connection-teardown (&rest args)
+  (declare (ignore args))
+  (values))
+
+(defmacro defconnmethod (name args &body body)
+  `(defmethod ,name ,args
+     (let ((*connection* (slot-value ,(caar args) 'parent)))
+       ,@body)))
+
+;; global value gets set in connection/local.lisp, but the symbol is not
+;; exported as it should only get bound by APPLY-PROPERTIES
 (defvar *connection* nil
   "Object representing the currently active connection.
-Deployments bind this variable.  Its global value should remain nil.")
+Connections dynamically bind this variable and then apply properties.  Its
+global value be regarded as a constant.")
 
 (defvar *host* nil
   "Object representing the host to which we're currently connected.
@@ -50,19 +77,21 @@ The main point of this is to allow properties to read the static informational
 attributes of the host to which they're being applied.")
 
 
-;;;; Functions to access the slots of the current connection.
+;;;; Functions to access the slots of the current connection
 
-(defun connection-run (cmd &optional input)
-  (funcall (slot-value *connection* 'run) cmd input))
+;; used by properties and by implementations of CONNECT-AND-APPLY
 
-(defun connection-readfile (path)
-  (funcall (slot-value *connection* 'readfile) path))
+(defun run (&rest args)
+  (apply #'connection-run *connection* args))
 
-(defun connection-writefile (path contents)
-  (funcall (slot-value *connection* 'writefile) path contents))
+(defun readfile (&rest args)
+  (apply #'connection-readfile *connection* args))
 
-(defun connection-upload (from to)
-  (funcall (slot-value *connection* 'upload) from to))
+(defun writefile (&rest args)
+  (apply #'connection-writefile *connection* args))
+
+(defun upload (&rest args)
+  (apply #'connection-upload *connection* args))
 
 
 ;;;; Properties
@@ -347,6 +376,10 @@ specification."
     :documentation "Property application specification of the properties to
 be applied to the host.")))
 
+(defun hostattr (host key)
+  "Retrieve a single static informational attribute."
+  (getf (slot-value host 'hostattrs) key))
+
 (defmacro defhost (hostname &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
 HOSTNAME can be a string or a symbol.  In either case, the host will get a
@@ -382,6 +415,92 @@ entries."
 				  ',hostattrs)))
 	   (make-instance 'host :attrs hostattrs :props propspec))
 	 ,(getf hostattrs :desc)))))
+
+
+;;;; Deployments
+
+(defmacro defdeploy (name (connection host) &body additional-properties)
+  "Define a function which does (DEPLOY CONNECTION HOST ADDITIONAL-PROPERTIES).
+You can then eval (NAME) to execute this deployment."
+  `(defun ,name ()
+     (deploy ,connection ,host ,@additional-properties)))
+
+(defmacro defdeploy-these (name (connection host) &body properties)
+  "Define a function which does (DEPLOY-THESE CONNECTION HOST PROPERTIES).
+You can then eval (NAME) to execute this deployment."
+  `(defun ,name ()
+     (deploy-these ,connection ,host ,@properties)))
+
+(defmacro defhostdeploy (connection host-name)
+  "Where HOST-NAME names a host as defined with DEFHOST, define a function
+which does (deploy CONNECTION (symbol-value HOST)).
+You can then eval (HOST-NAME) to execute this deployment.
+
+For example, if you usually deploy properties to athena by SSH,
+
+    (defhost athena.silentflame.com
+      (foo)
+      (bar)
+      ...)
+
+    (defhostdeploy :ssh athena.silentflame.com)
+
+and then you can eval (athena.silentflame.com) to apply athena's properties."
+  `(defdeploy ,host-name (,connection ,host-name)))
+
+(defmacro deploy (connection host &body additional-properties)
+  "Establish a connection of type CONNECTION to HOST, and apply each of the
+host's usual properties, followed by specified by ADDITIONAL-PROPERTIES, an
+unevaluated property application specification.
+
+CONNECTION is either a keyword identifying a connection type, or a list
+beginning with such a keyword and followed by keyword arguments required to
+establish the connection.
+
+Then HOST has all its usual static informational attributes, plus any set by
+ADDITIONAL-PROPERTIES.  Static informational attributes set by
+ADDITIONAL-PROPERTIES can override the host's usual static informational
+attributes, in the same way that later entries in the list of properties
+specified in DEFHOST forms can override earlier entries (see DEFHOST's
+docstring)."
+  (with-gensyms (propspec)
+    `(let ((,propspec ,(props additional-properties)))
+       (deploy* ,connection
+		(make-instance 'host
+			       :attrs (nconc (propspec->hostattrs ,propspec)
+					     (slot-value ,host 'hostattrs))
+			       :props (append (slot-value ,host 'propspec)
+					      ,propspec))))))
+
+(defmacro deploy-these (connection host &body properties)
+  "Establish a connection of type CONNECTION to HOST, and apply each of
+the properties specified by PROPERTIES, an unevaluated property application
+specification (and not the host's usual properties, unless they also appear
+in PROPERTIES).
+
+CONNECTION is either a keyword identifying a connection type, or a list
+beginning with such a keyword and followed by keyword arguments required to
+establish the connection.
+
+This function is useful to apply one or two properties to a host right now,
+e.g. at the REPL when when testing new property definitions.  If HOST is
+usually deployed using a :lisp connection, and the property you are testing
+is :posix, you might use a connection type like :ssh so that you can quickly
+alternate between redefining your work-in-progress property and attempting to
+apply it to HOST.
+
+HOST has all its usual static informational attributes, as set by its usual
+properties, plus any set by PROPERTIES.  Static informational attributes set
+by PROPERTIES can override the host's usual static informational attributes,
+in the same way that later entries in the list of properties specified in
+DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
+  (with-gensyms (propspec)
+    `(let ((,propspec ,(props properties)))
+       (deploy* ,connection
+		(make-instance 'host
+			       :attrs (nconc (propspec->hostattrs ,propspec)
+					     (slot-value ,host 'hostattrs))
+			       :props ,propspec)))))
 
 
 ;;;; Lisp systems defining host configurations
