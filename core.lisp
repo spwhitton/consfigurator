@@ -508,7 +508,7 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 			       :props ,propspec)))))
 
 (defun deploy* (connection host)
-  (let ((type (if (atom connection) connection (car connection)))
+  (let ((type (ensure-car connection))
 	(args (and (consp connection) (cdr connection))))
     (apply #'connect-and-apply type host args)))
 
