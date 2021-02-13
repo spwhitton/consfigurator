@@ -16,6 +16,8 @@ have it call APPLY-PROPERTIES by means of a :local connection."))
   "In the context of CONNECTION, apply HOST's properties to HOST.
 
 This function is called by implementations of CONNECT-AND-APPLY."
+  ;; TODO if connection is subclass of posix-connection, check that all
+  ;; properties to be applied are :posix
   (let ((*host* host)
 	(*connection* connection))
     (eval-propspec (slot-value host 'propspec))
@@ -504,6 +506,22 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 			       :attrs (nconc (propspec->hostattrs ,propspec)
 					     (slot-value ,host 'hostattrs))
 			       :props ,propspec)))))
+
+(defun deploy* (connection host)
+  (let ((type (if (atom connection) connection (car connection)))
+	(args (and (consp connection) (cdr connection))))
+    (apply #'connect-and-apply type host args)))
+
+(defprop deploy :posix (connection host &rest additional-properties)
+  "Execute a Consfigurator deployment.
+
+Useful to have one host act a controller, applying properties to other hosts.
+Also useful to set up VMs, chroots, disk images etc. on localhost.")
+
+(defprop deploy-these :posix (connection host &rest properties)
+  "Execute a deployment, but replace the properties of host with PROPERTIES.
+This property is to the DEPLOY property what the DEPLOY-THESE function is to
+the DEPLOY function.")
 
 
 ;;;; Lisp systems defining host configurations
