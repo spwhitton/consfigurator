@@ -27,7 +27,6 @@
 	   #:connection-upload
 	   #:upload
 	   #:connection-teardown
-	   #:defconnmethod
 	   #:*host*
 	   #:establish-connection
 	   #:defprop

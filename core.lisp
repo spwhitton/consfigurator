@@ -38,8 +38,16 @@ This function is called by implementations of CONNECT-AND-APPLY."
 (defgeneric connection-run (connection cmd &optional input)
   (:documentation "Subroutine to run shell commands on the host."))
 
+(defmethod connection-run :around ((connection connection) cmd &optional input)
+  (let ((*connection* (slot-value connection 'parent)))
+    (call-next-method)))
+
 (defgeneric connection-readfile (connection path)
   (:documentation "Subroutine to read the contents of files on the host."))
+
+(defmethod connection-readfile :around ((connection connection) path)
+  (let ((*connection* (slot-value connection 'parent)))
+    (call-next-method)))
 
 ;; only functional difference between writefile and upload is what args they
 ;; take: a string vs. a path.  they may have same or different implementations
@@ -48,21 +56,28 @@ This function is called by implementations of CONNECT-AND-APPLY."
   (:documentation
    "Subroutine to replace/create the contents of files on the host."))
 
+(defmethod connection-writefile :around ((connection connection) path contents)
+  (let ((*connection* (slot-value connection 'parent)))
+    (call-next-method)))
+
 (defgeneric connection-upload (connection from to)
   (:documentation "Subroutine to upload files to the host."))
 
+(defmethod connection-upload :around ((connection connection) from to)
+  (let ((*connection* (slot-value connection 'parent)))
+    (call-next-method)))
+
 (defgeneric connection-teardown (connection)
   (:documentation "Subroutine to disconnect from the host."))
+
+(defmethod connection-teardown :around ((connection connection))
+  (let ((*connection* (slot-value connection 'parent)))
+    (call-next-method)))
 
 ;; many connection types don't need anything to be done to disconnect
 (defmethod connection-teardown (&rest args)
   (declare (ignore args))
   (values))
-
-(defmacro defconnmethod (name args &body body)
-  `(defmethod ,name ,args
-     (let ((*connection* (slot-value ,(caar args) 'parent)))
-       ,@body)))
 
 ;; global value gets set in connection/local.lisp, but the symbol is not
 ;; exported as it should only get bound by APPLY-PROPERTIES

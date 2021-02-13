@@ -8,7 +8,7 @@
   ()
   (:documentation "Deploy properties using non-interactive SSH."))
 
-(defconnmethod connection-run ((connection ssh-connection) cmd &optional input)
+(defmethod connection-run ((connection ssh-connection) cmd &optional input)
   ;; wrap in 'sh -c' in case the login shell is not POSIX
   (run (shellcmd "ssh" (hostattr *host* :hostname) (shellcmd "sh" "-c" cmd))
        input))
