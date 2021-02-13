@@ -47,6 +47,10 @@ This is so that ``:posix`` connections can be used to administer hosts for
 which shell multiplexing is not possible, such as with serial connections.
 For asynchronous interaction, use a ``:lisp`` connection.
 
+The code which establishes a connection is similar to code in ``:posix``
+properties: it only performs I/O using functions which access the currently
+active connection.  This permits arbitrary nesting of connections.
+
 Deployment
 ----------
 
