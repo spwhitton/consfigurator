@@ -35,7 +35,7 @@ root Lisp is running on, as the root Lisp's uid."))
 
 ;; set the root Lisp's connection context now we've defined its value -- other
 ;; implementations of CONNECT-AND-APPLY will rely on this when they call RUN,
-;; UPLOAD etc.
+;; READFILE etc.
 (eval-when (:load-toplevel :execute)
   (unless consfigurator.core::*connection*
     (setq consfigurator.core::*connection*

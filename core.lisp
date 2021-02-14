@@ -107,9 +107,6 @@ attributes of the host to which they're being applied.")
 (defun writefile (&rest args)
   (apply #'connection-writefile *connection* args))
 
-(defun upload (&rest args)
-  (apply #'connection-upload *connection* args))
-
 
 ;;;; Properties
 

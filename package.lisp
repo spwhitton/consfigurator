@@ -25,7 +25,6 @@
 	   #:connection-writefile
 	   #:writefile
 	   #:connection-upload
-	   #:upload
 	   #:connection-teardown
 	   #:*host*
 	   #:establish-connection
