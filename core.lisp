@@ -360,6 +360,9 @@ specification."
   (if systems
       (when (atom systems)
 	(setq systems (list systems)))
+      ;; TODO maybe setconsfig could set *consfig* just within the current
+      ;; package and then macros bind it or pass it to this function.  then no
+      ;; global value, i.e. drop that piece of state.
       (if *consfig*
 	  (setq systems (list *consfig*))
 	  (error "*consfig* not set")))
