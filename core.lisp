@@ -19,9 +19,9 @@ suitable for *connection*."))
     :documentation
     "The value of *CONNECTION* at the time this connection was established.")))
 
-(defclass lisp-connection (connection))
+(defclass lisp-connection (connection) ())
 
-(defclass posix-connection (connection))
+(defclass posix-connection (connection) ())
 
 ;;; generic functions to operate on subclasses of CONNECTION
 
