@@ -480,14 +480,15 @@ ADDITIONAL-PROPERTIES can override the host's usual static informational
 attributes, in the same way that later entries in the list of properties
 specified in DEFHOST forms can override earlier entries (see DEFHOST's
 docstring)."
-  (with-gensyms (propspec)
-    `(let ((,propspec ,(props additional-properties)))
-       (deploy* ,connection
-		(make-instance 'host
-			       :attrs (nconc (propspec->hostattrs ,propspec)
-					     (slot-value ,host 'hostattrs))
-			       :props (append (slot-value ,host 'propspec)
-					      ,propspec))))))
+  (once-only (host)
+    (with-gensyms (propspec)
+      `(let ((,propspec ,(props additional-properties)))
+	 (deploy* ,connection
+		  (make-instance 'host
+				 :attrs (nconc (propspec->hostattrs ,propspec)
+					       (slot-value ,host 'hostattrs))
+				 :props (append (slot-value ,host 'propspec)
+						,propspec)))))))
 
 (defmacro deploy-these (connection host &body properties)
   "Establish a connection of type CONNECTION to HOST, and apply each of
