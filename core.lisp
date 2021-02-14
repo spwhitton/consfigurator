@@ -15,7 +15,7 @@ suitable for *connection*."))
 
 (defclass connection ()
   ((parent
-    :init-arg :parent
+    :initform *connection*
     :documentation
     "The value of *CONNECTION* at the time this connection was established.")))
 

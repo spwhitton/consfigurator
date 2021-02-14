@@ -5,7 +5,7 @@
 				   (hop (hostattr *host* :hostname)))
   (declare (ignore remaining))
   (run (shell-cmd "ssh" "-fN" hop))
-  (make-instance 'ssh-connection :parent *connection* :hostname hop))
+  (make-instance 'ssh-connection :hostname hop))
 
 (defclass ssh-connection (posix-connection)
   ((hostname
