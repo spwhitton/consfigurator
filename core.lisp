@@ -189,6 +189,8 @@ attributes of the host to which they're being applied.")
 
 ;;; standard way to write properties is to use one of these two macros
 
+;; TODO when forms is not (:apply etc.) but just code, we could just consider
+;; that all to be :apply, and leave :hostattrs, :check and :unapply blank?
 (defmacro defprop (name type args &body forms)
   (let ((slots (list :args args)))
     (when (stringp (car forms))
