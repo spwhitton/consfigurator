@@ -38,6 +38,8 @@
 	   #:defhostdeploy
 	   #:deploy
 	   #:deploy-these
+	   #:add-data-source
+	   #:register-data-source
 	   #:get-path-to-concatenated-system))
 
 (defpackage :consfigurator (:use #:cl))
@@ -53,6 +55,9 @@
 (defpackage :consfigurator.property.command
   (:use #:cl #:consfigurator)
   (:export #:shell-command))
+
+(defpackage :consfigurator.data.pgp
+  (:use #:cl #:consfigurator))
 
 (in-package :consfigurator)
 (dolist (package '(:consfigurator.core :consfigurator.util))

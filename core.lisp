@@ -539,6 +539,38 @@ This property is to the DEPLOY property what the DEPLOY-THESE function is to
 the DEPLOY function.")
 
 
+;;;; Prerequisite data
+
+(defvar *data-sources* nil "Known sources of prerequisite data.")
+
+(defun add-data-source (check provide)
+  (push (list check provide) *data-sources*))
+
+;; if this proves to be inadequate then an alternative would be to maintain a
+;; mapping of ASDF systems to data sources, and then APPLY-PROPERTIES could
+;; look up the data sources registered for the systems in (slot-value
+;; (slot-value host 'propspec) 'systems) and bind *data-sources* to point to
+;; those just how it binds *host* and *connection*.  registering a source
+;; means registering it in the mapping of systems to sources
+(defgeneric register-data-source (type &key)
+  (:documentation
+   "Initialise and register a source of prerequisite data in this Lisp process.
+Registered data sources are available to all deployments executed from the
+root Lisp, regardless of the consfig which defines the host to which
+properties are to be applied.  (This could only cause problems if you have
+different consfigs with prerequisite data which is identified by the same two
+strings, in which case you will need to wrap your deployments with registering
+and unregistering data sources.  Usually items of prerequisite data are
+identified using things like hostnames, so this is unlikely to be necessary.)
+
+Implementation of this function call ADD-DATA-SOURCE, providing two functions.
+
+Signals a condition MISSING-DATA-SOURCE when unable to access the data source
+(e.g. because can't decrypt it).  This condition is captured and ignored in
+all Lisp processes started up by Consfigurator, since prerequisite data
+sources are not expected to be available outside of the root Lisp."))
+
+
 ;;;; Lisp systems defining host configurations
 
 (defun get-path-to-concatenated-system (system)
