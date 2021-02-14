@@ -376,10 +376,7 @@ specification."
 			   (not (member (symbol-name first)
 					'("UNAPPLY")
 					:test #'string=)))
-		       ;; TODO this eval is not what we want because we want
-		       ;; the lexical environment in which the macro call
-		       ;; occurs, not the null lexical environment!
-		       `(cons ',first (mapcar #'eval ',rest))
+		       `(list ',first ,@rest)
 		       `(list ,@(mapcar #'make-eval-propspec form)))))))
     `(make-instance
       'propspec
