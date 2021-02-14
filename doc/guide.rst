@@ -110,7 +110,8 @@ data; this avoids uploading the same data over and over again.
 Properties declare that they need certain pieces of prerequisite data by
 adding static informational attributes, and a deployment of those properties
 will make an attempt to provide the data.  Properties then call either
-``get-data`` or ``upload-data`` to get access to the requested data.
+``get-data`` or the ``data-uploaded`` property to get access to the requested
+data.
 
 A ``:lisp`` connection gathers all the needed prerequisite data once at the
 beginning and copies it to an on-disk cache inside the home directory of the
