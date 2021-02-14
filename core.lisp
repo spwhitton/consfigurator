@@ -3,25 +3,15 @@
 ;;;; Connections
 
 ;; generic function operating on keywords which identify connection types
-(defgeneric connect-and-apply (type host &key)
+(defgeneric establish-connection (type remaining &key)
   (:documentation
-   "Within the context of the current connection, connect to HOST by
-establishing a new connection of type TYPE, and apply HOST's properties.
-
-Implementations of this function either instantiate a connection object and
-pass that to APPLY-PROPERTIES, or start up another Lisp process somewhere and
-have it call APPLY-PROPERTIES by means of a :local connection."))
-
-(defun apply-properties (connection host)
-  "In the context of CONNECTION, apply HOST's properties to HOST.
-
-This function is called by implementations of CONNECT-AND-APPLY."
-  ;; TODO if connection is subclass of posix-connection, check that all
-  ;; properties to be applied are :posix
-  (let ((*host* host)
-	(*connection* connection))
-    (eval-propspec (slot-value host 'propspec))
-    (connection-teardown connection)))
+   "Within the context of the current connection, connect to HOST by establishing
+a new connection of type TYPE.
+Either starts a Lisp process somewhere else, tells it to continue establishing
+REMAINING (by telling it to call DEPLOY* with arguments obtained by (locally)
+evaluating, on our side of the connection,
+(list (or REMAINING '(:local)) *host*)), and returns nil, or returns a object
+suitable for *connection*."))
 
 (defclass connection ()
   ((parent
@@ -348,6 +338,15 @@ PROPSPEC applied."
     (push v reversed)
     (push k reversed)))
 
+(defun propspec->type (propspec)
+  "Return :lisp if any types of the properties to be applied by PROPSPEC is
+:lisp, else return :posix."
+  (loop for form in (slot-value propspec 'applications)
+	for propapp = (compile-propapp form)
+	if (eq (propapptype propapp))
+	  return :lisp
+	finally return :posix))
+
 (defun props (forms &optional systems)
   "Where FORMS is the elements of an unevaluated property application
 specification, return code which will evaluate the expressions and produce the
@@ -522,10 +521,24 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 					     (slot-value ,host 'hostattrs))
 			       :props ,propspec)))))
 
-(defun deploy* (connection host)
-  (let ((type (ensure-car connection))
-	(args (and (consp connection) (cdr connection))))
-    (apply #'connect-and-apply type host args)))
+(defun deploy* (connections host)
+  (let ((*host* host))
+    (labels
+	((connect (connections)
+	   (destructuring-bind ((type . args) . remaining) connections
+	     (when-let ((*connection*
+			 (apply #'establish-connection type remaining args)))
+	       (if remaining
+		   (connect remaining)
+		   (apply-propspec (slot-value *host* 'propspec)))
+	       (connection-teardown *connection*))))
+	 (apply-propspec (propspec)
+	   (when (and (subtypep (class-of *connection*) 'posix-connection)
+		      (eq :lisp (propspec->type propspec)))
+	     (error "Cannot apply :lisp properties using :posix connection"))
+	   (eval-propspec propspec)))
+      (connect (loop for connection in (ensure-cons connections)
+		     collect (ensure-cons connection))))))
 
 (defprop deploy :posix (connection host &rest additional-properties)
   "Execute a Consfigurator deployment.
