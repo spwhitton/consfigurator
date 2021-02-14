@@ -1,3 +1,14 @@
+Property subroutines
+~~~~~~~~~~~~~~~~~~~~
+
+``:hostattrs`` subroutines
+==========================
+
+Return a list of static informational attributes to add to hosts to which this
+property has been applied or is to be applied.  Should not perform any I/O.
+Essentially just a conversion of the arguments to the property to
+informational attributes.
+
 ``:check`` subroutines
 ======================
 
@@ -29,3 +40,23 @@ command actually made a change to a particular file, for example.
 
 Errors in attempting to apply a property are indicated by signalling a
 ``failed-change`` condition.
+
+``:posix`` vs. ``:lisp`` properties
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``:posix`` properties should not make any assumptions about what localhost is
+-- they may be running in the root Lisp, but they might be running in a Lisp
+process running on an intermediary host.  They should perform I/O only by
+calling ``run``, ``readfile``, ``writefile``, requesting prerequisite data,
+and applying or unapplying other ``:posix`` properties.  Otherwise, they
+should be pure functions.
+
+In this respect, the code which establishes connections (i.e., implementations
+of the ``connect-and-apply`` generic function) is like a ``:posix`` property
+-- it should restrict its I/O to ``run``, ``readfile`` and ``writefile`` to
+permit the arbitrary nesting of connections.
+
+``:lisp`` properties, by contrast, may assume that they are running in a Lisp
+process on the host to which they are to be applied, so they can perform
+arbitrary I/O in that context.  They can also make use of ``run``,
+``readfile`` and ``writefile`` if desired.
