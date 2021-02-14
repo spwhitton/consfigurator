@@ -89,10 +89,10 @@ Prerequisite data
 -----------------
 
 Applying a property may require file contents which should be generated or
-extracted at the time of deployment on the machine executing the deployment: a
-tarball containing the latest version of the web service to be deployed; a
-secret extracted from an encrypted store; a git bundle from localhost which
-the target host cannot just clone to itself.
+extracted, by the root Lisp, at the time of deployment: a tarball containing
+the latest version of the web service to be deployed; a secret extracted from
+an encrypted store; a git bundle from localhost which the target host cannot
+just ``git clone`` to itself.
 
 A piece of prerequisite data is identified by two strings.  Typically the
 first of these specifies the context in which the data is relevant.  For an
@@ -104,17 +104,24 @@ human-readable string describing the purpose of the data.
 
 Prerequisite data is versioned.  To replace a secret key, for example, you
 change the data and bump the version.  If there is no version bump,
-Consfigurator will assume connections can re-use old data; this avoids
-uploading the same data over and over again.
+Consfigurator will assume connections can re-use old copies of prerequisite
+data; this avoids uploading the same data over and over again.
 
-Properties declare that they need certain pieces of prerequisite data, and a
-deployment of those properties will make an attempt to provide the data.
+Properties declare that they need certain pieces of prerequisite data by
+adding static informational attributes, and a deployment of those properties
+will make an attempt to provide the data.  Properties then call either
+``get-data`` or ``upload-data`` to get access to the requested data.
 
-A :lisp connection gathers all the needed prerequisite data once at the
+A ``:lisp`` connection gathers all the needed prerequisite data once at the
 beginning and copies it to an on-disk cache inside the home directory of the
-UID which will run the lisp process on the host which will run it.  A :posix
-connection only attempts to obtain prerequisite data when a property's check
-function indicates the property is not already applied.
+UID which will run the lisp process on the host which will run it.  A
+``:posix`` connection only attempts to obtain prerequisite data when a
+property's check function indicates the property is not already applied.
+
+In addition to secrets management, prerequisite data is Consfigurator's
+mechanism for the common need to upload files to controlled hosts.  The same
+mechanism is used internally to upload the Lisp code needed to start up remote
+Lisp processes for ``:lisp`` connections.
 
 Representing prerequisite data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
