@@ -11,7 +11,10 @@ Either starts a Lisp process somewhere else, tells it to continue establishing
 REMAINING (by telling it to call DEPLOY* with arguments obtained by (locally)
 evaluating, on our side of the connection,
 (list (or REMAINING '(:local)) *host*)), and returns nil, or returns a object
-suitable for *connection*."))
+suitable for *connection*.
+
+Any implementation which hands over to a remote Lisp process will need to
+upload any prerequisite data required by the deployment."))
 
 (defclass connection ()
   ((parent
