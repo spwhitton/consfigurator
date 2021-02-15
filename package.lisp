@@ -27,6 +27,9 @@
 	   #:connection-upload
 	   #:connection-teardown
 	   #:*host*
+	   #:*hostattrs*
+	   #:add-hostattr
+	   #:require-data
 	   #:establish-connection
 	   #:defprop
 	   #:defhost

@@ -147,8 +147,10 @@ attributes of the host to which they're being applied.")
   (get prop 'args))
 
 (defun propattrs (prop &rest args)
-  (when-let ((f (get prop 'hostattrs)))
-    (apply f args)))
+  (apply (get prop 'hostattrs (lambda (&rest args)
+				(declare (ignore args))
+				(values)))
+	 args))
 
 (defun propappattrs (propapp)
   (apply #'propattrs (car propapp) (cdr propapp)))
@@ -184,6 +186,9 @@ attributes of the host to which they're being applied.")
 
 ;; TODO when forms is not (:apply etc.) but just code, we could just consider
 ;; that all to be :apply, and leave :hostattrs, :check and :unapply blank?
+;; TODO :push-hostattrs to specify a function which does not look at
+;; *hostattrs* and just returns a list which gets added to the front (we will
+;; wrap (push ... *hostattrs*) around the return value, basically)
 (defmacro defprop (name type args &body forms)
   (let ((slots (list :args args)))
     (when (stringp (car forms))
@@ -333,17 +338,11 @@ an atomic property application."
 (defun propspec->hostattrs (propspec)
   "Return all the hostattrs which should be applied to the host which has
 PROPSPEC applied."
-  ;; we need to reverse the plist because hostattrs set by later entries in
-  ;; the propspec should override hostattrs set by earlier entries
-  (do* ((hostattrs (loop for form in (slot-value propspec 'applications)
-			 for propapp = (compile-propapp form)
-			 nconc (propappattrs propapp)))
-	reversed
-	(k (pop hostattrs) (pop hostattrs))
-	(v (pop hostattrs) (pop hostattrs)))
-       ((not k) reversed)
-    (push v reversed)
-    (push k reversed)))
+  (loop with *hostattrs*
+	for form in (slot-value propspec 'applications)
+	for propapp = (compile-propapp form)
+	do (propappattrs propapp)
+	finally (return *hostattrs*)))
 
 (defun propspec->type (propspec)
   "Return :lisp if any types of the properties to be applied by PROPSPEC is
@@ -388,6 +387,19 @@ specification."
       'propspec
       :systems ',systems
       :props (list ,@(mapcar #'make-eval-propspec forms)))))
+
+;;; property :hostattrs subroutines
+
+(defvar *hostattrs* nil
+  "Used by property :hostattrs subroutines, only, to access and modify the
+current static informational attributes, and to add new ones.")
+
+(defun add-hostattr (k v)
+  (push *hostattrs* v)
+  (push *hostattrs* k))
+
+(defun require-data (iden1 iden2)
+  (push (getf *hostattrs* :data) (cons iden1 iden2)))
 
 
 ;;;; Hosts

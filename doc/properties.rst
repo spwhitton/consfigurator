@@ -4,8 +4,13 @@ Property subroutines
 ``:hostattrs`` subroutines
 ==========================
 
-Return a list of static informational attributes to add to hosts to which this
-property has been applied or is to be applied.  Should not perform any I/O.
+When this subroutine is executed, consfigurator:*hostattrs* will be bound to
+the plist of static information attributes of the host to which the property
+has been applied or is to be applied.  This subroutine typically pushes new
+entries to this list, but it might also modify existing entries (e.g. by
+pushing new entries to a sublist).
+
+Should be a pure function aside from looking at consfigurator:*hostattrs*.
 Essentially just a conversion of the arguments to the property to
 informational attributes.
 
