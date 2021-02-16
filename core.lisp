@@ -581,7 +581,7 @@ the DEPLOY function.")
 (defvar *data-sources* nil "Known sources of prerequisite data.")
 
 (defun add-data-source (check provide)
-  (push (list check provide) *data-sources*))
+  (push (cons check provide) *data-sources*))
 
 ;; if this proves to be inadequate then an alternative would be to maintain a
 ;; mapping of ASDF systems to data sources, and then APPLY-PROPERTIES could
