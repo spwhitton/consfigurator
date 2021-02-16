@@ -56,8 +56,6 @@
 	   #:register-data-source
 	   #:get-path-to-concatenated-system))
 
-(defpackage :consfigurator (:use #:cl))
-
 (defpackage :consfigurator.connection.ssh
   (:use #:cl #:consfigurator))
 
@@ -73,6 +71,8 @@
 (defpackage :consfigurator.data.pgp
   (:use #:cl #:consfigurator))
 
+(unless (find-package :consfigurator)
+  (make-package :consfigurator :use '("cl")))
 (in-package :consfigurator)
 (dolist (package '(:consfigurator.core :consfigurator.util))
   (use-package package)
