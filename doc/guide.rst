@@ -128,15 +128,19 @@ Representing prerequisite data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A piece of prerequisite data is represented in your configuration by two
-functions.  The first will return either a string of the prerequisite data
-itself, or a path to a file containing the data.  The second returns the
+functions.  The second will return either a string of the prerequisite data
+itself, or a path to a file containing the data.  The first returns the
 latest version number of the data -- i.e., the version of the data that the
-first function would return if executed.
+second function would return if executed.
 
-Consfigurator will call the second function to find out if it needs to call
+Consfigurator will call the first function to find out if it needs to call
 the first rather than just using its cache.  The first function should return
 nil if it can't obtain the prerequisite data on this host, perhaps because it
-can't decrypt the store.
+can't decrypt the store.  A return value of t represents a request to
+Consfigurator to call the second function rather than relying on any cached
+values, bypassing the versioning system.
+
+Versions are compared using ``dpkg --compare-versions``.
 
 Security issues
 ~~~~~~~~~~~~~~~
