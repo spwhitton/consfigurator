@@ -337,8 +337,8 @@ an atomic property application."
   (mapc #'asdf:require-system (slot-value propspec 'systems))
   (loop for form in (slot-value propspec 'applications)
 	for propapp = (compile-propapp form)
-	do (unless (propappcheck propapp)
-	     (propappapply propapp))))
+	unless (propappcheck propapp)
+	  do (propappapply propapp)))
 
 (defun propspec->hostattrs (propspec)
   "Return all the hostattrs which should be applied to the host which has
@@ -356,7 +356,7 @@ PROPSPEC applied."
 	for propapp = (compile-propapp form)
 	if (eq (propapptype propapp))
 	  return :lisp
-	finally return :posix))
+	finally (return :posix)))
 
 (defun props (forms &optional systems)
   "Where FORMS is the elements of an unevaluated property application
