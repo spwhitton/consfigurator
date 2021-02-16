@@ -1,35 +1,5 @@
 (in-package :consfigurator.util)
 
-(defun shellcmd (&rest args)
-  "Return a single string representing the UNIX shell command whose arguments
-are each element of ARGS.  Escapes as necessary.  Use `:input' and `:output'
-for input and output redirection."
-  (format nil "~{~A~^ ~}" (loop for arg in args
-				if (eq arg :input)
-				collect "<"
-				else if (eq arg :output)
-				collect ">"
-				else collect (shell-escape arg))))
-
-;; Based on Emacs' `shell-quote-argument'.  A standard alternative is to wrap
-;; in single quotation marks and replace every intervening single quotation
-;; mark with '"'"', but this has the disadvantage of escaping arguments which
-;; don't need escaping, which may reduce readability when debugging.
-(defun shell-escape (arg)
-  "Return a string which represents, in POSIX shell syntax, a single argument
-with contents ARG.
-
-Escapes characters which would be interpreted by the shell."
-  (cl-ppcre:regex-replace-all "\\n"
-			      (cl-ppcre:regex-replace-all "[^-0-9a-zA-Z_./\n]"
-							  arg
-							  "\\\\\\&")
-			      "'\\n'"))
-
-(defmacro concat (&rest args)
-  "Abbreviation for concatenating strings."
-  `(concatenate 'string ,@args))
-
 (defun noop (&rest args)
   "Accept any arguments and do nothing."
   (declare (ignore args))
@@ -44,6 +14,22 @@ Escapes characters which would be interpreted by the shell."
 (defmacro symbol-named (name symbol)
   `(and (symbolp ,symbol)
 	(string= (symbol-name ',name) (symbol-name ,symbol))))
+
+(defun version< (x y)
+  (dpkg-version-compare x "<<" y))
+
+(defun version> (x y)
+  (dpkg-version-compare x ">>" y))
+
+(defun version<= (x y)
+  (dpkg-version-compare x "<=" y))
+
+(defun version>= (x y)
+  (dpkg-version-compare x ">=" y))
+
+(defun dpkg-version-compare (x r y)
+  (= 0 (nth-value 2 (uiop:run-program (list "dpkg" "--compare-versions" x r y)
+				      :ignore-error-status t))))
 
 
 ;;;; Encoding of strings to filenames

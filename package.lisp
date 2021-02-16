@@ -2,12 +2,24 @@
 
 (defpackage :consfigurator.util
   (:use #:cl)
-  (:export #:concat
+  (:shadowing-import-from #:uiop
+			  #:strcat
+			  #:string-prefix-p)
+  (:export #:strcat
+	   #:string-prefix-p
+
 	   #:lines
 	   #:unlines
 	   #:noop
-	   #:shellcmd
-	   #:symbol-named))
+	   #:symbol-named
+
+	   #:version<
+	   #:version>
+	   #:version<=
+	   #:version>=
+
+	   #:string->filename
+	   #:filename->string))
 
 (defpackage :consfigurator.core
   (:use #:cl
