@@ -354,7 +354,7 @@ PROPSPEC applied."
 :lisp, else return :posix."
   (loop for form in (slot-value propspec 'applications)
 	for propapp = (compile-propapp form)
-	if (eq (propapptype propapp))
+	if (eq (propapptype propapp) :lisp)
 	  return :lisp
 	finally (return :posix)))
 
