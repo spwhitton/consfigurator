@@ -92,7 +92,12 @@ attributes of the host to which they're being applied.")
 ;; used by properties and by implementations of CONNECT-AND-APPLY
 
 (defun run (&rest args)
-  (apply #'connection-run *connection* args))
+  (apply #'connection-run
+	 *connection*
+	 (if (cdr args) (uiop:escape-sh-command args) args)))
+
+(defun runlines (&rest args)
+  (unlines (apply #'run args)))
 
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))
