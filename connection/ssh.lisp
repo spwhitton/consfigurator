@@ -23,7 +23,14 @@
 			   &optional
 			     input
 			     environment)
-  (run-with-input input environment (sshcmd cmd)))
+  (when environment
+    (loop do (push (uiop:escape-sh-token
+		    (strcat
+		     (symbol-name (pop environment)) "=" (pop environment)))
+		   cmd)
+	  while environment
+	  finally do (push "env" cmd)))
+  (run-with-input input nil (sshcmd cmd)))
 
 (defmethod connection-readfile ((connection ssh-connection) path)
   (multiple-value-bind (output error-code)

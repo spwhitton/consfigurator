@@ -28,7 +28,7 @@ upload any prerequisite data required by the deployment."))
 
 ;;; generic functions to operate on subclasses of CONNECTION
 
-(defgeneric connection-run (connection cmd &optional input)
+(defgeneric connection-run (connection cmd &optional input environment)
   (:documentation "Subroutine to run shell commands on the host."))
 
 (defmethod connection-run :around ((connection connection) cmd &optional input)
@@ -89,15 +89,25 @@ attributes of the host to which they're being applied.")
 
 ;;;; Functions to access the slots of the current connection
 
-;; used by properties and by implementations of CONNECT-AND-APPLY
+;; used by properties and by implementations of ESTABLISH-CONNECTION
 
 (defun run (&rest args)
-  (apply #'connection-run
-	 *connection*
-	 (if (cdr args) (uiop:escape-sh-command args) args)))
+  (funcall #'connection-run
+	   *connection*
+	   (if (cdr args) (uiop:escape-sh-command args) args)))
+
+(defun run-with-input (input environment &rest args)
+    (funcall #'connection-run
+	   *connection*
+	   (if (cdr args) (uiop:escape-sh-command args) args)
+	   input
+	   environment))
 
 (defun runlines (&rest args)
   (unlines (apply #'run args)))
+
+(defun runlines-with-input (&rest args)
+  (unlines (apply #'run-with-input args)))
 
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))
