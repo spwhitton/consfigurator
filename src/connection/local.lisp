@@ -1,7 +1,7 @@
 (in-package :consfigurator.connection.local)
 
-(defmethod connect-and-apply ((type (eql :local)) host &key)
-  (apply-properties (make-instance 'local-connection) host))
+(defmethod establish-connection ((type (eql :local)) host &key)
+  (make-instance 'local-connection))
 
 (defclass local-connection (lisp-connection)
   ()

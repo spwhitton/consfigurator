@@ -51,15 +51,15 @@ Errors in attempting to apply a property are indicated by signalling a
 
 ``:posix`` properties should not make any assumptions about what localhost is
 -- they may be running in the root Lisp, but they might be running in a Lisp
-process running on an intermediary host.  They should perform I/O only by
-calling ``run``, ``readfile``, ``writefile``, requesting prerequisite data,
-and applying or unapplying other ``:posix`` properties.  Otherwise, they
-should be pure functions.
+process running on an intermediary host, or even on the host to be configured.
+They should perform I/O only by calling ``run``, ``readfile``, ``writefile``,
+requesting prerequisite data, and applying or unapplying other ``:posix``
+properties.  Otherwise, they should be pure functions.
 
 In this respect, the code which establishes connections (i.e., implementations
-of the ``connect-and-apply`` generic function) is like a ``:posix`` property
--- it should restrict its I/O to ``run``, ``readfile`` and ``writefile`` to
-permit the arbitrary nesting of connections.
+of the ``establish-connection`` generic function) is like a ``:posix``
+property -- it should restrict its I/O to ``run``, ``readfile`` and
+``writefile`` to permit the arbitrary nesting of connections.
 
 ``:lisp`` properties, by contrast, may assume that they are running in a Lisp
 process on the host to which they are to be applied, so they can perform
