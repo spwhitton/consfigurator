@@ -31,7 +31,12 @@ upload any prerequisite data required by the deployment."))
 (defgeneric connection-run (connection cmd &optional input environment)
   (:documentation "Subroutine to run shell commands on the host."))
 
-(defmethod connection-run :around ((connection connection) cmd &optional input)
+(defmethod connection-run :around ((connection connection)
+				   cmd
+				   &optional
+				     input
+				     environment)
+  (declare (ignore input environment))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
@@ -68,9 +73,8 @@ upload any prerequisite data required by the deployment."))
     (call-next-method)))
 
 ;; many connection types don't need anything to be done to disconnect
-(defmethod connection-teardown (&rest args)
-  (declare (ignore args))
-  (values))
+(defmethod connection-teardown ((connection connection))
+   (values))
 
 ;; global value gets set in connection/local.lisp, but the symbol is not
 ;; exported as it should only get bound by APPLY-PROPERTIES

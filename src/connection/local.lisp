@@ -11,7 +11,8 @@ root Lisp is running on, as the root Lisp's uid."))
 (defmethod connection-run ((connection local-connection)
 			   shell-cmd
 			   &optional
-			     input)
+			     input
+			     environment)
   ;; assumes a POSIX shell (otherwise we could wrap in 'sh -c')
   (multiple-value-bind (output _ exit-code)
       (uiop:run-program shell-cmd
