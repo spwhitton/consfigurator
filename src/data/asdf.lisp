@@ -22,4 +22,4 @@ return the filename."
 					   :disable-cache
 					   :ignore-inherited-configuration))
     (asdf:operate op co)
-    (list :file (asdf:output-file op co))))
+    (list :file (asdf:output-file op co) :type "text/plain")))
