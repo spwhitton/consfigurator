@@ -562,6 +562,8 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 			       :props ,propspec)))))
 
 (defun deploy* (connections host)
+  ;; TODO make a copy of HOST to put in *HOST* so that we can freely modify it
+  ;; (as :debian-sbcl connection already does)
   (let ((*host* host))
     (labels
 	((connect (connections)
