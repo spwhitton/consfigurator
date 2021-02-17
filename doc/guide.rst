@@ -124,6 +124,20 @@ mechanism for the common need to upload files to controlled hosts.  The same
 mechanism is used internally to upload the Lisp code needed to start up remote
 Lisp processes for ``:lisp`` connections.
 
+Reserved names for prerequisite data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These are exclusive semantics for certain possible pairs of strings
+identifying prerequisite data -- to avoid confusion and potential clashes, do
+not use prerequisite data identified by strings matching these conditions for
+other purposes.
+
+- ``(HOSTNAME . PATH)`` means the data that should be uploaded to PATH on
+  HOSTNAME (and nowhere else)
+
+- ``("lisp-system" . SYSTEM)`` means the data is Lisp code which, when loaded,
+  defines the packages and symbols contained in the ASDF system SYSTEM.
+
 Representing prerequisite data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
