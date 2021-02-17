@@ -3,7 +3,7 @@
   :depends-on (#:cl-ppcre
 	       #:alexandria
 	       #:cl-interpol)
-  :components ((:file "package")
-	       (:file "util")
-	       (:file "core")
-	       (:file "connection/ssh")))
+  :components ((:file "src/package")
+	       (:file "src/util")
+	       (:file "src/core")
+	       (:file "src/connection/ssh")))
