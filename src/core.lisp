@@ -303,7 +303,7 @@ an atomic property application."
       ((symbol-named unapply (car propapp))
        (destructuring-bind (psym . args) (compile-propapp (cadr propapp))
 	 (setprop sym (proptype psym)
-		  :desc (concat "Unapply: " (propdesc psym))
+		  :desc (strcat "Unapply: " (propdesc psym))
 		  :check (complement (get psym 'check))
 		  :apply (get psym 'unapply)
 		  :unapply (get psym 'apply))
@@ -621,7 +621,7 @@ Signals a condition MISSING-DATA-SOURCE when unable to access the data source
 all Lisp processes started up by Consfigurator, since prerequisite data
 sources are not expected to be available outside of the root Lisp."))
 
-(defprop data-uploaded (iden1 iden2 &optional destination)
+(defprop data-uploaded :posix (iden1 iden2 &optional destination)
     ;; calls get-data
     )
 
@@ -641,9 +641,10 @@ sources are not expected to be available outside of the root Lisp."))
 
 (defun query-data-sources (iden1 iden2)
   (car (sort (loop for (ver . get) in *data-sources*
-		   when (funcall ver iden1 iden2)
-		     collect (cons it (lambda ()
-					(funcall get iden1 iden2))))
+		   for version = (funcall ver iden1 iden2)
+		   when version collect (cons version
+					      (lambda ()
+						(funcall get iden1 iden2))))
 	     (compose #'version> #'car))))
 
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
@@ -729,7 +730,7 @@ sources are not expected to be available outside of the root Lisp."))
 			   "/*"))))
 
 (defun get-local-data-cache-dir ()
-  (uiop:ensure-pathname-directory
+  (uiop:ensure-directory-pathname
    (strcat (or (uiop:getenv "XDG_CACHE_HOME")
 	       (strcat (uiop:getenv "HOME") "/.cache"))
 	   "/consfigurator/data")))
@@ -746,7 +747,7 @@ process, where each entry is of the form
 						(list dir subdir file))))))
 
 (defun get-remote-data-cache-dir ()
-  (uiop:ensure-pathname-directory
+  (uiop:ensure-directory-pathname
    (car
     (runlines "echo" "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/"))))
 

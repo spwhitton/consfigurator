@@ -10,7 +10,8 @@
 (Defun get-path-to-concatenated-system (iden1 system)
   "Try to concatenate all the source code for SYSTEM, store it somewhere and
 return the filename."
-  (let ((cache-dir (uiop:ensure-pathname-directory
+  (declare (ignore iden1))
+  (let ((cache-dir (uiop:ensure-directory-pathname
 		    (strcat (or (uiop:getenv "XDG_CACHE_HOME")
 				(strcat (uiop:getenv "HOME") "/.cache"))
 			    "/consfigurator/systems")))
