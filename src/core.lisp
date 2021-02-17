@@ -696,7 +696,7 @@ sources are not expected to be available outside of the root Lisp."))
 			 (local-data-pathname iden1
 					      iden2
 					      highest-local-cached-version)))
-	else if (not highest-remote-cached-version)
+	else unless highest-remote-cached-version
 	       do (error "Could not provide prerequisite data ~S | ~S"
 			 iden1 iden2)))
 
