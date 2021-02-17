@@ -76,15 +76,15 @@
   (:export #:file-has-content
 	   #:file-contains-lines))
 
-(defpackage :consfigurator.property.command
-  (:use #:cl #:consfigurator)
-  (:export #:shell-command))
-
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))
 
 (defpackage :consfigurator.data.pgp
   (:use #:cl #:consfigurator))
+
+(defpackage :consfigurator.property.command
+  (:use #:cl #:consfigurator)
+  (:export #:shell-command))
 
 (in-package :consfigurator)
 (dolist (package '(:consfigurator.core :consfigurator.util))
