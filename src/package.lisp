@@ -4,9 +4,11 @@
   (:use #:cl)
   (:shadowing-import-from #:uiop
 			  #:strcat
-			  #:string-prefix-p)
+			  #:string-prefix-p
+			  #:split-string)
   (:export #:strcat
 	   #:string-prefix-p
+	   #:split-string
 
 	   #:lines
 	   #:unlines
