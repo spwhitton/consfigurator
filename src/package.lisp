@@ -71,6 +71,9 @@
 (defpackage :consfigurator.connection.ssh
   (:use #:cl #:consfigurator))
 
+(defpackage :consfigurator.connection.local
+  (:use #:cl #:consfigurator))
+
 (defpackage :consfigurator.connection.debian-sbcl
   (:use #:cl #:consfigurator))
 
