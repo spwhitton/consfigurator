@@ -227,8 +227,8 @@ attributes of the host to which they're being applied.")
 		     `(lambda ,args ,@slot))))
     `(setprop ',name ,type ,@slots)))
 
-(defmacro defproplist (name args &body propspec)
-  "Define a property which applies a property application specification.")
+;; (defmacro defproplist (name args &body propspec)
+;;   "Define a property which applies a property application specification.")
 
 
 ;;;; Property application specifications
