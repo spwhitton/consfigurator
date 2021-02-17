@@ -230,6 +230,19 @@ attributes of the host to which they're being applied.")
 ;; (defmacro defproplist (name args &body propspec)
 ;;   "Define a property which applies a property application specification.")
 
+;;; property :hostattrs subroutines
+
+(defvar *hostattrs* nil
+  "Used by property :hostattrs subroutines, only, to access and modify the
+current static informational attributes, and to add new ones.")
+
+(defun add-hostattr (k v)
+  (push *hostattrs* v)
+  (push *hostattrs* k))
+
+(defun require-data (iden1 iden2)
+  (push (cons iden1 iden2) (getf *hostattrs* :data)))
+
 
 ;;;; Property application specifications
 
@@ -408,19 +421,6 @@ specification."
       'propspec
       :systems ',systems
       :props (list ,@(mapcar #'make-eval-propspec forms)))))
-
-;;; property :hostattrs subroutines
-
-(defvar *hostattrs* nil
-  "Used by property :hostattrs subroutines, only, to access and modify the
-current static informational attributes, and to add new ones.")
-
-(defun add-hostattr (k v)
-  (push *hostattrs* v)
-  (push *hostattrs* k))
-
-(defun require-data (iden1 iden2)
-  (push (getf *hostattrs* :data) (cons iden1 iden2)))
 
 
 ;;;; Hosts
