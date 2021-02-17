@@ -363,7 +363,9 @@ an atomic property application."
 
 (defun eval-propspec (propspec)
   "Apply properties as specified by PROPSPEC."
-  (mapc #'asdf:require-system (slot-value propspec 'systems))
+  (loop for system in (slot-value propspec 'systems)
+	unless (asdf:component-loaded-p system)
+	  do (asdf:load-system system))
   (loop for form in (slot-value propspec 'applications)
 	for propapp = (compile-propapp form)
 	unless (propappcheck propapp)
