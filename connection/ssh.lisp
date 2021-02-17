@@ -29,7 +29,7 @@
 		     (symbol-name (pop environment)) "=" (pop environment)))
 		   cmd)
 	  while environment
-	  finally do (push "env" cmd)))
+	  finally (push "env" cmd)))
   (run-with-input input nil (sshcmd cmd)))
 
 (defmethod connection-readfile ((connection ssh-connection) path)
