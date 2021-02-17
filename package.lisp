@@ -57,7 +57,10 @@
 	   #:deploy-these
 	   #:add-data-source
 	   #:register-data-source
-	   #:get-path-to-concatenated-system))
+	   #:data-uploaded
+	   #:host-data-uploaded
+	   #:get-data
+	   #:upload-all-prerequisite-data))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package :consfigurator)
@@ -74,6 +77,9 @@
 (defpackage :consfigurator.property.command
   (:use #:cl #:consfigurator)
   (:export #:shell-command))
+
+(defpackage :consfigurator.data.asdf
+  (:use #:cl #:consfigurator))
 
 (defpackage :consfigurator.data.pgp
   (:use #:cl #:consfigurator))

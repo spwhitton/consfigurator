@@ -617,32 +617,141 @@ Signals a condition MISSING-DATA-SOURCE when unable to access the data source
 all Lisp processes started up by Consfigurator, since prerequisite data
 sources are not expected to be available outside of the root Lisp."))
 
-
-;;;; Lisp systems defining host configurations
+(defprop data-uploaded (iden1 iden2 &optional destination)
+    ;; calls get-data
+    )
 
-(defun get-path-to-concatenated-system (system)
-  "Try to concatenate all the source code for SYSTEM, store in the cache and
-return the filename.  If asdf doesn't know about SYSTEM, see if we have a
-concatenation of all the source code in the cache -- this will typically be
-the case when the current Lisp process was launched by a :lisp connection
-initiated on another host."
-  (let* ((cache-dir (concat (or (uiop:getenv "XDG_CACHE_HOME")
-				(concat (uiop:getenv "HOME") "/.cache"))
-			    "/consfigurator/systems"))
-	 (cache-file (concat cache-dir
-			     "/"
-			     (string->filename
-			      (string-downcase (symbol-name system)))
-			     ".lisp"))
-	 (op 'asdf:monolithic-concatenate-source-op)
-	 (co (asdf:find-component system nil)))
-    (asdf:initialize-output-translations
-     `(:output-translations
-       (t ,(uiop:parse-unix-namestring cache-dir :type :directory))
-       :disable-cache
-       :ignore-inherited-configuration))
-    (when (asdf:find-system system nil)
-      (asdf:operate op co)
-      (rename-file (asdf:output-file op co) cache-file))
-    (or (probe-file cache-file)
-	(error "Could not find system to concatenate"))))
+(defprop host-data-uploaded :posix (destination)
+  (:apply (propapply 'data-uploaded
+		     (hostattr *host* :hostname)
+		     destination
+		     destination)))
+
+(defun get-data (iden1 iden2)
+  (if-let ((source-thunk (cdr (query-data-sources iden1 iden2))))
+    (funcall source-thunk)
+    ;; now look in local cache -- note that this won't exist in the root Lisp,
+    ;; but only if we're a Lisp started up by a connection
+
+    ))
+
+(defun query-data-sources (iden1 iden2)
+  (car (sort (loop for (ver . get) in *data-sources*
+		   when (funcall ver iden1 iden2)
+		     collect (cons it (lambda ()
+					(funcall get iden1 iden2))))
+	     (compose #'version> #'car))))
+
+;; called by implementations of ESTABLISH-CONNECTION which start up remote
+;; Lisp processes
+(defun upload-all-prerequisite-data (host)
+  (loop with *data-sources*
+	initially (register-data-source :asdf)
+
+	with sorted-local-cache  = (sort (get-local-cached-prerequisite-data)
+					 (compose #'version> #'third))
+	with sorted-remote-cache = (sort (get-remote-cached-prerequisite-data)
+					 (compose #'version> #'third))
+
+	for (iden1 . iden2) in (getf (slot-value host :hostattrs) :data)
+	for highest-local-cached-version
+	  = (third (car (remove-if-not (lambda (c)
+					 (and (string= (first c) iden1)
+					      (string= (second c) iden2)))
+				       sorted-local-cache)))
+	for highest-remote-cached-version
+	  = (third (car (remove-if-not (lambda (c)
+					 (and (string= (first c) iden1)
+					      (string= (second c) iden2)))
+				       sorted-remote-cache)))
+	for (highest-source-version . highest-source)
+	  = (query-data-sources iden1 iden2)
+
+	if (and highest-source-version
+		(or (not highest-remote-cached-version)
+		    (version< highest-remote-cached-version
+			      highest-source-version)))
+	  do (connection-clear-data-cache iden1 iden2)
+	     (connection-upload-data iden1
+				     iden2
+				     highest-source-version
+				     (funcall highest-source))
+	else if (and highest-local-cached-version
+		     (or (not highest-remote-cached-version)
+			 (version< highest-remote-cached-version
+				   highest-local-cached-version)))
+	       do (connection-clear-data-cache iden1 iden2)
+		  (connection-upload-data
+		   iden1
+		   iden2
+		   highest-local-cached-version
+		   (list :file
+			 (local-data-pathname iden1
+					      iden2
+					      highest-local-cached-version)))
+	else if (not highest-remote-cached-version)
+	       do (error "Could not provide prerequisite data ~S | ~S"
+			 iden1 iden2)))
+
+(defun local-data-pathname (&rest segments)
+  (reduce #'merge-pathnames (nreverse (mapcar #'string->filename segments))
+	  :from-end t :initial-value (get-local-data-cache-dir)))
+
+(defun remote-data-pathname (&rest segments)
+  (reduce #'merge-pathnames (nreverse (mapcar #'string->filename segments))
+	  :from-end t :initial-value (get-remote-data-cache-dir)))
+
+(defun connection-upload-data (iden1 iden2 version data)
+  (let* ((dest (remote-data-pathname iden1 iden2 version)))
+    (run "mkdir" "-p" (uiop:unix-namestring
+		       (uiop:pathname-directory-pathname dest)))
+    (cond
+      ((getf data :file)
+       ;; TODO if (string-prefix-p "text/" (getf data :mime)) then gzip,
+       ;; upload and gunzip
+       (connection-upload *connection*
+			  (uiop:unix-namestring (getf data :file))
+			  dest))
+      ((getf data :data)
+       (connection-writefile *connection* dest (getf data :data)))
+      (t
+       (error "Prerequisite data plist lacks both :file and :data entries")))))
+
+(defun connection-clear-data-cache (iden1 iden2)
+  (let ((dir (uiop:ensure-directory-pathname
+	      (remote-data-pathname iden1 iden2))))
+    (run "rm" "-f" (strcat (uiop:unix-namestring
+			    (uiop:pathname-directory-pathname dir))
+			   "/*"))))
+
+(defun get-local-data-cache-dir ()
+  (uiop:ensure-pathname-directory
+   (strcat (or (uiop:getenv "XDG_CACHE_HOME")
+	       (strcat (uiop:getenv "HOME") "/.cache"))
+	   "/consfigurator/data")))
+
+(defun get-local-cached-prerequisite-data ()
+  "Return a list of items of prerequisite data in the cache local to this Lisp
+process, where each entry is of the form
+
+    '(iden1 iden2 version)."
+  (loop for dir in (uiop:subdirectories (get-local-data-cache-dir))
+	nconc (loop for subdir in (uiop:subdirectories dir)
+		    nconc (loop for file in (uiop:directory-files subdir)
+				collect (mapcar #'filename->string
+						(list dir subdir file))))))
+
+(defun get-remote-data-cache-dir ()
+  (uiop:ensure-pathname-directory
+   (car
+    (runlines "echo" "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/"))))
+
+(defun get-remote-cached-prerequisite-data ()
+  "Return a list of items of prerequisite data in the cache on the remote side
+of the current connection, where each entry is of the form
+
+    '(iden1 iden2 version)."
+  (mapcar (lambda (line)
+	    (mapcar #'filename->string (split-string line :separator "/")))
+	  (runlines "find" (get-remote-data-cache-dir)
+		    "-type" "f" "-printf" "%P\\n")))
