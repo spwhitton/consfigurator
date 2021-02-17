@@ -32,6 +32,9 @@
 	   #:posix-connection
 	   #:connection-run
 	   #:run
+	   #:run-with-input
+	   #:runlines
+	   #:runlines-with-input
 	   #:connection-readfile
 	   #:readfile
 	   #:connection-writefile
