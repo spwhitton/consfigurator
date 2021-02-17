@@ -135,6 +135,8 @@ attributes of the host to which they're being applied.")
   ;; use non-keyword keys to avoid clashes with other packages
   (when type
     (setf (get sym 'type) type))
+  (when args
+    (setf (get sym 'args) args))
   (when desc
     (setf (get sym 'desc) desc))
   (when hostattrs
@@ -209,7 +211,7 @@ attributes of the host to which they're being applied.")
 ;; *hostattrs* and just returns a list which gets added to the front (we will
 ;; wrap (push ... *hostattrs*) around the return value, basically)
 (defmacro defprop (name type args &body forms)
-  (let ((slots (list :args args)))
+  (let ((slots (list :args (list 'quote args))))
     (when (stringp (car forms))
       (setf (getf slots :desc) (pop forms)))
     (loop for form in forms
