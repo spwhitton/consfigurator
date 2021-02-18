@@ -202,12 +202,10 @@ Returns command's stdout, stderr and exit code."
 
 ;; Properties are not stored as CLOS objects (or structs) in value cells
 ;; because they are immutable -- see "Attempting to work with anonymous
-;; properties or connection types" in the docs.  An alternative would be to
-;; use the function cell to store a function which takes
-;; 'apply/'hostattrs/etc. as its first argument and dispatches, but those
-;; could be flet, which is forbidden.  A determined user could of course edit
-;; the symbol plist entries, but we want to make it difficult for someone who
-;; hasn't read the docs to accidentally violate immutability
+;; properties or connection types" in the docs.  A determined user could of
+;; course edit the symbol plist entries and/or function cell, but we want to
+;; make it difficult for someone who hasn't read that part of the docs to
+;; accidentally violate immutability
 
 (defun setprop (sym type &key args desc hostattrs check apply unapply)
   ;; use non-keyword keys to avoid clashes with other packages
@@ -222,7 +220,13 @@ Returns command's stdout, stderr and exit code."
   (when check
     (setf (get sym 'check) check))
   (when apply
-    (setf (get sym 'apply) apply))
+    (setf (get sym 'apply) apply)
+    (setf (symbol-function sym)
+	  (if check
+	      (lambda (&rest args)
+		(unless (apply check args)
+		  (apply apply args)))
+	      apply)))
   (when unapply
     (setf (get sym 'unapply) unapply))
   sym)
@@ -263,14 +267,8 @@ Returns command's stdout, stderr and exit code."
 (defun propappcheck (propapp)
   (apply #'propcheck (car propapp) (cdr propapp)))
 
-(defun propapply (prop &rest args)
-  (apply (get prop 'apply (lambda (&rest args)
-			    (declare (ignore args))
-			    (values)))
-	 args))
-
 (defun propappapply (propapp)
-  (apply #'propapply (car propapp) (cdr propapp)))
+  (apply (symbol-function (car propapp)) (cdr propapp)))
 
 (defun propunapply (prop &rest args)
   (apply (get prop 'unapply (lambda (&rest args)
@@ -424,16 +422,14 @@ an atomic property application."
 		    :check (get psym 'check)
 		    :apply (lambda (&rest args)
 			     (unless (eq :nochange
-					 (apply #'propapply psym args))
+					 (apply psym args))
 			       (loop for propapp in propapps
-				     do (unless (propappcheck propapp)
-					  (propappapply propapp)))))
+				     do (propappapply propapp))))
 		    :unapply (lambda (&rest args)
 			       (unless (eq :nochange
 					   (apply #'propunapply psym args))
 				 (loop for propapp in propapps
-				       do (unless (propappcheck propapp)
-					    (propappapply propapp))))))
+				       do (propappapply propapp)))))
 	   (cons sym args))))
       ;; atomic property application
       (t
@@ -446,8 +442,7 @@ an atomic property application."
 	  do (asdf:load-system system))
   (loop for form in (slot-value propspec 'applications)
 	for propapp = (compile-propapp form)
-	unless (propappcheck propapp)
-	  do (propappapply propapp)))
+	do (propappapply propapp)))
 
 (defun propspec->hostattrs (propspec)
   "Return all the hostattrs which should be applied to the host which has
@@ -710,10 +705,8 @@ sources are not expected to be available outside of the root Lisp."))
     )
 
 (defprop host-data-uploaded :posix (destination)
-  (:apply (propapply 'data-uploaded
-		     (hostattr *host* :hostname)
-		     destination
-		     destination)))
+  (:hostattrs (require-data (hostattr *host* :hostname) destination))
+  (:apply (data-uploaded (hostattr *host* :hostname) destination destination)))
 
 (defun get-data (iden1 iden2)
   (if-let ((source-thunk (cdr (query-data-sources iden1 iden2))))

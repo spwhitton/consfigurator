@@ -24,7 +24,7 @@ deployments can be built and executed programmatically.  However, properties
 and connection types should be defined in ``.lisp`` files, loaded into Lisp,
 and then *not* created or modified, except by reloading.  In particular, do
 not try to define properties and connection types programmatically, or try to
-dynamically rebind them.
+dynamically rebind or flet-bind them.
 
 The reason for this restriction is that some connection types need to invoke
 fresh Lisp processes on remote hosts with (local equivalents to) the function
