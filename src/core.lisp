@@ -153,9 +153,7 @@ Returns command's stdout, stderr and exit code."
 	       (t (push arg cmd)))
 	  while args
 	  finally (nreversef cmd))
-    (setq cmd (if (cdr cmd)
-		  (uiop:escape-sh-command cmd)
-		  (car cmd)))
+    (setq cmd (if (cdr cmd) (uiop:escape-sh-command cmd) (car cmd)))
     (loop while env
 	  collect (format nil "~A=~A" (symbol-name (pop env)) (pop env))
 	    into accum
