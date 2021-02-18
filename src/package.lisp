@@ -77,7 +77,8 @@
   (:use #:cl #:consfigurator))
 
 (defpackage :consfigurator.connection.local
-  (:use #:cl #:consfigurator))
+  (:use #:cl #:consfigurator)
+  (:export #:local-connection))
 
 (defpackage :consfigurator.connection.debian-sbcl
   (:use #:cl #:consfigurator))

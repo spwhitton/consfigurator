@@ -77,7 +77,9 @@ not signal any error condition just because EXIT is non-zero."))
     (call-next-method)))
 
 (defgeneric connection-upload (connection from to)
-  (:documentation "Subroutine to upload files to the host."))
+  (:documentation "Subroutine to upload files to the host.
+
+Only used for uploading prerequisite data."))
 
 (defmethod connection-upload :around ((connection connection) from to)
   (declare (ignore from to))
@@ -787,6 +789,9 @@ sources are not expected to be available outside of the root Lisp."))
   (apply #'data-pathname (get-remote-data-cache-dir) args))
 
 (defun connection-upload-data (iden1 iden2 version data)
+  (when (subtypep (class-of *connection*)
+		  'consfigurator.connection.local:local-connection)
+    (error "Attempt to upload data to the root Lisp; this is not allowed"))
   (let* ((dest (remote-data-pathname iden1 iden2 version)))
     (run "mkdir" "-p" (uiop:unix-namestring
 		       (uiop:pathname-directory-pathname dest)))
