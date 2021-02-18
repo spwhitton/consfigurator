@@ -37,13 +37,15 @@ work!
 Quick start / introduction
 ==========================
 
-1. Install Steel Bank Common Lisp and Consfigurator.  One way to do the latter
-   is to clone this git repository into ``~/.local/share/common-lisp/source``.
+1. ``apt-get install sbcl cl-ppcre cl-interpol cl-alexandria``.
 
-2. Create a new directory ``consfig`` somewhere where ASDF will pick it up,
+2. Install Consfigurator.  One way to do that is to clone this git repository
+   into ``~/.local/share/common-lisp/source``.
+
+3. Create a new directory ``consfig`` somewhere where ASDF will pick it up,
    such as ``~/common-lisp/consfig``.
 
-3. Define a Lisp system which represents your configuration.
+4. Define a Lisp system which represents your configuration.
 
     ~/common-lisp/consfig/com.example.consfig.asd::
 
@@ -59,9 +61,9 @@ Quick start / introduction
 
         (defpackage :com.example.consfig
           (:use #:cl #:consfigurator)
-          (:local-nicknames (#:file #:consfigurator.property.file)))
+          (:local-nicknames (#:etc-default #:consfigurator.property.etc-default)))
 
-4. Define some hosts and connections.
+5. Define some hosts and deployments.
 
     ~/common-lisp/consfig/consfig.lisp::
 
@@ -71,14 +73,14 @@ Quick start / introduction
 
         (defhost athena.example.com
           "Web and file server."
-          (file:contains-lines "/etc/default/locale" '("LANG=en_GB.UTF-8")))
+          (etc-default:set "locale" "LANG" "en_GB.UTF-8"))
 
         (defhostdeploy :ssh athena.example.com)
 
-5. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
+6. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
    prompt.  Evaluate ``(asdf:require-system "com.example.consfig")``.
 
-6. Now you should be able to use configure athena by evaulating
+7. Now you should be able to use configure athena by evaluating
    ``(com.example.consfig:athena.example.com)``.  You can use the
    ``CONSFIGURATOR:DEPLOY`` function to try out configuring athena using a
    different connection type than defined here.
@@ -91,18 +93,17 @@ Portability and stability
 - No attempt is made to support Common Lisp implementations other than SBCL,
   though portability patches are welcome.
 
-- No attempt is made to support running on Windows -- we often eschew Common
-  Lisp pathnames in favour of simple strings with forward slashes as directory
-  separators.
+- Little attempt is made by the author to support systems other than Debian
+  GNU/Linux, but again, portability patches are welcome.
 
 Credits
 =======
 
 Many of the good ideas here come straight from Joey Hess's Propellor_.  I'm
 working on Consfigurator because I think Propellor is great, but wanted to add
-Consfigurator's ``:posix`` connections and arbitrary connection nesting --
-Propellor supports something equivalent to a single, unnested ``:lisp``
-connection -- and I wanted to implement that in Lisp.  Also, after five years
+Consfigurator's POSIX-type connections and arbitrary connection nesting, and I
+wanted to implement that in Lisp (Propellor only supports something equivalent
+to a single, unnested Lisp-type connection).  Additionally, after five years
 of using and extending Propellor, I've come to disagree with Joey about
 whether Haskell's type system helps or hinders using and extending Propellor.
 
