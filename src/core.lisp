@@ -45,15 +45,17 @@ upload any prerequisite data required by the deployment."))
 
 ;;; generic functions to operate on subclasses of CONNECTION
 
-(defgeneric connection-run (connection cmd &optional input environment)
-  (:documentation "Subroutine to run shell commands on the host."))
+(defgeneric connection-run (connection cmd &optional input)
+  (:documentation "Subroutine to run shell commands on the host.
+
+Returns (values out exit) where out is merged stdout and stderr.  Should not
+signal any error conditions just because the exit code is not zero."))
 
 (defmethod connection-run :around ((connection connection)
 				   cmd
 				   &optional
-				     input
-				     environment)
-  (declare (ignore input environment))
+				     input)
+  (declare (ignore input))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
@@ -110,25 +112,86 @@ attributes of the host to which they're being applied.")
 
 ;;;; Functions to access the slots of the current connection
 
-;; used by properties and by implementations of ESTABLISH-CONNECTION
+;; Used by properties and by implementations of ESTABLISH-CONNECTION.  This is
+;; the only code that ever call CONNECTION-RUN, CONNECTION-READFILE and
+;; CONNECTION-WRITEFILE directly (except that it might make sense for
+;; implementations of CONNECTION-READFILE and CONNECTION-WRITEFILE to call
+;; their corresponding implementations of CONNECTION-RUN).
+
+(define-condition connection-run-failed (error)
+  ((stdout :initarg stdout :reader stdout)
+   (stderr :initarg stderr :reader stderr)
+   (exit-code :initarg exit-code :reader exit-code)))
 
 (defun run (&rest args)
-  (funcall #'connection-run
-	   *connection*
-	   (if (cdr args) (uiop:escape-sh-command args) args)))
+  "Synchronous execution of shell commands using the current connection.
+ARGS can contain keyword-value pairs (and singular keywords) to specify
+aspects of this function's behaviour, and remaining elements of ARGS are the
+shell command and its parameters, or, as a special case, a single string
+specifying the shell command, with any necessary escaping already performed.
+It is recommended that all keywords and corresponding values come first,
+followed by argument(s) specifying the shell command to execute.
 
-(defun run-with-input (input environment &rest args)
-    (funcall #'connection-run
-	   *connection*
-	   (if (cdr args) (uiop:escape-sh-command args) args)
-	   input
-	   environment))
+Keyword arguments accepted:
+
+  - :for-exit -- don't signal an error condition if the command does not exit
+     nonzero, because it is being called partly or only for its exit code
+
+  - :input INPUT -- pass the contents of the string INPUT on stdin
+
+  - :env ENVIRONMENT -- where ENVIRONMENT is a plist specifying environment
+    variable names and values, use env(1) to set these variables when running
+    the command.
+
+Returns command's stdout, stderr and exit code."
+  (let (cmd input for-exit env (stderr (mktemp)))
+    (loop for arg = (pop args)
+	  do (case arg
+	       (:for-exit (setq for-exit t))
+	       (:input (setq input (pop args)))
+	       (:env (setq env (pop args)))
+	       (t (push arg cmd)))
+	  while args
+	  finally (nreversef cmd))
+    (setq cmd (if (cdr cmd)
+		  (uiop:escape-sh-command cmd)
+		  (car cmd)))
+    (loop while env
+	  collect (format nil "~A=~A" (symbol-name (pop env)) (pop env))
+	    into accum
+	  finally
+	     (when accum
+	       (setq cmd (format nil "env ~A ~A"
+				 (apply #'uiop:escape-sh-command accum)
+				 cmd))))
+    (unwind-protect
+	 (multiple-value-bind (out exit)
+	     (connection-run *connection*
+			     (format nil "( ~A ) 2>~A" cmd stderr)
+			     input)
+	   (let ((err (readfile stderr)))
+	     (if (or for-exit (= exit 0))
+		 (values out err exit)
+		 (error 'connection-run-failed
+			:stdout out :stderr err :exit-code exit))))
+      (connection-run *connection* (format nil "rm -f ~A" stderr)))))
+
+(defun mktemp ()
+  "Make a temporary file on the remote side."
+  (multiple-value-bind (out exit)
+      ;; mktemp(1) is not POSIX; the only POSIX way is this m4 way,
+      ;; apparently, but even though m4(1) is POSIX it seems like it could
+      ;; often be absent, so have a fallback.  Avoid passing any arguments to
+      ;; mktemp(1) as these may differ on different platforms.
+      (connection-run
+       *connection*
+       "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp")
+    (if (= exit 0)
+	(car (lines out))
+	(error 'connection-run-failed :exit-code exit))))
 
 (defun runlines (&rest args)
-  (unlines (apply #'run args)))
-
-(defun runlines-with-input (&rest args)
-  (unlines (apply #'run-with-input args)))
+  (lines (apply #'run args)))
 
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))

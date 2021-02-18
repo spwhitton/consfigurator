@@ -28,8 +28,7 @@ root Lisp is running on, as the root Lisp's uid."))
 (defmethod connection-run ((connection local-connection)
 			   shell-cmd
 			   &optional
-			     input
-			     environment)
+			     input)
   ;; assumes a POSIX shell (otherwise we could wrap in 'sh -c')
   (multiple-value-bind (output _ exit-code)
       (uiop:run-program shell-cmd
@@ -37,7 +36,8 @@ root Lisp is running on, as the root Lisp's uid."))
 			:input (and input
 				    (make-string-input-stream input))
 			:output :string
-			:error-output :output)
+			:error-output :output
+			:ignore-error-status t)
     (declare (ignore _))
     (values output exit-code)))
 
