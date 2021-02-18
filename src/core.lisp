@@ -127,8 +127,9 @@ followed by argument(s) specifying the shell command to execute.
 
 Keyword arguments accepted:
 
-  - :for-exit -- don't signal an error condition if the command does not exit
-     nonzero, because it is being called partly or only for its exit code
+  - :for-exit / :may-fail -- don't signal an error condition if the command
+    does not exit nonzero, usually because it is being called partly or only
+    for its exit code
 
   - :input INPUT -- pass the contents of the string INPUT on stdin
 
@@ -137,10 +138,11 @@ Keyword arguments accepted:
     the command.
 
 Returns command's stdout, stderr and exit code."
-  (let (cmd input for-exit env (stderr (mktemp)))
+  (let (cmd input may-fail env (stderr (mktemp)))
     (loop for arg = (pop args)
 	  do (case arg
-	       (:for-exit (setq for-exit t))
+	       (:for-exit (setq may-fail t))
+	       (:may-fail (setq may-fail t))
 	       (:input (setq input (pop args)))
 	       (:env (setq env (pop args)))
 	       (t (push arg cmd)))
@@ -161,7 +163,7 @@ Returns command's stdout, stderr and exit code."
 			     (format nil "( ~A ) 2>~A" cmd stderr)
 			     input)
 	   (let ((err (readfile stderr)))
-	     (if (or for-exit (= exit 0))
+	     (if (or may-fail (= exit 0))
 		 (values out err exit)
 		 (error 'connection-run-failed
 			:stdout out :stderr err :exit-code exit))))
@@ -771,13 +773,18 @@ sources are not expected to be available outside of the root Lisp."))
 	       do (error "Could not provide prerequisite data ~S | ~S"
 			 iden1 iden2)))
 
-(defun local-data-pathname (&rest segments)
-  (reduce #'merge-pathnames (nreverse (mapcar #'string->filename segments))
-	  :from-end t :initial-value (get-local-data-cache-dir)))
+(defun data-pathname (root &rest segments)
+  (destructuring-bind (last . rest)
+      (nreverse (mapcar #'string->filename segments))
+    (merge-pathnames last (reduce #'merge-pathnames
+				  (mapcar (lambda (s) (strcat s "/")) rest)
+				  :from-end t :initial-value root))))
 
-(defun remote-data-pathname (&rest segments)
-  (reduce #'merge-pathnames (nreverse (mapcar #'string->filename segments))
-	  :from-end t :initial-value (get-remote-data-cache-dir)))
+(defun local-data-pathname (&rest args)
+  (apply #'data-pathname (get-local-data-cache-dir) args))
+
+(defun remote-data-pathname (&rest args)
+  (apply #'data-pathname (get-remote-data-cache-dir) args))
 
 (defun connection-upload-data (iden1 iden2 version data)
   (let* ((dest (remote-data-pathname iden1 iden2 version)))
@@ -798,9 +805,10 @@ sources are not expected to be available outside of the root Lisp."))
 (defun connection-clear-data-cache (iden1 iden2)
   (let ((dir (uiop:ensure-directory-pathname
 	      (remote-data-pathname iden1 iden2))))
-    (run "rm" "-f" (strcat (uiop:unix-namestring
-			    (uiop:pathname-directory-pathname dir))
-			   "/*"))))
+    (run (strcat "rm -f "
+		 (uiop:unix-namestring
+		  (uiop:pathname-directory-pathname dir))
+		 "/*"))))
 
 (defun get-local-data-cache-dir ()
   (uiop:ensure-directory-pathname
@@ -816,13 +824,18 @@ process, where each entry is of the form
   (loop for dir in (uiop:subdirectories (get-local-data-cache-dir))
 	nconc (loop for subdir in (uiop:subdirectories dir)
 		    nconc (loop for file in (uiop:directory-files subdir)
-				collect (mapcar #'filename->string
-						(list dir subdir file))))))
+				collect
+				(mapcar #'filename->string
+					(list (lastcar
+					       (pathname-directory dir))
+					      (lastcar
+					       (pathname-directory subdir))
+					      (pathname-name file)))))))
 
 (defun get-remote-data-cache-dir ()
   (uiop:ensure-directory-pathname
    (car
-    (runlines "echo" "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/"))))
+    (runlines "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/"))))
 
 (defun get-remote-cached-prerequisite-data ()
   "Return a list of items of prerequisite data in the cache on the remote side
@@ -831,5 +844,6 @@ of the current connection, where each entry is of the form
     '(iden1 iden2 version)."
   (mapcar (lambda (line)
 	    (mapcar #'filename->string (split-string line :separator "/")))
-	  (runlines "find" (get-remote-data-cache-dir)
+	  (runlines :may-fail "find"
+		    (uiop:unix-namestring (get-remote-data-cache-dir))
 		    "-type" "f" "-printf" "%P\\n")))
