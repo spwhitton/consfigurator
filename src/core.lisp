@@ -96,7 +96,7 @@ signal any error conditions just because the exit code is not zero."))
    (values))
 
 ;; global value gets set in connection/local.lisp, but the symbol is not
-;; exported as it should only get bound by APPLY-PROPERTIES
+;; exported as it should only get bound by DEPLOY*
 (defvar *connection* nil
   "Object representing the currently active connection.
 Connections dynamically bind this variable and then apply properties.  Its
