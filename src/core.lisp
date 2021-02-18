@@ -797,11 +797,18 @@ sources are not expected to be available outside of the root Lisp."))
 		       (uiop:pathname-directory-pathname dest)))
     (cond
       ((getf data :file)
-       ;; TODO if (string-prefix-p "text/" (getf data :mime)) then gzip,
-       ;; upload and gunzip
-       (connection-upload *connection*
-			  (uiop:unix-namestring (getf data :file))
-			  dest))
+       (let ((source (uiop:unix-namestring (getf data :file))))
+	 (if (string-prefix-p "text/" (getf data :mime))
+	     (let ((dest (strcat (uiop:unix-namestring dest) ".gz")))
+	       (uiop:with-temporary-file (:pathname tmp)
+		 (uiop:run-program (strcat "gzip --rsyncable -c "
+					   (uiop:escape-sh-token source)
+					   " >" (uiop:unix-namestring tmp)))
+		 (connection-upload *connection*
+				    tmp
+				    (uiop:unix-namestring dest))
+		 (run "gunzip" dest)))
+	     (connection-upload *connection* source dest))))
       ((getf data :data)
        (connection-writefile *connection* dest (getf data :data)))
       (t
