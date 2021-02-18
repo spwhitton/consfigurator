@@ -150,14 +150,14 @@ Returns command's stdout, stderr and exit code."
 	       (t (push arg cmd)))
 	  while args
 	  finally (nreversef cmd))
-    (setq cmd (if (cdr cmd) (uiop:escape-sh-command cmd) (car cmd)))
+    (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
     (loop while env
 	  collect (format nil "~A=~A" (symbol-name (pop env)) (pop env))
 	    into accum
 	  finally
 	     (when accum
 	       (setq cmd (format nil "env ~A ~A"
-				 (uiop:escape-sh-command accum)
+				 (escape-sh-command accum)
 				 cmd))))
     (unwind-protect
 	 (multiple-value-bind (out exit)
@@ -776,13 +776,12 @@ sources are not expected to be available outside of the root Lisp."))
 			   iden1 iden2))))
 
 (defun try-get-file-mime-type (file)
-  (handler-case (uiop:stripln
-		 (uiop:run-program (uiop:escape-sh-command
-				    (list "file" "-E"
-					  "--mime-type" "--brief"
-					  (uiop:unix-namestring file)))
-				   :output :string))
-    (uiop:subprocess-error () nil)))
+  (handler-case (stripln (run-program
+			  (escape-sh-command (list "file" "-E"
+						   "--mime-type" "--brief"
+						   (unix-namestring file)))
+			  :output :string))
+    (subprocess-error () nil)))
 
 (defun sort-prerequisite-data-cache (cache)
   (sort cache (lambda (x y) (version> (third x) (third y)))))
@@ -805,20 +804,19 @@ sources are not expected to be available outside of the root Lisp."))
 		  'consfigurator.connection.local:local-connection)
     (error "Attempt to upload data to the root Lisp; this is not allowed"))
   (let* ((dest (remote-data-pathname iden1 iden2 version)))
-    (run "mkdir" "-p" (uiop:unix-namestring
-		       (uiop:pathname-directory-pathname dest)))
+    (run "mkdir" "-p" (unix-namestring (pathname-directory-pathname dest)))
     (cond
       ((getf data :file)
-       (let ((source (uiop:unix-namestring (getf data :file))))
+       (let ((source (unix-namestring (getf data :file))))
 	 (if (string-prefix-p "text/" (getf data :mime))
-	     (let ((dest (strcat (uiop:unix-namestring dest) ".gz")))
-	       (uiop:with-temporary-file (:pathname tmp)
-		 (uiop:run-program (strcat "gzip --rsyncable -c "
-					   (uiop:escape-sh-token source)
-					   " >" (uiop:unix-namestring tmp)))
+	     (let ((dest (strcat (unix-namestring dest) ".gz")))
+	       (with-temporary-file (:pathname tmp)
+		 (run-program (strcat "gzip --rsyncable -c "
+				      (escape-sh-token source)
+				      " >" (unix-namestring tmp)))
 		 (connection-upload *connection*
 				    tmp
-				    (uiop:unix-namestring dest))
+				    (unix-namestring dest))
 		 (run "gunzip" dest)))
 	     (connection-upload *connection* source dest))))
       ((getf data :data)
@@ -827,17 +825,14 @@ sources are not expected to be available outside of the root Lisp."))
        (error "Prerequisite data plist lacks both :file and :data entries")))))
 
 (defun connection-clear-data-cache (iden1 iden2)
-  (let ((dir (uiop:ensure-directory-pathname
-	      (remote-data-pathname iden1 iden2))))
+  (let ((dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))
     (run (strcat "rm -f "
-		 (uiop:unix-namestring
-		  (uiop:pathname-directory-pathname dir))
+		 (unix-namestring (pathname-directory-pathname dir))
 		 "/*"))))
 
 (defun get-local-data-cache-dir ()
-  (uiop:ensure-directory-pathname
-   (strcat (or (uiop:getenv "XDG_CACHE_HOME")
-	       (strcat (uiop:getenv "HOME") "/.cache"))
+  (ensure-directory-pathname
+   (strcat (or (getenv "XDG_CACHE_HOME") (strcat (getenv "HOME") "/.cache"))
 	   "/consfigurator/data")))
 
 (defun get-local-cached-prerequisite-data ()
@@ -845,9 +840,9 @@ sources are not expected to be available outside of the root Lisp."))
 process, where each entry is of the form
 
     '(iden1 iden2 version)."
-  (loop for dir in (uiop:subdirectories (get-local-data-cache-dir))
-	nconc (loop for subdir in (uiop:subdirectories dir)
-		    nconc (loop for file in (uiop:directory-files subdir)
+  (loop for dir in (subdirectories (get-local-data-cache-dir))
+	nconc (loop for subdir in (subdirectories dir)
+		    nconc (loop for file in (directory-files subdir)
 				collect
 				(mapcar #'filename->string
 					(list (lastcar
@@ -857,7 +852,7 @@ process, where each entry is of the form
 					      (pathname-name file)))))))
 
 (defun get-remote-data-cache-dir ()
-  (uiop:ensure-directory-pathname
+  (ensure-directory-pathname
    (car
     (runlines "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/"))))
 
@@ -869,5 +864,5 @@ of the current connection, where each entry is of the form
   (mapcar (lambda (line)
 	    (mapcar #'filename->string (split-string line :separator "/")))
 	  (runlines :may-fail "find"
-		    (uiop:unix-namestring (get-remote-data-cache-dir))
+		    (unix-namestring (get-remote-data-cache-dir))
 		    "-type" "f" "-printf" "%P\\n")))

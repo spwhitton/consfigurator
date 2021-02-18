@@ -5,10 +5,36 @@
   (:shadowing-import-from #:uiop
 			  #:strcat
 			  #:string-prefix-p
-			  #:split-string)
+			  #:split-string
+			  #:escape-sh-command
+			  #:escape-sh-token
+			  #:run-program
+			  #:read-file-string
+			  #:subprocess-error
+			  #:stripln
+			  #:unix-namestring
+			  #:pathname-directory-pathname
+			  #:with-temporary-file
+			  #:ensure-directory-pathname
+			  #:getenv
+			  #:subdirectories
+			  #:directory-files)
   (:export #:strcat
 	   #:string-prefix-p
 	   #:split-string
+	   #:escape-sh-command
+	   #:escape-sh-token
+	   #:run-program
+	   #:read-file-string
+	   #:subprocess-error
+	   #:stripln
+	   #:unix-namestring
+	   #:pathname-directory-pathname
+	   #:with-temporary-file
+	   #:ensure-directory-pathname
+	   #:getenv
+	   #:subdirectories
+	   #:directory-files
 
 	   #:lines
 	   #:unlines

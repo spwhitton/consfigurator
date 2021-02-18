@@ -33,7 +33,7 @@
   ;; wrap in 'sh -c' in case the login shell is not POSIX
   `(list "ssh"
 	 (slot-value connection :hostname)
-	 (uiop:escape-sh-command "sh" "-c" ,@args)))
+	 (escape-sh-command "sh" "-c" ,@args)))
 
 (defmethod connection-run ((connection ssh-connection)
 			   cmd
@@ -41,7 +41,7 @@
 			     input
 			     environment)
   (when environment
-    (loop do (push (uiop:escape-sh-token
+    (loop do (push (escape-sh-token
 		    (strcat
 		     (symbol-name (pop environment)) "=" (pop environment)))
 		   cmd)

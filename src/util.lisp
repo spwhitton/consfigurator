@@ -23,7 +23,7 @@
   (values))
 
 (defun lines (text)
-  (uiop:split-string (uiop:stripln text) :separator '(#\Newline)))
+  (split-string (stripln text) :separator '(#\Newline)))
 
 (defun unlines (lines)
   (format nil "~{~A~%~}" lines))
@@ -48,8 +48,8 @@
   (dpkg-version-compare x ">=" y))
 
 (defun dpkg-version-compare (x r y)
-  (= 0 (nth-value 2 (uiop:run-program (list "dpkg" "--compare-versions" x r y)
-				      :ignore-error-status t))))
+  (= 0 (nth-value 2 (run-program (list "dpkg" "--compare-versions" x r y)
+				 :ignore-error-status t))))
 
 
 ;;;; Encoding of strings to filenames

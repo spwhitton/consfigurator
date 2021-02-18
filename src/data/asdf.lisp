@@ -28,9 +28,9 @@
   "Try to concatenate all the source code for SYSTEM, store it somewhere and
 return the filename."
   (declare (ignore iden1))
-  (let ((cache-dir (uiop:ensure-directory-pathname
-		    (strcat (or (uiop:getenv "XDG_CACHE_HOME")
-				(strcat (uiop:getenv "HOME") "/.cache"))
+  (let ((cache-dir (ensure-directory-pathname
+		    (strcat (or (getenv "XDG_CACHE_HOME")
+				(strcat (getenv "HOME") "/.cache"))
 			    "/consfigurator/systems")))
 	(op 'asdf:monolithic-concatenate-source-op)
 	(co (asdf:find-component system nil)))
