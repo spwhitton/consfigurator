@@ -26,9 +26,8 @@
 a new connection of type TYPE.
 Either starts a Lisp process somewhere else, tells it to continue establishing
 REMAINING (by telling it to call DEPLOY* with arguments obtained by (locally)
-evaluating, on our side of the connection,
-(list (or REMAINING '(:local)) *host*)), and returns nil, or returns a object
-suitable for *connection*.
+evaluating (list (or REMAINING '(:local)) *host*)), and returns nil, or
+returns a object suitable for *CONNECTION*.
 
 Any implementation which hands over to a remote Lisp process will need to
 upload any prerequisite data required by the deployment."))
@@ -48,8 +47,8 @@ upload any prerequisite data required by the deployment."))
 (defgeneric connection-run (connection cmd &optional input)
   (:documentation "Subroutine to run shell commands on the host.
 
-Returns (values out exit) where out is merged stdout and stderr.  Should not
-signal any error conditions just because the exit code is not zero."))
+Returns (values OUT EXIT) where OUT is merged stdout and stderr and .  Should
+not signal any error condition just because EXIT is non-zero."))
 
 (defmethod connection-run :around ((connection connection) cmd &optional input)
   (declare (ignore cmd input))
@@ -64,8 +63,9 @@ signal any error conditions just because the exit code is not zero."))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
-;; only functional difference between writefile and upload is what args they
-;; take: a string vs. a path.  they may have same or different implementations
+;; only functional difference between WRITEFILE AND upload is what args they
+;; take: a string vs. a path.  for a given connection type, they may have same
+;; or different implementations.
 
 (defgeneric connection-writefile (connection path contents)
   (:documentation
