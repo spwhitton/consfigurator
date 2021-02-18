@@ -51,11 +51,8 @@ upload any prerequisite data required by the deployment."))
 Returns (values out exit) where out is merged stdout and stderr.  Should not
 signal any error conditions just because the exit code is not zero."))
 
-(defmethod connection-run :around ((connection connection)
-				   cmd
-				   &optional
-				     input)
-  (declare (ignore input))
+(defmethod connection-run :around ((connection connection) cmd &optional input)
+  (declare (ignore cmd input))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
@@ -63,6 +60,7 @@ signal any error conditions just because the exit code is not zero."))
   (:documentation "Subroutine to read the contents of files on the host."))
 
 (defmethod connection-readfile :around ((connection connection) path)
+  (declare (ignore path))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
@@ -74,6 +72,7 @@ signal any error conditions just because the exit code is not zero."))
    "Subroutine to replace/create the contents of files on the host."))
 
 (defmethod connection-writefile :around ((connection connection) path contents)
+  (declare (ignore path contents))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
@@ -81,6 +80,7 @@ signal any error conditions just because the exit code is not zero."))
   (:documentation "Subroutine to upload files to the host."))
 
 (defmethod connection-upload :around ((connection connection) from to)
+  (declare (ignore from to))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
