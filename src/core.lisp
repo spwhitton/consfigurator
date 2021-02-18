@@ -727,53 +727,65 @@ sources are not expected to be available outside of the root Lisp."))
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
 ;; Lisp processes
 (defun upload-all-prerequisite-data (host)
-  (loop with *data-sources*
-	initially (register-data-source :asdf)
+  (macrolet ((highest-version-in-cache (cache)
+	       `(third (car (remove-if-not (lambda (c)
+					     (and (string= (first c) iden1)
+						  (string= (second c) iden2)))
+					   ,cache)))))
+    (loop with *data-sources*
+	  initially (register-data-source :asdf)
 
-	with sorted-local-cache  = (sort (get-local-cached-prerequisite-data)
-					 (compose #'version> #'third))
-	with sorted-remote-cache = (sort (get-remote-cached-prerequisite-data)
-					 (compose #'version> #'third))
+	  with sorted-local-cache  = (sort-prerequisite-data-cache
+				      (get-local-cached-prerequisite-data))
+	  with sorted-remote-cache = (sort-prerequisite-data-cache
+				      (get-remote-cached-prerequisite-data))
+	  for (iden1 . iden2) in (getf (slot-value host :hostattrs) :data)
 
-	for (iden1 . iden2) in (getf (slot-value host :hostattrs) :data)
-	for highest-local-cached-version
-	  = (third (car (remove-if-not (lambda (c)
-					 (and (string= (first c) iden1)
-					      (string= (second c) iden2)))
-				       sorted-local-cache)))
-	for highest-remote-cached-version
-	  = (third (car (remove-if-not (lambda (c)
-					 (and (string= (first c) iden1)
-					      (string= (second c) iden2)))
-				       sorted-remote-cache)))
-	for (highest-source-version . highest-source)
-	  = (query-data-sources iden1 iden2)
+	  for highest-local-cached-version  = (highest-version-in-cache
+					       sorted-local-cache)
+	  for highest-remote-cached-version = (highest-version-in-cache
+					       sorted-remote-cache)
+	  for (highest-source-version . highest-source)
+	    = (query-data-sources iden1 iden2)
 
-	if (and highest-source-version
-		(or (not highest-remote-cached-version)
-		    (version< highest-remote-cached-version
-			      highest-source-version)))
-	  do (connection-clear-data-cache iden1 iden2)
-	     (connection-upload-data iden1
-				     iden2
-				     highest-source-version
-				     (funcall highest-source))
-	else if (and highest-local-cached-version
-		     (or (not highest-remote-cached-version)
-			 (version< highest-remote-cached-version
-				   highest-local-cached-version)))
-	       do (connection-clear-data-cache iden1 iden2)
-		  (connection-upload-data
-		   iden1
-		   iden2
-		   highest-local-cached-version
-		   (list :file
-			 (local-data-pathname iden1
-					      iden2
-					      highest-local-cached-version)))
-	else unless highest-remote-cached-version
-	       do (error "Could not provide prerequisite data ~S | ~S"
-			 iden1 iden2)))
+	  if (and highest-source-version
+		  (or (not highest-remote-cached-version)
+		      (version< highest-remote-cached-version
+				highest-source-version)))
+	    do (connection-clear-data-cache iden1 iden2)
+	       (connection-upload-data iden1
+				       iden2
+				       highest-source-version
+				       (funcall highest-source))
+	  else if (and highest-local-cached-version
+		       (or (not highest-remote-cached-version)
+			   (version< highest-remote-cached-version
+				     highest-local-cached-version)))
+		 do (connection-clear-data-cache iden1 iden2)
+		    (connection-upload-data
+		     iden1
+		     iden2
+		     highest-local-cached-version
+		     (let ((file (local-data-pathname
+				  iden1
+				  iden2
+				  highest-local-cached-version)))
+		       (list :file file :type (try-get-file-mime-type file))))
+	  else unless highest-remote-cached-version
+		 do (error "Could not provide prerequisite data ~S | ~S"
+			   iden1 iden2))))
+
+(defun try-get-file-mime-type (file)
+  (handler-case (uiop:stripln
+		 (uiop:run-program (uiop:escape-sh-command
+				    (list "file" "-E"
+					  "--mime-type" "--brief"
+					  (uiop:unix-namestring file)))
+				   :output :string))
+    (uiop:subprocess-error () nil)))
+
+(defun sort-prerequisite-data-cache (cache)
+  (sort cache (lambda (x y) (version> (third x) (third y)))))
 
 (defun data-pathname (root &rest segments)
   (destructuring-bind (last . rest)
