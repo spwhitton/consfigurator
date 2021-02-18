@@ -274,11 +274,6 @@ Returns command's stdout, stderr and exit code."
 
 ;;; standard way to write properties is to use one of these two macros
 
-;; TODO when forms is not (:apply etc.) but just code, we could just consider
-;; that all to be :apply, and leave :hostattrs, :check and :unapply blank?
-;; TODO :push-hostattrs to specify a function which does not look at
-;; *hostattrs* and just returns a list which gets added to the front (we will
-;; wrap (push ... *hostattrs*) around the return value, basically)
 (defmacro defprop (name type args &body forms)
   (let ((slots (list :args (list 'quote args))))
     (when (stringp (car forms))
