@@ -157,7 +157,7 @@ Returns command's stdout, stderr and exit code."
 	  finally
 	     (when accum
 	       (setq cmd (format nil "env ~A ~A"
-				 (apply #'uiop:escape-sh-command accum)
+				 (uiop:escape-sh-command accum)
 				 cmd))))
     (unwind-protect
 	 (multiple-value-bind (out exit)
