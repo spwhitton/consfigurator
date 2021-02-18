@@ -27,36 +27,41 @@
   (:use #:cl
 	#:alexandria
 	#:consfigurator.util)
-  (:export #:connect-and-apply
-	   #:apply-properties
+  (:export #:establish-connection
 	   #:connection
 	   #:lisp-connection
 	   #:posix-connection
 	   #:connection-run
-	   #:run
-	   #:run-with-input
-	   #:runlines
-	   #:runlines-with-input
 	   #:connection-readfile
-	   #:readfile
 	   #:connection-writefile
-	   #:writefile
 	   #:connection-upload
 	   #:connection-teardown
-	   #:*host*
+
+	   #:run
+	   #:connection-run-failed
+	   #:runlines
+	   #:readfile
+	   #:writefile
+
+	   #:propattrs
+	   #:propunapply
+	   #:defprop
 	   #:*hostattrs*
 	   #:add-hostattr
 	   #:require-data
-	   #:establish-connection
-	   #:defprop
-	   #:defhost
-	   #:hostattr
+
+	   #:*consfig*
 	   #:setconsfig
+	   #:hostattr
+	   #:defhost
+
+	   #:*host*
 	   #:defdeploy
 	   #:defdeploy-these
 	   #:defhostdeploy
 	   #:deploy
 	   #:deploy-these
+
 	   #:add-data-source
 	   #:register-data-source
 	   #:data-uploaded
