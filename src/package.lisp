@@ -18,7 +18,8 @@
 			  #:ensure-directory-pathname
 			  #:getenv
 			  #:subdirectories
-			  #:directory-files)
+			  #:directory-files
+			  #:file-exists-p)
   (:export #:strcat
 	   #:string-prefix-p
 	   #:split-string
@@ -35,6 +36,7 @@
 	   #:getenv
 	   #:subdirectories
 	   #:directory-files
+	   #:file-exists-p
 
 	   #:lines
 	   #:unlines
