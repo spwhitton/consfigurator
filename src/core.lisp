@@ -750,7 +750,7 @@ sources are not expected to be available outside of the root Lisp."))
 					     (and (string= (first c) iden1)
 						  (string= (second c) iden2)))
 					   ,cache)))))
-    (loop with *data-sources*
+    (loop with *data-sources* = *data-sources*
 	  initially (register-data-source :asdf)
 
 	  with sorted-local-cache  = (sort-prerequisite-data-cache
