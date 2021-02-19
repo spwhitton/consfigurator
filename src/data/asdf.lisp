@@ -24,7 +24,7 @@
   (and (string= iden1 "lisp-system")
        (asdf:find-system system nil)))
 
-(Defun get-path-to-concatenated-system (iden1 system)
+(defun get-path-to-concatenated-system (iden1 system)
   "Try to concatenate all the source code for SYSTEM, store it somewhere and
 return the filename."
   (declare (ignore iden1))
