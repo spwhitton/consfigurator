@@ -812,8 +812,8 @@ sources are not expected to be available outside of the root Lisp."))
 	     (let ((dest (strcat (unix-namestring dest) ".gz")))
 	       (with-temporary-file (:pathname tmp)
 		 (run-program (strcat "gzip --rsyncable -c "
-				      (escape-sh-token source)
-				      " >" (unix-namestring tmp)))
+				      (escape-sh-token source))
+			      :output tmp)
 		 (connection-upload *connection*
 				    tmp
 				    (unix-namestring dest))
