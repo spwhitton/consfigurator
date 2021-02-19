@@ -48,5 +48,5 @@
 ;; write to a temporary file, and then atomically move into place
 (defmethod connection-writefile ((connection ssh-connection) path contents))
 
-;; rsync it to a temporary location, and then atomically move into place
+;; rsync it to its destination, so rsync can be smart about updates
 (defmethod connection-upload ((connection ssh-connection) from to))
