@@ -69,7 +69,7 @@ Quick start / introduction
 
         (in-package :com.example.consfig)
 
-        (setconsfig :com.example.consfig)
+        (in-consfig :com.example.consfig)
 
         (defhost athena.example.com
           "Web and file server."

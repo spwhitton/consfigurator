@@ -314,28 +314,28 @@ current static informational attributes, and to add new ones.")
 
 ;;;; Property application specifications
 
-(defvar *consfig* nil
-  "A list of names of the ASDF systems in which you define your hosts,
-site-specific properties and deployments.  These systems should depend on the
-\"consfigurator\" system.
+(defmacro in-consfig (systems)
+  "Sets the variable *CONSFIG* in the current package to SYSTEMS, or (SYSTEMS)
+if SYSTEMS is an atom.  Used at the top of your consfig, right after IN-PACKAGE.
 
-More specifically, in normal usage of Consfigurator, calling
-(mapc #'asdf:require-system *consfig*) should be sufficient to define all the
-properties you intend to apply to hosts.
+This is used to record a list of the names of the ASDF systems in which you
+define your hosts, site-specific properties and deployments.  These systems
+should depend on the \"consfigurator\" system.
 
-Use the SETCONSFIG macro at the top of your consfig to set this value.
+SYSTEMS should satisfy the following condition: in normal usage of
+Consfigurator, evaluating
+(mapc #'asdf:load-system (if (atom SYSTEMS) (list SYSTEMS) SYSTEMS) should be
+sufficient to define all the properties you intend to apply to hosts.
 
-Note that you can use Consfigurator without setting this variable, by
-explicitly specifying the names of systems when creating property application
-specifications.  This is useful if you have more than one consfig that you
-want to keep completely independent of each other.")
-
-(defmacro setconsfig (systems)
-  "Set the value of *consfig*.  SYSTEMS can be a name or a list of names."
+Consfigurator uses this information when starting up remote Lisp processes to
+effect deployments: it sends over the ASDF systems specified by SYSTEMS."
   (when (atom systems)
     (setq systems (list systems)))
-  `(eval-when (:compile-toplevel :load-toplevel :execute)
-     (setq *consfig* ',systems)))
+  (let ((sym (intern "*CONSFIG*")))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (defparameter ,sym ',systems
+    "ASDF systems the loading of all of which is sufficient to define all the
+Consfigurator properties code in this symbol's package applies to hosts."))))
 
 (defclass propspec ()
   ((systems
@@ -454,7 +454,9 @@ PROPSPEC applied."
 	  return :lisp
 	finally (return :posix)))
 
-(defun props (forms &optional systems)
+(defun props (forms
+	      &optional
+		(systems (symbol-value (find-symbol "*CONSFIG*"))))
   "Where FORMS is the elements of an unevaluated property application
 specification, return code which will evaluate the expressions and produce the
 corresponding property application specification.
@@ -465,15 +467,8 @@ that the returned code should produce.
 Intended for use by macros which allow the user to provide expressions instead
 of values as the arguments to properties when building a property application
 specification."
-  (if systems
-      (when (atom systems)
-	(setq systems (list systems)))
-      ;; TODO maybe setconsfig could set *consfig* just within the current
-      ;; package and then macros bind it or pass it to this function.  then no
-      ;; global value, i.e. drop that piece of state.
-      (if *consfig*
-	  (setq systems (list *consfig*))
-	  (error "*consfig* not set")))
+  (unless systems
+    (error "Looks like *CONSFIG* is not set; please call IN-CONSFIG"))
   (labels ((make-eval-propspec (form)
 	     (if (atom form)
 		 `(quote ,form)

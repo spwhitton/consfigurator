@@ -78,8 +78,7 @@
 	   #:add-hostattr
 	   #:require-data
 
-	   #:*consfig*
-	   #:setconsfig
+	   #:in-consfig
 	   #:hostattr
 	   #:defhost
 
