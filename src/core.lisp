@@ -22,12 +22,12 @@
 ;; generic function operating on keywords which identify connection types
 (defgeneric establish-connection (type remaining &key)
   (:documentation
-   "Within the context of the current connection, connect to HOST by establishing
-a new connection of type TYPE.
+   "Within the context of the current connection, connect to HOST by
+establishing a new connection of type TYPE.
 Either starts a Lisp process somewhere else, tells it to continue establishing
 REMAINING (by telling it to call DEPLOY* with arguments obtained by (locally)
 evaluating (list (or REMAINING '(:local)) *host*)), and returns nil, or
-returns a object suitable for *CONNECTION*.
+returns a object suitable to be the value of *CONNECTION*.
 
 Any implementation which hands over to a remote Lisp process will need to
 upload any prerequisite data required by the deployment."))
@@ -47,8 +47,9 @@ upload any prerequisite data required by the deployment."))
 (defgeneric connection-run (connection cmd &optional input)
   (:documentation "Subroutine to run shell commands on the host.
 
-Returns (values OUT EXIT) where OUT is merged stdout and stderr and .  Should
-not signal any error condition just because EXIT is non-zero."))
+Returns (values OUT EXIT) where OUT is merged stdout and stderr and EXIT is
+the exit code.  Should not signal any error condition just because EXIT is
+non-zero."))
 
 (defmethod connection-run :around ((connection connection) cmd &optional input)
   (declare (ignore cmd input))
@@ -111,7 +112,7 @@ global value should be regarded as a constant.")
 ;; the only code that ever call CONNECTION-RUN, CONNECTION-READFILE and
 ;; CONNECTION-WRITEFILE directly (except that it might make sense for
 ;; implementations of CONNECTION-READFILE and CONNECTION-WRITEFILE to call
-;; their corresponding implementations of CONNECTION-RUN).
+;; their corresponding implementation of CONNECTION-RUN).
 
 (define-condition connection-run-failed (error)
   ((stdout :initarg stdout :reader stdout)
@@ -201,8 +202,8 @@ Returns command's stdout, stderr and exit code."
 ;; because they are immutable -- see "Attempting to work with anonymous
 ;; properties or connection types" in the docs.  A determined user could of
 ;; course edit the symbol plist entries and/or function cell, but we want to
-;; make it difficult for someone who hasn't read that part of the docs to
-;; accidentally violate immutability
+;; make it a bit more difficult for someone who hasn't read that part of the
+;; docs to accidentally violate immutability.
 
 (defun setprop (sym type &key args desc hostattrs check apply unapply)
   ;; use non-keyword keys to avoid clashes with other packages
