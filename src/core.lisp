@@ -254,7 +254,7 @@ Returns command's stdout, stderr and exit code."
 	 args))
 
 (defun propappattrs (propapp)
-  (apply #'propattrs (car propapp) (cdr propapp)))
+  (apply #'propattrs propapp))
 
 (defun propcheck (prop &rest args)
   (apply (get prop 'check (lambda (&rest args)
