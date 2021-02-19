@@ -35,19 +35,8 @@
 	 (slot-value connection :hostname)
 	 (escape-sh-command "sh" "-c" ,@args)))
 
-(defmethod connection-run ((connection ssh-connection)
-			   cmd
-			   &optional
-			     input
-			     environment)
-  (when environment
-    (loop do (push (escape-sh-token
-		    (strcat
-		     (symbol-name (pop environment)) "=" (pop environment)))
-		   cmd)
-	  while environment
-	  finally (push "env" cmd)))
-  (run-with-input input nil (sshcmd cmd)))
+(defmethod connection-run ((connection ssh-connection) cmd &optional input)
+  (run :input input (sshcmd cmd)))
 
 (defmethod connection-readfile ((connection ssh-connection) path)
   (multiple-value-bind (output error-code)
