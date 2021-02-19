@@ -298,18 +298,27 @@ Returns command's stdout, stderr and exit code."
 ;; (defmacro defproplist (name args &body propspec)
 ;;   "Define a property which applies a property application specification.")
 
-;;; property :hostattrs subroutines
+;;; hostattrs in property subroutines
 
-(defvar *hostattrs* nil
-  "Used by property :hostattrs subroutines, only, to access and modify the
-current static informational attributes, and to add new ones.")
+(defun get-hostattrs (k)
+  "Retrieve the list of static informational attributes of type KEY.
 
-(defun add-hostattr (k v)
-  (push *hostattrs* v)
-  (push *hostattrs* k))
+Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."
+  (getf (slot-value *host* 'hostattrs) k))
+
+(defun push-hostattrs (k &rest vs)
+  "Push new static informational attributes VS of type KEY.
+
+Called by property :HOSTATTRS subroutines."
+  (loop for v in vs
+	do (push v (getf (slot-value *host* 'hostattrs) k))))
 
 (defun require-data (iden1 iden2)
-  (push (cons iden1 iden2) (getf *hostattrs* :data)))
+  "Wrapper around PUSH-HOSTATTRS to indicate that a piece of prerequisite data
+is needed to deploy a property.
+
+Called by property :HOSTATTRS subroutines."
+  (push-hostattrs :data (cons iden1 iden2)))
 
 
 ;;;; Property application specifications
@@ -372,10 +381,10 @@ systems, resolve unapply, onchange etc., and then look in the value cell of
 each PROPERTY to find a property, and pass each of ARGS to the function in the
 property's apply slot."))
 
-;; The following four functions, plus simple concatenation, should be
-;; everything we need to do with propspecs, so all knowledge of the possible
-;; combinator symbols should be confined to these four functions -- i.e., if
-;; we are to add any combinators, this is the code that needs to change
+;; The following five functions, should be everything we need to do with
+;; propspecs, so all knowledge of the possible combinator symbols should be
+;; confined to these four functions -- i.e., if we are to add any combinators,
+;; this is the code that needs to change
 
 (defun compile-propapp (propapp)
   "Recursively apply the effects of property combinators in PROPAPP to produce
@@ -409,8 +418,8 @@ an atomic property application."
 					(mapcar #'propapptype propapps))
 		    :desc (propdesc psym)
 		    :hostattrs (lambda (&rest args)
-				 (nconc (apply #'propattrs psym args)
-					(mapcan #'propappattrs propapps)))
+				 (apply #'propattrs psym args)
+				 (mapc #'propappattrs propapps))
 		    :check (get psym 'check)
 		    :apply (lambda (&rest args)
 			     (unless (eq :nochange
@@ -436,14 +445,10 @@ an atomic property application."
 	for propapp = (compile-propapp form)
 	do (propappapply propapp)))
 
-(defun propspec->hostattrs (propspec)
-  "Return all the hostattrs which should be applied to the host which has
-PROPSPEC applied."
-  (loop with *hostattrs*
-	for form in (slot-value propspec 'applications)
+(defun eval-propspec-hostattrs (propspec)
+  (loop for form in (slot-value propspec 'applications)
 	for propapp = (compile-propapp form)
-	do (propappattrs propapp)
-	finally (return *hostattrs*)))
+	do (propappattrs propapp)))
 
 (defun propspec->type (propspec)
   "Return :lisp if any types of the properties to be applied by PROPSPEC is
@@ -484,6 +489,15 @@ specification."
       :systems ',systems
       :props (list ,@(mapcar #'make-eval-propspec forms)))))
 
+(defmethod append-propspecs ((first propspec) (second propspec))
+  (make-instance 'propspec
+		 :props (append (slot-value first 'applications)
+				(slot-value second 'applications))
+		 :systems (loop with new = (slot-value first 'systems)
+				for s in (slot-value second 'systems)
+				do (pushnew s new)
+				finally (return new))))
+
 
 ;;;; Hosts
 
@@ -495,10 +509,6 @@ specification."
     :initarg :props
     :documentation "Property application specification of the properties to
 be applied to the host.")))
-
-(defun hostattr (host key)
-  "Retrieve a single static informational attribute."
-  (getf (slot-value host 'hostattrs) key))
 
 (defmacro defhost (hostname &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
@@ -519,22 +529,24 @@ in the order specified here, so later properties implicitly depend on earlier
 ones.  In addition, static informational attributes set by later properties
 are allowed to override any attributes with the same name set by earlier
 entries."
-  (let (hostname-sym hostattrs)
-    (etypecase hostname
-      (string (setq hostname-sym (intern hostname)))
-      (symbol (setq hostname-sym hostname
-		    hostname (string-downcase (symbol-name hostname)))))
-    (setf (getf hostattrs :hostname) hostname)
-    (when (stringp (car properties))
-      (setf (getf hostattrs :desc) (pop properties)))
-    `(progn
-       (declaim (type host ,hostname-sym))
-       (defparameter ,hostname-sym
-	 (let* ((propspec ,(props properties))
-		(hostattrs (nconc (propspec->hostattrs propspec)
-				  ',hostattrs)))
-	   (make-instance 'host :attrs hostattrs :props propspec))
-	 ,(getf hostattrs :desc)))))
+  (with-gensyms (propspec)
+    (let (hostname-sym attrs)
+      (etypecase hostname
+	(string (setq hostname-sym (intern hostname)))
+	(symbol (setq hostname-sym hostname
+		      hostname (string-downcase (symbol-name hostname)))))
+      (push (getf attrs :hostname) hostname)
+      (when (stringp (car properties))
+	(push (pop properties) (getf attrs :desc)))
+      `(progn
+	 (declaim (type host ,hostname-sym))
+	 (defparameter ,hostname-sym
+	   (let* ((,propspec ,(props properties))
+		  (*host*
+		    (make-instance 'host :attrs ',attrs :props ,propspec)))
+	     (eval-propspec-hostattrs ,propspec)
+	     *host*)
+	   ,(car (getf attrs :desc)))))))
 
 
 ;;;; Deployments
@@ -592,14 +604,17 @@ attributes, in the same way that later entries in the list of properties
 specified in DEFHOST forms can override earlier entries (see DEFHOST's
 docstring)."
   (once-only (host)
-    (with-gensyms (propspec)
-      `(let ((,propspec ,(props additional-properties)))
-	 (deploy* ,connection
-		  (make-instance 'host
-				 :attrs (nconc (propspec->hostattrs ,propspec)
-					       (slot-value ,host 'hostattrs))
-				 :props (append (slot-value ,host 'propspec)
-						,propspec)))))))
+    (with-gensyms (propspec new-host)
+      `(let* ((,propspec ,(props additional-properties))
+	      (,new-host
+		(make-instance 'host
+			       :attrs (copy-list (slot-value ,host 'hostattrs))
+			       :props (append-propspecs
+				       (slot-value ,host 'propspec)
+				       ,propspec))))
+	 (let ((*host* ,new-host))
+	   (eval-propspec-hostattrs ,propspec))
+	 (deploy* ,connection ,new-host)))))
 
 (defmacro deploy-these (connection host &body properties)
   "Establish a connection of type CONNECTION to HOST, and apply each of
@@ -623,18 +638,23 @@ properties, plus any set by PROPERTIES.  Static informational attributes set
 by PROPERTIES can override the host's usual static informational attributes,
 in the same way that later entries in the list of properties specified in
 DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
-  (with-gensyms (propspec)
-    `(let ((,propspec ,(props properties)))
-       (deploy* ,connection
-		(make-instance 'host
-			       :attrs (nconc (propspec->hostattrs ,propspec)
-					     (slot-value ,host 'hostattrs))
-			       :props ,propspec)))))
+  (with-gensyms (propspec new-host)
+    `(let* ((,propspec ,(props properties))
+	    (,new-host (make-instance 'host
+				      :attrs (copy-list
+					      (slot-value ,host 'hostattrs))
+				      :props ,propspec)))
+       (let ((*host* ,new-host))
+	 (eval-propspec-hostattrs ,propspec))
+       (deploy* ,connection ,new-host))))
 
 (defun deploy* (connections host)
-  ;; TODO make a copy of HOST to put in *HOST* so that we can freely modify it
-  ;; (as :debian-sbcl connection already does)
-  (let ((*host* host))
+  ;; make a partial own-copy of HOST so that connections can add new pieces of
+  ;; required prerequisite data; specifically, so that they can request the
+  ;; source code of ASDF systems
+  (let ((*host* (make-instance 'host
+			       :attrs (copy-list (slot-value host 'hostattrs))
+			       :props (slot-value host 'propspec))))
     (labels
 	((connect (connections)
 	   (destructuring-bind ((type . args) . remaining) connections
@@ -700,8 +720,10 @@ sources are not expected to be available outside of the root Lisp."))
     )
 
 (defprop host-data-uploaded :posix (destination)
-  (:hostattrs (require-data (hostattr *host* :hostname) destination))
-  (:apply (data-uploaded (hostattr *host* :hostname) destination destination)))
+  (:hostattrs
+   (require-data (car (get-hostattrs :hostname)) destination))
+  (:apply
+   (data-uploaded (car (get-hostattrs :hostname)) destination destination)))
 
 (defun get-data (iden1 iden2)
   (if-let ((source-thunk (cdr (query-data-sources iden1 iden2))))

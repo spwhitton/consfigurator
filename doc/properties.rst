@@ -10,23 +10,21 @@ arguments.  At least one of ``:hostattrs`` or ``:apply`` must be present.
 ``:hostattrs`` subroutines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Executed in the root Lisp to (i) add and modify static informational
-attributes of hosts to which this property is applied or is to be applied;
-and (ii) check that applying this property makes sense -- e.g. that we're not
-trying to install a package using apt(1) on a FreeBSD host.
+Executed in the root Lisp to (i) add static informational attributes of hosts
+to which this property is applied or is to be applied; and (ii) check that
+applying this property makes sense -- e.g. that we're not trying to install a
+package using apt(1) on a FreeBSD host.
 
-When this subroutine is called, ``*HOSTATTRS*`` will be bound to the plist of
-static informational attributes of the host to which the property is to be
-applied, which may be modified.
+Can retrieve existing static informational attributes using ``GET-HOSTATTRS``.
+Should signal the condition ``INCOMPATIBLE-PROPERTY`` if existing static
+informational attributes indicate that the property should not be applied to
+this host.  Can use ``PUSH-HOSTATTRS`` and ``REQUIRE-DATA`` to add new entries
+to the host's static information atributes.
 
-Should signal the condition ``INCOMPATIBLE-PROPERTY`` if the contents of
-``*HOSTATTRS*`` indicates that the property should not be applied to this
-host.
-
-Should be a pure function aside from looking at and modifying ``*HOSTATTRS*``.
+Other than as described in the previous paragraph, should be a pure function.
 In particular, should not examine the actual state of the host.  Essentially a
-conversion of the arguments to the property to appropriate static information
-attributes.
+conversion of the arguments to the property to appropriate static
+informational attributes.
 
 ``:check`` subroutines
 ~~~~~~~~~~~~~~~~~~~~~~

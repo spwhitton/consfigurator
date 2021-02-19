@@ -74,8 +74,8 @@
 	   #:propattrs
 	   #:propunapply
 	   #:defprop
-	   #:*hostattrs*
-	   #:add-hostattr
+	   #:get-hostattrs
+	   #:push-hostattrs
 	   #:require-data
 
 	   #:in-consfig
