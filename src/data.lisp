@@ -175,7 +175,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
 ;; Lisp processes
-(defun upload-all-prerequisite-data (host)
+(defun upload-all-prerequisite-data (&optional (host *host*))
   (macrolet ((highest-version-in-cache (cache)
 	       `(third (car (remove-if-not (lambda (c)
 					     (and (string= (first c) iden1)

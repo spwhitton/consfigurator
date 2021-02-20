@@ -23,7 +23,7 @@
   (unless (= 0 (nth-value 1 (run "which" "sbcl" "2>/dev/null"
 				 "||" "apt-get" "-y" "install" "sbcl")))
     (error "Could not get sbcl installed on the remote host"))
-  (upload-all-prerequisite-data *host*)
+  (upload-all-prerequisite-data)
   ;; now we generate and upload a Lisp file which will load all the
   ;; lisp-system prerequisite data we just uploaded and call (deploy :local
   ;; host properties), execute `sbcl --script <path to tiny file>`, and relay
