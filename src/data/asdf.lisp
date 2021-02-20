@@ -18,7 +18,7 @@
 (in-package :consfigurator.data.asdf)
 
 (defmethod register-data-source ((type (eql :asdf)) &key)
-  (add-data-source #'asdf-data-source-check #'get-path-to-concatenated-system))
+  (cons #'asdf-data-source-check #'get-path-to-concatenated-system))
 
 (defun asdf-data-source-check (iden1 system)
   (and (string= iden1 "lisp-system")
