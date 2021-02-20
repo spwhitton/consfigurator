@@ -479,7 +479,8 @@ an atomic property application."
 
 (defun props (forms
 	      &optional
-		(systems (symbol-value (find-symbol "*CONSFIG*"))))
+		(systems (symbol-value (find-symbol "*CONSFIG*"))
+			 systems-supplied-p))
   "Where FORMS is the elements of an unevaluated property application
 specification, return code which will evaluate the expressions and produce the
 corresponding property application specification.
@@ -490,7 +491,7 @@ that the returned code should produce.
 Intended for use by macros which allow the user to provide expressions instead
 of values as the arguments to properties when building a property application
 specification."
-  (unless systems
+  (unless (or systems systems-supplied-p)
     (error "Looks like *CONSFIG* is not set; please call IN-CONSFIG"))
   (labels ((make-eval-propspec (form)
 	     (if (atom form)
