@@ -19,6 +19,13 @@
 
 ;;;; Connections
 
+;; global value gets set in connection/local.lisp, but the symbol is not
+;; exported as it should only get bound by DEPLOY*
+(defvar *connection* nil
+  "Object representing the currently active connection.
+Connections dynamically bind this variable and then apply properties.  Its
+global value should be regarded as a constant.")
+
 ;; generic function operating on keywords which identify connection types
 (defgeneric establish-connection (type remaining &key)
   (:documentation
@@ -108,13 +115,6 @@ Only used, internally, for uploading prerequisite data, and only to caches."))
 ;; many connection types don't need anything to be done to disconnect
 (defmethod connection-teardown ((connection connection))
    (values))
-
-;; global value gets set in connection/local.lisp, but the symbol is not
-;; exported as it should only get bound by DEPLOY*
-(defvar *connection* nil
-  "Object representing the currently active connection.
-Connections dynamically bind this variable and then apply properties.  Its
-global value should be regarded as a constant.")
 
 
 ;;;; Functions to access the slots of the current connection
