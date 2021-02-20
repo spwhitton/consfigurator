@@ -126,3 +126,13 @@ All unqualified names of Lisp symbols refer to those exported from the
 ``CONSFIGURATOR`` package, because it is assumed that this package is imported
 unqualified into both user consfigs and Lisp packages providing properties,
 connection types and sources of prerequisite data.
+
+``FOO.BAR:BAZ`` means a symbol ``BAZ`` defined in
+``CONSFIGURATOR.PROPERTY.FOO.BAR``, except that ``DATA.FOO:BAR`` means a
+symbol ``BAR`` defined in ``CONSFIGURATOR.PROPERTY.DATA.FOO``.  These are the
+recommended package nicknaming schemes for use in consfigs, e.g.::
+
+  (defpackage :com.example.consfig
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:file #:consfigurator.property.file
+                     #:data.pgp #:consfigurator.data.pgp)))
