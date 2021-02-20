@@ -91,7 +91,7 @@ they need to handle streams and strings differently."))
 (defgeneric connection-upload (connection from to)
   (:documentation "Subroutine to upload files to the host.
 
-Only used for uploading prerequisite data."))
+Only used, internally, for uploading prerequisite data, and only to caches."))
 
 (defmethod connection-upload :around ((connection connection) from to)
   (declare (ignore from to))
