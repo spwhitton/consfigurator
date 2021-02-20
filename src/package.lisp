@@ -112,8 +112,8 @@
 
 (defpackage :consfigurator.property.file
   (:use #:cl #:consfigurator)
-  (:export #:file-has-content
-	   #:file-contains-lines))
+  (:export #:has-content
+	   #:contains-lines))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))

@@ -17,11 +17,11 @@
 
 (in-package :consfigurator.property.file)
 
-(defprop file-has-content :posix (path lines)
+(defprop has-content :posix (path lines)
   "Ensure there is a file at PATH whose lines are the elements of LINES."
   (:apply (writefile path (unlines lines))))
 
-(defprop file-contains-lines :posix (path lines)
+(defprop contains-lines :posix (path lines)
   "Ensure there is a file at PATH containing each of LINES."
   (:apply (let ((new-lines (copy-list lines))
 		(existing-lines (lines (readfile path))))
