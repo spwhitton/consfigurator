@@ -1,7 +1,7 @@
 (in-package :cl-user)
 
-(defpackage :consfigurator.util
-  (:use #:cl)
+(defpackage :consfigurator
+  (:use #:cl #:alexandria)
   (:shadowing-import-from #:uiop
 			  #:strcat
 			  #:string-prefix-p
@@ -21,7 +21,8 @@
 			  #:subdirectories
 			  #:directory-files
 			  #:file-exists-p)
-  (:export #:strcat
+  (:export ;; re-export from UIOP
+	   #:strcat
 	   #:string-prefix-p
 	   #:split-string
 	   #:escape-sh-command
@@ -40,6 +41,7 @@
 	   #:directory-files
 	   #:file-exists-p
 
+	   ;; util.lisp
 	   #:lines
 	   #:unlines
 	   #:noop
@@ -51,13 +53,10 @@
 	   #:version>=
 
 	   #:string->filename
-	   #:filename->string))
+	   #:filename->string
 
-(defpackage :consfigurator.core
-  (:use #:cl
-	#:alexandria
-	#:consfigurator.util)
-  (:export #:establish-connection
+	   ;; connection.lisp
+	   #:establish-connection
 	   #:connection
 	   #:lisp-connection
 	   #:posix-connection
@@ -73,7 +72,7 @@
 	   #:readfile
 	   #:writefile
 
-	   #:in-consfig
+	   ;; property.lisp
 	   #:propattrs
 	   #:propunapply
 	   #:defprop
@@ -81,8 +80,14 @@
 	   #:push-hostattrs
 	   #:get-hostname
 	   #:require-data
+
+	   ;; propspec.lisp
+	   #:in-consfig
+
+	   ;; host.lisp
 	   #:defhost
 
+	   ;; deployment.lisp
 	   #:defdeploy
 	   #:defdeploy-these
 	   #:defhostdeploy
@@ -91,6 +96,7 @@
 	   #:deploys
 	   #:deploys-these
 
+	   ;; data.lisp
 	   #:data
 	   #:iden1
 	   #:iden2
@@ -100,6 +106,7 @@
 	   #:data-string
 	   #:file-data
 	   #:data-file
+
 	   #:try-register-data-source
 	   #:register-data-source
 	   #:reset-data-sources
@@ -108,10 +115,6 @@
 	   #:with-data-stream
 	   #:get-data-string
 	   #:upload-all-prerequisite-data))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (find-package :consfigurator)
-    (make-package :consfigurator :use '(cl))))
 
 (defpackage :consfigurator.connection.ssh
   (:use #:cl #:consfigurator))
@@ -139,9 +142,3 @@
 (defpackage :consfigurator.property.command
   (:use #:cl #:consfigurator)
   (:export #:shell-command))
-
-(in-package :consfigurator)
-(dolist (package '(:consfigurator.core :consfigurator.util))
-  (use-package package)
-  (do-external-symbols (sym package)
-    (export sym)))

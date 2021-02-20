@@ -1,0 +1,196 @@
+;;; Consfigurator -- Lisp declarative configuration management system
+
+;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
+
+;;; This file is free software; you can redistribute it and/or modify
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation; either version 3, or (at your option)
+;;; any later version.
+
+;;; This file is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+
+;;; You should have received a copy of the GNU General Public License
+;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(in-package :consfigurator)
+
+;;;; Property application specifications
+
+(defmacro in-consfig (systems)
+  "Sets the variable *CONSFIG* in the current package to SYSTEMS, or (SYSTEMS)
+if SYSTEMS is an atom.  Used at the top of your consfig, right after IN-PACKAGE.
+
+This is used to record a list of the names of the ASDF systems in which you
+define your hosts, site-specific properties and deployments.  These systems
+should depend on the \"consfigurator\" system.
+
+SYSTEMS should satisfy the following condition: in normal usage of
+Consfigurator, evaluating
+(mapc #'asdf:load-system (if (atom SYSTEMS) (list SYSTEMS) SYSTEMS) should be
+sufficient to define all the properties you intend to apply to hosts.
+
+Consfigurator uses this information when starting up remote Lisp processes to
+effect deployments: it sends over the ASDF systems specified by SYSTEMS."
+  (when (atom systems)
+    (setq systems (list systems)))
+  (let ((sym (intern "*CONSFIG*")))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (defparameter ,sym ',systems
+    "ASDF systems the loading of all of which is sufficient to define all the
+Consfigurator properties code in this symbol's package applies to hosts."))))
+
+(defclass propspec ()
+  ((systems
+    :initarg :systems
+    :documentation "List of names of systems, the loading of all of which is
+sufficient to deploy this propspec.")
+   (applications
+    :initarg :props
+    :documentation "Ordered list of property applications.
+The base case valid entry is of the form (PROPERTY . ARGS) where PROPERTY is
+a symbol naming a property (typically as defined by DEFPROP) and ARGS is a
+list of arguments to be passed when calling the property's subroutines.  These
+ARGS will not be evaluated before calling the function.
+
+Additionally, entries can be of the following forms:
+
+    (unapply (PROPERTY . ARGS)) -- unapply the property, if it supports that.
+
+    ((PROPERTY . ARGS) onchange (PROPERTY . ARGS) onchange (PROPERTY . ARGS))
+    -- apply the second and third properties in the case that the first
+       property actually had work to do.
+
+... and combinations thereof.
+
+Deployments apply properties in the order specified here, so later entries in
+the list implicitly depend on earlier ones.
+
+Members of ARGS must all be objects which can be serialised.  In particular,
+function objects are not permitted."))
+  (:documentation
+   "The point of this data structure is to be a way to inform a Lisp process
+running on a remote host how it can apply some properties: load each of the
+systems, resolve unapply, onchange etc., and then look in the value cell of
+each PROPERTY to find a property, and pass each of ARGS to the function in the
+property's apply slot."))
+
+;; The following five functions, should be everything we need to do with
+;; propspecs, so all knowledge of the possible combinator symbols should be
+;; confined to these four functions -- i.e., if we are to add any combinators,
+;; this is the code that needs to change
+
+(defun compile-propapp (propapp)
+  "Recursively apply the effects of property combinators in PROPAPP to produce
+an atomic property application."
+  (let ((sym (gensym)))
+    (cond
+      ;; UNAPPLY
+      ((symbol-named unapply (car propapp))
+       (destructuring-bind (psym . args) (compile-propapp (cadr propapp))
+	 (setprop sym (proptype psym)
+		  :desc (strcat "Unapply: " (propdesc psym))
+		  :check (complement (get psym 'check))
+		  :apply (get psym 'unapply)
+		  :unapply (get psym 'apply))
+	 (cons sym args)))
+      ;; ON-CHANGE
+      ;; Following pretty much assumes that on-change is our only infix
+      ;; property combinator.
+      ((symbol-named on-change (cadr propapp))
+       (let ((propapps (loop with remaining = (cdr propapp)
+			     with apps
+			     for s = (pop remaining)
+			     for a = (pop remaining)
+			     unless (symbol-named on-change s)
+			       do (error "Invalid on-change expression")
+			     else
+			       do (push (compile-propapp a) apps)
+			     unless remaining return apps)))
+	 (destructuring-bind (psym . args) (compile-propapp (car propapp))
+	   (setprop sym (collapse-types (proptype psym)
+					(mapcar #'propapptype propapps))
+		    :desc (propdesc psym)
+		    :hostattrs (lambda (&rest args)
+				 (apply #'propattrs psym args)
+				 (mapc #'propappattrs propapps))
+		    :check (get psym 'check)
+		    :apply (lambda (&rest args)
+			     (unless (eq :nochange
+					 (apply psym args))
+			       (loop for propapp in propapps
+				     do (propappapply propapp))))
+		    :unapply (lambda (&rest args)
+			       (unless (eq :nochange
+					   (apply #'propunapply psym args))
+				 (loop for propapp in propapps
+				       do (propappapply propapp)))))
+	   (cons sym args))))
+      ;; atomic property application
+      (t
+       propapp))))
+
+(defun eval-propspec (propspec)
+  "Apply properties as specified by PROPSPEC."
+  (loop for system in (slot-value propspec 'systems)
+	unless (asdf:component-loaded-p system)
+	  do (asdf:load-system system))
+  (loop for form in (slot-value propspec 'applications)
+	for propapp = (compile-propapp form)
+	do (propappapply propapp)))
+
+(defun eval-propspec-hostattrs (propspec)
+  (loop for form in (slot-value propspec 'applications)
+	for propapp = (compile-propapp form)
+	do (propappattrs propapp)))
+
+(defun propspec->type (propspec)
+  "Return :lisp if any types of the properties to be applied by PROPSPEC is
+:lisp, else return :posix."
+  (loop for form in (slot-value propspec 'applications)
+	for propapp = (compile-propapp form)
+	if (eq (propapptype propapp) :lisp)
+	  return :lisp
+	finally (return :posix)))
+
+(defun props (forms
+	      &optional
+		(systems (symbol-value (find-symbol "*CONSFIG*"))
+			 systems-supplied-p))
+  "Where FORMS is the elements of an unevaluated property application
+specification, return code which will evaluate the expressions and produce the
+corresponding property application specification.
+
+SYSTEMS is the 'systems attribute of the property application specification
+that the returned code should produce.
+
+Intended for use by macros which allow the user to provide expressions instead
+of values as the arguments to properties when building a property application
+specification."
+  (unless (or systems systems-supplied-p)
+    (error "Looks like *CONSFIG* is not set; please call IN-CONSFIG"))
+  (labels ((make-eval-propspec (form)
+	     (if (atom form)
+		 `(quote ,form)
+		 (destructuring-bind (first . rest) form
+		   (if (and (symbolp first)
+			   (not (member (symbol-name first)
+					'("UNAPPLY")
+					:test #'string=)))
+		       `(list ',first ,@rest)
+		       `(list ,@(mapcar #'make-eval-propspec form)))))))
+    `(make-instance
+      'propspec
+      :systems ',systems
+      :props (list ,@(mapcar #'make-eval-propspec forms)))))
+
+(defmethod append-propspecs ((first propspec) (second propspec))
+  (make-instance 'propspec
+		 :props (append (slot-value first 'applications)
+				(slot-value second 'applications))
+		 :systems (loop with new = (slot-value first 'systems)
+				for s in (slot-value second 'systems)
+				do (pushnew s new)
+				finally (return new))))
