@@ -40,4 +40,5 @@ return the filename."
 					   :disable-cache
 					   :ignore-inherited-configuration))
     (asdf:operate op co)
-    (list :file (asdf:output-file op co) :type "text/plain")))
+    (make-instance 'file-data :file (asdf:output-file op co)
+			      :mime "text/plain")))
