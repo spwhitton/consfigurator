@@ -150,9 +150,14 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 		       :mime (try-get-file-mime-type file)))
       (error "Could not provide prerequisite data ~S | ~S" iden1 iden2))))
 
-(defmethod %get-data-stream ((data string-data)))
+(defmethod %get-data-stream ((data string-data))
+  (babel-streams:make-in-memory-input-stream
+   (babel:string-to-octets (data-string data) :UTF-8)
+   :element-type '(unsigned-byte 8)))
 
-(defmethod %get-data-stream ((data file-data)))
+(defmethod %get-data-stream ((data file-data))
+  (open (data-file data) :direction :input
+			 :element-type '(unsigned-byte 8)))
 
 (defmethod %get-data-string ((data string-data))
   (data-string data))

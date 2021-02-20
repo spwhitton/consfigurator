@@ -1,6 +1,8 @@
 (asdf:defsystem :consfigurator
   :serial t
   :depends-on (#:alexandria
+	       #:babel
+	       #:babel-streams
 	       #:cl-ppcre
 	       #:cl-interpol)
   :components ((:file "src/package")
