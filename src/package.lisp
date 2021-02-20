@@ -117,7 +117,7 @@
   (:use #:cl #:consfigurator))
 
 (defpackage :consfigurator.connection.local
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
 
 (defpackage :consfigurator.connection.debian-sbcl
