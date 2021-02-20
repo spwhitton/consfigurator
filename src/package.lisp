@@ -71,18 +71,15 @@
 	   #:readfile
 	   #:writefile
 
+	   #:in-consfig
 	   #:propattrs
 	   #:propunapply
 	   #:defprop
 	   #:get-hostattrs
 	   #:push-hostattrs
 	   #:require-data
-
-	   #:in-consfig
-	   #:hostattr
 	   #:defhost
 
-	   #:*host*
 	   #:defdeploy
 	   #:defdeploy-these
 	   #:defhostdeploy
