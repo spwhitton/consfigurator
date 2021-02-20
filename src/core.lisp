@@ -728,17 +728,12 @@ prerequisite data."))
   (:documentation
    "An item of prerequisite data accessible via the filesystem."))
 
-(defvar *data-sources* nil "Known sources of prerequisite data.")
-
-(defun add-data-source (check provide)
-  (push (cons check provide) *data-sources*))
-
 ;; if this proves to be inadequate then an alternative would be to maintain a
-;; mapping of ASDF systems to data sources, and then APPLY-PROPERTIES could
-;; look up the data sources registered for the systems in (slot-value
-;; (slot-value host 'propspec) 'systems) and bind *data-sources* to point to
-;; those just how it binds *host* and *connection*.  registering a source
-;; means registering it in the mapping of systems to sources
+;; mapping of ASDF systems to data sources, and then DEPLOY* could look up the
+;; data sources registered for the systems in (slot-value (slot-value host
+;; 'propspec) 'systems) and bind *data-sources* to point to those just how it
+;; binds *host* and *connection*.  registering a source would the mean
+;; registering it in the mapping of systems to sources
 (defgeneric register-data-source (type &key)
   (:documentation
    "Initialise and register a source of prerequisite data in this Lisp process.
@@ -748,24 +743,38 @@ properties are to be applied.  (This could only cause problems if you have
 different consfigs with prerequisite data which is identified by the same two
 strings, in which case you will need to wrap your deployments with registering
 and unregistering data sources.  Usually items of prerequisite data are
-identified using things like hostnames, so this is unlikely to be necessary.)
+identified using things like hostnames, so this shouldn't be necessary.)
 
-Implementation of this function call ADD-DATA-SOURCE, providing two functions.
+Implementations of this function return a pair of functions.
 
 Signals a condition MISSING-DATA-SOURCE when unable to access the data source
 (e.g. because can't decrypt it).  This condition is captured and ignored in
-all Lisp processes started up by Consfigurator, since prerequisite data
+all new Lisp processes started up by Consfigurator, since prerequisite data
 sources are not expected to be available outside of the root Lisp."))
 
-(defprop data-uploaded :posix (iden1 iden2 &optional destination)
-    ;; calls get-data
-    )
+(defvar *data-sources* nil "Known sources of prerequisite data.")
 
-(defprop host-data-uploaded :posix (destination)
-  (:hostattrs
-   (require-data (car (get-hostattrs :hostname)) destination))
-  (:apply
-   (data-uploaded (car (get-hostattrs :hostname)) destination destination)))
+(defvar *data-source-registrations* nil
+  "Successful attempts to register data sources, which need not be repeated.")
+
+(defun try-register-data-source (&rest args)
+  "Register sources of prerequisite data.
+This function is typically called in consfigs."
+  (when-let ((pair (and (not (find args *data-source-registrations*))
+			(restart-case (apply #'register-data-source args)
+			  (skip-data-source () nil)))))
+    (push pair *data-sources*)
+    (push args *data-source-registrations*)))
+
+(defun skip-data-source (c)
+  (declare (ignore c))
+  (invoke-restart 'skip-data-source))
+
+(defun reset-data-sources ()
+  "Forget all data sources registered in this Lisp process.
+This function is typically called at the REPL."
+  (setq *data-sources* nil
+	*data-source-registrations* nil))
 
 (defun get-data (iden1 iden2)
   (if-let ((source-thunk (cdr (query-data-sources iden1 iden2))))

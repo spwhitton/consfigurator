@@ -89,7 +89,6 @@
 	   #:deploys
 	   #:deploys-these
 
-	   #:add-data-source
 	   #:data
 	   #:iden1
 	   #:iden2
@@ -99,10 +98,11 @@
 	   #:data-string
 	   #:file-data
 	   #:data-file
+	   #:try-register-data-source
 	   #:register-data-source
-	   #:data-uploaded
-	   #:host-data-uploaded
 	   #:get-data
+	   #:reset-data-sources
+	   #:skip-data-source
 	   #:upload-all-prerequisite-data))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -122,7 +122,9 @@
 (defpackage :consfigurator.property.file
   (:use #:cl #:consfigurator)
   (:export #:has-content
-	   #:contains-lines))
+	   #:contains-lines
+	   #:data-uploaded
+	   #:host-data-uploaded))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))

@@ -29,3 +29,16 @@
 		  do (setq new-lines (delete existing-line new-lines)))
 	    (writefile path (unlines
 			     (nconc existing-lines new-lines))))))
+
+(defprop data-uploaded :posix (iden1 iden2 destination)
+  (:hostattrs
+   (declare (ignore destination))
+   (require-data iden1 iden2))
+  (:apply
+   (writefile destination (get-data-stream iden1 iden2))))
+
+(defprop host-data-uploaded :posix (destination)
+  (:hostattrs
+   (require-data (get-hostname) destination))
+  (:apply
+   (data-uploaded (get-hostname) destination destination)))
