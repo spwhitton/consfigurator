@@ -88,6 +88,8 @@
 	   #:defhostdeploy
 	   #:deploy
 	   #:deploy-these
+	   #:deploys
+	   #:deploys-these
 
 	   #:add-data-source
 	   #:register-data-source

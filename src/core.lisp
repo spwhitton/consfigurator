@@ -673,15 +673,15 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
       (connect (loop for connection in (ensure-cons connections)
 		     collect (ensure-cons connection))))))
 
-(defprop deploy :posix (connection host &rest additional-properties)
+(defprop deploys :posix (connection host &rest additional-properties)
   "Execute a Consfigurator deployment.
 
 Useful to have one host act a controller, applying properties to other hosts.
 Also useful to set up VMs, chroots, disk images etc. on localhost.")
 
-(defprop deploy-these :posix (connection host &rest properties)
+(defprop deploys-these :posix (connection host &rest properties)
   "Execute a deployment, but replace the properties of host with PROPERTIES.
-This property is to the DEPLOY property what the DEPLOY-THESE function is to
+This property is to the DEPLOYS property what the DEPLOY-THESE function is to
 the DEPLOY function.")
 
 
