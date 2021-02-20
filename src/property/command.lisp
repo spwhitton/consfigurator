@@ -22,4 +22,4 @@
 
 Keyword argument :environment is a plist of environment variables to be set
 when running the command, using env(1)."
-  (:apply (apply #'run-with-input nil environment cmd args)))
+  (:apply (apply #'run :env environment cmd args)))
