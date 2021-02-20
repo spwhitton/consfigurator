@@ -77,6 +77,7 @@
 	   #:defprop
 	   #:get-hostattrs
 	   #:push-hostattrs
+	   #:get-hostname
 	   #:require-data
 	   #:defhost
 

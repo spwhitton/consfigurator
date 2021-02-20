@@ -321,6 +321,12 @@ is needed to deploy a property.
 Called by property :HOSTATTRS subroutines."
   (push-hostattrs :data (cons iden1 iden2)))
 
+(defun get-hostname ()
+  "Get the hostname of the host to which properties are being applied.
+
+Called by property subroutines."
+  (car (get-hostattrs :hostname)))
+
 
 ;;;; Property application specifications
 

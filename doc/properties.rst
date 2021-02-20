@@ -15,8 +15,9 @@ to which this property is applied or is to be applied; and (ii) check that
 applying this property makes sense -- e.g. that we're not trying to install a
 package using apt(1) on a FreeBSD host.
 
-Can retrieve existing static informational attributes using ``GET-HOSTATTRS``.
-Should signal the condition ``INCOMPATIBLE-PROPERTY`` if existing static
+Can retrieve existing static informational attributes using ``GET-HOSTATTRS``,
+or things which wrap ``GET-HOSTATTRS``, such as ``GET-HOSTNAME``.  Should
+signal the condition ``INCOMPATIBLE-PROPERTY`` if existing static
 informational attributes indicate that the property should not be applied to
 this host.  Can use ``PUSH-HOSTATTRS`` and ``REQUIRE-DATA`` to add new entries
 to the host's static information atributes.
