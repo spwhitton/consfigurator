@@ -54,12 +54,22 @@ prerequisite data."))
   (:documentation
    "An item of prerequisite data accessible via the filesystem."))
 
-;; if this proves to be inadequate then an alternative would be to maintain a
+;; If this proves to be inadequate then an alternative would be to maintain a
 ;; mapping of ASDF systems to data sources, and then DEPLOY* could look up the
 ;; data sources registered for the systems in (slot-value (slot-value host
 ;; 'propspec) 'systems) and bind *data-sources* to point to those just how it
-;; binds *host* and *connection*.  registering a source would the mean
-;; registering it in the mapping of systems to sources
+;; binds *host* and *connection*.  Registering a source would the mean
+;; registering it in the mapping of systems to sources.
+;;
+;; Sources of data are not associated with propspecs because the latter might
+;; request "/etc/foo/key.sec for whatever host I'm being applied to" using
+;; FILE:HOST-DATA-UPLOADED, and different hosts in different consfigs might
+;; have different data sources for that file.  So one possibility is to
+;; associate sources of prerequisite data to hosts, or to the consfigs which
+;; define those hosts.  But associating them to the root Lisp makes more
+;; sense, I think, because it reflects the idea that prerequisite data sources
+;; are associated with the user of the Lisp image -- what data they are able
+;; to get at from this terminal.
 (defgeneric register-data-source (type &key)
   (:documentation
    "Initialise and register a source of prerequisite data in this Lisp process.
