@@ -72,7 +72,7 @@ prerequisite data."))
 ;; to get at from this terminal.
 (defgeneric register-data-source (type &key)
   (:documentation
-   "Initialise and register a source of prerequisite data in this Lisp process.
+   "Initialise and register a source of prerequisite data in this Lisp image.
 Registered data sources are available to all deployments executed from the
 root Lisp, regardless of the consfig which defines the host to which
 properties are to be applied.  (This could only cause problems if you have
@@ -85,7 +85,7 @@ Implementations of this function return a pair of functions.
 
 Signals a condition MISSING-DATA-SOURCE when unable to access the data source
 (e.g. because can't decrypt it).  This condition is captured and ignored in
-all new Lisp processes started up by Consfigurator, since prerequisite data
+all new Lisp images started up by Consfigurator, since prerequisite data
 sources are not expected to be available outside of the root Lisp."))
 
 (defvar *data-sources* nil "Known sources of prerequisite data.")
@@ -107,7 +107,7 @@ This function is typically called in consfigs."
   (invoke-restart 'skip-data-source))
 
 (defun reset-data-sources ()
-  "Forget all data sources registered in this Lisp process.
+  "Forget all data sources registered in this Lisp image.
 This function is typically called at the REPL."
   (setq *data-sources* nil
 	*data-source-registrations* nil))
@@ -174,7 +174,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 	     (compose #'version> #'car))))
 
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
-;; Lisp processes
+;; Lisp images
 (defun upload-all-prerequisite-data (&optional (host *host*))
   (macrolet ((highest-version-in-cache (cache)
 	       `(third (car (remove-if-not (lambda (c)

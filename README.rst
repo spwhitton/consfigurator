@@ -18,7 +18,7 @@ Configurator has convenient abstractions for combining these different ways to
 execute your configuration on hosts with different ways of connecting to them.
 Connections can be arbitrarily nested.  For example, to combine SSHing to a
 Debian machine as an unprivileged user, using sudo to become root, and then
-starting up a Lisp process to execute your deployment code, you would just
+starting up a Lisp image to execute your deployment code, you would just
 evaluate ``(deploy (:ssh (:sudo :user "root") :debian-sbcl) foo.example.com)``.
 
 Declarative configuration management systems like Consfigurator and Propellor_

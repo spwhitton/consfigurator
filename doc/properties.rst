@@ -58,12 +58,12 @@ Errors in attempting to apply a property are indicated by signalling a
 
 ``:posix`` properties should not make any assumptions about what localhost is
 -- they may be running in the root Lisp, but they might be running in a Lisp
-process running on an intermediary host, or even on the host to be configured.
+image running on an intermediary host, or even on the host to be configured.
 They should perform I/O only by calling ``RUN``, ``RUNLINES``, ``READFILE``,
 ``WRITEFILE``, requesting prerequisite data, and applying or unapplying other
 ``:posix`` properties.  Otherwise, they should be pure functions.
 
 ``:lisp`` properties, by contrast, may (and should) assume that they are
-running in a Lisp process on the host to which they are to be applied, so they
+running in a Lisp image on the host to which they are to be applied, so they
 can perform arbitrary I/O in that context.  They can also make use of ``RUN``,
 ``RUNLINES``, ``READFILE`` and ``WRITEFILE`` if desired.

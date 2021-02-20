@@ -27,7 +27,7 @@ not try to define properties and connection types programmatically, or try to
 dynamically rebind or flet-bind them.
 
 The reason for this restriction is that some connection types need to invoke
-fresh Lisp processes on remote hosts with (local equivalents to) the function
+fresh Lisp images on remote hosts with (local equivalents to) the function
 objects contained in properties and connections available to be called.  Since
 function objects are not serialisable, the only way to do this is to send over
 the contents of your ``.lisp`` files and load the same properties and
@@ -35,8 +35,8 @@ connection types into the remote Lisp.  By contrast, hosts, property
 application specifications and deployments can be send over in serialised form.
 
 If you were to dynamically rebind properties or connection types in the root
-Lisp, then connections which do not start remote Lisp processes would use your
-new definitions, but connections which start remote Lisp processes would use
+Lisp, then connections which do not start remote Lisp images would use your
+new definitions, but connections which start remote Lisp images would use
 the static definitions in your ``.lisp`` files (or lack definitions
 altogether).  This would violate the idea in Consfigurator that properties,
 including nested deployments, have the same meaning regardless of the

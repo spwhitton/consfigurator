@@ -37,7 +37,7 @@ the ``DATA-UPLOADED`` property, to get access to the requested data.
 
 A Lisp connection gathers all needed prerequisite data once at the beginning,
 and copies it to an on-disk cache inside the home directory of the remote UID
-which will run the Lisp process.  A POSIX connection only attempts to obtain
+which will run the Lisp image.  A POSIX connection only attempts to obtain
 prerequisite data when a property's check function indicates the property is
 not already applied.
 

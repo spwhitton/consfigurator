@@ -32,7 +32,7 @@ Consfigurator, evaluating
 (mapc #'asdf:load-system (if (atom SYSTEMS) (list SYSTEMS) SYSTEMS) should be
 sufficient to define all the properties you intend to apply to hosts.
 
-Consfigurator uses this information when starting up remote Lisp processes to
+Consfigurator uses this information when starting up remote Lisp images to
 effect deployments: it sends over the ASDF systems specified by SYSTEMS."
   (when (atom systems)
     (setq systems (list systems)))
@@ -71,7 +71,7 @@ the list implicitly depend on earlier ones.
 Members of ARGS must all be objects which can be serialised.  In particular,
 function objects are not permitted."))
   (:documentation
-   "The point of this data structure is to be a way to inform a Lisp process
+   "The point of this data structure is to be a way to inform a Lisp image
 running on a remote host how it can apply some properties: load each of the
 systems, resolve unapply, onchange etc., and then look in the value cell of
 each PROPERTY to find a property, and pass each of ARGS to the function in the

@@ -31,12 +31,12 @@ global value should be regarded as a constant.")
   (:documentation
    "Within the context of the current connection, connect to HOST by
 establishing a new connection of type TYPE.
-Either starts a Lisp process somewhere else, tells it to continue establishing
+Either starts a Lisp image somewhere else, tells it to continue establishing
 REMAINING (by telling it to call DEPLOY* with arguments obtained by (locally)
 evaluating (list (or REMAINING '(:local)) *host*)), and returns nil, or
 returns a object suitable to be the value of *CONNECTION*.
 
-Any implementation which hands over to a remote Lisp process will need to
+Any implementation which hands over to a remote Lisp image will need to
 upload any prerequisite data required by the deployment."))
 
 (defclass connection ()

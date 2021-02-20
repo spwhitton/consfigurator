@@ -29,7 +29,7 @@ Connection
 A means by which properties can be applied to hosts, and multihop connections
 to other hosts can be established.  There are two types of connections: those
 which interact with the remote host by means of a POSIX shell, and those which
-apply properties by executing them in a Lisp process running on the host.
+apply properties by executing them in a Lisp image running on the host.
 
 POSIX connections can pass input to and return output from processes, but
 cannot start asynchronous processes for interaction with your Lisp functions.
@@ -52,7 +52,7 @@ be nested: one remote host can be used to deploy others, as a controller.
 Root Lisp
 ~~~~~~~~~
 
-The Lisp process you control directly when you execute deployments.  Typically
+The Lisp image you control directly when you execute deployments.  Typically
 running on your development laptop/workstation (and not as the ``root`` user).
 
 Property application specification
@@ -100,7 +100,7 @@ data; this avoids uploading the same data over and over again.
 In addition to secrets management, prerequisite data is Consfigurator's
 mechanism for the common need to upload files to controlled hosts.  The same
 mechanism is used internally to upload the Lisp code needed to start up remote
-Lisp processes for ``:lisp`` connections.
+Lisp images for ``:lisp`` connections.
 
 Consfig
 ~~~~~~~
