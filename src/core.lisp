@@ -47,6 +47,12 @@ upload any prerequisite data required by the deployment."))
 (defgeneric connection-run (connection cmd &optional input)
   (:documentation "Subroutine to run shell commands on the host.
 
+INPUT is a string to send to the shell command's stdin, or a stream which will
+be emptied into the shell command's stdin.
+
+Implementations can specialise on both the CONNECTION and INPUT arguments, if
+they need to handle streams and strings differently.
+
 Returns (values OUT EXIT) where OUT is merged stdout and stderr and EXIT is
 the exit code.  Should not signal any error condition just because EXIT is
 non-zero."))
@@ -68,9 +74,14 @@ non-zero."))
 ;; take: a string vs. a path.  for a given connection type, they may have same
 ;; or different implementations.
 
-(defgeneric connection-writefile (connection path contents)
+(defgeneric connection-writefile (connection path input)
   (:documentation
-   "Subroutine to replace/create the contents of files on the host."))
+   "Subroutine to replace/create the contents of files on the host.
+
+INPUT is the new contents of the file or a stream which will produce it.
+
+Implementations can specialise on both the CONNECTION and INPUT arguments, if
+they need to handle streams and strings differently."))
 
 (defmethod connection-writefile :around ((connection connection) path contents)
   (declare (ignore path contents))
@@ -134,7 +145,7 @@ Keyword arguments accepted:
     does not exit nonzero, usually because it is being called partly or only
     for its exit code
 
-  - :input INPUT -- pass the contents of the string INPUT on stdin
+  - :input INPUT -- pass the contents of the string or stream INPUT on stdin
 
   - :env ENVIRONMENT -- where ENVIRONMENT is a plist specifying environment
     variable names and values, use env(1) to set these variables when running

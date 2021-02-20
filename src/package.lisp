@@ -10,6 +10,7 @@
 			  #:escape-sh-token
 			  #:run-program
 			  #:read-file-string
+			  #:copy-stream-to-stream
 			  #:subprocess-error
 			  #:stripln
 			  #:unix-namestring
@@ -27,6 +28,7 @@
 	   #:escape-sh-token
 	   #:run-program
 	   #:read-file-string
+	   #:copy-stream-to-stream
 	   #:subprocess-error
 	   #:stripln
 	   #:unix-namestring

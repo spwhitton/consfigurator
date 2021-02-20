@@ -33,8 +33,10 @@ root Lisp is running on, as the root Lisp's uid."))
   (multiple-value-bind (output _ exit-code)
       (run-program shell-cmd
 		   :force-shell t
-		   :input (and input
-			       (make-string-input-stream input))
+		   :input (typecase input
+			    (stream input)
+			    (string (make-string-input-stream input))
+			    (t nil))
 		   :output :string
 		   :error-output :output
 		   :ignore-error-status t)
@@ -44,9 +46,17 @@ root Lisp is running on, as the root Lisp's uid."))
 (defmethod connection-readfile ((connection local-connection) path)
   (read-file-string path))
 
-(defmethod connection-writefile ((connection local-connection) path contents)
+(defmethod connection-writefile ((connection local-connection)
+				 path
+				 (contents string))
   (with-open-file (stream path :direction :output :if-exists :supersede)
     (write-string contents stream)))
+
+(defmethod connection-writefile ((connection local-connection)
+				 path
+				 (contents stream))
+  (with-open-file (stream path :direction :output :if-exists :supersede)
+    (copy-stream-to-stream contents stream)))
 
 (defmethod connection-upload ((connection local-connection) from to)
   (copy-file from to))
