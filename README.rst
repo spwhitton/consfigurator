@@ -88,7 +88,8 @@ Quick start / introduction
 Portability and stability
 =========================
 
-- **Consfigurator is still stabilising and so there may be breaking changes.**
+- **Consfigurator is still stabilising and so there may be lots of breaking
+  changes.**
 
 - No attempt is made to support Common Lisp implementations other than SBCL,
   though portability patches are welcome.
