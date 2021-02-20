@@ -693,6 +693,41 @@ the DEPLOY function.")
 
 ;;;; Prerequisite data
 
+(defclass data ()
+  ((iden1
+    :initarg :iden1
+    :reader iden1)
+   (iden2
+    :initarg :iden2
+    :reader iden2)
+   (data-version
+    :initarg :version
+    :reader data-version
+    :initform nil)
+   (data-mime
+    :initarg :mime
+    :reader data-mime
+    :initform nil
+    :documentation "The MIME type of the data, if known."))
+  (:documentation
+   "An item of prerequisite data as provided by a registered prerequisite data
+source, or, outside of the root Lisp, as fished out of a local cache of
+prerequisite data."))
+
+(defclass string-data (data)
+  ((data-string
+    :initarg :string
+    :reader data-string))
+  (:documentation
+   "An item of prerequisite data directly accessible to Lisp."))
+
+(defclass file-data (data)
+  ((data-file
+    :initarg :file
+    :reader data-file))
+  (:documentation
+   "An item of prerequisite data accessible via the filesystem."))
+
 (defvar *data-sources* nil "Known sources of prerequisite data.")
 
 (defun add-data-source (check provide)
@@ -777,24 +812,23 @@ sources are not expected to be available outside of the root Lisp."))
 		      (version< highest-remote-cached-version
 				highest-source-version)))
 	    do (connection-clear-data-cache iden1 iden2)
-	       (connection-upload-data iden1
-				       iden2
-				       highest-source-version
-				       (funcall highest-source))
+	       (connection-upload-data (funcall highest-source))
 	  else if (and highest-local-cached-version
 		       (or (not highest-remote-cached-version)
 			   (version< highest-remote-cached-version
 				     highest-local-cached-version)))
-		 do (connection-clear-data-cache iden1 iden2)
-		    (connection-upload-data
-		     iden1
-		     iden2
-		     highest-local-cached-version
-		     (let ((file (local-data-pathname
-				  iden1
-				  iden2
-				  highest-local-cached-version)))
-		       (list :file file :type (try-get-file-mime-type file))))
+		 do (let ((file (local-data-pathname
+				 iden1
+				 iden2
+				 highest-local-cached-version)))
+		      (connection-clear-data-cache iden1 iden2)
+		      (connection-upload-data
+		       (make-instance 'file-data
+				      :iden1 iden1
+				      :iden2 iden2
+				      :version highest-local-cached-version
+				      :file file
+				      :mime (try-get-file-mime-type file))))
 	  else unless highest-remote-cached-version
 		 do (error "Could not provide prerequisite data ~S | ~S"
 			   iden1 iden2))))
@@ -823,30 +857,33 @@ sources are not expected to be available outside of the root Lisp."))
 (defun remote-data-pathname (&rest args)
   (apply #'data-pathname (get-remote-data-cache-dir) args))
 
-(defun connection-upload-data (iden1 iden2 version data)
+(defmethod connection-upload-data :around ((data data))
   (when (subtypep (class-of *connection*)
 		  'consfigurator.connection.local:local-connection)
     (error "Attempt to upload data to the root Lisp; this is not allowed"))
-  (let* ((dest (remote-data-pathname iden1 iden2 version)))
-    (run "mkdir" "-p" (unix-namestring (pathname-directory-pathname dest)))
-    (cond
-      ((getf data :file)
-       (let ((source (unix-namestring (getf data :file))))
-	 (if (string-prefix-p "text/" (getf data :mime))
-	     (let ((dest (strcat (unix-namestring dest) ".gz")))
-	       (with-temporary-file (:pathname tmp)
-		 (run-program (strcat "gzip --rsyncable -c "
-				      (escape-sh-token source))
-			      :output tmp)
-		 (connection-upload *connection*
-				    tmp
-				    (unix-namestring dest))
-		 (run "gunzip" dest)))
-	     (connection-upload *connection* source dest))))
-      ((getf data :data)
-       (connection-writefile *connection* dest (getf data :data)))
-      (t
-       (error "Prerequisite data plist lacks both :file and :data entries")))))
+  (let ((*dest* (remote-data-pathname (iden1 data)
+				      (iden2 data)
+				      (data-version data))))
+    (declare (special *dest*))
+    (run "mkdir" "-p" (unix-namestring (pathname-directory-pathname *dest*)))
+    (call-next-method)))
+
+(defmethod connection-upload-data ((data file-data))
+  (declare (special *dest*))
+  (let ((source (unix-namestring (data-file data))))
+    (if (string-prefix-p "text/" (data-mime data))
+	(let ((dest (strcat (unix-namestring *dest*) ".gz")))
+	  (with-temporary-file (:pathname tmp)
+	    (run-program (strcat "gzip --rsyncable -c "
+				 (escape-sh-token source))
+			 :output tmp)
+	    (connection-upload *connection* tmp (unix-namestring dest))
+	    (run "gunzip" dest)))
+	(connection-upload *connection* source *dest*))))
+
+(defmethod connection-upload-data ((data string-data))
+  (declare (special *dest*))
+  (connection-writefile *connection* *dest* (data-string data)))
 
 (defun connection-clear-data-cache (iden1 iden2)
   (let ((dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))

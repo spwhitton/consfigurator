@@ -90,6 +90,15 @@
 	   #:deploys-these
 
 	   #:add-data-source
+	   #:data
+	   #:iden1
+	   #:iden2
+	   #:data-version
+	   #:data-mime
+	   #:string-data
+	   #:data-string
+	   #:file-data
+	   #:data-file
 	   #:register-data-source
 	   #:data-uploaded
 	   #:host-data-uploaded
