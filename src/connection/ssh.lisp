@@ -19,7 +19,7 @@
 
 (defmethod establish-connection ((type (eql :ssh)) remaining
 				 &key
-				   (hop (hostattr *host* :hostname)))
+				   (hop (get-hostname)))
   (declare (ignore remaining))
   (run "ssh" "-fN" hop)
   (make-instance 'ssh-connection :hostname hop))
