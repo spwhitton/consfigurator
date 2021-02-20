@@ -32,8 +32,8 @@ Mechanics
 Properties declare that they need certain pieces of prerequisite data by
 adding static informational attributes, and a deployment of those properties
 will make an attempt to provide the data.  Properties then either call the
-``GET-DATA`` function, or depend on the ``DATA-UPLOADED`` property, to get
-access to the requested data.
+``GET-DATA-STREAM`` function or the ``GET-DATA-STRING`` function, or depend on
+the ``DATA-UPLOADED`` property, to get access to the requested data.
 
 A Lisp connection gathers all needed prerequisite data once at the beginning,
 and copies it to an on-disk cache inside the home directory of the remote UID

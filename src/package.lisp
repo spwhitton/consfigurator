@@ -100,9 +100,11 @@
 	   #:data-file
 	   #:try-register-data-source
 	   #:register-data-source
-	   #:get-data
 	   #:reset-data-sources
 	   #:skip-data-source
+	   #:get-data-stream
+	   #:with-data-stream
+	   #:get-data-string
 	   #:upload-all-prerequisite-data))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)

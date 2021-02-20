@@ -776,13 +776,53 @@ This function is typically called at the REPL."
   (setq *data-sources* nil
 	*data-source-registrations* nil))
 
-(defun get-data (iden1 iden2)
+(defun get-data-string (iden1 iden2)
+  "Return the content of an item of prerequisite data as a string.
+
+This function is called by property :APPLY and :UNAPPLY subroutines."
+  (%get-data-string (%get-data iden1 iden2)))
+
+(defun get-data-stream (iden1 iden2)
+  "Return a stream which will produce the content of an item of prerequisite
+data.  The elements of the stream are always octets.  If the item of
+prerequisite data was provided by the prerequisite data source as a string, it
+will be encoded in UTF-8.
+
+This function is called by property :APPLY and :UNAPPLY subroutines."
+  (%get-data-stream (%get-data iden1 iden2)))
+
+(defmacro with-data-stream ((s iden1 iden2) &body body)
+  `(with-open-stream (,s (get-data-stream ,iden1 ,iden2))
+     ,@body))
+
+(defun %get-data (iden1 iden2)
   (if-let ((source-thunk (cdr (query-data-sources iden1 iden2))))
     (funcall source-thunk)
-    ;; now look in local cache -- note that this won't exist in the root Lisp,
-    ;; but only if we're a Lisp started up by a connection
+    ;; else, look in local cache -- note that this won't exist in the root
+    ;; Lisp, but only if we're a Lisp started up by a connection
+    (if-let ((local-cached
+	      (car (remove-if-not (lambda (c)
+				    (and (string= (first c) iden1)
+					 (string= (second c) iden2)))
+				  (sort-prerequisite-data-cache
+				   (get-local-cached-prerequisite-data))))))
+      (let ((file (apply #'local-data-pathname local-cached)))
+	(make-instance 'file-data
+		       :iden1 iden1
+		       :iden2 iden2
+		       :file file
+		       :mime (try-get-file-mime-type file)))
+      (error "Could not provide prerequisite data ~S | ~S" iden1 iden2))))
 
-    ))
+(defmethod %get-data-stream ((data string-data)))
+
+(defmethod %get-data-stream ((data file-data)))
+
+(defmethod %get-data-string ((data string-data))
+  (data-string data))
+
+(defmethod %get-data-string ((data file-data))
+  (read-file-string (data-file data)))
 
 (defun query-data-sources (iden1 iden2)
   (car (sort (loop for (ver . get) in *data-sources*
