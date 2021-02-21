@@ -179,7 +179,7 @@ Returns command's stdout, stderr and exit code."
 	    into accum
 	  finally
 	     (when accum
-	       (setq cmd (format nil "env ~A ~A"
+	       (setq cmd (format nil "env ~{~A~^ ~} ~A"
 				 (escape-sh-command accum)
 				 cmd))))
     (with-remote-temporary-file (stderr)
