@@ -57,10 +57,7 @@
   (get (car propapp) 'type))
 
 (defun collapse-types (&rest lists)
-  (if (some (lambda (type) (eq type :posix))
-	    (flatten lists))
-      :posix
-      :lisp))
+  (if (member :posix (flatten lists)) :posix :lisp))
 
 (defun propdesc (prop)
   (get prop 'desc))
@@ -69,34 +66,25 @@
   (get prop 'args))
 
 (defun propattrs (prop &rest args)
-  (apply (get prop 'hostattrs (lambda (&rest args)
-				(declare (ignore args))
-				(values)))
-	 args))
+  (apply (get prop 'hostattrs #'noop) args))
 
 (defun propappattrs (propapp)
   (apply #'propattrs propapp))
 
 (defun propcheck (prop &rest args)
-  (apply (get prop 'check (lambda (&rest args)
-			    (declare (ignore args))
-			    (values)))
-	 args))
+  (apply (get prop 'check #'noop) args))
 
 (defun propappcheck (propapp)
-  (apply #'propcheck (car propapp) (cdr propapp)))
+  (apply #'propcheck propapp))
 
 (defun propappapply (propapp)
   (apply (symbol-function (car propapp)) (cdr propapp)))
 
 (defun propunapply (prop &rest args)
-  (apply (get prop 'unapply (lambda (&rest args)
-			      (declare (ignore args))
-			      (values)))
-	 args))
+  (apply (get prop 'unapply #'noop) args))
 
 (defun propappunapply (propapp)
-  (apply #'propunapply (car propapp) (cdr propapp)))
+  (apply #'propunapply propapp))
 
 ;;; standard way to write properties is to use one of these two macros
 
