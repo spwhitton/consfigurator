@@ -137,7 +137,8 @@
   (:use #:cl #:consfigurator))
 
 (defpackage :consfigurator.data.pgp
-  (:use #:cl #:consfigurator))
+  (:use #:cl #:consfigurator #:alexandria)
+  (:export #:list-data #:get-data #:set-data #:set-data-from-file))
 
 (defpackage :consfigurator.property.command
   (:use #:cl #:consfigurator)

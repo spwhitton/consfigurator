@@ -23,3 +23,70 @@
 ;; user to call at the REPL to add pieces of data, see what's there, etc.  (a
 ;; prerequisite data source which was some sort of external file-generating or
 ;; secrets storage database might not provide any functions for the REPL).
+
+(defmethod register-data-source ((type (eql :pgp)) &key location)
+  (unless (file-exists-p location)
+    (with-open-file (s location :direction :output)
+      (print "" s)))
+  (let ((mod (file-write-date location))
+	(cache (read-store location)))
+    (labels ((update-cache ()
+	       (when-let ((new-mod (> (file-write-date location) mod)))
+		 (setq mod new-mod
+		       cache (read-store location))))
+	     (check (iden1 iden2)
+	       (update-cache)
+	       (cadr (data-assoc iden1 iden2 cache)))
+	     (extract (iden1 iden2)
+	       (update-cache)
+	       (cddr (data-assoc iden1 iden2 cache))))
+      (cons #'check #'extract))))
+
+(defun read-store (location)
+  (unless (file-exists-p location)
+    (error "~A does not exist!" location))
+  (read-from-string
+   (run-program
+    (escape-sh-command (list "gpg" "--decrypt" (unix-namestring location)))
+    :output :string)))
+
+(defun put-store (location data)
+  (run-program (list "gpg" "--encrypt")
+	       :input (make-string-input-stream (prin1-to-string data))
+	       :output (unix-namestring location)))
+
+(defun data-assoc (iden1 iden2 data)
+  (assoc (cons iden1 iden2) data
+	 :test (lambda (x y)
+		 (and (string= (car x) (car y))
+		      (string= (cdr x) (cdr y))))))
+
+(defun get-data (location iden1 iden2)
+  "Fetch a piece of prerequisite data.
+
+Useful at the REPL."
+  (cddr (data-assoc iden1 iden2 (read-store location))))
+
+(defun set-data (location iden1 iden2 val)
+  "Set a piece of prerequisite data.
+
+Useful at the REPL."
+  (let ((data (delete-if
+	       (lambda (d)
+		 (and (string= (caar d) iden1) (string= (cdar d) iden2)))
+	       (and (file-exists-p location) (read-store location)))))
+    (push (cons (cons iden1 iden2) (cons (get-universal-time) val)) data)
+    (put-store location data)))
+
+(defun set-data-from-file (location iden1 iden2 file)
+  "Set a piece of prerequisite data from the contents of a file.
+
+Useful at the REPL."
+  (set-data location iden1 iden2 (read-file-string file)))
+
+(defun list-data (location)
+  "List all prerequisite data in the PGP store at LOCATION.
+
+Useful at the REPL."
+  (dolist (item (read-store location))
+    (format t "~A ~A~%" (caar item) (cdar item))))
