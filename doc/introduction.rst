@@ -133,6 +133,6 @@ symbol ``BAR`` defined in ``CONSFIGURATOR.PROPERTY.DATA.FOO``.  These are the
 recommended package nicknaming schemes for use in consfigs, e.g.::
 
   (defpackage :com.example.consfig
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file #:consfigurator.property.file
-                     #:data.pgp #:consfigurator.data.pgp)))
+    (:use #:cl #:consfigurator)
+    (:local-nicknames (#:file #:consfigurator.property.file
+                       #:data.pgp #:consfigurator.data.pgp)))
