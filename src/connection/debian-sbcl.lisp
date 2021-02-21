@@ -18,7 +18,8 @@
 (in-package :consfigurator.connection.debian-sbcl)
 
 
-;; (handler-bind ((missing-data-source #'skip-data-source))
+;; (handler-bind ((consfigurator:missing-data-source
+;;                 #'consfigurator:skip-data-source))
 ;;   ...)
 
 
