@@ -1,8 +1,6 @@
 Introduction
 ============
 
-This is the user's guide for Consfigurator.
-
 Concepts and terminology
 ------------------------
 
