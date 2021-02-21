@@ -107,6 +107,7 @@
 	   #:data-string
 	   #:file-data
 	   #:data-file
+	   #:missing-data-source
 
 	   #:try-register-data-source
 	   #:register-data-source

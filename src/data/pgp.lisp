@@ -23,11 +23,14 @@
 ;; user to call at the REPL to add pieces of data, see what's there, etc.  (a
 ;; prerequisite data source which was some sort of external file-generating or
 ;; secrets storage database might not provide any functions for the REPL).
+;;
+;; You will need to touch(1) the file you wish to use before trying to
+;; register it.
 
 (defmethod register-data-source ((type (eql :pgp)) &key location)
   (unless (file-exists-p location)
-    (with-open-file (s location :direction :output)
-      (print "" s)))
+    (error 'missing-data-source
+	   :text (format nil "Could not open ~A" location)))
   (let ((mod (file-write-date location))
 	(cache (read-store location)))
     (labels ((update-cache ()
@@ -43,12 +46,15 @@
       (cons #'check #'extract))))
 
 (defun read-store (location)
-  (unless (file-exists-p location)
-    (error "~A does not exist!" location))
-  (read-from-string
-   (run-program
-    (escape-sh-command (list "gpg" "--decrypt" (unix-namestring location)))
-    :output :string)))
+  (handler-case
+      (read-from-string
+       (run-program
+	(escape-sh-command (list "gpg" "--decrypt" (unix-namestring location)))
+	:output :string))
+    (subprocess-error (error)
+      (error 'missing-data-source
+	     :text (format nil "While attempt to decrypt, gpg exited with ~A"
+			   (uiop:subprocess-error-code error))))))
 
 (defun put-store (location data)
   (run-program (list "gpg" "--encrypt")
