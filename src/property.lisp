@@ -105,8 +105,16 @@
 		     `(lambda ,args ,@slot))))
     `(setprop ',name ,type ,@slots)))
 
-;; (defmacro defproplist (name args &body propspec)
-;;   "Define a property which applies a property application specification.")
+(defmacro defproplist (name type args &body propspec)
+  "Define a property which applies a property application specification.
+PROPSPEC is an unevaluated property application specification."
+  (with-gensyms (props)
+    `(let ((,props (props ,propspec)))
+       (defprop ,name ,type ,args
+	 (:hostattrs
+	  (eval-propspec-hostattrs ,props))
+	 (:apply
+	  (eval-propspec ,props))))))
 
 
 ;;;; hostattrs in property subroutines

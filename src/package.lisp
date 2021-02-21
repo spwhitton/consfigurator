@@ -79,6 +79,7 @@
 	   #:propattrs
 	   #:propunapply
 	   #:defprop
+	   #:defproplist
 	   #:get-hostattrs
 	   #:push-hostattrs
 	   #:get-hostname
