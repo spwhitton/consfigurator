@@ -59,5 +59,16 @@
    (password
     :initarg :password)))
 
+(defmethod connection-run ((connection sudo-connection) cmd &optional input))
+
+(defmethod connection-readfile ((connection sudo-connection) path))
+
+(defmethod connection-writefile ((connection sudo-connection) path contents))
+
+(defmethod connection-upload ((connection sudo-connection) from to))
+
 ;; always wrap in sh -c so that we can be sure that a password will be
-;; consistently asked for or not asked for.
+;; consistently asked for or not asked for.  and we don't make a single string
+;; with the whole command to run, but pass the command and its args
+;;
+;; so, ``sudo -HkS --user=USER sh -c ARGS`` and prepend password\n to INPUT
