@@ -119,7 +119,7 @@
 	   #:upload-all-prerequisite-data))
 
 (defpackage :consfigurator.connection.ssh
-  (:use #:cl #:consfigurator))
+  (:use #:cl #:consfigurator #:alexandria))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
