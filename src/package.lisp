@@ -71,6 +71,7 @@
 	   #:with-remote-temporary-file
 	   #:connection-run-failed
 	   #:runlines
+	   #:test
 	   #:readfile
 	   #:writefile
 

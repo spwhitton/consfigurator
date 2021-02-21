@@ -216,6 +216,9 @@ Returns command's stdout, stderr and exit code."
 (defun runlines (&rest args)
   (lines (apply #'run args)))
 
+(defun test (&rest args)
+  (= 0 (nth-value 2 (apply #'run :for-exit "test" args))))
+
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))
 
