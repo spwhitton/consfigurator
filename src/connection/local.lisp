@@ -65,6 +65,6 @@ root Lisp is running on, as the root Lisp's uid."))
 ;; implementations of ESTABLISH-CONNECTION will rely on this when they call
 ;; RUN, READFILE etc.
 (eval-when (:load-toplevel :execute)
-  (unless consfigurator.core::*connection*
-    (setq consfigurator.core::*connection*
+  (unless consfigurator::*connection*
+    (setq consfigurator::*connection*
 	  (make-instance 'local-connection))))
