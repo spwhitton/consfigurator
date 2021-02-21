@@ -33,8 +33,9 @@
   (cons #'asdf-data-source-check #'get-path-to-concatenated-system))
 
 (defun asdf-data-source-check (iden1 system)
-  (and (string= iden1 "lisp-system")
-       (asdf:find-system system nil)))
+  (when (and (string= iden1 "lisp-system")
+	     (asdf:find-system system nil))
+    (get-universal-time)))
 
 (defun get-path-to-concatenated-system (iden1 system)
   "Try to concatenate all the source code for SYSTEM, store it somewhere and
