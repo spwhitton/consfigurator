@@ -33,8 +33,15 @@
 				 "||" "apt-get" "-y" "install" "sbcl")))
     (error "Could not get sbcl installed on the remote host"))
   (upload-all-prerequisite-data)
-  ;; now we generate and upload a Lisp file which will load all the
-  ;; lisp-system prerequisite data we just uploaded and call (deploy :local
-  ;; host properties), execute `sbcl --script <path to tiny file>`, and relay
-  ;; its output, signalling an error if it exits nonzero
+
+  ;; PROGRAM is (load "~/.cache/...") (deploy :local host properties)
+  ;; (multiple-value-bind ()
+  ;;     (run :input program "sbcl"
+  ;; 	   "--noinform"
+  ;; 	   "--noprint"
+  ;; 	   "--disable-debugger"
+  ;; 	   "--no-sysinit"
+  ;; 	   "--no-user-init"))
+  ;; relay its output and signal something if it exits nonzero
+
   )
