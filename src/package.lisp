@@ -67,6 +67,7 @@
 	   #:connection-teardown
 
 	   #:run
+	   #:with-remote-temporary-file
 	   #:connection-run-failed
 	   #:runlines
 	   #:readfile

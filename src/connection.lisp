@@ -152,7 +152,7 @@ Keyword arguments accepted:
     the command.
 
 Returns command's stdout, stderr and exit code."
-  (let (cmd input may-fail env (stderr (mktemp)))
+  (let (cmd input may-fail env)
     (loop for arg = (pop args)
 	  do (case arg
 	       (:for-exit (setq may-fail t))
@@ -171,17 +171,16 @@ Returns command's stdout, stderr and exit code."
 	       (setq cmd (format nil "env ~A ~A"
 				 (escape-sh-command accum)
 				 cmd))))
-    (unwind-protect
-	 (multiple-value-bind (out exit)
-	     (connection-run *connection*
-			     (format nil "( ~A ) 2>~A" cmd stderr)
-			     input)
-	   (let ((err (readfile stderr)))
-	     (if (or may-fail (= exit 0))
-		 (values out err exit)
-		 (error 'connection-run-failed
-			:stdout out :stderr err :exit-code exit))))
-      (connection-run *connection* (format nil "rm -f ~A" stderr)))))
+    (with-remote-temporary-file (stderr)
+      (multiple-value-bind (out exit)
+	  (connection-run *connection*
+			  (format nil "( ~A ) 2>~A" cmd stderr)
+			  input)
+	(let ((err (readfile stderr)))
+	  (if (or may-fail (= exit 0))
+	      (values out err exit)
+	      (error 'connection-run-failed
+		     :stdout out :stderr err :exit-code exit)))))))
 
 (defun mktemp ()
   "Make a temporary file on the remote side."
@@ -196,6 +195,12 @@ Returns command's stdout, stderr and exit code."
     (if (= exit 0)
 	(car (lines out))
 	(error 'connection-run-failed :exit-code exit))))
+
+(defmacro with-remote-temporary-file ((file) &body body)
+  `(let ((,file (mktemp)))
+     (unwind-protect
+	  (progn ,@body)
+       (connection-run *connection* (format nil "rm -f ~A" ,file)))))
 
 (defun runlines (&rest args)
   (lines (apply #'run args)))
