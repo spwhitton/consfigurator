@@ -141,13 +141,21 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 		     collect (mapcar #'preprocess-connection-args
 				     (ensure-cons connection)))))))
 
-(defprop deploys :posix (connection host &rest additional-properties)
-  "Execute a Consfigurator deployment.
-
-Useful to have one host act a controller, applying properties to other hosts.
-Also useful to set up VMs, chroots, disk images etc. on localhost.")
-
-(defprop deploys-these :posix (connection host &rest properties)
-  "Execute a deployment, but replace the properties of host with PROPERTIES.
-This property is to the DEPLOYS property what the DEPLOY-THESE function is to
-the DEPLOY function.")
+;; these might need to be special-cased in parsing propspecs, because we
+;; probably want it to be easy for the user to pass unevaluated propspecs to
+;; these, but we want the evaluation to happen in the root Lisp.
+;;
+;; also, :HOSTATTRS subroutines of these will want to call
+;; PREPROCESS-CONNECTION-ARGS in order to substitute in any values from
+;; prerequisite data as early as possible
+;;
+;; (defprop deploys :posix (connection host &rest additional-properties)
+;;   "Execute a Consfigurator deployment.
+;;
+;; Useful to have one host act a controller, applying properties to other hosts.
+;; Also useful to set up VMs, chroots, disk images etc. on localhost.")
+;;
+;; (defprop deploys-these :posix (connection host &rest properties)
+;;   "Execute a deployment, but replace the properties of host with PROPERTIES.
+;; This property is to the DEPLOYS property what the DEPLOY-THESE function is to
+;; the DEPLOY function.")
