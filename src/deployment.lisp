@@ -48,7 +48,6 @@ For example, if you usually deploy properties to athena by SSH,
 and then you can eval (athena.silentflame.com) to apply athena's properties."
   `(defdeploy ,host-name (,connection ,host-name)))
 
-
 (defvar *host* nil
   "Object representing the host at the end of the current connection chain.
 Deployments bind this variable.  Its global value should remain nil.
