@@ -138,7 +138,8 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 	     (error "Cannot apply :lisp properties using :posix connection"))
 	   (eval-propspec propspec)))
       (connect (loop for connection in (ensure-cons connections)
-		     collect (ensure-cons connection))))))
+		     collect (mapcar #'preprocess-connection-args
+				     (ensure-cons connection)))))))
 
 (defprop deploys :posix (connection host &rest additional-properties)
   "Execute a Consfigurator deployment.

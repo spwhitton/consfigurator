@@ -57,6 +57,7 @@
 
 	   ;; connection.lisp
 	   #:establish-connection
+	   #:preprocess-connection-args
 	   #:connection
 	   #:lisp-connection
 	   #:posix-connection
@@ -119,6 +120,9 @@
 	   #:upload-all-prerequisite-data))
 
 (defpackage :consfigurator.connection.ssh
+  (:use #:cl #:consfigurator #:alexandria))
+
+(defpackage :consfigurator.connection.sudo
   (:use #:cl #:consfigurator #:alexandria))
 
 (defpackage :consfigurator.connection.local

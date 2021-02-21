@@ -39,6 +39,17 @@ returns a object suitable to be the value of *CONNECTION*.
 Any implementation which hands over to a remote Lisp image will need to
 upload any prerequisite data required by the deployment."))
 
+(defgeneric preprocess-connection-args (type &key)
+  (:documentation
+   "Hook to allow connection types to do work in the root Lisp before
+Consfigurator begins the attempt to establish the connection chain.  The
+return value is used as replacement keyword arguments to the connection.
+
+For an example of usage, see the :SUDO connection type."))
+
+(defmethod preprocess-connection-args ((type symbol) &key)
+  (values))
+
 (defclass connection ()
   ((parent
     :initform *connection*

@@ -23,8 +23,16 @@ other purposes.
 - ``(HOSTNAME . PATH)`` means the data that should be uploaded to ``PATH`` on
   ``HOSTNAME`` (and nowhere else)
 
-- ``("lisp-system" . SYSTEM)`` means the data is Lisp code which, when loaded,
-  defines the packages and symbols contained in the ASDF system ``SYSTEM``.
+- ``("--lisp-system" . SYSTEM)`` means the data is Lisp code which, when
+  loaded, defines the packages and symbols contained in the ASDF system
+  ``SYSTEM``
+
+- ``("--user-passwd--HOSTNAME" . USER)`` means the data is the password for
+  user ``USER`` on ``HOSTNAME``.
+
+(Proposed convention: Except for the first item above, these reserved names
+should start with ``--`` and use ``--`` to separate parameter values within
+the string.  Hostnames cannot start with a hyphen.)
 
 Mechanics
 ---------
