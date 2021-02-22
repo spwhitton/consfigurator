@@ -43,9 +43,12 @@
 
 (defun sshcmd (connection &rest args)
   ;; wrap in 'sh -c' in case the login shell is not POSIX
-  (format nil "ssh ~A sh -c ~A"
+  (format nil "ssh ~A ~A"
 	  (ssh-host connection)
-	  (escape-sh-token (if (cdr args) (escape-sh-command args) args))))
+	  (escape-sh-token
+	   (format nil "sh -c ~A"
+		   (escape-sh-token
+		    (if (cdr args) (escape-sh-command args) (car args)))))))
 
 (defmethod connection-run ((c ssh-connection) cmd &optional input)
   (run :input input (sshcmd c cmd)))
