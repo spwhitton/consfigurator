@@ -253,6 +253,18 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 (defun remote-data-pathname (&rest args)
   (apply #'data-pathname (get-remote-data-cache-dir) args))
 
+(defun connection-try-upload (from to)
+  "Wrapper around CONNECTION-UPLOAD to ensure it gets used only when
+appropriate.  Falls back to CONNECTION-WRITEFILE."
+  (if (and (subtypep (slot-value *connection* 'parent)
+		     'consfigurator.connection.local:local-connection)
+	   (find-method #'connection-upload
+			(mapcar #'find-class (list *connection* t t))
+			nil))
+      (connection-upload *connection* from to)
+      (with-open-file (s from)
+	(connection-writefile *connection* to s))))
+
 (defmethod connection-upload-data :around ((data data))
   (when (subtypep (class-of *connection*)
 		  'consfigurator.connection.local:local-connection)

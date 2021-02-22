@@ -115,18 +115,6 @@ specifying a more efficient alternative to CONNECTION-WRITEFILE when data is
 in a file on disc rather than in memory, and we are uploading directly from
 the root Lisp's machine.  For example, using rsync(1) over SSH."))
 
-(defun connection-try-upload (from to)
-  "Wrapper around CONNECTION-UPLOAD to ensure it gets used only when
-appropriate.  Falls back to CONNECTION-WRITEFILE."
-  (if (and (subtypep (slot-value *connection* 'parent)
-		     'consfigurator.connection.local:local-connection)
-	   (find-method #'connection-upload
-			(mapcar #'find-class (list *connection* t t))
-			nil))
-      (connection-upload *connection* from to)
-      (with-open-file (s from)
-	(connection-writefile *connection* to s))))
-
 (defgeneric connection-teardown (connection)
   (:documentation "Subroutine to disconnect from the host."))
 
