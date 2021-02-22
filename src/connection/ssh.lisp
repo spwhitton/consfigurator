@@ -56,10 +56,13 @@
     (values (strcat err out) exit)))
 
 (defmethod connection-readfile ((c ssh-connection) path)
-  (multiple-value-bind (output error-code)
-      (run (sshcmd c "test" "-r" path "&&" "cat" path))
-    (if (= 0 error-code)
-	output
+  (multiple-value-bind (out err exit-code)
+      (run :may-fail
+	   (sshcmd c (format nil "test -r ~A && cat ~:*~A"
+			     (escape-sh-token path))))
+    (declare (ignore err))
+    (if (= 0 exit-code)
+	out
 	(error "File ~S not readable" path))))
 
 (defmethod connection-writefile ((c ssh-connection) path contents)
