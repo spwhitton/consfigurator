@@ -73,7 +73,7 @@ Quick start / introduction
 
         (asdf:defsystem :com.example.consfig
           :serial t
-          :depends-on (#:consfigurator)
+          :depends-on (#:consfigurator #:cl-interpol)
           :components ((:file "package")
                        (:file "consfig")))
 
@@ -90,8 +90,11 @@ Quick start / introduction
     ~/common-lisp/consfig/consfig.lisp::
 
         (in-package :com.example.consfig)
-
         (in-consfig :com.example.consfig)
+	(named-readtables:in-readtable :interpol-syntax)
+
+	;; (try-register-data-source
+        ;;  :pgp :location #P"/path/to/com.example.consfig.gpg")
 
         (defhost athena.example.com
           "Web and file server."
