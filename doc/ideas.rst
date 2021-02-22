@@ -28,3 +28,15 @@ Core
   would be to avoid calling the property within another property without
   calling its :HOSTATTRS subroutine too -- could we figure out catching and
   ignoring the condition when its :HOSTATTRS subroutine did get run?
+
+- Macro for use in properties which works like Propellor's changesFile.
+
+Project & packaging
+-------------------
+
+- Define a semantics for version numbers (probably just like Propellor's),
+  start keeping a NEWS file and move from Debian experimental to unstable.
+
+- Add an autopkgtest, marked as superficial, which tries to load the system
+  into sbcl and dies if there are any compiler warnings.  Mainly to ensure
+  that everything is loaded in the correct order.
