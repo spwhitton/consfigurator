@@ -1,0 +1,44 @@
+Source: consfigurator
+Section: admin
+Priority: optional
+Maintainer: Sean Whitton <spwhitton@spwhittona.name>
+Build-Depends: debhelper-compat (= 13), dh-sphinxdoc, dh-texinfo, python3-sphinx, sphinx-common
+Standards-Version: 4.5.1
+Homepage: https://spwhitton.name/tech/code/consfigurator/
+Vcs-Git: https://git.spwhitton.name/consfigurator
+Vcs-Browser: https://git.spwhitton.name/consfigurator
+Rules-Requires-Root: no
+
+Package: consfigurator
+Architecture: all
+Depends: ${misc:Depends}, cl-alexandria, cl-ppcre, cl-interpol
+Recommends: sbcl
+Description: Lisp declarative configuration management system
+ Consfigurator is a system for declarative configuration management using
+ Common Lisp.  You can use it to configure hosts as root, deploy services as
+ unprivileged users, build and deploy containers, and produce disc images.
+ .
+ Consfigurator's design gives you a great deal of flexibility about how to
+ control the hosts you want to configure.  Input and output streams attached
+ to an interactive POSIX sh running on the target host (or in the target
+ container) is sufficient to use much of Consfigurator's functionality.  But
+ if it is possible to get an implementation of Common Lisp started up on the
+ host, then Configurator can transparently execute your deployment code over
+ on the remote side, rather than exchanging information via POSIX sh.  This
+ lets you use the full power of Common Lisp to deploy your configuration.
+ .
+ Configurator has convenient abstractions for combining these different ways
+ to execute your configuration on hosts with different ways of connecting to
+ them.  Connections can be arbitrarily nested.  For example, to combine SSHing
+ to a Debian machine as an unprivileged user, using sudo to become root, and
+ then starting up a Lisp image to execute your deployment code, you would just
+ evaluate (deploy (:ssh (:sudo :user "root") :debian-sbcl) foo.example.com).
+ .
+ Declarative configuration management systems like Consfigurator and Propellor
+ share a number of goals with projects like the GNU Guix System and NixOS.
+ However, tools like Consfigurator and Propellor try to layer the power of
+ declarative and reproducible configuration on top of traditional,
+ battle-tested unix system administration infrastructure like apt, dpkg, yum,
+ and distro package archives, rather than seeking to replace any of those.
+ Let's get as much as we can out of all that existing distro policy-compliant
+ work!

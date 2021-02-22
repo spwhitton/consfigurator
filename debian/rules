@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --with sphinxdoc
+
+override_dh_auto_build:
+	make -C doc html info
+
+override_dh_auto_clean:
+	find src -name "*.fasl" -delete
+	make -C doc clean
