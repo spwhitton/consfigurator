@@ -137,9 +137,9 @@
 (defpackage :consfigurator.connection.debian-sbcl
   (:use #:cl #:consfigurator))
 
-(defpackage :consfigurator.property.command
+(defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)
-  (:export #:run))
+  (:export #:single))
 
 (defpackage :consfigurator.property.file
   (:use #:cl #:consfigurator #:alexandria)

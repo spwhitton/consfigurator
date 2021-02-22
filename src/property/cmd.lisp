@@ -15,14 +15,14 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :consfigurator.property.command)
+(in-package :consfigurator.property.cmd)
 
-(defprop run :posix (&rest args)
-  "A property which can be applied by running a shell command.  ARGS is either
-a single string specifying a shell-escaped command, or number of strings which
-will be shell-escaped and then concatenated.
+(defprop single :posix (&rest args)
+  "A property which can be applied by running a single shell command.  ARGS is
+either a single string specifying a shell-escaped command, or number of
+strings which will be shell-escaped and then concatenated.
 
-(Note that bypassing the shell could only be done within a :LISP property.)
+(Note that bypassing the shell can only be done within a :LISP property.)
 
 Keyword argument :ENV is a plist of environment variables to be set when
 running the command, using env(1)."

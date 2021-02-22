@@ -16,7 +16,7 @@
 	       (:file "src/data")
 	       (:file "src/connection/ssh")
 	       (:file "src/connection/debian-sbcl")
-	       (:file "src/property/command")
+	       (:file "src/property/cmd")
 	       (:file "src/property/file")
 	       (:file "src/data/asdf")
 	       (:file "src/data/pgp")))
