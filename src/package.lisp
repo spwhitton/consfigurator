@@ -137,6 +137,10 @@
 (defpackage :consfigurator.connection.debian-sbcl
   (:use #:cl #:consfigurator))
 
+(defpackage :consfigurator.property.command
+  (:use #:cl #:consfigurator)
+  (:export #:run))
+
 (defpackage :consfigurator.property.file
   (:use #:cl #:consfigurator)
   (:export #:has-content
@@ -150,7 +154,3 @@
 (defpackage :consfigurator.data.pgp
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:list-data #:get-data #:set-data #:set-data-from-file))
-
-(defpackage :consfigurator.property.command
-  (:use #:cl #:consfigurator)
-  (:export #:run))
