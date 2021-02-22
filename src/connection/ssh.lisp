@@ -37,9 +37,9 @@
   (:documentation "Deploy properties using non-interactive SSH."))
 
 (defun ssh-host (connection)
-  (if-let ((user (slot-value connection :user)))
-    (format nil "~A@~A" user (slot-value connection :hostname))
-    (slot-value connection :hostname)))
+  (if-let ((user (slot-value connection 'user)))
+    (format nil "~A@~A" user (slot-value connection 'hostname))
+    (slot-value connection 'hostname)))
 
 (defun sshcmd (connection &rest args)
   ;; wrap in 'sh -c' in case the login shell is not POSIX
