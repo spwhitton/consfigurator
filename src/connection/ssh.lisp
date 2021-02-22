@@ -51,7 +51,9 @@
 		    (if (cdr args) (escape-sh-command args) (car args)))))))
 
 (defmethod connection-run ((c ssh-connection) cmd &optional input)
-  (run :input input (sshcmd c cmd)))
+  (multiple-value-bind (out err exit)
+      (run :input input (sshcmd c cmd))
+    (values (strcat err out) exit)))
 
 (defmethod connection-readfile ((c ssh-connection) path)
   (multiple-value-bind (output error-code)

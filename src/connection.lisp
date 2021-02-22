@@ -71,9 +71,9 @@ be emptied into the shell command's stdin.
 Implementations can specialise on both the CONNECTION and INPUT arguments, if
 they need to handle streams and strings differently.
 
-Returns (values OUT EXIT) where OUT is merged stdout and stderr and EXIT is
-the exit code.  Should not signal any error condition just because EXIT is
-non-zero."))
+Returns (values OUT EXIT) where OUT is either merged stdout and stderr or
+stderr followed by stdout, and EXIT is the exit code.  Should not signal any
+error condition just because EXIT is non-zero."))
 
 (defmethod connection-run :around ((connection connection) cmd &optional input)
   (declare (ignore cmd input))
