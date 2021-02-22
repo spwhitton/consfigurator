@@ -6,6 +6,9 @@ Patches welcome.
 Properties
 ----------
 
+- Implementing DEPLOYS and DEPLOYS-THESE is a priority, as it is the first
+  step towards implementing things like building disc images.
+
 Connections
 -----------
 
