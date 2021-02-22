@@ -71,17 +71,19 @@
 (defmethod connection-run ((c sudo-connection) cmd &optional input)
   ;; send the password followed by ^M, then the real stdin.  use CODE-CHAR in
   ;; this way so that we can be sure ASCII ^M is what will get emitted.
-  (let* ((password (slot-value c 'password))
+  (let* ((input-stream
+	   (if (streamp input) input (make-string-input-stream input)))
+	 (password (slot-value c 'password))
 	 (password-stream (and password
 			       (make-string-input-stream
 				(format nil "~A~A" password (code-char 13)))))
 	 (new-input (cond
 		      ((and password input)
-		       (make-concatenated-stream password-stream input))
+		       (make-concatenated-stream password-stream input-stream))
 		      (password
 		       password-stream)
 		      (input
-		       (make-string-input-stream input))
+		       input-stream)
 		      (t
 		       nil))))
     (run :input new-input (sudocmd c cmd))))
