@@ -177,7 +177,8 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 		   when version collect (cons version
 					      (lambda ()
 						(funcall get iden1 iden2))))
-	     (compose #'version> #'car))))
+	     (lambda (x y)
+	       (version> (car x) (car y))))))
 
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
 ;; Lisp images
