@@ -37,19 +37,19 @@
 ;; which runs the remote Lisp image.  At least :debian-sbcl avoids this by
 ;; sending your password in on stdin.
 
-(defmethod preprocess-connection-args ((type (eql :sudo)) &key as to)
+(defmethod preprocess-connection-args ((type (eql :sudo)) &key as (to "root"))
   (list :sudo
 	:user to
 	:password (and
 		   as
 		   (destructuring-bind (user host)
 		       (split-string as :separator "@")
-		     (get-data-string (strcat "-user-passwd--" host) user)))))
+		     (get-data-string (strcat "--user-passwd--" host) user)))))
 
 (defmethod establish-connection ((type (eql :sudo))
 				 remaining
 				 &key
-				   (user "root")
+				   user
 				   password)
   (declare (ignore remaining))
   (make-instance 'sudo-connection :user user :password password))
@@ -63,15 +63,18 @@
 (defun sudocmd (connection &rest args)
   ;; wrap in sh -c so that it is more likely we are either asked for a
   ;; password for all our commands or not asked for one for any
-  (format nil "sudo -HkS --user=~A sh -c ~A"
+  (format nil "sudo -HkS --prompt=\"\" --user=~A sh -c ~A"
 	  (slot-value connection 'user)
-	  (escape-sh-token (if (cdr args) (escape-sh-command args) args))))
+	  (escape-sh-token
+	   (if (cdr args) (escape-sh-command args) (car args)))))
 
 (defmethod connection-run ((c sudo-connection) cmd &optional input)
   ;; send the password followed by ^M, then the real stdin.  use CODE-CHAR in
   ;; this way so that we can be sure ASCII ^M is what will get emitted.
   (let* ((input-stream
-	   (if (streamp input) input (make-string-input-stream input)))
+	   (typecase input
+	     (stream input)
+	     (string (make-string-input-stream input))))
 	 (password (slot-value c 'password))
 	 (password-stream (and password
 			       (make-string-input-stream
@@ -85,13 +88,17 @@
 		       input-stream)
 		      (t
 		       nil))))
-    (run :input new-input (sudocmd c cmd))))
+    (multiple-value-bind (out err exit-code)
+	(run :input new-input (sudocmd c cmd))
+      (values (strcat err out) exit-code))))
 
 (defmethod connection-readfile ((c sudo-connection) path)
-  (multiple-value-bind (output error-code)
-      (run (sudocmd c "test" "-r" path "&&" "cat" path))
-    (if (= 0 error-code)
-	output
+  (multiple-value-bind (out exit-code)
+      (connection-run
+       c
+       (format nil "test -r ~A && cat ~:*~A" (escape-sh-token path)))
+    (if (= 0 exit-code)
+	out
 	(error "File ~S not readable" path))))
 
 (defmethod connection-writefile ((c sudo-connection) path contents)
