@@ -102,7 +102,8 @@ sources are not expected to be available outside of the root Lisp."))
 (defun try-register-data-source (&rest args)
   "Register sources of prerequisite data.
 This function is typically called in consfigs."
-  (when-let ((pair (and (not (find args *data-source-registrations*))
+  (when-let ((pair (and (not (find args *data-source-registrations*
+				   :test #'equal))
 			(restart-case (apply #'register-data-source args)
 			  (skip-data-source () nil)))))
     (push pair *data-sources*)
