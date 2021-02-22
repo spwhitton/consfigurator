@@ -153,4 +153,4 @@
 
 (defpackage :consfigurator.property.command
   (:use #:cl #:consfigurator)
-  (:export #:shell-command))
+  (:export #:run))
