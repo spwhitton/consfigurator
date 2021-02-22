@@ -53,7 +53,7 @@ entries."
 	(string (setq hostname-sym (intern hostname)))
 	(symbol (setq hostname-sym hostname
 		      hostname (string-downcase (symbol-name hostname)))))
-      (push (getf attrs :hostname) hostname)
+      (push hostname (getf attrs :hostname))
       (when (stringp (car properties))
 	(push (pop properties) (getf attrs :desc)))
       `(progn
