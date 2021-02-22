@@ -261,7 +261,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 				      (iden2 data)
 				      (data-version data))))
     (declare (special *dest*))
-    (run "mkdir" "-p" (unix-namestring (pathname-directory-pathname *dest*)))
+    (run "mkdir" "-p" (pathname-directory-pathname *dest*))
     (call-next-method)))
 
 (defmethod connection-upload-data ((data file-data))
@@ -321,5 +321,5 @@ of the current connection, where each entry is of the form
   (mapcar (lambda (line)
 	    (mapcar #'filename->string (split-string line :separator "/")))
 	  (runlines :may-fail "find"
-		    (unix-namestring (get-remote-data-cache-dir))
+		    (get-remote-data-cache-dir)
 		    "-type" "f" "-printf" "%P\\n")))

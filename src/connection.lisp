@@ -181,7 +181,8 @@ Returns command's stdout, stderr and exit code."
 	       (:may-fail (setq may-fail t))
 	       (:input (setq input (pop args)))
 	       (:env (setq env (pop args)))
-	       (t (push arg cmd)))
+	       (t (push (typecase arg (pathname (unix-namestring arg)) (t arg))
+			cmd)))
 	  while args
 	  finally (nreversef cmd))
     (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
