@@ -33,7 +33,7 @@
   (cons #'asdf-data-source-check #'get-path-to-concatenated-system))
 
 (defun asdf-data-source-check (iden1 system)
-  (when (and (string= iden1 "lisp-system")
+  (when (and (string= iden1 "--lisp-system")
 	     (asdf:find-system system nil))
     (get-universal-time)))
 

@@ -27,7 +27,7 @@
   ;; any connection type which starts up a Lisp connection is going to want to
   ;; do something like what this loop does, so just make it a core function?
   ;; (loop for system in (slot-value (slot-value *host* :hostattrs) :systems)
-  ;; 	do (push (cons "lisp-system" system) (getf *host* :data)))
+  ;; 	do (push (cons "--lisp-system" system) (getf *host* :data)))
 
   (unless (= 0 (nth-value 1 (run "which" "sbcl" "2>/dev/null"
 				 "||" "apt-get" "-y" "install" "sbcl")))
