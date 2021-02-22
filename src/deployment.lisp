@@ -79,7 +79,7 @@ docstring)."
 				       ,propspec))))
 	 (let ((*host* ,new-host))
 	   (eval-propspec-hostattrs ,propspec))
-	 (deploy* ,connection ,new-host)))))
+	 (deploy* ',connection ,new-host)))))
 
 (defmacro deploy-these (connection host &body properties)
   "Establish a connection of type CONNECTION to HOST, and apply each of
@@ -111,7 +111,7 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 				      :props ,propspec)))
        (let ((*host* ,new-host))
 	 (eval-propspec-hostattrs ,propspec))
-       (deploy* ,connection ,new-host))))
+       (deploy* ',connection ,new-host))))
 
 (defun deploy* (connections host)
   ;; make a partial own-copy of HOST so that connections can add new pieces of
