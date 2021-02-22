@@ -273,9 +273,9 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 	    (run-program (strcat "gzip --rsyncable -c "
 				 (escape-sh-token source))
 			 :output tmp)
-	    (connection-upload *connection* tmp (unix-namestring dest))
+	    (connection-try-upload tmp (unix-namestring dest))
 	    (run "gunzip" dest)))
-	(connection-upload *connection* source *dest*))))
+	(connection-try-upload source *dest*))))
 
 (defmethod connection-upload-data ((data string-data))
   (declare (special *dest*))
