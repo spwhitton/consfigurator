@@ -15,6 +15,7 @@
 	       (:file "src/connection/local")
 	       (:file "src/data")
 	       (:file "src/connection/ssh")
+	       (:file "src/connection/sudo")
 	       (:file "src/connection/debian-sbcl")
 	       (:file "src/property/cmd")
 	       (:file "src/property/file")
