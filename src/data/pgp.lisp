@@ -34,9 +34,10 @@
   (let ((mod (file-write-date location))
 	(cache (read-store location)))
     (labels ((update-cache ()
-	       (when-let ((new-mod (> (file-write-date location) mod)))
-		 (setq mod new-mod
-		       cache (read-store location))))
+	       (let ((new-mod (file-write-date location)))
+		 (when (> new-mod mod)
+		   (setq mod new-mod
+			 cache (read-store location)))))
 	     (check (iden1 iden2)
 	       (update-cache)
 	       (cadr (data-assoc iden1 iden2 cache)))
