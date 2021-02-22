@@ -17,11 +17,13 @@
 
 (in-package :consfigurator.property.command)
 
-(defprop run :posix (cmd args &key environment)
-  "A property which can be applied by running a shell command.
+(defprop run :posix (&rest args)
+  "A property which can be applied by running a shell command.  ARGS is either
+a single string specifying a shell-escaped command, or number of strings which
+will be shell-escaped and then concatenated.
 
-(Note that bypassing the shell could only be done within a :lisp property.)
+(Note that bypassing the shell could only be done within a :LISP property.)
 
-Keyword argument :ENVIRONMENT is a plist of environment variables to be set
-when running the command, using env(1)."
-  (:apply (apply #'run :env environment cmd args)))
+Keyword argument :ENV is a plist of environment variables to be set when
+running the command, using env(1)."
+  (:apply (apply #'run args)))
