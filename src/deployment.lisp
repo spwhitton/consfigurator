@@ -148,6 +148,12 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 ;; PREPROCESS-CONNECTION-ARGS in order to substitute in any values from
 ;; prerequisite data as early as possible
 ;;
+;; One possibility is to allow :hostattrs subroutines to modify the arguments
+;; which will get passed to the other routines, by giving them a special var
+;; bound to the current propapp.  Then they could apply
+;; preprocess-connection-args to the arguments.  (This suggests that deploy*
+;; becomes simply applying the DEPLOYS property to the root Lisp, hrm.)
+;;
 ;; (defprop deploys :posix (connection host &rest additional-properties)
 ;;   "Execute a Consfigurator deployment.
 ;;

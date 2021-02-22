@@ -34,6 +34,13 @@
     (error "Could not get sbcl installed on the remote host"))
   (upload-all-prerequisite-data)
 
+  ;; I think we want a function in data.lisp which returns a LOAD form which
+  ;; will load a given lisp system out of a local cache.  After calling
+  ;; upload-all-prerequisite-data we can call that from here to get a form
+  ;; suitable for feeding to remote sbcl.  Slight layering violation, and only
+  ;; to be called by connections, not properties.  But better than exposing
+  ;; get-remote-data-cache-dir.
+
   ;; PROGRAM is (load "~/.cache/...") (deploy :local host properties)
   ;; (multiple-value-bind ()
   ;;     (run :input program "sbcl"
