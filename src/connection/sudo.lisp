@@ -99,4 +99,4 @@
   (run :input contents (sudocmd c "cat" #?">$(path)")))
 
 (defmethod connection-upload ((c sudo-connection) from to)
-  (connection-writefile c to (read-file-string from)))
+  (run (sudocmd c "cp" from to)))
