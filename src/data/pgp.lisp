@@ -24,8 +24,8 @@
 ;; prerequisite data source which was some sort of external file-generating or
 ;; secrets storage database might not provide any functions for the REPL).
 ;;
-;; You will need to touch(1) the file you wish to use before trying to
-;; register it.
+;; You will need to use SET-DATA to create an encrypted store before
+;; attempting to call REGISTER-DATA-SOURCE in your consfig.
 
 (defmethod register-data-source ((type (eql :pgp)) &key location)
   (unless (file-exists-p location)
