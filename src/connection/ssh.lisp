@@ -36,35 +36,32 @@
     :documentation "User to log in as."))
   (:documentation "Deploy properties using non-interactive SSH."))
 
-(defmacro ssh-host ()
-  `(if-let ((user (slot-value connection :user)))
-     (strcat user "@" (slot-value connection :hostname))
-     (slot-value connection :hostname)))
+(defun ssh-host (connection)
+  (if-let ((user (slot-value connection :user)))
+    (format nil "~A@~A" user (slot-value connection :hostname))
+    (slot-value connection :hostname)))
 
-(defmacro sshcmd (&rest args)
-  `(list
-    "ssh"
-    (ssh-host)
-    ;; wrap in 'sh -c' in case the login shell is not POSIX
-    (strcat "sh -c "
-	    (escape-sh-token
-	     ,(if (cdr args) `(escape-sh-command ',args) `(car ',args))))))
+(defun sshcmd (connection &rest args)
+  ;; wrap in 'sh -c' in case the login shell is not POSIX
+  (format nil "ssh ~A sh -c ~A"
+	  (ssh-host connection)
+	  (escape-sh-token (if (cdr args) (escape-sh-command args) args))))
 
-(defmethod connection-run ((connection ssh-connection) cmd &optional input)
-  (run :input input (sshcmd cmd)))
+(defmethod connection-run ((c ssh-connection) cmd &optional input)
+  (run :input input (sshcmd c cmd)))
 
-(defmethod connection-readfile ((connection ssh-connection) path)
+(defmethod connection-readfile ((c ssh-connection) path)
   (multiple-value-bind (output error-code)
-      (run (sshcmd "test" "-r" path "&&" "cat" path))
+      (run (sshcmd c "test" "-r" path "&&" "cat" path))
     (if (= 0 error-code)
 	output
 	(error "File ~S not readable" path))))
 
-(defmethod connection-writefile ((connection ssh-connection) path contents)
+(defmethod connection-writefile ((c ssh-connection) path contents)
   (with-remote-temporary-file (temp)
-    (run :input contents (sshcmd "cat" #?">$(temp)"))
+    (run :input contents (sshcmd c "cat" #?">$(temp)"))
     (run "mv" temp path)))
 
 ;; rsync it straight to to its destination so rsync can do incremental updates
-(defmethod connection-upload ((connection ssh-connection) from to)
-  (run "rsync" "-Pavc" from (strcat (ssh-host) ":" to)))
+(defmethod connection-upload ((c ssh-connection) from to)
+  (run "rsync" "-Pavc" from (format nil "~A:~A" (ssh-host c) to)))
