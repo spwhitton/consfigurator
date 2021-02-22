@@ -48,13 +48,6 @@ For example, if you usually deploy properties to athena by SSH,
 and then you can eval (athena.silentflame.com) to apply athena's properties."
   `(defdeploy ,host-name (,connection ,host-name)))
 
-(defvar *host* nil
-  "Object representing the host at the end of the current connection chain.
-Deployments bind this variable.  Its global value should remain nil.
-
-The main point of this is to allow properties to access the context in which
-they're being applied.")
-
 ;; this exists just to avoid exposing *HOST* but otherwise it's not really a
 ;; nice abstraction
 (defun deploy*-form-for-remote-lisp (remaining)

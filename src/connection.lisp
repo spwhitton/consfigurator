@@ -236,3 +236,10 @@ Returns command's stdout, stderr and exit code."
 
 (defun writefile (&rest args)
   (apply #'connection-writefile *connection* args))
+
+(defvar *host* nil
+  "Object representing the host at the end of the current connection chain.
+Deployments bind this variable.  Its global value should remain nil.
+
+The main point of this is to allow properties to access the context in which
+they're being applied.")
