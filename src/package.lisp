@@ -142,7 +142,7 @@
   (:export #:run))
 
 (defpackage :consfigurator.property.file
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:consfigurator #:alexandria)
   (:export #:has-content
 	   #:contains-lines
 	   #:data-uploaded

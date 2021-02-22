@@ -22,13 +22,12 @@
   (:apply (writefile path (unlines lines))))
 
 (defprop contains-lines :posix (path lines)
-  "Ensure there is a file at PATH containing each of LINES."
+  "Ensure there is a file at PATH containing each of LINES once."
   (:apply (let ((new-lines (copy-list lines))
 		(existing-lines (lines (readfile path))))
-	    (loop for existing-line in existing-lines
-		  do (setq new-lines (delete existing-line new-lines)))
-	    (writefile path (unlines
-			     (nconc existing-lines new-lines))))))
+	    (dolist (existing-line existing-lines)
+	      (deletef new-lines existing-line))
+	    (writefile path (unlines (nconc existing-lines new-lines))))))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
   (:hostattrs
