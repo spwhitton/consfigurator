@@ -274,7 +274,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 				 (escape-sh-token source))
 			 :output tmp)
 	    (connection-try-upload tmp (unix-namestring dest))
-	    (run "gunzip" dest)))
+	    (run "gunzip" "--keep" dest)))
 	(connection-try-upload source *dest*))))
 
 (defmethod connection-upload-data ((data string-data))
