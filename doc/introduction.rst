@@ -132,5 +132,6 @@ recommended package nicknaming schemes for use in consfigs, e.g.::
 
   (defpackage :com.example.consfig
     (:use #:cl #:consfigurator)
-    (:local-nicknames (#:file #:consfigurator.property.file
-                       #:data.pgp #:consfigurator.data.pgp)))
+    (:local-nicknames (#:file        #:consfigurator.property.file)
+                      (#:command     #:consfigurator.property.command)
+		      (#:data.pgp    #:consfigurator.data.pgp)))
