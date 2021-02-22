@@ -140,6 +140,26 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
    (stderr :initarg stderr :reader stderr)
    (exit-code :initarg exit-code :reader exit-code)))
 
+(defmacro with-remote-temporary-file ((file) &body body)
+  `(let ((,file (mktemp)))
+     (unwind-protect
+	  (progn ,@body)
+       (connection-run *connection* (format nil "rm -f ~A" ,file)))))
+
+(defun mktemp ()
+  "Make a temporary file on the remote side."
+  (multiple-value-bind (out exit)
+      ;; mktemp(1) is not POSIX; the only POSIX way is this m4 way,
+      ;; apparently, but even though m4(1) is POSIX it seems like it could
+      ;; often be absent, so have a fallback.  Avoid passing any arguments to
+      ;; mktemp(1) as these may differ on different platforms.
+      (connection-run
+       *connection*
+       "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp")
+    (if (= exit 0)
+	(car (lines out))
+	(error 'connection-run-failed :exit-code exit))))
+
 (defun run (&rest args)
   "Synchronous execution of shell commands using the current connection.
 ARGS can contain keyword-value pairs (and singular keywords) to specify
@@ -192,26 +212,6 @@ Returns command's stdout, stderr and exit code."
 	      (values out err exit)
 	      (error 'connection-run-failed
 		     :stdout out :stderr err :exit-code exit)))))))
-
-(defun mktemp ()
-  "Make a temporary file on the remote side."
-  (multiple-value-bind (out exit)
-      ;; mktemp(1) is not POSIX; the only POSIX way is this m4 way,
-      ;; apparently, but even though m4(1) is POSIX it seems like it could
-      ;; often be absent, so have a fallback.  Avoid passing any arguments to
-      ;; mktemp(1) as these may differ on different platforms.
-      (connection-run
-       *connection*
-       "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp")
-    (if (= exit 0)
-	(car (lines out))
-	(error 'connection-run-failed :exit-code exit))))
-
-(defmacro with-remote-temporary-file ((file) &body body)
-  `(let ((,file (mktemp)))
-     (unwind-protect
-	  (progn ,@body)
-       (connection-run *connection* (format nil "rm -f ~A" ,file)))))
 
 (defun runlines (&rest args)
   (lines (apply #'run args)))
