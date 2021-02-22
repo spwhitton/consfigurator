@@ -135,8 +135,8 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 	     (error "Cannot apply :lisp properties using :posix connection"))
 	   (eval-propspec propspec)))
       (connect (loop for connection in (ensure-cons connections)
-		     collect (mapcar #'preprocess-connection-args
-				     (ensure-cons connection)))))))
+		     collect (apply #'preprocess-connection-args
+				    (ensure-cons connection)))))))
 
 ;; these might need to be special-cased in parsing propspecs, because we
 ;; probably want it to be easy for the user to pass unevaluated propspecs to
