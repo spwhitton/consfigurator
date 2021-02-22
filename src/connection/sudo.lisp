@@ -17,6 +17,8 @@
 
 (in-package :consfigurator.connection.sudo)
 
+(named-readtables:in-readtable :interpol-syntax)
+
 ;; Note that a password needed to sudo is technically not a piece of
 ;; prerequisite data required by a deployment, because it is not used in
 ;; deploying properties in the context of a connection chain which has already
@@ -48,7 +50,7 @@
 (defmethod establish-connection ((type (eql :sudo))
 				 remaining
 				 &key
-				   user
+				   (user "root")
 				   password)
   (declare (ignore remaining))
   (make-instance 'sudo-connection :user user :password password))
@@ -59,16 +61,40 @@
    (password
     :initarg :password)))
 
-(defmethod connection-run ((connection sudo-connection) cmd &optional input))
+(defun sudocmd (connection &rest args)
+  ;; wrap in sh -c so that it is more likely we are either asked for a
+  ;; password for all our commands or not asked for one for any
+  (format nil "sudo -HkS --user=~A sh -c ~A"
+	  (slot-value connection 'user)
+	  (escape-sh-token (if (cdr args) (escape-sh-command args) args))))
 
-(defmethod connection-readfile ((connection sudo-connection) path))
+(defmethod connection-run ((c sudo-connection) cmd &optional input)
+  ;; send the password followed by ^M, then the real stdin.  use CODE-CHAR in
+  ;; this way so that we can be sure ASCII ^M is what will get emitted.
+  (let* ((password (slot-value c 'password))
+	 (password-stream (and password
+			       (make-string-input-stream
+				(format nil "~A~A" password (code-char 13)))))
+	 (new-input (cond
+		      ((and password input)
+		       (make-concatenated-stream password-stream input))
+		      (password
+		       password-stream)
+		      (input
+		       (make-string-input-stream input))
+		      (t
+		       nil))))
+    (run :input new-input (sudocmd c cmd))))
 
-(defmethod connection-writefile ((connection sudo-connection) path contents))
+(defmethod connection-readfile ((c sudo-connection) path)
+  (multiple-value-bind (output error-code)
+      (run (sudocmd c "test" "-r" path "&&" "cat" path))
+    (if (= 0 error-code)
+	output
+	(error "File ~S not readable" path))))
 
-(defmethod connection-upload ((connection sudo-connection) from to))
+(defmethod connection-writefile ((c sudo-connection) path contents)
+  (run :input contents (sudocmd c "cat" #?">$(path)")))
 
-;; always wrap in sh -c so that we can be sure that a password will be
-;; consistently asked for or not asked for.  and we don't make a single string
-;; with the whole command to run, but pass the command and its args
-;;
-;; so, ``sudo -HkS --user=USER sh -c ARGS`` and prepend password\n to INPUT
+(defmethod connection-upload ((c sudo-connection) from to)
+  (connection-writefile c to (read-file-string from)))
