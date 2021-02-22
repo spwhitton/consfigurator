@@ -99,6 +99,7 @@
 	   #:deploy-these
 	   #:deploys
 	   #:deploys-these
+	   #:deploy*-form-for-remote-lisp
 
 	   ;; data.lisp
 	   #:data
@@ -119,7 +120,9 @@
 	   #:get-data-stream
 	   #:with-data-stream
 	   #:get-data-string
-	   #:upload-all-prerequisite-data))
+	   #:upload-all-prerequisite-data
+	   #:load-forms-for-remote-cached-lisp-systems
+	   #:request-lisp-systems))
 
 (defpackage :consfigurator.connection.ssh
   (:use #:cl #:consfigurator #:alexandria))

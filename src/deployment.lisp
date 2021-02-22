@@ -55,6 +55,11 @@ Deployments bind this variable.  Its global value should remain nil.
 The main point of this is to allow properties to access the context in which
 they're being applied.")
 
+;; this exists just to avoid exposing *HOST* but otherwise it's not really a
+;; nice abstraction
+(defun deploy*-form-for-remote-lisp (remaining)
+  `(deploy* ,(or remaining :local) *host*))
+
 (defmacro deploy (connection host &body additional-properties)
   "Establish a connection of type CONNECTION to HOST, and apply each of the
 host's usual properties, followed by specified by ADDITIONAL-PROPERTIES, an

@@ -323,3 +323,18 @@ of the current connection, where each entry is of the form
 	  (runlines :may-fail "find"
 		    (get-remote-data-cache-dir)
 		    "-type" "f" "-printf" "%P\\n")))
+
+;; bit of a layering violation but better than exposing REMOTE-DATA-PATHNAME
+(defun load-forms-for-remote-cached-lisp-systems ()
+  "Return forms calling LOAD for concatenated, remote-cached copies of each of
+the Lisp systems required by *HOST*'s propspec.
+
+Only to be called by implementations of ESTABLISH-CONNECTION, after calling
+UPLOAD-ALL-PREREQUISITE-DATA."
+  (loop for system in (slot-value (slot-value *host* 'propspec) 'systems)
+	collect `(load ,(remote-data-pathname "--lisp-system" system))))
+
+;; connections which start up remote Lisp images use this
+(defun request-lisp-systems ()
+  (dolist (system (slot-value (slot-value *host* 'propspec) 'systems))
+    (push-hostattrs :data (cons "--lisp-system" system))))
