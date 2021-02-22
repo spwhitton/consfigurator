@@ -40,6 +40,7 @@
     (setf (get sym 'check) check))
   (when apply
     (setf (get sym 'apply) apply)
+    (eval `(defun ,sym ()))
     (setf (symbol-function sym)
 	  (if check
 	      (lambda (&rest args)
