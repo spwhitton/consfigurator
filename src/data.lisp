@@ -351,4 +351,8 @@ UPLOAD-ALL-PREREQUISITE-DATA."
 ;; connections which start up remote Lisp images use this
 (defun request-lisp-systems ()
   (dolist (system (slot-value (slot-value *host* 'propspec) 'systems))
-    (push-hostattrs :data (cons "--lisp-system" system))))
+    (push-hostattrs :data (cons "--lisp-system"
+				(etypecase system
+				  (string system)
+				  (symbol (string-downcase
+					   (symbol-name system))))))))
