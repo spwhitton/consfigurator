@@ -173,13 +173,15 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
   (read-file-string (data-file data)))
 
 (defun query-data-sources (iden1 iden2)
-  (car (sort (loop for (ver . get) in *data-sources*
-		   for version = (funcall ver iden1 iden2)
-		   when version collect (cons version
-					      (lambda ()
-						(funcall get iden1 iden2))))
-	     (lambda (x y)
-	       (version> (car x) (car y))))))
+  (flet ((make-thunk (v iden1 iden2)
+	   (lambda ()
+	     (funcall v iden1 iden2))))
+    (car (sort (loop for (ver . get) in *data-sources*
+		     for version = (funcall ver iden1 iden2)
+		     when version
+		       collect (cons version (make-thunk get iden1 iden2)))
+	       (lambda (x y)
+		 (version> (car x) (car y)))))))
 
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
 ;; Lisp images
