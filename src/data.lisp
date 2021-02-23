@@ -263,7 +263,8 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
   (if (and (subtypep (type-of (slot-value *connection* 'parent))
 		     'consfigurator.connection.local:local-connection)
 	   (find-method #'connection-upload
-			(mapcar #'find-class (list *connection* t t))
+			'()
+			(mapcar #'class-of (list *connection* t t))
 			nil))
       (connection-upload *connection* from to)
       (with-open-file (s from :element-type '(unsigned-byte 8))
