@@ -72,7 +72,8 @@
 
 (defun string->filename (s)
   (apply #'concatenate 'string
-	 (loop for c across s
+	 (loop for c
+		 across (etypecase s (string s) (number (write-to-string s)))
 	       if (or (char= c #\.)
 		      (alpha-char-p c)
 		      (digit-char-p c))
