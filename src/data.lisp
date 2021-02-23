@@ -336,8 +336,7 @@ of the current connection, where each entry is of the form
     '(iden1 iden2 version)."
   (mapcar (lambda (line)
 	    (mapcar #'filename->string (split-string line :separator "/")))
-	  (runlines :may-fail "find"
-		    (get-remote-data-cache-dir)
+	  (runlines :may-fail "find" (get-remote-data-cache-dir)
 		    "-type" "f" "-printf" "%P\\n")))
 
 ;; bit of a layering violation but better than exposing REMOTE-DATA-PATHNAME
