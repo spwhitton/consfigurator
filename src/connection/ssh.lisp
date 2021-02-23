@@ -52,7 +52,7 @@
 
 (defmethod connection-run ((c ssh-connection) cmd &optional input)
   (multiple-value-bind (out err exit)
-      (run :input input (sshcmd c cmd))
+      (run :may-fail :input input (sshcmd c cmd))
     (values (strcat err out) exit)))
 
 (defmethod connection-readfile ((c ssh-connection) path)

@@ -89,7 +89,7 @@
 		      (t
 		       nil))))
     (multiple-value-bind (out err exit-code)
-	(run :input new-input (sudocmd c cmd))
+	(run :may-fail :input new-input (sudocmd c cmd))
       (values (strcat err out) exit-code))))
 
 (defmethod connection-readfile ((c sudo-connection) path)
@@ -102,7 +102,7 @@
 	(error "File ~S not readable" path))))
 
 (defmethod connection-writefile ((c sudo-connection) path contents)
-  (run :input contents (sudocmd c "cat" #?">$(path)")))
+  (connection-run c #?"cat >$(path)" contents))
 
 (defmethod connection-upload ((c sudo-connection) from to)
   (run (sudocmd c "cp" from to)))
