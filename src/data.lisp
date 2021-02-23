@@ -159,7 +159,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 
 (defmethod %get-data-stream ((data string-data))
   (babel-streams:make-in-memory-input-stream
-   (babel:string-to-octets (data-string data) :UTF-8)
+   (babel:string-to-octets (data-string data) :encoding :UTF-8)
    :element-type '(unsigned-byte 8)))
 
 (defmethod %get-data-stream ((data file-data))
