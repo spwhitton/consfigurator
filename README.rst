@@ -90,7 +90,7 @@ Quick start / introduction
     ~/common-lisp/consfig/consfig.lisp::
 
         (in-package :com.example.consfig)
-        (in-consfig :com.example.consfig)
+        (in-consfig "com.example.consfig")
 	(named-readtables:in-readtable :interpol-syntax)
 
 	;; (try-register-data-source
