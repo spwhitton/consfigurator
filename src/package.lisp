@@ -100,6 +100,8 @@
 	   #:deploys
 	   #:deploys-these
 	   #:deploy*-form-for-remote-lisp
+	   #:*last-hop-info
+	   #:*this-hop-info*
 
 	   ;; data.lisp
 	   #:data

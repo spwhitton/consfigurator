@@ -113,6 +113,13 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 	 (eval-propspec-hostattrs ,propspec))
        (deploy* ',connection ,new-host))))
 
+(defvar *last-hop-info* nil
+  "Plist of information about most recently established connection hop.  Can be
+used by implementations of ESTABLISH-CONNECTION.")
+
+(defvar *this-hop-info* nil
+  "Plist which will become the value of *LAST-HOP-INFO*.")
+
 (defun deploy* (connections host)
   ;; make a partial own-copy of HOST so that connections can add new pieces of
   ;; required prerequisite data; specifically, so that they can request the
@@ -123,12 +130,13 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
     (labels
 	((connect (connections)
 	   (destructuring-bind ((type . args) . remaining) connections
-	     (when-let ((*connection*
-			 (apply #'establish-connection type remaining args)))
-	       (if remaining
-		   (connect remaining)
-		   (apply-propspec (slot-value *host* 'propspec)))
-	       (connection-teardown *connection*))))
+	     (let ((*last-hop-info* *this-hop-info*) *this-hop-info*)
+	       (when-let ((*connection*
+			   (apply #'establish-connection type remaining args)))
+		 (if remaining
+		     (connect remaining)
+		     (apply-propspec (slot-value *host* 'propspec)))
+		 (connection-teardown *connection*)))))
 	 (apply-propspec (propspec)
 	   (when (and (subtypep (class-of *connection*) 'posix-connection)
 		      (eq :lisp (propspec->type propspec)))
