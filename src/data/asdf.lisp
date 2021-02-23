@@ -55,4 +55,5 @@ return the filename."
     (make-instance 'file-data :file (asdf:output-file op co)
 			      :mime "text/plain"
 			      :iden1 iden1
-			      :iden2 system)))
+			      :iden2 system
+			      :version (get-universal-time))))
