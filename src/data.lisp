@@ -189,8 +189,8 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 					     (and (string= (first c) iden1)
 						  (string= (second c) iden2)))
 					   ,cache)))))
-    (loop with *data-sources* = *data-sources*
-	  initially (register-data-source :asdf)
+    (loop with *data-sources* = (cons (register-data-source :asdf)
+				      *data-sources*)
 
 	  with sorted-local-cache  = (sort-prerequisite-data-cache
 				      (get-local-cached-prerequisite-data))
