@@ -40,7 +40,6 @@
 (defun get-path-to-concatenated-system (iden1 system)
   "Try to concatenate all the source code for SYSTEM, store it somewhere and
 return the filename."
-  (declare (ignore iden1))
   (let ((cache-dir (ensure-directory-pathname
 		    (strcat (or (getenv "XDG_CACHE_HOME")
 				(strcat (getenv "HOME") "/.cache"))
@@ -54,4 +53,6 @@ return the filename."
 					   :ignore-inherited-configuration))
     (asdf:operate op co)
     (make-instance 'file-data :file (asdf:output-file op co)
-			      :mime "text/plain")))
+			      :mime "text/plain"
+			      :iden1 iden1
+			      :iden2 system)))

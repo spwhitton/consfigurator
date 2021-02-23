@@ -44,6 +44,8 @@
 	     (extract (iden1 iden2)
 	       (update-cache)
 	       (make-instance 'string-data
+			      :iden1 iden1
+			      :iden2 iden2
 			      :string (cddr (data-assoc iden1 iden2 cache)))))
       (cons #'check #'extract))))
 
