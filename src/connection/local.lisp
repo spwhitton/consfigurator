@@ -25,23 +25,36 @@
   (:documentation "The root deployment: applying properties to the machine the
 root Lisp is running on, as the root Lisp's uid."))
 
+;; assumes a POSIX shell (otherwise we could wrap in 'sh -c')
 (defmethod connection-run ((connection local-connection)
 			   shell-cmd
 			   &optional
 			     input)
-  ;; assumes a POSIX shell (otherwise we could wrap in 'sh -c')
-  (multiple-value-bind (output _ exit-code)
-      (run-program shell-cmd
-		   :force-shell t
-		   :input (typecase input
-			    (stream input)
-			    (string (make-string-input-stream input))
-			    (t nil))
-		   :output :string
-		   :error-output :output
-		   :ignore-error-status t)
-    (declare (ignore _))
-    (values output exit-code)))
+  ;; if INPUT is a stream, RUN-PROGRAM will empty it into a temporary file
+  ;; anyway, but it will not do so successfully if INPUT is a binary stream --
+  ;; in particular, it will try to call COPY-STREAM-TO-STREAM with
+  ;; :ELEMENT-TYPE CHARACTER.  so empty it into a temporary file ourselves.
+  (with-temporary-file (:pathname temp)
+    (etypecase input
+      (string
+       (with-output-to-file (s temp :if-exists :supersede)
+	 (write-sequence input s)))
+      (stream
+       (with-open-file (s temp :element-type (stream-element-type input)
+			       :direction :output
+			       :if-exists :supersede)
+	 (copy-stream-to-stream input s
+				:element-type (stream-element-type input))))
+      (null nil))
+    (multiple-value-bind (output _ exit-code)
+	(run-program shell-cmd
+		     :force-shell t
+		     :input temp
+		     :output :string
+		     :error-output :output
+		     :ignore-error-status t)
+      (declare (ignore _))
+      (values output exit-code))))
 
 (defmethod connection-readfile ((connection local-connection) path)
   (read-file-string path))

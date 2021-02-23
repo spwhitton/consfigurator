@@ -75,13 +75,20 @@
 	   (typecase input
 	     (stream input)
 	     (string (make-string-input-stream input))))
-	 (password (slot-value c 'password))
-	 (password-stream (and password
-			       (make-string-input-stream
-				(format nil "~A~A" password (code-char 13)))))
+	 (password (when-let ((password (slot-value c 'password)))
+		     (format nil "~A~A" password (code-char 13))))
+	 (password-stream (and password (make-string-input-stream password)))
 	 (new-input (cond
 		      ((and password input)
-		       (make-concatenated-stream password-stream input-stream))
+		       (make-concatenated-stream
+			(case (stream-element-type input-stream)
+			  (character
+			   password-stream)
+			  (t
+			   (babel-streams:make-in-memory-input-stream
+			    (babel:string-to-octets password :encoding :UTF-8)
+			    :element-type (stream-element-type input-stream))))
+			input-stream))
 		      (password
 		       password-stream)
 		      (input

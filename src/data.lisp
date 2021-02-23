@@ -266,7 +266,7 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
 			(mapcar #'find-class (list *connection* t t))
 			nil))
       (connection-upload *connection* from to)
-      (with-open-file (s from)
+      (with-open-file (s from :element-type '(unsigned-byte 8))
 	(connection-writefile *connection* to s))))
 
 (defmethod connection-upload-data :around ((data data))
