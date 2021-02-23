@@ -196,7 +196,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 				      (get-local-cached-prerequisite-data))
 	  with sorted-remote-cache = (sort-prerequisite-data-cache
 				      (get-remote-cached-prerequisite-data))
-	  for (iden1 . iden2) in (getf (slot-value host :hostattrs) :data)
+	  for (iden1 . iden2) in (getf (slot-value host 'hostattrs) :data)
 
 	  for highest-local-cached-version  = (highest-version-in-cache
 					       sorted-local-cache)
