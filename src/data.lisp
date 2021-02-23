@@ -349,8 +349,11 @@ UPLOAD-ALL-PREREQUISITE-DATA."
   (loop for system in (slot-value (slot-value *host* 'propspec) 'systems)
 	collect `(load ,(remote-data-pathname "--lisp-system" system))))
 
-;; connections which start up remote Lisp images use this
 (defun request-lisp-systems ()
+  "Request that all Lisp systems required by the host currently being deployed
+are uploaded to the remote cache of the currently established connection.
+
+Called by connections which start up remote Lisp images."
   (dolist (system (slot-value (slot-value *host* 'propspec) 'systems))
     (push-hostattrs :data (cons "--lisp-system"
 				(etypecase system
