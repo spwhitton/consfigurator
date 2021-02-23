@@ -18,7 +18,7 @@
 (in-package :consfigurator.connection.debian-sbcl)
 
 (defmethod establish-connection ((type (eql :debian-sbcl)) remaining &key)
-  (run "which" "sbcl" ">/dev/null" "2>&1" "||" "apt-get" "-y" "install" "sbcl")
+  (run "which sbcl >/dev/null 2>&1 || apt-get -y install sbcl")
   (request-lisp-systems)
   (upload-all-prerequisite-data)
   (let ((program
