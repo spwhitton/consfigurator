@@ -260,7 +260,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 (defun connection-try-upload (from to)
   "Wrapper around CONNECTION-UPLOAD to ensure it gets used only when
 appropriate.  Falls back to CONNECTION-WRITEFILE."
-  (if (and (subtypep (slot-value *connection* 'parent)
+  (if (and (subtypep (type-of (slot-value *connection* 'parent))
 		     'consfigurator.connection.local:local-connection)
 	   (find-method #'connection-upload
 			(mapcar #'find-class (list *connection* t t))
