@@ -146,10 +146,12 @@
 
 (defpackage :consfigurator.property.file
   (:use #:cl #:consfigurator #:alexandria)
+  (:local-nicknames (#:re #:cl-ppcre))
   (:export #:has-content
 	   #:contains-lines
 	   #:data-uploaded
-	   #:host-data-uploaded))
+	   #:host-data-uploaded
+	   #:regex-replace-lines))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))

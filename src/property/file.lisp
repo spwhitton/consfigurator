@@ -42,3 +42,14 @@
    (require-data (get-hostname) destination))
   (:apply
    (data-uploaded (get-hostname) destination destination)))
+
+(defprop regex-replace-lines :posix (regex replace file)
+  "Like s/REGEX/REPLACE/ on the lines of FILE.
+Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
+  (:apply
+   (writefile
+    file
+    (unlines
+     (mapcar (lambda (line)
+	       (re:regex-replace regex line replace))
+	     (lines (readfile file)))))))
