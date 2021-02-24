@@ -128,6 +128,8 @@ used by implementations of ESTABLISH-CONNECTION.")
 	((connect (connections)
 	   (destructuring-bind ((type . args) . remaining) connections
 	     (let ((*last-hop-info* *this-hop-info*) *this-hop-info*)
+	       ;; implementations of ESTABLISH-CONNECTION return nil if they
+	       ;; have handed off to a remote Lisp image
 	       (when-let ((*connection*
 			   (apply #'establish-connection type remaining args)))
 		 (if remaining
