@@ -60,6 +60,7 @@
 				   user
 				   password)
   (declare (ignore remaining))
+  (format t "Establishing sudo connection to ~A~%" user)
   (make-instance 'sudo-connection :user user :password password))
 
 (defclass sudo-connection (posix-connection)

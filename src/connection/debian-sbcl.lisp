@@ -21,11 +21,16 @@
   (mrun "which sbcl >/dev/null 2>&1 || apt-get -y install sbcl")
   (request-lisp-systems)
   (upload-all-prerequisite-data)
-  (princ "Handing over to remote Lisp ...")
-  (terpri)
-  (format t "~{    ~A~%~}"
-	  (runlines :input (deployment-handover-program remaining)
-		   "sbcl" "--noinform" "--noprint"
-		   "--disable-debugger"
-		   "--no-sysinit" "--no-user-init"))
+  (princ "Waiting for remote Lisp to exit, this may take some time ... ")
+  (let ((program (deployment-handover-program remaining)))
+    (multiple-value-bind (out err exit)
+	(run :may-fail :input program
+	     "sbcl" "--noinform" "--noprint"
+	     "--disable-debugger"
+	     "--no-sysinit" "--no-user-init")
+      (format t "done.")
+      (if (= 0 exit)
+	  (format t "  Output was:~%~{    ~A~%~}" (lines out))
+	  (error "~%~%Remote Lisp failed; we sent~%~%~A~%~%and stderr was:~%~A"
+		 program err))))
   nil)
