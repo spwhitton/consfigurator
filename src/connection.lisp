@@ -207,11 +207,11 @@ Returns command's stdout, stderr and exit code."
 	       (setq cmd (format nil "env ~{~A~^ ~} ~A"
 				 (escape-sh-command accum)
 				 cmd))))
-    (with-remote-temporary-file (stderr)
-      (setq cmd (format nil "( ~A ) 2>~A" cmd stderr))
-      (multiple-value-bind (out exit)
+    (with-remote-temporary-file (stdout)
+      (setq cmd (format nil "( ~A ) >~A" cmd stdout))
+      (multiple-value-bind (err exit)
 	  (connection-run *connection* cmd input)
-	(let ((err (readfile stderr)))
+	(let ((out (readfile stdout)))
 	  (if (or may-fail (= exit 0))
 	      (values out err exit)
 	      (error 'run-failed
