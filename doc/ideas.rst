@@ -34,6 +34,10 @@ Core
   into a ``(:apply ...)`` expression.  Use this or variants thereof in most of
   the entries in ``PROPERTY.FILE``.
 
+- HOSTDEPLOY and HOSTDEPLOY-THESE functions which are like DEPLOY and
+  DEPLOY-THESE but take the CONNECTION argument from definitions established
+  by DEFHOSTDEPLOY.
+
 Project & packaging
 -------------------
 
