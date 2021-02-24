@@ -115,6 +115,8 @@ used by implementations of ESTABLISH-CONNECTION.")
 (defvar *this-hop-info* nil
   "Plist which will become the value of *LAST-HOP-INFO*.")
 
+;; this is the main do-work loop for Consfigurator; remote Lisp images are
+;; instructed to pick up the remaining work of this loop
 (defun deploy* (connections host)
   ;; make a partial own-copy of HOST so that connections can add new pieces of
   ;; required prerequisite data; specifically, so that they can request the
