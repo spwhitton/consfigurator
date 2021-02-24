@@ -37,6 +37,14 @@
 ;; which runs the remote Lisp image.  At least :debian-sbcl avoids this by
 ;; sending your password in on stdin.
 
+;; TODO Let's require the user pass :PASSWD or :NOPASSWD to indicate whether
+;; we'll query prerequisite data sources and always try to send a password on
+;; stdin, or never try to send one (and default to :NOPASSWD).  Will still
+;; require an :AS parameter, which is redundant in a sense, but this way
+;; avoids it being implicit that we're always going to be sending a password
+;; on stdin, which latter has security implications (e.g. if a password is not
+;; actually required then the password is going into random processes).
+
 (defmethod preprocess-connection-args ((type (eql :sudo)) &key as (to "root"))
   (list :sudo
 	:user to
