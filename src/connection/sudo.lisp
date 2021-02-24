@@ -81,13 +81,12 @@
 	 (new-input (cond
 		      ((and password input)
 		       (make-concatenated-stream
-			(case (stream-element-type input-stream)
-			  (character
-			   password-stream)
-			  (t
-			   (babel-streams:make-in-memory-input-stream
-			    (babel:string-to-octets password :encoding :UTF-8)
-			    :element-type (stream-element-type input-stream))))
+			(if (subtypep (stream-element-type input-stream)
+				      'character)
+			    password-stream
+			    (babel-streams:make-in-memory-input-stream
+			     (babel:string-to-octets password :encoding :UTF-8)
+			     :element-type (stream-element-type input-stream)))
 			input-stream))
 		      (password
 		       password-stream)
