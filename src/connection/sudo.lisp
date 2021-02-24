@@ -103,9 +103,7 @@
 		       input-stream)
 		      (t
 		       nil))))
-    (multiple-value-bind (out err exit-code)
-	(run :may-fail :input new-input (sudocmd c cmd))
-      (values (strcat err out) exit-code))))
+    (mrun :may-fail :input new-input (sudocmd c cmd))))
 
 (defmethod connection-readfile ((c sudo-connection) path)
   (multiple-value-bind (out exit-code)

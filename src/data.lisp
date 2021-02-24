@@ -293,7 +293,7 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
 				 (escape-sh-token source))
 			 :output tmp)
 	    (connection-try-upload tmp (unix-namestring dest))
-	    (run "gunzip" "--keep" dest)))
+	    (mrun "gunzip" "--keep" dest)))
 	(connection-try-upload source *dest*))))
 
 (defmethod connection-upload-data ((data string-data))
@@ -302,9 +302,9 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
 
 (defun connection-clear-data-cache (iden1 iden2)
   (let ((dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))
-    (run (strcat "rm -f "
-		 (unix-namestring (pathname-directory-pathname dir))
-		 "/*"))))
+    (mrun (strcat "rm -f "
+		  (unix-namestring (pathname-directory-pathname dir))
+		  "/*"))))
 
 (defun get-local-data-cache-dir ()
   (ensure-directory-pathname
@@ -330,7 +330,8 @@ process, where each entry is of the form
 (defun get-remote-data-cache-dir ()
   (ensure-directory-pathname
    (car
-    (runlines "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/"))))
+    (lines
+     (mrun "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
 
 (defun get-remote-cached-prerequisite-data ()
   "Return a list of items of prerequisite data in the cache on the remote side
@@ -339,8 +340,10 @@ of the current connection, where each entry is of the form
     '(iden1 iden2 version)."
   (mapcar (lambda (line)
 	    (mapcar #'filename->string (split-string line :separator "/")))
-	  (runlines :may-fail "find" (get-remote-data-cache-dir)
-		    "-type" "f" "-printf" "%P\\n")))
+	  (multiple-value-bind (out exit)
+	      (mrun :may-fail "find" (get-remote-data-cache-dir)
+		    "-type" "f" "-printf" "%P\\n")
+	    (and (= 0 exit) (lines out)))))
 
 ;; TODO on remote side, catch read errors and signal our own which says
 ;; something more specific -- "This has probably been caused by an attempt to
