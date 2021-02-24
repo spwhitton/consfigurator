@@ -137,7 +137,7 @@ used by implementations of ESTABLISH-CONNECTION.")
 	 (apply-propspec (propspec)
 	   (when (and (subtypep (class-of *connection*) 'posix-connection)
 		      (eq :lisp (propspec->type propspec)))
-	     (error "Cannot apply :lisp properties using :posix connection"))
+	     (error "Cannot apply :lisp properties using POSIX connection"))
 	   (eval-propspec propspec)))
       (connect (loop for connection in (ensure-cons connections)
 		     collect (apply #'preprocess-connection-args
