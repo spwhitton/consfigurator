@@ -110,6 +110,39 @@ Quick start / introduction
    ``CONSFIGURATOR:DEPLOY`` function to try out configuring athena using a
    different connection type than defined here.
 
+Other things to try
+-------------------
+
+Note that some of these violate some of the ideas of declarative configuration
+management, because they apply individual properties without updating the
+definitions of hosts.  Sometimes that's the right thing to do, though, and
+Consfigurator makes it easy to reuse your definitions of properties in these
+non-declarative ways.
+
+Apply a security update to all your systems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It's useful to be able to quickly apply a security update across multiple
+machines without otherwise interacting with their configuration.  Supposing
+you have defined a variable ``*ALL-MY-SERVERS*`` which is a list hosts defined
+with ``DEFHOST``, you can evaluate::
+
+  (dolist (server *all-my-servers*)
+    (deploy-these :ssh server
+                  (cmd:single "apt-get update && apt-get upgrade openssl")))
+
+Regex replace a file across hosts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With ``*ALL-MY-SERVERS*`` as in the previous example,::
+
+  (dolist (server *all-my-servers*)
+    (deploy-these :ssh server
+                  (file:regex-replace-lines "/etc/baz" #?/foo/ "bar")))
+
+(relies on CL-INTERPOL syntax being enabled, as it is in the example consfig
+above)
+
 Portability and stability
 =========================
 
