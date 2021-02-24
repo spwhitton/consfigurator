@@ -32,8 +32,8 @@ and distro package archives, rather than seeking to replace any of those.
 Let's get as much as we can out of all that existing distro policy-compliant
 work!
 
-[some features described in the preceding are not yet implemented, but
-Consfigurator's design should permit them to be soon]
+*Some features described in the foregoing are not yet implemented, but
+Consfigurator's design should permit them to be soon.*
 
 .. _Propellor: https://propellor.branchable.com/
 .. _GNU Guix System: https://guix.gnu.org/
