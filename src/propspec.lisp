@@ -89,6 +89,8 @@ property's apply slot."))
 ;; confined to these four functions -- i.e., if we are to add any combinators,
 ;; this is the code that needs to change
 
+;; TODO these should probably be methods
+
 (defun compile-propapp (propapp)
   "Recursively apply the effects of property combinators in PROPAPP to produce
 an atomic property application."
