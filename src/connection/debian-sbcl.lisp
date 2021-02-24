@@ -22,6 +22,7 @@
   (request-lisp-systems)
   (upload-all-prerequisite-data)
   (princ "Handing over to remote Lisp ...")
+  (terpri)
   (format t "~{    ~A~%~}"
 	  (runlines :input (deployment-handover-program remaining)
 		   "sbcl" "--noinform" "--noprint"
