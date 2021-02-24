@@ -144,7 +144,8 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
   `(let ((,file (mktemp)))
      (unwind-protect
 	  (progn ,@body)
-       (connection-run *connection* (format nil "rm -f ~A" ,file)))))
+       (connection-run *connection* (format nil "rm -f ~A"
+					    (escape-sh-token ,file))))))
 
 (defun mktemp ()
   "Make a temporary file on the remote side."
