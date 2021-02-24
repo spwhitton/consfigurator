@@ -58,8 +58,8 @@ connection type for testing.
 
 We also have a few nice macros defined, though nothing too clever yet.
 
-Quick start / introduction
-==========================
+Try it out / quick start
+========================
 
 1. ``apt-get install sbcl cl-ppcre cl-interpol cl-alexandria``.
 
