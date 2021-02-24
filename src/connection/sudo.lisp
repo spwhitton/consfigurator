@@ -115,7 +115,7 @@
 	(error "File ~S not readable" path))))
 
 (defmethod connection-writefile ((c sudo-connection) path contents)
-  (connection-run c #?"cat >$(path)" contents))
+  (connection-run c #?"cat >${path}" contents))
 
 (defmethod connection-upload ((c sudo-connection) from to)
   (run (sudocmd c "cp" from to)))

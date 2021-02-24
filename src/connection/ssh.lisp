@@ -65,7 +65,7 @@
 
 (defmethod connection-writefile ((c ssh-connection) path contents)
   (with-remote-temporary-file (temp)
-    (mrun :input contents (sshcmd c "cat" #?">$(temp)"))
+    (mrun :input contents (sshcmd c "cat" #?">${temp}"))
     (mrun "mv" temp path)))
 
 ;; rsync it straight to to its destination so rsync can do incremental updates
