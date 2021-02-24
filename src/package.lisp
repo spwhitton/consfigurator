@@ -69,7 +69,7 @@
 
 	   #:run
 	   #:with-remote-temporary-file
-	   #:connection-run-failed
+	   #:run-failed
 	   #:runlines
 	   #:test
 	   #:readfile

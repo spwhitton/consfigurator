@@ -135,10 +135,11 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
 ;; implementations of CONNECTION-READFILE and CONNECTION-WRITEFILE to call
 ;; their corresponding implementation of CONNECTION-RUN).
 
-(define-condition connection-run-failed (error)
-  ((stdout :initarg stdout :reader stdout)
-   (stderr :initarg stderr :reader stderr)
-   (exit-code :initarg exit-code :reader exit-code)))
+(define-condition run-failed (error)
+  ((cmd :initarg :cmd :reader failed-cmd)
+   (stdout :initarg :stdout :reader failed-stdout)
+   (stderr :initarg :stderr :reader failed-stderr)
+   (exit-code :initarg :exit-code :reader failed-exit-code)))
 
 (defmacro with-remote-temporary-file ((file) &body body)
   `(let ((,file (mktemp)))
@@ -159,7 +160,10 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
        "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp")
     (if (= exit 0)
 	(car (lines out))
-	(error 'connection-run-failed :exit-code exit))))
+	(error 'run-failed :cmd "(attempt to make a temporary file on remote)"
+			   :stdout out
+			   :stderr "(merged with stdout)"
+			   :exit-code exit))))
 
 (defun run (&rest args)
   "Synchronous execution of shell commands using the current connection.
@@ -204,15 +208,14 @@ Returns command's stdout, stderr and exit code."
 				 (escape-sh-command accum)
 				 cmd))))
     (with-remote-temporary-file (stderr)
+      (setq cmd (format nil "( ~A ) 2>~A" cmd stderr))
       (multiple-value-bind (out exit)
-	  (connection-run *connection*
-			  (format nil "( ~A ) 2>~A" cmd stderr)
-			  input)
+	  (connection-run *connection* cmd input)
 	(let ((err (readfile stderr)))
 	  (if (or may-fail (= exit 0))
 	      (values out err exit)
-	      (error 'connection-run-failed
-		     :stdout out :stderr err :exit-code exit)))))))
+	      (error 'run-failed
+		     :cmd cmd :stdout out :stderr err :exit-code exit)))))))
 
 (defun runlines (&rest args)
   (lines (apply #'run args)))
