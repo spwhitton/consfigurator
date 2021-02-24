@@ -354,13 +354,26 @@ host which will run the Lisp image must already be established.
 
 Called by connections which start up remote Lisp images."
   (flet ((wrap (forms)
-	   `(handler-bind ((missing-data-source
-			     (lambda (c)
-			       (declare (ignore c))
-			       (invoke-restart 'skip-data-source))))
+	   `(handler-bind
+		(;; we can skip missing data sources because these are not
+		 ;; expected to be available outside of the root Lisp
+		 (missing-data-source
+		   (lambda (c)
+		     (declare (ignore c))
+		     (invoke-restart 'skip-data-source)))
+		 ;; we can skip missing components when our particular restart
+		 ;; is available because we've already uploaded everything
+		 ;; that was declared to be required
+		 (asdf/find-component:missing-component
+		   (lambda (c)
+		     (declare (ignore c))
+		     (let ((restart (find-restart 'continue-without-system)))
+		       (when restart (invoke-restart restart))))))
 	      ,@forms)))
     (let ((intern-forms
-	    (loop for name in '("MISSING-DATA-SOURCE" "SKIP-DATA-SOURCE")
+	    (loop for name in '("MISSING-DATA-SOURCE"
+				"SKIP-DATA-SOURCE"
+				"CONTINUE-WITHOUT-SYSTEM")
 		  collect
 		  `(export (intern ,name (find-package "CONSFIGURATOR"))
 			   (find-package "CONSFIGURATOR"))))

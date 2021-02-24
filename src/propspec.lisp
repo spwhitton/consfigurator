@@ -143,7 +143,8 @@ an atomic property application."
   "Apply properties as specified by PROPSPEC."
   (loop for system in (slot-value propspec 'systems)
 	unless (asdf:component-loaded-p system)
-	  do (asdf:load-system system))
+	  do (restart-case (asdf:load-system system)
+	       (continue-without-system () nil)))
   (loop for form in (slot-value propspec 'applications)
 	for propapp = (compile-propapp form)
 	do (propappapply propapp)))

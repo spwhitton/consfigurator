@@ -88,6 +88,7 @@
 
 	   ;; propspec.lisp
 	   #:in-consfig
+	   #:continue-without-system
 
 	   ;; host.lisp
 	   #:defhost
