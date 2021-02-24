@@ -24,7 +24,7 @@
 				   (hop (get-hostname))
 				   user)
   (declare (ignore remaining))
-  (run "ssh" "-fN" hop)
+  (mrun "ssh" "-fN" hop)
   (make-instance 'ssh-connection :hostname hop :user user))
 
 (defclass ssh-connection (posix-connection)
@@ -51,25 +51,22 @@
 		    (if (cdr args) (escape-sh-command args) (car args)))))))
 
 (defmethod connection-run ((c ssh-connection) cmd &optional input)
-  (multiple-value-bind (out err exit)
-      (run :may-fail :input input (sshcmd c cmd))
-    (values (strcat err out) exit)))
+  (mrun :may-fail :input input (sshcmd c cmd)))
 
 (defmethod connection-readfile ((c ssh-connection) path)
-  (multiple-value-bind (out err exit-code)
-      (run :may-fail
+  (multiple-value-bind (out exit-code)
+      (mrun :may-fail
 	   (sshcmd c (format nil "test -r ~A && cat ~:*~A"
 			     (escape-sh-token path))))
-    (declare (ignore err))
     (if (= 0 exit-code)
 	out
 	(error "File ~S not readable" path))))
 
 (defmethod connection-writefile ((c ssh-connection) path contents)
   (with-remote-temporary-file (temp)
-    (run :input contents (sshcmd c "cat" #?">$(temp)"))
-    (run "mv" temp path)))
+    (mrun :input contents (sshcmd c "cat" #?">$(temp)"))
+    (mrun "mv" temp path)))
 
 ;; rsync it straight to to its destination so rsync can do incremental updates
 (defmethod connection-upload ((c ssh-connection) from to)
-  (run "rsync" "-Pavc" from (format nil "~A:~A" (ssh-host c) to)))
+  (mrun "rsync" "-Pavc" from (format nil "~A:~A" (ssh-host c) to)))
