@@ -43,10 +43,10 @@
 	       (cadr (data-assoc iden1 iden2 cache)))
 	     (extract (iden1 iden2)
 	       (update-cache)
-	       (make-instance 'string-data
-			      :iden1 iden1
-			      :iden2 iden2
-			      :string (cddr (data-assoc iden1 iden2 cache)))))
+	       (let ((data (data-assoc iden1 iden2 cache)))
+		 (make-instance 'string-data
+				:iden1 iden1 :iden2 iden2
+				:string (cddr data) :version (cadr data)))))
       (cons #'check #'extract))))
 
 (defun read-store (location)
