@@ -99,7 +99,6 @@
 	   #:deploy-these
 	   #:deploys
 	   #:deploys-these
-	   #:deploy*-form-for-remote-lisp
 	   #:*last-hop-info
 	   #:*this-hop-info*
 
@@ -123,8 +122,8 @@
 	   #:with-data-stream
 	   #:get-data-string
 	   #:upload-all-prerequisite-data
-	   #:load-forms-for-remote-cached-lisp-systems
-	   #:request-lisp-systems))
+	   #:request-lisp-systems
+	   #:deployment-handover-program))
 
 (defpackage :consfigurator.connection.ssh
   (:use #:cl #:consfigurator #:alexandria))

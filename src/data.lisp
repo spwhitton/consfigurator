@@ -279,7 +279,9 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
 				      (data-version data))))
     (declare (special *dest*))
     (run "mkdir" "-p" (pathname-directory-pathname *dest*))
-    (call-next-method)))
+    (call-next-method)
+    (push (list (iden1 data) (iden2 data) *dest*)
+	  (getf *this-hop-info* :cached-data))))
 
 (defmethod connection-upload-data ((data file-data))
   (declare (special *dest*))
@@ -340,15 +342,47 @@ of the current connection, where each entry is of the form
 	  (runlines :may-fail "find" (get-remote-data-cache-dir)
 		    "-type" "f" "-printf" "%P\\n")))
 
-;; bit of a layering violation but better than exposing REMOTE-DATA-PATHNAME
-(defun load-forms-for-remote-cached-lisp-systems ()
-  "Return forms calling LOAD for concatenated, remote-cached copies of each of
-the Lisp systems required by *HOST*'s propspec.
+(defun deployment-handover-program (remaining)
+  "Return a program which instructs a remote Lisp image to continue DEPLOY*.
 
-Only to be called by implementations of ESTABLISH-CONNECTION, after calling
-UPLOAD-ALL-PREREQUISITE-DATA."
-  (loop for system in (slot-value (slot-value *host* 'propspec) 'systems)
-	collect `(load ,(remote-data-pathname "--lisp-system" system))))
+Will query the remote cache for paths to Lisp systems, so a connection to the
+host which will run the Lisp image must already be established.
+
+Called by connections which start up remote Lisp images."
+  (flet ((wrap (forms)
+	   `(handler-bind ((missing-data-source
+			     (lambda (c)
+			       (declare (ignore c))
+			       (invoke-restart 'skip-data-source))))
+	      ,@forms)))
+    (let ((intern-forms
+	    (loop for name in '("MISSING-DATA-SOURCE" "SKIP-DATA-SOURCE")
+		  collect
+		  `(export (intern ,name (find-package "CONSFIGURATOR"))
+			   (find-package "CONSFIGURATOR"))))
+	  (load-forms
+	    (loop for system
+		    in (slot-value (slot-value *host* 'propspec) 'systems)
+		  collect `(load
+			    ,(caddar
+			      (remove-if-not
+			       (lambda (d)
+				 (string= (car d) "--lisp-system")
+				 (string= (cadr d) (normalise-system system)))
+			       (getf *this-hop-info* :cached-data))))))
+	  (*package* (find-package "COMMON-LISP-USER")))
+      ;; need line breaks in between so that packages exist before we try to
+      ;; have remote Lisp read sexps containing symbols from those packages
+      (format nil "~{~A~^~%~}"
+	      (mapcar
+	       #'prin1-to-string
+	       `((make-package "CONSFIGURATOR")
+		 ,@intern-forms
+		 (define-condition missing-data-source (error) ())
+		 (require "asdf")
+		 (let ((*standard-output* *error-output*))
+		   ,(wrap load-forms))
+		 ,(wrap `((deploy* ,(or remaining :local) ,*host*)))))))))
 
 (defun request-lisp-systems ()
   "Request that all Lisp systems required by the host currently being deployed
@@ -356,8 +390,4 @@ are uploaded to the remote cache of the currently established connection.
 
 Called by connections which start up remote Lisp images."
   (dolist (system (slot-value (slot-value *host* 'propspec) 'systems))
-    (push-hostattrs :data (cons "--lisp-system"
-				(etypecase system
-				  (string system)
-				  (symbol (string-downcase
-					   (symbol-name system))))))))
+    (push-hostattrs :data (cons "--lisp-system" (normalise-system system)))))

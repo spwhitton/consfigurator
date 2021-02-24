@@ -21,13 +21,10 @@
   (run "which sbcl >/dev/null 2>&1 || apt-get -y install sbcl")
   (request-lisp-systems)
   (upload-all-prerequisite-data)
-  (let ((program
-	  `(handler-bind ((consfigurator:missing-data-source
-			    #'consfigurator:skip-data-source))
-	     ,@(load-forms-for-remote-cached-lisp-systems)
-	     ,(deploy*-form-for-remote-lisp remaining))))
-    (print (run :input (prin1-to-string program)
-		"sbcl" "--noinform" "--noprint"
-		"--disable-debugger"
-		"--no-sysinit" "--no-user-init")))
+  (princ "Handing over to remote Lisp ...")
+  (format t "~{    ~A~%~}"
+	  (runlines :input (deployment-handover-program remaining)
+		   "sbcl" "--noinform" "--noprint"
+		   "--disable-debugger"
+		   "--no-sysinit" "--no-user-init"))
   nil)

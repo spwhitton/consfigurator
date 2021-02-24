@@ -48,11 +48,6 @@ For example, if you usually deploy properties to athena by SSH,
 and then you can eval (athena.silentflame.com) to apply athena's properties."
   `(defdeploy ,host-name (,connection ,host-name)))
 
-;; this exists just to avoid exposing *HOST* but otherwise it's not really a
-;; nice abstraction
-(defun deploy*-form-for-remote-lisp (remaining)
-  `(deploy* ,(or remaining :local) *host*))
-
 (defmacro deploy (connection host &body additional-properties)
   "Establish a connection of type CONNECTION to HOST, and apply each of the
 host's usual properties, followed by specified by ADDITIONAL-PROPERTIES, an
