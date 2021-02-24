@@ -9,7 +9,7 @@ Vcs-Git: https://git.spwhitton.name/consfigurator
 Vcs-Browser: https://git.spwhitton.name/consfigurator
 Rules-Requires-Root: no
 
-Package: consfigurator
+Package: cl-consfigurator
 Architecture: all
 Depends: ${misc:Depends}, cl-alexandria, cl-ppcre, cl-interpol
 Recommends: sbcl
