@@ -71,7 +71,8 @@ root Lisp is running on, as the root Lisp's uid."))
   (with-open-file (stream path :direction :output
 			       :if-exists :supersede
 			       :element-type (stream-element-type contents))
-    (copy-stream-to-stream contents stream)))
+    (copy-stream-to-stream contents stream
+			   :element-type (stream-element-type contents))))
 
 (defmethod connection-upload ((connection local-connection) from to)
   (copy-file from to))
