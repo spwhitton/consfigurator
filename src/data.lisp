@@ -342,6 +342,10 @@ of the current connection, where each entry is of the form
 	  (runlines :may-fail "find" (get-remote-data-cache-dir)
 		    "-type" "f" "-printf" "%P\\n")))
 
+;; TODO on remote side, catch read errors and signal our own which says
+;; something more specific -- "This has probably been caused by an attempt to
+;; use a property application specification or set of static informational
+;; attributes which cannot be serialised by the Lisp printer"
 (defun deployment-handover-program (remaining)
   "Return a program which instructs a remote Lisp image to continue DEPLOY*.
 
