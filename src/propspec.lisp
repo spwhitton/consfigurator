@@ -77,6 +77,13 @@ systems, resolve unapply, onchange etc., and then look in the value cell of
 each PROPERTY to find a property, and pass each of ARGS to the function in the
 property's apply slot."))
 
+(defmethod print-object ((propspec propspec) stream)
+  (format stream "~S" `(make-instance
+			'propspec
+			:systems ',(slot-value propspec 'systems)
+			:props ',(slot-value propspec 'applications)))
+  propspec)
+
 ;; The following five functions, should be everything we need to do with
 ;; propspecs, so all knowledge of the possible combinator symbols should be
 ;; confined to these four functions -- i.e., if we are to add any combinators,
