@@ -68,6 +68,7 @@
 	   #:connection-teardown
 
 	   #:run
+	   #:mrun
 	   #:with-remote-temporary-file
 	   #:run-failed
 	   #:runlines

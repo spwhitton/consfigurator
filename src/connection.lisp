@@ -165,6 +165,29 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
 			   :stderr "(merged with stdout)"
 			   :exit-code exit))))
 
+(defmacro %process-run-args (&body forms)
+  `(let (cmd input may-fail env)
+    (loop for arg = (pop args)
+	  do (case arg
+	       (:for-exit (setq may-fail t))
+	       (:may-fail (setq may-fail t))
+	       (:input (setq input (pop args)))
+	       (:env (setq env (pop args)))
+	       (t (push (typecase arg (pathname (unix-namestring arg)) (t arg))
+			cmd)))
+	  while args
+	  finally (nreversef cmd))
+    (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
+    (loop while env
+	  collect (format nil "~A=~A" (symbol-name (pop env)) (pop env))
+	    into accum
+	  finally
+	     (when accum
+	       (setq cmd (format nil "env ~{~A~^ ~} ~A"
+				 (escape-sh-command accum)
+				 cmd))))
+     ,@forms))
+
 (defun run (&rest args)
   "Synchronous execution of shell commands using the current connection.
 ARGS can contain keyword-value pairs (and singular keywords) to specify
@@ -187,26 +210,7 @@ Keyword arguments accepted:
     the command.
 
 Returns command's stdout, stderr and exit code."
-  (let (cmd input may-fail env)
-    (loop for arg = (pop args)
-	  do (case arg
-	       (:for-exit (setq may-fail t))
-	       (:may-fail (setq may-fail t))
-	       (:input (setq input (pop args)))
-	       (:env (setq env (pop args)))
-	       (t (push (typecase arg (pathname (unix-namestring arg)) (t arg))
-			cmd)))
-	  while args
-	  finally (nreversef cmd))
-    (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
-    (loop while env
-	  collect (format nil "~A=~A" (symbol-name (pop env)) (pop env))
-	    into accum
-	  finally
-	     (when accum
-	       (setq cmd (format nil "env ~{~A~^ ~} ~A"
-				 (escape-sh-command accum)
-				 cmd))))
+  (%process-run-args
     (with-remote-temporary-file (stdout)
       (setq cmd (format nil "( ~A ) >~A" cmd stdout))
       (multiple-value-bind (err exit)
@@ -216,6 +220,29 @@ Returns command's stdout, stderr and exit code."
 	      (values out err exit)
 	      (error 'run-failed
 		     :cmd cmd :stdout out :stderr err :exit-code exit)))))))
+
+(defun mrun (&rest args)
+  "Like RUN but don't separate stdout and stderr (\"m\" for \"merged\"; note
+that this might mean interleaved or simply concatenated, depending on the
+connection chain).
+
+Some (but not all) connection types will want to use this when implementing
+ESTABLISH-CONNECTION, CONNECTION-RUN, CONNECTION-WRITEFILE etc. to avoid the
+overhead of splitting the output streams only to immediately recombine them.
+
+Some :POSIX properties which want to run a lot of commands and don't need to
+separate the streams might want to use this too, but usually it is best to
+start with RUN."
+  (%process-run-args
+    (multiple-value-bind (out exit)
+	  (connection-run *connection* cmd input)
+      (if (or may-fail (= exit 0))
+	  (values out exit)
+	  (error 'run-failed
+		 :cmd cmd
+		 :stdout out
+		 :stderr "(merged with stdout)"
+		 :exit-code exit)))))
 
 (defun runlines (&rest args)
   (lines (apply #'run args)))
