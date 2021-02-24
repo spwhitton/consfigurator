@@ -151,11 +151,13 @@ Portability and stability
 - **Consfigurator is still stabilising and so there may be lots of breaking
   changes.**
 
-- No attempt is made to support Common Lisp implementations other than SBCL,
-  though portability patches are welcome.
+- All of the code should be portable ANSI Common Lisp, but little to no
+  testing is done by the author on implementations other than SBCL, so testing
+  and portability patches are welcome.
 
 - Little attempt is made by the author to support systems other than Debian
-  GNU/Linux, but again, portability patches are welcome.
+  GNU/Linux, but again, portability patches are welcome, and the design of
+  Consfigurator should enable supporting other systems.
 
 Credits
 =======
