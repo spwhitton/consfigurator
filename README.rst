@@ -118,7 +118,7 @@ Other things to try
 Note that some of these violate some of the ideas of declarative configuration
 management, because they apply individual properties without updating the
 definitions of hosts.  Sometimes that's the right thing to do, though, and
-Consfigurator makes it easy to reuse your definitions of properties in these
+Consfigurator makes it easy to reuse your property definitions in these
 non-declarative ways.
 
 Apply a security update to all your systems
