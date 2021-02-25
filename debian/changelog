@@ -1,5 +1,5 @@
-consfigurator (0.0.1-1) UNRELEASED; urgency=medium
+consfigurator (0.0.1-1) experimental; urgency=medium
 
   * Initial release.
 
- -- Sean Whitton <spwhitton@spwhitton.name>  Sun, 21 Feb 2021 21:25:43 -0700
+ -- Sean Whitton <spwhitton@spwhitton.name>  Wed, 24 Feb 2021 19:42:21 -0700
