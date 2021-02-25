@@ -191,6 +191,11 @@ Portability and stability
   GNU/Linux, but again, portability patches are welcome, and the design of
   Consfigurator should enable supporting other systems.
 
+Bug reports, patches etc.
+=========================
+
+Please see the included CONTRIBUTING.rst.
+
 Credits
 =======
 
