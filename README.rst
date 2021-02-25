@@ -21,7 +21,7 @@ Debian machine as an unprivileged user, using sudo to become root, and then
 starting up a Lisp image to execute your deployment code, you would just
 evaluate::
 
-  (deploy (:ssh (:sudo :as "spwhitton@foo.example.com") :debian-sbcl) foo.example.com)
+  (deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl) athena.example.com)
 
 Declarative configuration management systems like Consfigurator and Propellor_
 share a number of goals with projects like the `GNU Guix System`_ and
@@ -84,8 +84,10 @@ Try it out / quick start
         (in-package :cl-user)
 
         (defpackage :com.example.consfig
-          (:use #:cl #:consfigurator)
-          (:local-nicknames (#:etc-default #:consfigurator.property.etc-default)))
+          (:use #:cl #:consfigurator #:alexandria)
+          (:local-nicknames (#:file      #:consfigurator.property.file)
+                            (#:cmd       #:consfigurator.property.cmd)
+                            (#:data.pgp  #:consfigurator.data.pgp)))
 
 5. Define some hosts and deployments.
 
@@ -95,22 +97,45 @@ Try it out / quick start
         (in-consfig "com.example.consfig")
 	(named-readtables:in-readtable :interpol-syntax)
 
-	;; (try-register-data-source
-        ;;  :pgp :location #P"/path/to/com.example.consfig.gpg")
+	(try-register-data-source
+         :pgp :location #P"/path/to/com.example.consfig.gpg")
 
         (defhost athena.example.com
           "Web and file server."
-          (etc-default:set "locale" "LANG" "en_GB.UTF-8"))
+	  (file:has-content "/etc/foo" '("these" "are" "my" "lines"))
+	  (file:contains-lines "/etc/some.conf" '("FOO=bar")))
 
-        (defhostdeploy :ssh athena.example.com)
+        (defhostdeploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl)
+	               athena.example.com)
+
+    Here, "spwhitton" is my username on athena; we have to tell Consfigurator
+    what user it will be when it tries to sudo, so it knows whose password it
+    needs.  If you have passwordless sudo access configured, you can skip the
+    ``:AS`` keyword parameter and its argument.
 
 6. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
-   prompt.  Evaluate ``(asdf:require-system "com.example.consfig")``.
+   prompt.  Evaluate ``(asdf:load-system "consfigurator")``.
 
-7. Now you should be able to use configure athena by evaluating
-   ``(com.example.consfig:athena.example.com)``.  You can use the
-   ``CONSFIGURATOR:DEPLOY`` function to try out configuring athena using a
-   different connection type than defined here.
+7. When it's asked to use sudo to become root, Consfigurator will query your
+   registered sources of secrets to try to find the password it will need to
+   give to sudo.  You can easily write code to let Consfigurator query your
+   own sources of secrets, but for the purposes of this guide we'll use the
+   simple, PGP-based secrets source included with Consfigurator.  Unless
+   you've passwordless sudo access set up on athena, evaluate something like
+   this to initialise the store::
+
+     (consfigurator.data.pgp:set-data #P"/path/to/com.example.consfig.gpg"
+                                      "--user-passwd--athena.example.com"
+				      "spwhitton"
+				      "s3cre+")
+
+8. Now you can evaluate ``(asdf:load-system "com.example.consfig")`` followed
+   by ``(in-package :com.example.consfig)`` (or ``C-c ~`` in Emacs).  In the
+   future, now the secrets store exists, you can start with this step.
+
+9. You should now be able to evaluate ``(athena.example.com)`` to deploy
+   properties to athena, using the connection chain of SSH, sudo and then
+   handing over to a remote Lisp image.
 
 Other things to try
 -------------------
@@ -120,6 +145,13 @@ management, because they apply individual properties without updating the
 definitions of hosts.  Sometimes that's the right thing to do, though, and
 Consfigurator makes it easy to reuse your property definitions in these
 non-declarative ways.
+
+Try deploying properties to athena using a different connection type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Evaluate something like::
+
+  (deploy :ssh athena.example.com)
 
 Apply a security update to all your systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
