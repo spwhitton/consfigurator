@@ -1,4 +1,8 @@
 (asdf:defsystem :consfigurator
+  :description "Lisp declarative configuration management system"
+  :version "0.0.1"
+  :author "Sean Whitton <spwhitton@spwhitton.name>"
+  :licence "GPL-3+"
   :serial t
   :depends-on (#:alexandria
 	       #:babel
