@@ -61,7 +61,10 @@ We also have a few nice macros defined, though nothing too clever yet.
 Try it out / quick start
 ========================
 
-1. ``apt-get install sbcl cl-ppcre cl-interpol cl-alexandria``.
+1. ``apt-get install sbcl cl-ppcre cl-interpol cl-alexandria cl-babel``, or
+   ``(ql:quickload "cl-ppcre")``, ``(ql:quickload "alexandria")``,
+   ``(ql:quickload "cl-interpol")`` and ``(ql:quickload "babel")`` (see
+   https://www.quicklisp.org/).
 
 2. Install Consfigurator.  One way to do that is to clone this git repository
    into ``~/.local/share/common-lisp/source``.
