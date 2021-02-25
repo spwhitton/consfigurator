@@ -2,7 +2,7 @@ Source: consfigurator
 Section: admin
 Priority: optional
 Maintainer: Sean Whitton <spwhitton@spwhittona.name>
-Build-Depends: debhelper-compat (= 13), dh-sphinxdoc, dh-texinfo, python3-sphinx, sphinx-common
+Build-Depends: debhelper-compat (= 13), texinfo, python3-sphinx, sphinx-common
 Standards-Version: 4.5.1
 Homepage: https://git.spwhitton.name/consfigurator/about/
 Vcs-Git: https://git.spwhitton.name/consfigurator
