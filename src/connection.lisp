@@ -166,10 +166,10 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
 			   :exit-code exit))))
 
 (defmacro %process-run-args (&body forms)
-  `(let (cmd input may-fail env)
+  `(let (cmd input may-fail for-exit env)
     (loop for arg = (pop args)
 	  do (case arg
-	       (:for-exit (setq may-fail t))
+	       (:for-exit (setq may-fail t for-exit t))
 	       (:may-fail (setq may-fail t))
 	       (:input (setq input (pop args)))
 	       (:env (setq env (pop args)))
@@ -209,7 +209,8 @@ Keyword arguments accepted:
     variable names and values, use env(1) to set these variables when running
     the command.
 
-Returns command's stdout, stderr and exit code."
+Returns command's stdout, stderr and exit code, unless :FOR-EXIT, in which
+case return only the exit code."
   (%process-run-args
     (with-remote-temporary-file (stdout)
       (setq cmd (format nil "( ~A ) >~A" cmd stdout))
@@ -217,7 +218,7 @@ Returns command's stdout, stderr and exit code."
 	  (connection-run *connection* cmd input)
 	(let ((out (readfile stdout)))
 	  (if (or may-fail (= exit 0))
-	      (values out err exit)
+	      (if for-exit exit (values out err exit))
 	      (error 'run-failed
 		     :cmd cmd :stdout out :stderr err :exit-code exit)))))))
 
@@ -237,7 +238,7 @@ start with RUN."
     (multiple-value-bind (out exit)
 	  (connection-run *connection* cmd input)
       (if (or may-fail (= exit 0))
-	  (values out exit)
+	  (if for-exit exit (values out exit))
 	  (error 'run-failed
 		 :cmd cmd
 		 :stdout out
@@ -248,7 +249,7 @@ start with RUN."
   (lines (apply #'run args)))
 
 (defun test (&rest args)
-  (= 0 (nth-value 2 (apply #'run :for-exit "test" args))))
+  (= 0 (apply #'run :for-exit "test" args)))
 
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))
