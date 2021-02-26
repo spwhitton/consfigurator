@@ -280,6 +280,8 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
       (mrun "mkdir" "-p" (pathname-directory-pathname *dest*))
       (format t "Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
       (call-next-method)
+      ;; TODO eliminate *{THIS,LAST}-HOP-INFO* and just store this in a field
+      ;; of *CONNECTION*
       (push (list iden1 iden2 *dest*) (getf *this-hop-info* :cached-data))
       (format t "done.~%"))))
 
