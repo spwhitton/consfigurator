@@ -1,0 +1,38 @@
+;;; Consfigurator -- Lisp declarative configuration management system
+
+;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
+
+;;; This file is free software; you can redistribute it and/or modify
+;;; it under the terms of the GNU General Public License as published by
+;;; the Free Software Foundation; either version 3, or (at your option)
+;;; any later version.
+
+;;; This file is distributed in the hope that it will be useful,
+;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;; GNU General Public License for more details.
+
+;;; You should have received a copy of the GNU General Public License
+;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(in-package :consfigurator.connection.shell-wrap)
+(named-readtables:in-readtable :interpol-syntax)
+
+(defclass shell-wrap-connection (posix-connection) ())
+
+(defgeneric connection-shell-wrap (connection cmd))
+
+(defmethod connection-run ((c shell-wrap-connection) cmd &optional input)
+  (mrun :may-fail :input input (connection-shell-wrap c cmd)))
+
+(defmethod connection-readfile ((c shell-wrap-connection) path)
+  (multiple-value-bind (out exit)
+      (let ((path (escape-sh-token path)))
+	(mrun :may-fail
+	      (connection-shell-wrap c #?"test -r ${path} && cat ${path}")))
+    (if (= 0 exit) out (error "File ~S not readable" path))))
+
+(defmethod connection-writefile ((c shell-wrap-connection) path contents)
+  (with-remote-temporary-file (temp)
+    (mrun :input contents (connection-shell-wrap c #?"cat >${temp}"))
+    (mrun "mv" temp path)))

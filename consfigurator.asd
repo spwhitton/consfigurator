@@ -18,6 +18,7 @@
 	       (:file "src/deployment")
 	       (:file "src/connection/local")
 	       (:file "src/data")
+	       (:file "src/connection/shell-wrap")
 	       (:file "src/connection/ssh")
 	       (:file "src/connection/sudo")
 	       (:file "src/connection/debian-sbcl")

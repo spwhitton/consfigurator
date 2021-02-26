@@ -28,7 +28,7 @@
   (mrun "ssh" "-fN" hop)
   (make-instance 'ssh-connection :hostname hop :user user))
 
-(defclass ssh-connection (posix-connection)
+(defclass ssh-connection (shell-wrap-connection)
   ((hostname
     :initarg :hostname
     :documentation "Hostname to SSH to.")
@@ -42,31 +42,11 @@
     (format nil "~A@~A" user (slot-value connection 'hostname))
     (slot-value connection 'hostname)))
 
-(defun sshcmd (connection &rest args)
+(defmethod connection-shell-wrap ((connection ssh-connection) cmd)
   ;; wrap in 'sh -c' in case the login shell is not POSIX
   (format nil "ssh ~A ~A"
 	  (ssh-host connection)
-	  (escape-sh-token
-	   (format nil "sh -c ~A"
-		   (escape-sh-token
-		    (if (cdr args) (escape-sh-command args) (car args)))))))
-
-(defmethod connection-run ((c ssh-connection) cmd &optional input)
-  (mrun :may-fail :input input (sshcmd c cmd)))
-
-(defmethod connection-readfile ((c ssh-connection) path)
-  (multiple-value-bind (out exit-code)
-      (mrun :may-fail
-	   (sshcmd c (format nil "test -r ~A && cat ~:*~A"
-			     (escape-sh-token path))))
-    (if (= 0 exit-code)
-	out
-	(error "File ~S not readable" path))))
-
-(defmethod connection-writefile ((c ssh-connection) path contents)
-  (with-remote-temporary-file (temp)
-    (mrun :input contents (sshcmd c "cat" #?">${temp}"))
-    (mrun "mv" temp path)))
+	  (escape-sh-token (format nil "sh -c ~A" (escape-sh-token cmd)))))
 
 ;; rsync it straight to to its destination so rsync can do incremental updates
 (defmethod connection-upload ((c ssh-connection) from to)

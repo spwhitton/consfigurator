@@ -63,19 +63,17 @@
   (format t "Establishing sudo connection to ~A~%" user)
   (make-instance 'sudo-connection :user user :password password))
 
-(defclass sudo-connection (posix-connection)
+(defclass sudo-connection (shell-wrap-connection)
   ((user
     :initarg :user)
    (password
     :initarg :password)))
 
-(defun sudocmd (connection &rest args)
+(defmethod connection-shell-wrap ((connection sudo-connection) cmd)
   ;; wrap in sh -c so that it is more likely we are either asked for a
   ;; password for all our commands or not asked for one for any
   (format nil "sudo -HkS --prompt=\"\" --user=~A sh -c ~A"
-	  (slot-value connection 'user)
-	  (escape-sh-token
-	   (if (cdr args) (escape-sh-command args) (car args)))))
+	  (slot-value connection 'user) (escape-sh-token cmd)))
 
 (defmethod connection-run ((c sudo-connection) cmd &optional input)
   ;; send the password followed by ^M, then the real stdin.  use CODE-CHAR in
@@ -103,19 +101,7 @@
 		       input-stream)
 		      (t
 		       nil))))
-    (mrun :may-fail :input new-input (sudocmd c cmd))))
-
-(defmethod connection-readfile ((c sudo-connection) path)
-  (multiple-value-bind (out exit-code)
-      (connection-run
-       c
-       (format nil "test -r ~A && cat ~:*~A" (escape-sh-token path)))
-    (if (= 0 exit-code)
-	out
-	(error "File ~S not readable" path))))
-
-(defmethod connection-writefile ((c sudo-connection) path contents)
-  (connection-run c #?"cat >${path}" contents))
+    (call-next-method c cmd new-input)))
 
 (defmethod connection-upload ((c sudo-connection) from to)
-  (run (sudocmd c "cp" from to)))
+  (connection-run c #?"cp ${from} ${to}" nil))

@@ -127,11 +127,21 @@
 	   #:request-lisp-systems
 	   #:deployment-handover-program))
 
+(defpackage :consfigurator.connection.shell-wrap
+  (:use #:cl #:consfigurator)
+  (:export #:shell-wrap-connection #:connection-shell-wrap))
+
 (defpackage :consfigurator.connection.ssh
-  (:use #:cl #:consfigurator #:alexandria))
+  (:use #:cl
+	#:consfigurator
+	#:alexandria
+	#:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.connection.sudo
-  (:use #:cl #:consfigurator #:alexandria))
+  (:use #:cl
+	#:consfigurator
+	#:alexandria
+	#:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
