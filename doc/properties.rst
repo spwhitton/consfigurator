@@ -39,11 +39,11 @@ apply the property will always be made.
 ``:apply`` and ``:unapply`` subroutines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Apply or unapply the property.  Should return ``:nochange`` if the property
+Apply or unapply the property.  Should return ``:no-change`` if the property
 was already applied; any other return value is interpreted as meaning that the
 property was not (fully) applied before we ran, but now it is.  (If the
 ``:check`` function indicated that neither ``:apply`` nor ``:unapply`` should
-be run, then this is equivalent to those subroutines returning ``:nochange``.)
+be run, then this is equivalent to those subroutines returning ``:no-change``.)
 
 The point of having both these return value semantics and the ``:check``
 subroutine is that a property might only be able to check whether it made a

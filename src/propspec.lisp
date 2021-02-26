@@ -127,12 +127,12 @@ an atomic property application."
 				 (mapc #'propappattrs propapps))
 		    :check (get psym 'check)
 		    :apply (lambda (&rest args)
-			     (unless (eq :nochange
+			     (unless (eq :no-change
 					 (apply psym args))
 			       (loop for propapp in propapps
 				     do (propappapply propapp))))
 		    :unapply (lambda (&rest args)
-			       (unless (eq :nochange
+			       (unless (eq :no-change
 					   (apply #'propunapply psym args))
 				 (loop for propapp in propapps
 				       do (propappapply propapp)))))
