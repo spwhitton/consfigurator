@@ -17,6 +17,17 @@
 
 (in-package :consfigurator.property.file)
 
+(defun map-file-lines (file function)
+  "Apply FUNCTION to the lines of FILE.  Safe to use in a :POSIX property.
+
+For efficiency, a :LISP property might want to use streams, but there's no
+point in doing that here because WRITEFILE is synchronous."
+  (let* ((orig-lines (lines (readfile file)))
+	 (new-lines (funcall function orig-lines)))
+    (if (equal orig-lines new-lines)
+	:no-change
+	(writefile :try-preserve file (unlines new-lines)))))
+
 (defprop has-content :posix (path lines)
   "Ensure there is a file at PATH whose lines are the elements of LINES."
   (:apply (writefile path (unlines lines))))
@@ -47,9 +58,7 @@
   "Like s/REGEX/REPLACE/ on the lines of FILE.
 Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
   (:apply
-   (writefile
+   (map-file-lines
     file
-    (unlines
-     (mapcar (lambda (line)
-	       (re:regex-replace regex line replace))
-	     (lines (readfile file)))))))
+    (lambda (lines)
+      (mapcar (lambda (line) (re:regex-replace regex line replace)) lines)))))
