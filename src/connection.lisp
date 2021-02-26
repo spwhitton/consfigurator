@@ -199,13 +199,13 @@ followed by argument(s) specifying the shell command to execute.
 
 Keyword arguments accepted:
 
-  - :for-exit / :may-fail -- don't signal an error condition if the command
+  - :FOR-EXIT / :MAY-FAIL -- don't signal an error condition if the command
     does not exit nonzero, usually because it is being called partly or only
     for its exit code
 
-  - :input INPUT -- pass the contents of the string or stream INPUT on stdin
+  - :INPUT INPUT -- pass the content of the string or stream INPUT on stdin
 
-  - :env ENVIRONMENT -- where ENVIRONMENT is a plist specifying environment
+  - :ENV ENVIRONMENT -- where ENVIRONMENT is a plist specifying environment
     variable names and values, use env(1) to set these variables when running
     the command.
 
