@@ -48,7 +48,7 @@ return value is used as replacement keyword arguments to the connection.
 
 For an example of usage, see the :SUDO connection type."))
 
-(defmethod preprocess-connection-args ((type symbol) &rest args &key)
+(defmethod preprocess-connection-args ((type symbol) &rest args &key &allow-other-keys)
   (cons type args))
 
 (defclass connection ()
