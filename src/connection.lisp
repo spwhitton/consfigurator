@@ -62,7 +62,7 @@ For an example of usage, see the :SUDO connection type."))
 
 ;;; generic functions to operate on subclasses of CONNECTION
 
-(defgeneric connection-run (connection cmd &optional input)
+(defgeneric connection-run (connection cmd input)
   (:documentation "Subroutine to run shell commands on the host.
 
 INPUT is a string to send to the shell command's stdin, or a stream which will
@@ -75,7 +75,7 @@ Returns (values OUT EXIT) where OUT is either merged stdout and stderr or
 stderr followed by stdout, and EXIT is the exit code.  Should not signal any
 error condition just because EXIT is non-zero."))
 
-(defmethod connection-run :around ((connection connection) cmd &optional input)
+(defmethod connection-run :around ((connection connection) cmd input)
   (declare (ignore cmd input))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
@@ -145,8 +145,10 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
   `(let ((,file (mktemp)))
      (unwind-protect
 	  (progn ,@body)
-       (connection-run *connection* (format nil "rm -f ~A"
-					    (escape-sh-token ,file))))))
+       (connection-run *connection*
+		       (format nil "rm -f ~A"
+			       (escape-sh-token ,file))
+		       nil))))
 
 (defun mktemp ()
   "Make a temporary file on the remote side."
@@ -157,7 +159,8 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
       ;; mktemp(1) as these may differ on different platforms.
       (connection-run
        *connection*
-       "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp")
+       "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp"
+       nil)
     (if (= exit 0)
 	(car (lines out))
 	(error 'run-failed :cmd "(attempt to make a temporary file on remote)"

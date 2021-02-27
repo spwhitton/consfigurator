@@ -22,7 +22,7 @@
 
 (defgeneric connection-shell-wrap (connection cmd))
 
-(defmethod connection-run ((c shell-wrap-connection) cmd &optional input)
+(defmethod connection-run ((c shell-wrap-connection) cmd input)
   (mrun :may-fail :input input (connection-shell-wrap c cmd)))
 
 (defmethod connection-readfile ((c shell-wrap-connection) path)

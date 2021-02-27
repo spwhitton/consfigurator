@@ -61,7 +61,12 @@
 				   password)
   (declare (ignore remaining))
   (format t "Establishing sudo connection to ~A~%" user)
-  (make-instance 'sudo-connection :user user :password password))
+  (make-instance 'sudo-connection
+		 :user user
+		 ;; we'll send the password followed by ^M, then the real
+		 ;; stdin.  use CODE-CHAR in this way so that we can be sure
+		 ;; ASCII ^M is what will get emitted.
+		 :password (strcat password (string (code-char 13)))))
 
 (defclass sudo-connection (shell-wrap-connection)
   ((user
@@ -75,33 +80,25 @@
   (format nil "sudo -HkS --prompt=\"\" --user=~A sh -c ~A"
 	  (slot-value connection 'user) (escape-sh-token cmd)))
 
-(defmethod connection-run ((c sudo-connection) cmd &optional input)
-  ;; send the password followed by ^M, then the real stdin.  use CODE-CHAR in
-  ;; this way so that we can be sure ASCII ^M is what will get emitted.
-  (let* ((input-stream
-	   (typecase input
-	     (stream input)
-	     (string (make-string-input-stream input))))
-	 (password (when-let ((password (slot-value c 'password)))
-		     (format nil "~A~A" password (code-char 13))))
-	 (password-stream (and password (make-string-input-stream password)))
-	 (new-input (cond
-		      ((and password input)
-		       (make-concatenated-stream
-			(if (subtypep (stream-element-type input-stream)
-				      'character)
-			    password-stream
-			    (babel-streams:make-in-memory-input-stream
-			     (babel:string-to-octets password :encoding :UTF-8)
-			     :element-type (stream-element-type input-stream)))
-			input-stream))
-		      (password
-		       password-stream)
-		      (input
-		       input-stream)
-		      (t
-		       nil))))
-    (call-next-method c cmd new-input)))
+(defmethod connection-run ((c sudo-connection) cmd (input null))
+  (call-next-method c cmd (slot-value c 'password)))
+
+(defmethod connection-run ((c sudo-connection) cmd (input string))
+  (call-next-method c cmd (strcat (slot-value c 'password) input)))
+
+(defmethod connection-run ((connection sudo-connection) cmd (input stream))
+  (call-next-method connection
+		    cmd
+		    (if-let ((password (slot-value connection 'password)))
+		      (make-concatenated-stream
+		       (if (subtypep (stream-element-type input) 'character)
+			   (make-string-input-stream password)
+			   (babel-streams:make-in-memory-input-stream
+			    (babel:string-to-octets
+			     password :encoding :UTF-8)
+			    :element-type (stream-element-type input)))
+		       input)
+		      input)))
 
 (defmethod connection-upload ((c sudo-connection) from to)
   (connection-run c #?"cp ${from} ${to}" nil))
