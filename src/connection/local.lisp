@@ -34,8 +34,8 @@ root Lisp is running on, as the root Lisp's uid."))
 
 (defmethod connection-run ((connection local-connection) shell-cmd input)
   (multiple-value-bind (output _ exit-code)
-      ;; assumes a POSIX shell (otherwise we could wrap in 'sh -c')
-      (run-program shell-cmd
+      ;; wrap in sh -c in case user's shell is not POSIX
+      (run-program (strcat "sh -c " (escape-sh-token shell-cmd))
 		   :force-shell t
 		   :input input
 		   :output :string
