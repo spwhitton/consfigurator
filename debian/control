@@ -11,7 +11,7 @@ Rules-Requires-Root: no
 
 Package: cl-consfigurator
 Architecture: all
-Depends: ${misc:Depends}, ${sphinxdoc:Depends}, cl-alexandria, cl-ppcre, cl-interpol
+Depends: ${misc:Depends}, ${sphinxdoc:Depends}, cl-alexandria, cl-ppcre, cl-interpol, cl-babel, cl-cffi
 Recommends: sbcl
 Description: Lisp declarative configuration management system
  Consfigurator is a system for declarative configuration management using
