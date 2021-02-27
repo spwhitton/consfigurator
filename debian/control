@@ -2,7 +2,11 @@ Source: consfigurator
 Section: admin
 Priority: optional
 Maintainer: Sean Whitton <spwhitton@spwhitton.name>
-Build-Depends: debhelper-compat (= 13), texinfo, python3-sphinx, sphinx-common
+Build-Depends:
+ debhelper-compat (= 13),
+ python3-sphinx,
+ sphinx-common,
+ texinfo,
 Standards-Version: 4.5.1
 Homepage: https://git.spwhitton.name/consfigurator/about/
 Vcs-Git: https://git.spwhitton.name/consfigurator
@@ -11,8 +15,16 @@ Rules-Requires-Root: no
 
 Package: cl-consfigurator
 Architecture: all
-Depends: ${misc:Depends}, ${sphinxdoc:Depends}, cl-alexandria, cl-ppcre, cl-interpol, cl-babel, cl-cffi
-Recommends: sbcl
+Depends:
+ cl-alexandria,
+ cl-babel,
+ cl-cffi,
+ cl-interpol,
+ cl-ppcre,
+ ${misc:Depends},
+ ${sphinxdoc:Depends},
+Recommends:
+ sbcl,
 Description: Lisp declarative configuration management system
  Consfigurator is a system for declarative configuration management using
  Common Lisp.  You can use it to configure hosts as root, deploy services as
