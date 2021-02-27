@@ -62,6 +62,7 @@
 	   #:connection
 	   #:lisp-connection
 	   #:posix-connection
+	   #:lisp-connection-p
 	   #:connection-run
 	   #:connection-readfile
 	   #:connection-writefile
@@ -150,6 +151,9 @@
 
 (defpackage :consfigurator.connection.debian-sbcl
   (:use #:cl #:consfigurator))
+
+(defpackage :consfigurator.connection.chroot.fork
+  (:use #:cl #:consfigurator #:cffi))
 
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)

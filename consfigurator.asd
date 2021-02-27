@@ -23,6 +23,7 @@
 	       (:file "src/connection/ssh")
 	       (:file "src/connection/sudo")
 	       (:file "src/connection/debian-sbcl")
+	       (:file "src/connection/chroot/fork")
 	       (:file "src/property/cmd")
 	       (:file "src/property/file")
 	       (:file "src/data/asdf")

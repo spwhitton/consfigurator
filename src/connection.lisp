@@ -61,6 +61,9 @@ For an example of usage, see the :SUDO connection type."))
 
 (defclass posix-connection (connection) ())
 
+(defun lisp-connection-p ()
+  (subtypep (type-of *connection*) 'lisp-connection))
+
 ;;; generic functions to operate on subclasses of CONNECTION
 
 (defgeneric connection-run (connection cmd input)
