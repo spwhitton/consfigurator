@@ -55,7 +55,9 @@ For an example of usage, see the :SUDO connection type."))
   ((parent
     :initform *connection*
     :documentation
-    "The value of *CONNECTION* at the time this connection was established.")))
+    "The value of *CONNECTION* at the time this connection was established.")
+   (cached-data
+    :initform nil)))
 
 (defclass lisp-connection (connection) ())
 

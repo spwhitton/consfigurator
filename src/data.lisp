@@ -280,9 +280,7 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
       (mrun "mkdir" "-p" (pathname-directory-pathname *dest*))
       (format t "Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
       (call-next-method)
-      ;; TODO eliminate *{THIS,LAST}-HOP-INFO* and just store this in a field
-      ;; of *CONNECTION*
-      (push (list iden1 iden2 *dest*) (getf *this-hop-info* :cached-data))
+      (push (list iden1 iden2 *dest*) (slot-value *connection* 'cached-data))
       (format t "done.~%"))))
 
 (defmethod connection-upload-data ((data file-data))
@@ -391,7 +389,7 @@ Called by connections which start up remote Lisp images."
 			       (lambda (d)
 				 (string= (car d) "--lisp-system")
 				 (string= (cadr d) (normalise-system system)))
-			       (getf *this-hop-info* :cached-data))))))
+			       (slot-value *connection* 'cached-data))))))
 	  (*package* (find-package "COMMON-LISP-USER")))
       ;; need line breaks in between so that packages exist before we try to
       ;; have remote Lisp read sexps containing symbols from those packages
