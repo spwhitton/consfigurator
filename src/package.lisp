@@ -152,8 +152,16 @@
 (defpackage :consfigurator.connection.debian-sbcl
   (:use #:cl #:consfigurator))
 
+(defpackage :consfigurator.connection.chroot
+  (:use #:cl #:consfigurator #:cffi))
+
 (defpackage :consfigurator.connection.chroot.fork
   (:use #:cl #:consfigurator #:cffi))
+
+(defpackage :consfigurator.connection.chroot.shell
+  (:use #:cl
+	#:consfigurator
+	#:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)

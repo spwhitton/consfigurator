@@ -12,15 +12,6 @@ Properties
 Connections
 -----------
 
-- POSIX-CONNECTION which runs commands in a chroot, and a corresponding
-  LISP-CONNECTION which forks into the chroot.  The latter will make a system
-  call so it will be an implementation of ESTABLISH-CONNECTION which does not
-  behave like a :POSIX property.  So I think we actually want a generic for
-  each connection type keyword symbol, which returns whether establishing a
-  connection of that type requires the most recent hop to be POSIX- or LISP-.
-  Then DEPLOY* can call that and error out if establishing the next hop
-  requires LISP- but we only have POSIX-.
-
 - :DEBIAN-SBCL could (fork and) SAVE-LISP-AND-DIE.  That way, we have
   something that a cronjob can call to re-run the deployment to ensure that
   all properties remain applied.  Need to think about how the property which
