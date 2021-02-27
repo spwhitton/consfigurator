@@ -2,6 +2,7 @@
 
 (defpackage :consfigurator
   (:use #:cl #:alexandria)
+  (:local-nicknames (#:re #:cl-ppcre))
   (:shadowing-import-from #:uiop
 			  #:strcat
 			  #:string-prefix-p
@@ -144,7 +145,7 @@
 	#:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.connection.local
-  (:use #:cl #:consfigurator #:alexandria)
+  (:use #:cl #:consfigurator #:alexandria #:cffi)
   (:export #:local-connection))
 
 (defpackage :consfigurator.connection.debian-sbcl

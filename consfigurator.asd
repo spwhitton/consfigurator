@@ -8,7 +8,8 @@
 	       #:babel
 	       #:babel-streams
 	       #:cl-ppcre
-	       #:cl-interpol)
+	       #:cl-interpol
+	       #:cffi)
   :components ((:file "src/package")
 	       (:file "src/util")
 	       (:file "src/connection")

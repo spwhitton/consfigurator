@@ -16,6 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator)
+(named-readtables:in-readtable :interpol-syntax)
 
 ;;;; Connections
 
@@ -92,7 +93,7 @@ error condition just because EXIT is non-zero."))
 ;; take: a string vs. a path.  for a given connection type, they may have same
 ;; or different implementations.
 
-(defgeneric connection-writefile (connection path input)
+(defgeneric connection-writefile (connection path input umask)
   (:documentation
    "Subroutine to replace/create the contents of files on the host.
 
@@ -101,8 +102,11 @@ INPUT is the new contents of the file or a stream which will produce it.
 Implementations can specialise on both the CONNECTION and INPUT arguments, if
 they need to handle streams and strings differently."))
 
-(defmethod connection-writefile :around ((connection connection) path contents)
-  (declare (ignore path contents))
+(defmethod connection-writefile :around ((connection connection)
+					 path
+					 content
+					 umask)
+  (declare (ignore path content umask))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
@@ -257,8 +261,20 @@ start with RUN."
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))
 
-(defun writefile (&rest args)
-  (apply #'connection-writefile *connection* args))
+(defun writefile (path content &key try-preserve (umask #o022))
+  (if (and try-preserve (test "-f" path))
+      (destructuring-bind (umode gmode wmode uid gid)
+	  ;; seems there is nothing like stat(1) in POSIX
+	  (re:all-matches-as-strings
+	   #?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
+	   (mrun "ls" "-nd" path))
+	(connection-writefile *connection* path content umask)
+	(let ((path (escape-sh-token path)))
+	  ;; assume that if we can write it we can chmod it
+	  (mrun #?"chmod u=${umode},g=${gmode},w=${wmode} ${path}")
+	  ;; we may not be able to chown; that's okay
+	  (mrun :may-fail #?"chown ${uid}:${gid} ${path}")))
+      (connection-writefile *connection* path content umask)))
 
 (defvar *host* nil
   "Object representing the host at the end of the current connection chain.

@@ -44,20 +44,34 @@ root Lisp is running on, as the root Lisp's uid."))
 (defmethod connection-readfile ((connection local-connection) path)
   (read-file-string path))
 
-(defmethod connection-writefile ((connection local-connection)
-				 path
-				 (contents string))
-  (with-open-file (stream path :direction :output :if-exists :supersede)
-    (write-string contents stream)))
+(defcfun "umask" :int (mode :int))
+
+(defmacro with-umask ((umask) &body forms)
+  (with-gensyms (old)
+    `(let ((,old (umask ,umask)))
+       (unwind-protect
+	    (progn ,@forms)
+	 (umask ,old)))))
 
 (defmethod connection-writefile ((connection local-connection)
 				 path
-				 (contents stream))
-  (with-open-file (stream path :direction :output
-			       :if-exists :supersede
-			       :element-type (stream-element-type contents))
-    (copy-stream-to-stream contents stream
-			   :element-type (stream-element-type contents))))
+				 (contents string)
+				 umask)
+  (with-umask (umask)
+    (with-open-file (stream path :direction :output :if-exists :supersede)
+      (write-string contents stream))))
+
+(defmethod connection-writefile ((connection local-connection)
+				 path
+				 (contents stream)
+				 umask
+				 &aux
+				   (type (stream-element-type contents)))
+  (with-umask (umask)
+    (with-open-file (stream path :direction :output
+				 :if-exists :supersede
+				 :element-type type)
+      (copy-stream-to-stream contents stream :element-type type))))
 
 (defmethod connection-upload ((connection local-connection) from to)
   (copy-file from to))

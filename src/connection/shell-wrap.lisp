@@ -31,10 +31,16 @@
 	(connection-run c #?"test -r ${path} && cat ${path}" nil))
     (if (= 0 exit) out (error "File ~S not readable" path))))
 
-(defmethod connection-writefile ((conn shell-wrap-connection) path contents)
+(defmethod connection-writefile ((conn shell-wrap-connection)
+				 path
+				 contents
+				 umask)
   (with-remote-temporary-file (temp)
-    (connection-run conn #?"cat >${temp}" contents)
-    (connection-run
-     conn
-     #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
-     nil)))
+    (connection-run conn
+		    (if umask
+			(format nil "( umask ~O; cat >~A )" umask temp)
+			#?"cat >${temp}")
+		    contents)
+    (connection-run conn
+		    #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
+		    nil)))

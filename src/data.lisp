@@ -268,7 +268,7 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
 			nil))
       (connection-upload *connection* from to)
       (with-open-file (s from :element-type '(unsigned-byte 8))
-	(connection-writefile *connection* to s))))
+	(connection-writefile *connection* to s #o077))))
 
 (defmethod connection-upload-data :around ((data data))
   (when (subtypep (class-of *connection*)
@@ -300,7 +300,7 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
 
 (defmethod connection-upload-data ((data string-data))
   (declare (special *dest*))
-  (connection-writefile *connection* *dest* (data-string data)))
+  (connection-writefile *connection* *dest* (data-string data) #o077))
 
 (defun connection-clear-data-cache (iden1 iden2)
   (let ((dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))

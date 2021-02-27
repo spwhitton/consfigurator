@@ -26,7 +26,7 @@ point in doing that here because WRITEFILE is synchronous."
 	 (new-lines (funcall function orig-lines)))
     (if (equal orig-lines new-lines)
 	:no-change
-	(writefile :try-preserve file (unlines new-lines)))))
+	(writefile file (unlines new-lines) :try-preserve t))))
 
 (defprop has-content :posix (path lines)
   "Ensure there is a file at PATH whose lines are the elements of LINES."
@@ -39,7 +39,8 @@ point in doing that here because WRITEFILE is synchronous."
 	 (existing-lines (lines (readfile path))))
      (dolist (existing-line existing-lines)
        (deletef new-lines existing-line :test #'string=))
-     (writefile path (unlines (nconc existing-lines new-lines))))))
+     (writefile path (unlines (nconc existing-lines new-lines))
+		:try-preserve t))))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
   (:hostattrs
