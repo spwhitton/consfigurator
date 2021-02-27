@@ -22,6 +22,7 @@
   (request-lisp-systems)
   (upload-all-prerequisite-data)
   (princ "Waiting for remote Lisp to exit, this may take some time ... ")
+  (force-output)
   (let ((program (deployment-handover-program remaining)))
     (multiple-value-bind (out err exit)
 	(run :may-fail :input program
