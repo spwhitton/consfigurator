@@ -103,8 +103,6 @@
 	   #:deploy-these
 	   #:deploys
 	   #:deploys-these
-	   #:*last-hop-info
-	   #:*this-hop-info*
 
 	   ;; data.lisp
 	   #:data

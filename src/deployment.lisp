@@ -108,13 +108,6 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 	 (eval-propspec-hostattrs ,propspec))
        (deploy* ',connection ,new-host))))
 
-(defvar *last-hop-info* nil
-  "Plist of information about most recently established connection hop.  Can be
-used by implementations of ESTABLISH-CONNECTION.")
-
-(defvar *this-hop-info* nil
-  "Plist which will become the value of *LAST-HOP-INFO*.")
-
 ;; this is the main do-work loop for Consfigurator; remote Lisp images are
 ;; instructed to pick up the remaining work of this loop
 (defun deploy* (connections host)
@@ -127,15 +120,14 @@ used by implementations of ESTABLISH-CONNECTION.")
     (labels
 	((connect (connections)
 	   (destructuring-bind ((type . args) . remaining) connections
-	     (let ((*last-hop-info* *this-hop-info*) *this-hop-info*)
-	       ;; implementations of ESTABLISH-CONNECTION return nil if they
-	       ;; have handed off to a remote Lisp image
-	       (when-let ((*connection*
-			   (apply #'establish-connection type remaining args)))
-		 (if remaining
-		     (connect remaining)
-		     (apply-propspec (slot-value *host* 'propspec)))
-		 (connection-teardown *connection*)))))
+	     ;; implementations of ESTABLISH-CONNECTION return nil if they
+	     ;; have handed off to a remote Lisp image
+	     (when-let ((*connection*
+			 (apply #'establish-connection type remaining args)))
+	       (if remaining
+		   (connect remaining)
+		   (apply-propspec (slot-value *host* 'propspec)))
+	       (connection-teardown *connection*))))
 	 (apply-propspec (propspec)
 	   (when (and (subtypep (class-of *connection*) 'posix-connection)
 		      (eq :lisp (propspec->type propspec)))
