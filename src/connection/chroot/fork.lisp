@@ -16,7 +16,8 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.connection.chroot.fork)
-#+sbcl (require "sb-posix")
+#+sbcl (eval-when (:compile-toplevel :load-toplevel :execute)
+	 (require "sb-posix"))
 
 ;; use only implementation-specific fork and waitpid calls to avoid thread
 ;; woes.  chroot(2), however, should be okay.
