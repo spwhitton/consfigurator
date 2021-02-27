@@ -54,6 +54,11 @@ Core
   DEPLOY-THESE but take the CONNECTION argument from definitions established
   by DEFHOSTDEPLOY.
 
+- A CONCURRENTLY combinator for property application specifications, which
+  means to apply each of the enclosed properties in parallel.  Particularly
+  useful surrounding a set of DEPLOYS applications, to concurrently deploy a
+  number of hosts.
+
 Project & packaging
 -------------------
 
