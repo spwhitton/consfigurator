@@ -1,6 +1,7 @@
 consfigurator (0.0.1-2) UNRELEASED; urgency=medium
 
   * Add dependencies on cl-babel, cl-cffi.
+  * Add an autopkgtest, marked as superficial, to test compiling and loading.
 
  -- Sean Whitton <spwhitton@spwhitton.name>  Sat, 27 Feb 2021 16:54:31 -0700
 

@@ -64,7 +64,3 @@ Project & packaging
 
 - Define a semantics for version numbers (probably just like Propellor's),
   start keeping a NEWS file and move from Debian experimental to unstable.
-
-- Add an autopkgtest, marked as superficial, which tries to load the system
-  into sbcl and dies if there are any compiler warnings.  Mainly to ensure
-  that everything is loaded in the correct order.
