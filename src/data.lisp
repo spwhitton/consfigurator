@@ -404,7 +404,7 @@ Called by connections which start up remote Lisp images."
 		 (require "asdf")
 		 (let ((*standard-output* *error-output*))
 		   ,(wrap load-forms))
-		 ,(wrap `((deploy* ,(or remaining :local) ,*host*)))))))))
+		 ,(wrap `((deploy* ',(or remaining :local) ,*host*)))))))))
 
 (defun request-lisp-systems ()
   "Request that all Lisp systems required by the host currently being deployed
