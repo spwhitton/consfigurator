@@ -145,16 +145,17 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
    (stderr :initarg :stderr :reader failed-stderr)
    (exit-code :initarg :exit-code :reader failed-exit-code)))
 
-(defmacro with-remote-temporary-file ((file) &body body)
-  `(let ((,file (mktemp)))
-     (unwind-protect
-	  (progn ,@body)
-       (connection-run *connection*
-		       (format nil "rm -f ~A"
-			       (escape-sh-token ,file))
-		       nil))))
+(defmacro with-remote-temporary-file ((file &key (connection '*connection*))
+				      &body body)
+  (once-only (connection)
+    `(let ((,file (mktemp ,connection)))
+       (unwind-protect
+	    (progn ,@body)
+	 (connection-run ,connection
+			 (format nil "rm -f ~A" (escape-sh-token ,file))
+			 nil)))))
 
-(defun mktemp ()
+(defun mktemp (&optional (connection *connection*))
   "Make a temporary file on the remote side."
   (multiple-value-bind (out exit)
       ;; mktemp(1) is not POSIX; the only POSIX way is this m4 way,
@@ -162,7 +163,7 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
       ;; often be absent, so have a fallback.  Avoid passing any arguments to
       ;; mktemp(1) as these may differ on different platforms.
       (connection-run
-       *connection*
+       connection
        "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp"
        nil)
     (if (= exit 0)

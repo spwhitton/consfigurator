@@ -35,11 +35,10 @@
 				 path
 				 contents
 				 umask)
-  (with-remote-temporary-file (temp)
-    (connection-run conn
-		    (if umask
-			(format nil "( umask ~O; cat >~A )" umask temp)
-			#?"cat >${temp}")
+  (with-remote-temporary-file (temp :connection conn)
+    (connection-run conn (if umask
+			     (format nil "( umask ~O; cat >~A )" umask temp)
+			     #?"cat >${temp}")
 		    contents)
     (connection-run conn
 		    #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
