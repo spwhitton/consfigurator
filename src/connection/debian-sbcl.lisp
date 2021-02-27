@@ -30,7 +30,7 @@
 	     "--disable-debugger"
 	     "--no-sysinit" "--no-user-init")
       (format t "done.")
-      (if (= 0 exit)
+      (if (zerop exit)
 	  (format t "  Output was:~%~{    ~A~%~}" (lines out))
 	  (error "~%~%Remote Lisp failed; we sent~%~%~A~%~%and stderr was:~%~A"
 		 program err))))

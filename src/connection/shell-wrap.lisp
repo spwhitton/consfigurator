@@ -29,7 +29,7 @@
   (multiple-value-bind (out exit)
       (let ((path (escape-sh-token path)))
 	(connection-run c #?"test -r ${path} && cat ${path}" nil))
-    (if (= 0 exit) out (error "File ~S not readable" path))))
+    (if (zerop exit) out (error "File ~S not readable" path))))
 
 (defmethod connection-writefile ((conn shell-wrap-connection)
 				 path

@@ -53,15 +53,15 @@
   (dpkg-version-compare x ">=" y))
 
 (defun dpkg-version-compare (x r y)
-  (= 0 (nth-value 2 (run-program `("dpkg" "--compare-versions"
-					  ,(etypecase x
-					     (string x)
-					     (number (format nil "~A" x)))
-					  ,r
-					  ,(etypecase y
-					     (string y)
-					     (number (format nil "~A" y))))
-				 :ignore-error-status t))))
+  (zerop (nth-value 2 (run-program `("dpkg" "--compare-versions"
+					    ,(etypecase x
+					       (string x)
+					       (number (format nil "~A" x)))
+					    ,r
+					    ,(etypecase y
+					       (string y)
+					       (number (format nil "~A" y))))
+				   :ignore-error-status t))))
 
 
 ;;;; Encoding of strings to filenames

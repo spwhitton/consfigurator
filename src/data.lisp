@@ -345,7 +345,7 @@ of the current connection, where each entry is of the form
 	  (multiple-value-bind (out exit)
 	      (mrun :may-fail "find" (get-remote-data-cache-dir)
 		    "-type" "f" "-printf" "%P\\n")
-	    (and (= 0 exit) (lines out)))))
+	    (and (zerop exit) (lines out)))))
 
 ;; TODO on remote side, catch read errors and signal our own which says
 ;; something more specific -- "This has probably been caused by an attempt to
