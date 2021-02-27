@@ -1,6 +1,12 @@
 Properties
 ==========
 
+Names
+-----
+
+The names of properties may not end in the character ``.``, because that has a
+special meaning in unevaluated property application specifications.
+
 Property subroutines
 --------------------
 
