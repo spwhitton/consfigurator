@@ -46,6 +46,7 @@ root Lisp is running on, as the root Lisp's uid."))
 
 (defcfun "umask" :int (mode :int))
 
+;; TODO this is not safe if there are multiple threads
 (defmacro with-umask ((umask) &body forms)
   (with-gensyms (old)
     `(let ((,old (umask ,umask)))
