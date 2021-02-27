@@ -6,13 +6,14 @@ Common Lisp.  You can use it to configure hosts as root, deploy services as
 unprivileged users, build and deploy containers, and produce disc images.
 
 Consfigurator's design gives you a great deal of flexibility about how to
-control the hosts you want to configure.  Input and output streams attached to
-an interactive POSIX sh running on the target host (or in the target
-container) is sufficient to use much of Consfigurator's functionality.  But if
-it is possible to get an implementation of Common Lisp started up on the host,
-then Configurator can transparently execute your deployment code over on the
-remote side, rather than exchanging information via POSIX sh.  This lets you
-use the full power of Common Lisp to deploy your configuration.
+control the hosts you want to configure.  If you can run a command which will
+obtain input and output streams attached to an interactive POSIX sh running on
+the target host/in the target container, then you use much of Consfigurator's
+functionality to configure that host or container.  But if it is possible to
+get an implementation of Common Lisp started up on the host, then Configurator
+can transparently execute your deployment code over on the remote side, rather
+than exchanging information via POSIX sh.  This lets you use the full power of
+Common Lisp to deploy your configuration.
 
 Configurator has convenient abstractions for combining these different ways to
 execute your configuration on hosts with different ways of connecting to them.
@@ -33,7 +34,7 @@ Let's get as much as we can out of all that existing distro policy-compliant
 work!
 
 *Some features described in the foregoing are not yet implemented, but
-Consfigurator's design should permit them to be soon.*
+Consfigurator's design permits them to be.*
 
 .. _Propellor: https://propellor.branchable.com/
 .. _GNU Guix System: https://guix.gnu.org/

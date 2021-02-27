@@ -21,6 +21,13 @@ Connections
   some sort of command line input telling it what arguments to pass to
   DEPLOY*.
 
+- Basic infrastructure for connections which work with just input and output
+  streams connected to an interactive POSIX sh somewhere, like TRAMP, and
+  probably using ``base64 -d`` for WRITEFILE.  Probably the basic connection
+  type will take a command to start up the shell as a keyword argument, and
+  then we can have more specific connection types which take other arguments
+  and construct the full command.
+
 Data sources
 ------------
 
