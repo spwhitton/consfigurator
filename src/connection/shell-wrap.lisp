@@ -28,11 +28,13 @@
 (defmethod connection-readfile ((c shell-wrap-connection) path)
   (multiple-value-bind (out exit)
       (let ((path (escape-sh-token path)))
-	(mrun :may-fail
-	      (connection-shell-wrap c #?"test -r ${path} && cat ${path}")))
+	(connection-run c #?"test -r ${path} && cat ${path}" nil))
     (if (= 0 exit) out (error "File ~S not readable" path))))
 
-(defmethod connection-writefile ((c shell-wrap-connection) path contents)
+(defmethod connection-writefile ((conn shell-wrap-connection) path contents)
   (with-remote-temporary-file (temp)
-    (mrun :input contents (connection-shell-wrap c #?"cat >${temp}"))
-    (mrun "mv" temp path)))
+    (connection-run conn #?"cat >${temp}" contents)
+    (connection-run
+     conn
+     #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
+     nil)))
