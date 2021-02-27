@@ -34,13 +34,10 @@ root Lisp is running on, as the root Lisp's uid."))
 
 (defmethod connection-run ((connection local-connection) shell-cmd input)
   (multiple-value-bind (output _ exit-code)
-      ;; wrap in sh -c in case user's shell is not POSIX
-      (run-program (strcat "sh -c " (escape-sh-token shell-cmd))
-		   :force-shell t
-		   :input input
-		   :output :string
-		   :error-output :output
-		   :ignore-error-status t)
+      ;; call sh(1) so we know we'll get POSIX
+      (run-program `("sh" "-c" ,shell-cmd)
+		   :input input :output :string
+		   :error-output :output :ignore-error-status t)
     (declare (ignore _))
     (values output exit-code)))
 
