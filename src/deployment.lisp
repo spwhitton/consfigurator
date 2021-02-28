@@ -19,6 +19,44 @@
 
 ;;;; Deployments
 
+(defun deploy* (connections host)
+  "Execute the deployment which is defined by the pair (CONNECTIONS . HOST).
+
+This is the entry point to Consfigurator's primary loop.  Typically users use
+DEPLOY, DEPLOY-THESE, and the function definitions established by DEFDEPLOY,
+DEFDEPLOY-THESE, etc., rather than calling this function.  However, code which
+programmatically constructs deployments will need to call this function.
+
+Unlike DEPLOY there is no argument to supply additional properties, and there
+is no function DEPLOY-THESE*.  This is because merging/replacing properties
+into HOST's propspec cannot be done without either the implicit context
+established by a consfig (specifically, by IN-CONSFIG) or with an explicit
+specification of the SYSTEMS slot of the resultant property application
+specification."
+  (labels
+      ((connect (connections)
+	 (destructuring-bind ((type . args) . remaining) connections
+	   ;; implementations of ESTABLISH-CONNECTION which call
+	   ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
+	   (when-let ((*connection*
+		       (apply #'establish-connection type remaining args)))
+	     (if remaining
+		 (connect remaining)
+		 (eval-propspec (host-propspec *host*)))
+	     (connection-teardown *connection*)))))
+    ;; make a partial own-copy of HOST so that connections can add new pieces
+    ;; of required prerequisite data; specifically, so that they can request
+    ;; the source code of ASDF systems
+    (let ((*host* (make-instance 'host :props (host-propspec host)
+				       :attrs (copy-list (hostattrs host)))))
+      (connect (normalise-connections connections)))))
+
+(defun normalise-connections (connections)
+  (let ((chain (loop for connection in (ensure-cons connections)
+		     collect (apply #'preprocess-connection-args
+				    (ensure-cons connection)))))
+    (if (eq :local (caar chain)) chain (cons '(:local) chain))))
+
 (defmacro defdeploy (name (connection host) &body additional-properties)
   "Define a function which does (DEPLOY CONNECTION HOST ADDITIONAL-PROPERTIES).
 You can then eval (NAME) to execute this deployment."
@@ -107,44 +145,6 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
        (let ((*host* ,new-host))
 	 (eval-propspec-hostattrs ,propspec))
        (deploy* ',connection ,new-host))))
-
-(defun deploy* (connections host)
-  "Execute the deployment which is defined by the pair (CONNECTIONS . HOST).
-
-This is the entry point to Consfigurator's primary loop.  Typically users use
-DEPLOY, DEPLOY-THESE, and the function definitions established by DEFDEPLOY,
-DEFDEPLOY-THESE, etc., rather than calling this function.  However, code which
-programmatically constructs deployments will need to call this function.
-
-Unlike DEPLOY there is no argument to supply additional properties, and there
-is no function DEPLOY-THESE*.  This is because merging/replacing properties
-into HOST's propspec cannot be done without either the implicit context
-established by a consfig (specifically, by IN-CONSFIG) or with an explicit
-specification of the SYSTEMS slot of the resultant property application
-specification."
-  (labels
-      ((connect (connections)
-	 (destructuring-bind ((type . args) . remaining) connections
-	   ;; implementations of ESTABLISH-CONNECTION which call
-	   ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
-	   (when-let ((*connection*
-		       (apply #'establish-connection type remaining args)))
-	     (if remaining
-		 (connect remaining)
-		 (eval-propspec (host-propspec *host*)))
-	     (connection-teardown *connection*)))))
-    ;; make a partial own-copy of HOST so that connections can add new pieces
-    ;; of required prerequisite data; specifically, so that they can request
-    ;; the source code of ASDF systems
-    (let ((*host* (make-instance 'host :props (host-propspec host)
-				       :attrs (copy-list (hostattrs host)))))
-      (connect (normalise-connections connections)))))
-
-(defun normalise-connections (connections)
-  (let ((chain (loop for connection in (ensure-cons connections)
-		     collect (apply #'preprocess-connection-args
-				    (ensure-cons connection)))))
-    (if (eq :local (caar chain)) chain (cons '(:local) chain))))
 
 (defun continue-deploy* (remaining-connections)
   "Complete the work of an enclosing call to DEPLOY*.
