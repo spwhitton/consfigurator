@@ -44,6 +44,9 @@ Consfigurator properties code in this symbol's package applies to hosts."))))
 (defclass propspec ()
   ((systems
     :initarg :systems
+    :initform (or (symbol-value (find-symbol "*CONSFIG*"))
+		  (error
+		   "Looks like *CONSFIG* is not set; please call IN-CONSFIG"))
     :reader propspec-systems
     :documentation "List of names of systems, the loading of all of which is
 sufficient to deploy this propspec.")
@@ -169,10 +172,7 @@ an atomic property application."
 	  return :lisp
 	finally (return :posix)))
 
-(defun props (forms
-	      &optional
-		(systems (symbol-value (find-symbol "*CONSFIG*"))
-			 systems-supplied-p))
+(defun props (forms &optional (systems nil systems-supplied-p))
   "Where FORMS is the elements of an unevaluated property application
 specification, return code which will evaluate the expressions and produce the
 corresponding property application specification.
@@ -183,8 +183,6 @@ that the returned code should produce.
 Intended for use by macros which allow the user to provide expressions instead
 of values as the arguments to properties when building a property application
 specification."
-  (unless (or systems systems-supplied-p)
-    (error "Looks like *CONSFIG* is not set; please call IN-CONSFIG"))
   (labels ((make-eval-propspec (form)
 	     (if (atom form)
 		 `(quote ,form)
@@ -197,7 +195,7 @@ specification."
 		       `(list ,@(mapcar #'make-eval-propspec form)))))))
     `(make-instance
       'propspec
-      :systems ',systems
+      ,@(and systems-supplied-p `(:systems ,systems))
       :props (list ,@(mapcar #'make-eval-propspec forms)))))
 
 (defmethod append-propspecs ((first propspec) (second propspec))
