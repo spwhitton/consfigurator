@@ -52,12 +52,12 @@
 		   (list *standard-input* *debug-io* *terminal-io*))
 	     (unless (zerop (chroot into))
 	       (error "chroot(2) failed; are you root?"))
-	     ;; note that we can't just
-	     ;; (return-from establish-connection (establish-connection :local)
-	     ;; because we need to kill off the child afterwards, rather than
-	     ;; returning to the child's REPL or whatever else
-	     ;; TODO public interface to DEPLOY* or similar needed here
-	     (consfigurator::deploy* (or remaining :local) consfigurator::*host*)
+	     ;; it would be nice to reenter Consfigurator's primary loop by
+	     ;; just calling (return-from establish-connection
+	     ;; (establish-connection :local)) here, but we need to kill off
+	     ;; the child afterwards, rather than returning to the child's
+	     ;; REPL or whatever else
+	     (continue-deploy* remaining)
 	     (uiop:quit 0))
 	 (serious-condition (c)
 	   (format *error-output* ":CHROOT.FORK child failed: ~A~%" c)

@@ -32,13 +32,11 @@ global value should be regarded as a constant.")
   (:documentation
    "Within the context of the current connection, connect to HOST by
 establishing a new connection of type TYPE.
-Either starts a Lisp image somewhere else, tells it to continue establishing
-REMAINING (by telling it to call DEPLOY* with arguments obtained by (locally)
-evaluating (list (or REMAINING '(:local)) *host*)), and returns nil, or
-returns a object suitable to be the value of *CONNECTION*.
+Either returns an object suitable to be the value of *CONNECTION*, or calls
+either CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM and returns nil.
 
-Any implementation which hands over to a remote Lisp image will need to
-upload any prerequisite data required by the deployment."))
+Any implementation which calls CONTINUE-DEPLOY*-PROGRAM will need to call
+UPLOAD-ALL-PREREQUISITE-DATA."))
 
 (defgeneric preprocess-connection-args (type &key)
   (:documentation

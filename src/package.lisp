@@ -103,6 +103,8 @@
 	   #:deploy-these
 	   #:deploys
 	   #:deploys-these
+	   #:deploy*
+	   #:continue-deploy*
 
 	   ;; data.lisp
 	   #:data
@@ -125,7 +127,7 @@
 	   #:get-data-string
 	   #:upload-all-prerequisite-data
 	   #:request-lisp-systems
-	   #:deployment-handover-program))
+	   #:continue-deploy*-program))
 
 (defpackage :consfigurator.connection.shell-wrap
   (:use #:cl #:consfigurator)

@@ -345,17 +345,27 @@ of the current connection, where each entry is of the form
 		    "-type" "f" "-printf" "%P\\n")
 	    (and (zerop exit) (lines out)))))
 
+;; we can't just default REMAINING to :LOCAL in the lambda list because it is
+;; legitimate for callers to explicitly pass nil.
+;;
 ;; TODO on remote side, catch read errors and signal our own which says
 ;; something more specific -- "This has probably been caused by an attempt to
 ;; use a property application specification or set of static informational
 ;; attributes which cannot be serialised by the Lisp printer"
-(defun deployment-handover-program (remaining)
-  "Return a program which instructs a remote Lisp image to continue DEPLOY*.
+(defun continue-deploy*-program (remaining-connections)
+  "Return a program to complete the work of an enclosing call to DEPLOY*.
+
+Implementations of ESTABLISH-CONNECTION which start up remote Lisp images call
+this function, instead of CONTINUE-DEPLOY*, and use the result to instruct the
+newly started image.
 
 Will query the remote cache for paths to Lisp systems, so a connection to the
 host which will run the Lisp image must already be established.
 
-Called by connections which start up remote Lisp images."
+The program returned is a single string consisting of a number of sexps
+separated by newlines.  Each sexp must be evaluated by the remote Lisp image
+before the following sexp is offered to its reader.  Usually this can be
+achieved by sending the return value of this function into a REPL's stdin."
   (flet ((wrap (forms)
 	   `(handler-bind
 		(;; we can skip missing data sources because these are not
@@ -402,7 +412,8 @@ Called by connections which start up remote Lisp images."
 		 (require "asdf")
 		 (let ((*standard-output* *error-output*))
 		   ,(wrap load-forms))
-		 ,(wrap `((deploy* ',(or remaining :local) ,*host*)))))))))
+		 ,(wrap `((deploy* ',(or remaining-connections :local)
+				   ,*host*)))))))))
 
 (defun request-lisp-systems ()
   "Request that all Lisp systems required by the host currently being deployed

@@ -108,9 +108,20 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 	 (eval-propspec-hostattrs ,propspec))
        (deploy* ',connection ,new-host))))
 
-;; this is the main do-work loop for Consfigurator; remote Lisp images are
-;; instructed to pick up the remaining work of this loop
 (defun deploy* (connections host)
+  "Execute the deployment which is defined by the pair (CONNECTIONS . HOST).
+
+This is the entry point to Consfigurator's primary loop.  Typically users use
+DEPLOY, DEPLOY-THESE, and the function definitions established by DEFDEPLOY,
+DEFDEPLOY-THESE, etc., rather than calling this function.  However, code which
+programmatically constructs deployments will need to call this function.
+
+Unlike DEPLOY there is no argument to supply additional properties, and there
+is no function DEPLOY-THESE*.  This is because merging/replacing properties
+into HOST's propspec cannot be done without either the implicit context
+established by a consfig (specifically, by IN-CONSFIG) or with an explicit
+specification of the SYSTEMS slot of the resultant property application
+specification."
   ;; make a partial own-copy of HOST so that connections can add new pieces of
   ;; required prerequisite data; specifically, so that they can request the
   ;; source code of ASDF systems
@@ -120,8 +131,8 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
     (labels
 	((connect (connections)
 	   (destructuring-bind ((type . args) . remaining) connections
-	     ;; implementations of ESTABLISH-CONNECTION return nil if they
-	     ;; have handed off to a remote Lisp image
+	     ;; implementations of ESTABLISH-CONNECTION which call
+	     ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
 	     (when-let ((*connection*
 			 (apply #'establish-connection type remaining args)))
 	       (if remaining
@@ -131,6 +142,15 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
       (connect (loop for connection in (ensure-cons connections)
 		     collect (apply #'preprocess-connection-args
 				    (ensure-cons connection)))))))
+
+;; we can't just default CONNECTIONS to :LOCAL in the lambda list, because it
+;; is legitimate for callers to explicitly pass nil
+(defun continue-deploy* (remaining-connections)
+  "Complete the work of an enclosing call to DEPLOY*.
+
+Used by implementations of ESTABLISH-CONNECTION which need to do something like
+fork(2) and then return to Consfigurator's primary loop in the child."
+  (deploy* (or remaining-connections :local) *host*))
 
 ;; these might need to be special-cased in parsing propspecs, because we
 ;; probably want it to be easy for the user to pass unevaluated propspecs to
