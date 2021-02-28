@@ -44,10 +44,12 @@ Consfigurator properties code in this symbol's package applies to hosts."))))
 (defclass propspec ()
   ((systems
     :initarg :systems
+    :reader propspec-systems
     :documentation "List of names of systems, the loading of all of which is
 sufficient to deploy this propspec.")
    (applications
     :initarg :props
+    :reader propspec-props
     :documentation "Ordered list of property applications.
 The base case valid entry is of the form (PROPERTY . ARGS) where PROPERTY is
 a symbol naming a property (typically as defined by DEFPROP) and ARGS is a

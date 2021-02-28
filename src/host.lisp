@@ -22,9 +22,11 @@
 (defclass host ()
   ((hostattrs
     :initarg :attrs
+    :reader hostattrs
     :documentation "Plist of the host's static informational attributes.")
    (propspec
     :initarg :props
+    :reader host-propspec
     :documentation "Property application specification of the properties to
 be applied to the host.")))
 
