@@ -34,8 +34,7 @@ sufficient to define all the properties you intend to apply to hosts.
 
 Consfigurator uses this information when starting up remote Lisp images to
 effect deployments: it sends over the ASDF systems specified by SYSTEMS."
-  (when (atom systems)
-    (setq systems (list systems)))
+  (setq systems (ensure-cons systems))
   (let ((sym (intern "*CONSFIG*")))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (defparameter ,sym ',systems
