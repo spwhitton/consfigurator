@@ -126,13 +126,8 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 			 (apply #'establish-connection type remaining args)))
 	       (if remaining
 		   (connect remaining)
-		   (apply-propspec (slot-value *host* 'propspec)))
-	       (connection-teardown *connection*))))
-	 (apply-propspec (propspec)
-	   (when (and (subtypep (class-of *connection*) 'posix-connection)
-		      (eq :lisp (propspec->type propspec)))
-	     (error "Cannot apply :LISP properties using a POSIX connection"))
-	   (eval-propspec propspec)))
+		   (eval-propspec (slot-value *host* 'propspec)))
+	       (connection-teardown *connection*)))))
       (connect (loop for connection in (ensure-cons connections)
 		     collect (apply #'preprocess-connection-args
 				    (ensure-cons connection)))))))

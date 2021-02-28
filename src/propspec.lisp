@@ -143,6 +143,9 @@ an atomic property application."
 
 (defun eval-propspec (propspec)
   "Apply properties as specified by PROPSPEC."
+  (when (and (subtypep (class-of *connection*) 'posix-connection)
+	     (eq :lisp (propspec->type propspec)))
+    (error "Cannot apply :LISP properties using a POSIX connection"))
   (loop for system in (slot-value propspec 'systems)
 	unless (asdf:component-loaded-p system)
 	  do (restart-case (asdf:load-system system)
