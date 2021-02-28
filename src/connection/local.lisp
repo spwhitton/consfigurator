@@ -76,11 +76,3 @@ root Lisp is running on, as the root Lisp's uid."))
 
 (defmethod connection-upload ((connection local-connection) from to)
   (copy-file from to))
-
-;; set the root Lisp's connection context now we've defined its value -- other
-;; implementations of ESTABLISH-CONNECTION will rely on this when they call
-;; RUN, READFILE etc.
-(eval-when (:load-toplevel :execute)
-  (unless consfigurator::*connection*
-    (setq consfigurator::*connection*
-	  (make-instance 'local-connection))))

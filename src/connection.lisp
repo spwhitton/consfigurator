@@ -20,12 +20,9 @@
 
 ;;;; Connections
 
-;; global value gets set in connection/local.lisp, but the symbol is not
-;; exported as it should only get bound by DEPLOY*
 (defvar *connection* nil
   "Object representing the currently active connection.
-Connections dynamically bind this variable and then apply properties.  Its
-global value should be regarded as a constant.")
+Deployments dynamically bind this variable and then apply properties.")
 
 ;; generic function operating on keywords which identify connection types
 (defgeneric establish-connection (type remaining &key)

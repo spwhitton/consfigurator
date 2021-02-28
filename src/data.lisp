@@ -345,9 +345,6 @@ of the current connection, where each entry is of the form
 		    "-type" "f" "-printf" "%P\\n")
 	    (and (zerop exit) (lines out)))))
 
-;; we can't just default REMAINING to :LOCAL in the lambda list because it is
-;; legitimate for callers to explicitly pass nil.
-;;
 ;; TODO on remote side, catch read errors and signal our own which says
 ;; something more specific -- "This has probably been caused by an attempt to
 ;; use a property application specification or set of static informational
@@ -412,8 +409,7 @@ achieved by sending the return value of this function into a REPL's stdin."
 		 (require "asdf")
 		 (let ((*standard-output* *error-output*))
 		   ,(wrap load-forms))
-		 ,(wrap `((deploy* ',(or remaining-connections :local)
-				   ,*host*)))))))))
+		 ,(wrap `((deploy* ',remaining-connections ,*host*)))))))))
 
 (defun request-lisp-systems ()
   "Request that all Lisp systems required by the host currently being deployed

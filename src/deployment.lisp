@@ -122,35 +122,36 @@ into HOST's propspec cannot be done without either the implicit context
 established by a consfig (specifically, by IN-CONSFIG) or with an explicit
 specification of the SYSTEMS slot of the resultant property application
 specification."
-  ;; make a partial own-copy of HOST so that connections can add new pieces of
-  ;; required prerequisite data; specifically, so that they can request the
-  ;; source code of ASDF systems
-  (let ((*host* (make-instance 'host
-			       :attrs (copy-list (slot-value host 'hostattrs))
-			       :props (slot-value host 'propspec))))
-    (labels
-	((connect (connections)
-	   (destructuring-bind ((type . args) . remaining) connections
-	     ;; implementations of ESTABLISH-CONNECTION which call
-	     ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
-	     (when-let ((*connection*
-			 (apply #'establish-connection type remaining args)))
-	       (if remaining
-		   (connect remaining)
-		   (eval-propspec (slot-value *host* 'propspec)))
-	       (connection-teardown *connection*)))))
-      (connect (loop for connection in (ensure-cons connections)
-		     collect (apply #'preprocess-connection-args
-				    (ensure-cons connection)))))))
+  (labels
+      ((connect (connections)
+	 (destructuring-bind ((type . args) . remaining) connections
+	   ;; implementations of ESTABLISH-CONNECTION which call
+	   ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
+	   (when-let ((*connection*
+		       (apply #'establish-connection type remaining args)))
+	     (if remaining
+		 (connect remaining)
+		 (eval-propspec (host-propspec *host*)))
+	     (connection-teardown *connection*)))))
+    ;; make a partial own-copy of HOST so that connections can add new pieces
+    ;; of required prerequisite data; specifically, so that they can request
+    ;; the source code of ASDF systems
+    (let ((*host* (make-instance 'host :props (host-propspec host)
+				       :attrs (copy-list (hostattrs host)))))
+      (connect (normalise-connections connections)))))
 
-;; we can't just default CONNECTIONS to :LOCAL in the lambda list, because it
-;; is legitimate for callers to explicitly pass nil
+(defun normalise-connections (connections)
+  (let ((chain (loop for connection in (ensure-cons connections)
+		     collect (apply #'preprocess-connection-args
+				    (ensure-cons connection)))))
+    (if (eq :local (caar chain)) chain (cons '(:local) chain))))
+
 (defun continue-deploy* (remaining-connections)
   "Complete the work of an enclosing call to DEPLOY*.
 
 Used by implementations of ESTABLISH-CONNECTION which need to do something like
 fork(2) and then return to Consfigurator's primary loop in the child."
-  (deploy* (or remaining-connections :local) *host*))
+  (deploy* remaining-connections *host*))
 
 ;; these might need to be special-cased in parsing propspecs, because we
 ;; probably want it to be easy for the user to pass unevaluated propspecs to
