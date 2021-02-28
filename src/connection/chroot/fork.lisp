@@ -44,7 +44,7 @@
     (case child
       ;; note that SB-POSIX:FORK can only return >=0
       (-1
-       (error "fork() failed"))
+       (error "fork(2) failed"))
       (0
        (handler-case
 	   (progn
