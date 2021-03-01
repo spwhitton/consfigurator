@@ -139,8 +139,8 @@ Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."
   "Push new static informational attributes VS of type KEY.
 
 Called by property :HOSTATTRS subroutines."
-  (loop for v in vs
-	do (push v (getf (slot-value *host* 'hostattrs) k))))
+  (dolist (v vs)
+    (push v (getf (slot-value *host* 'hostattrs) k))))
 
 (defun require-data (iden1 iden2)
   "Wrapper around PUSH-HOSTATTRS to indicate that a piece of prerequisite data
