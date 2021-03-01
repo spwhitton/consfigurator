@@ -169,15 +169,22 @@ an atomic property application."
       (t
        propapp))))
 
+(defvar *remote-lisp* nil
+  "Whether this Lisp is one started up within a call to DEPLOY*.")
+
 (defmethod eval-propspec ((propspec propspec))
   "Apply properties as specified by PROPSPEC."
   (when (and (subtypep (class-of *connection*) 'posix-connection)
 	     (eq :lisp (propspec->type propspec)))
     (error "Cannot apply :LISP properties using a POSIX connection"))
-  (loop for system in (slot-value propspec 'systems)
-	unless (asdf:component-loaded-p system)
-	  do (restart-case (asdf:load-system system)
-	       (continue-without-system () nil)))
+  ;; Don't try to load systems if we are a remote Lisp, as we don't upload the
+  ;; .asd files, and we don't want to load out of /usr/share/common-lisp as we
+  ;; might get a different version of the library at worst, or a lot of
+  ;; warnings at best
+  (unless *remote-lisp*
+    (loop for system in (slot-value propspec 'systems)
+	  unless (asdf:component-loaded-p system)
+	    do (asdf:load-system system)))
   (loop for form in (slot-value propspec 'applications)
 	for propapp = (compile-propapp form)
 	do (propappapply propapp)))

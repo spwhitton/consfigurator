@@ -370,23 +370,17 @@ achieved by sending the return value of this function into a REPL's stdin."
 		 (missing-data-source
 		   (lambda (c)
 		     (declare (ignore c))
-		     (invoke-restart 'skip-data-source)))
-		 ;; we can skip missing components when our particular restart
-		 ;; is available because we've already uploaded everything
-		 ;; that was declared to be required
-		 (asdf/find-component:missing-component
-		   (lambda (c)
-		     (declare (ignore c))
-		     (let ((restart (find-restart 'continue-without-system)))
-		       (when restart (invoke-restart restart))))))
-	      ,@forms)))
+		     (invoke-restart 'skip-data-source))))
+	      (let ((*remote-lisp* t))
+		,@forms))))
     (let ((intern-forms
 	    (loop for name in '("MISSING-DATA-SOURCE"
 				"SKIP-DATA-SOURCE"
-				"CONTINUE-WITHOUT-SYSTEM")
+				"*REMOTE-LISP*")
 		  collect
 		  `(export (intern ,name (find-package "CONSFIGURATOR"))
 			   (find-package "CONSFIGURATOR"))))
+	  (proclamations `((proclaim '(special *remote-lisp*))))
 	  (load-forms
 	    (loop for system
 		    in (slot-value (slot-value *host* 'propspec) 'systems)
@@ -405,6 +399,7 @@ achieved by sending the return value of this function into a REPL's stdin."
 	       #'prin1-to-string
 	       `((make-package "CONSFIGURATOR")
 		 ,@intern-forms
+		 ,@proclamations
 		 (define-condition missing-data-source (error) ())
 		 (require "asdf")
 		 (let ((*standard-output* *error-output*))
