@@ -7,6 +7,7 @@
 			  #:strcat
 			  #:string-prefix-p
 			  #:split-string
+			  #:last-char
 			  #:escape-sh-command
 			  #:escape-sh-token
 			  #:run-program
@@ -26,6 +27,7 @@
 	   #:strcat
 	   #:string-prefix-p
 	   #:split-string
+	   #:last-char
 	   #:escape-sh-command
 	   #:escape-sh-token
 	   #:run-program
