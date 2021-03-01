@@ -103,12 +103,21 @@ property's apply slot."))
 			:props ',(slot-value propspec 'applications)))
   propspec)
 
-;; The following five functions, should be everything we need to do with
-;; propspecs, so all knowledge of the possible combinator symbols should be
-;; confined to these four functions -- i.e., if we are to add any combinators,
-;; this is the code that needs to change
 
-;; TODO these should probably be methods
+;; doesn't use MAKE-PROPSPEC because each of the propspecs will already have
+;; had its :PREPROCESS subroutines run
+(defmethod append-propspecs ((first propspec) (second propspec))
+  (make-instance 'propspec
+		 :props (append (slot-value first 'applications)
+				(slot-value second 'applications))
+		 :systems (loop with new = (slot-value first 'systems)
+				for s in (slot-value second 'systems)
+				do (pushnew s new)
+				finally (return new))))
+
+;; All knowledge of the possible combinator symbols should be confined to
+;; between here and the end of the file -- i.e., if we are to add any
+;; combinators, this is the code that needs to change
 
 (defun compile-propapp (propapp)
   "Recursively apply the effects of property combinators in PROPAPP to produce
@@ -160,7 +169,7 @@ an atomic property application."
       (t
        propapp))))
 
-(defun eval-propspec (propspec)
+(defmethod eval-propspec ((propspec propspec))
   "Apply properties as specified by PROPSPEC."
   (when (and (subtypep (class-of *connection*) 'posix-connection)
 	     (eq :lisp (propspec->type propspec)))
@@ -198,7 +207,7 @@ an atomic property application."
 				:attrs (hostattrs host) :props propspec))
     (%eval-propspec-hostattrs host propspec)))
 
-(defun propspec->type (propspec)
+(defmethod propspec->type ((propspec propspec))
   "Return :lisp if any types of the properties to be applied by PROPSPEC is
 :lisp, else return :posix."
   (loop for form in (slot-value propspec 'applications)
@@ -231,14 +240,3 @@ specification."
     `(make-propspec
       ,@(and systems-supplied-p `(:systems ,systems))
       :props (list ,@(mapcar #'make-eval-propspec forms)))))
-
-;; doesn't use MAKE-PROPSPEC because each of the propspecs will already have
-;; had its :PREPROCESS subroutines run
-(defmethod append-propspecs ((first propspec) (second propspec))
-  (make-instance 'propspec
-		 :props (append (slot-value first 'applications)
-				(slot-value second 'applications))
-		 :systems (loop with new = (slot-value first 'systems)
-				for s in (slot-value second 'systems)
-				do (pushnew s new)
-				finally (return new))))
