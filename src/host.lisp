@@ -40,6 +40,31 @@ be applied to the host.")))
 			:props ,(slot-value host 'propspec)))
   host)
 
+(defmethod %eval-propspec-hostattrs ((host host) (propspec propspec))
+  "Modify HOST in-place according to :HOSTATTRS subroutines."
+  (loop with *host* = host
+	for form in (propspec-props propspec)
+	for propapp = (compile-propapp form)
+	do (propappattrs propapp)))
+
+;; return values of the following two functions share structure, and thus are
+;; not safe to use except on host objects that were just made, or that are
+;; going straight into %CONSFIGURE
+
+(defmethod %union-propspec-into-host ((host host) (propspec propspec))
+  (prog1
+      (setq host (make-instance 'host
+				:attrs (hostattrs host)
+				:props (append-propspecs (host-propspec host)
+							 propspec)))
+    (%eval-propspec-hostattrs host propspec)))
+
+(defmethod %replace-propspec-into-host ((host host) (propspec propspec))
+  (prog1
+      (setq host (make-instance 'host
+				:attrs (hostattrs host) :props propspec))
+    (%eval-propspec-hostattrs host propspec)))
+
 (defmacro defhost (hostname (&key deploy) &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
 HOSTNAME can be a string or a symbol.  In either case, the host will get a
