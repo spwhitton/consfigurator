@@ -19,6 +19,9 @@
 
 ;;;; Hosts
 
+;; note that we expect any host object to be such that the :HOSTATTRS
+;; subroutines of its propspec has already been run.  so, run them when
+;; instantiating a new object, as DEFHOST does.
 (defclass host ()
   ((hostattrs
     :initarg :attrs
@@ -56,21 +59,17 @@ in the order specified here, so later properties implicitly depend on earlier
 ones.  In addition, static informational attributes set by later properties
 are allowed to override any attributes with the same name set by earlier
 entries."
-  (with-gensyms (propspec)
-    (let (hostname-sym attrs)
-      (etypecase hostname
-	(string (setq hostname-sym (intern hostname)))
-	(symbol (setq hostname-sym hostname
-		      hostname (string-downcase (symbol-name hostname)))))
-      (push hostname (getf attrs :hostname))
-      (when (stringp (car properties))
-	(push (pop properties) (getf attrs :desc)))
-      `(progn
-	 (declaim (type host ,hostname-sym))
-	 (defparameter ,hostname-sym
-	   (let* ((,propspec ,(props properties))
-		  (*host*
-		    (make-instance 'host :attrs ',attrs :props ,propspec)))
-	     (eval-propspec-hostattrs ,propspec)
-	     *host*)
-	   ,(car (getf attrs :desc)))))))
+  (let (hostname-sym attrs)
+    (etypecase hostname
+      (string (setq hostname-sym (intern hostname)))
+      (symbol (setq hostname-sym hostname
+		    hostname (string-downcase (symbol-name hostname)))))
+    (push hostname (getf attrs :hostname))
+    (when (stringp (car properties))
+      (push (pop properties) (getf attrs :desc)))
+    `(progn
+       (declaim (type host ,hostname-sym))
+       (defparameter ,hostname-sym
+	 (%replace-propspec-into-host (make-instance 'host :attrs ',attrs)
+				      ,(props properties))
+	 ,(car (getf attrs :desc))))))

@@ -96,7 +96,7 @@
 (defun propappunapply (propapp)
   (apply #'propunapply propapp))
 
-;;; standard way to write properties is to use one of these two macros
+;;; supported way to write properties is to use one of these two macros
 
 (defmacro defprop (name type args &body forms)
   (let ((slots (list :args (list 'quote args))))
@@ -115,16 +115,16 @@
 		     `(lambda ,args ,@slot))))
     `(setprop ',name ,type ,@slots)))
 
-(defmacro defproplist (name type args &body propspec)
+(defmacro defproplist (name type args &body properties)
   "Define a property which applies a property application specification.
-PROPSPEC is an unevaluated property application specification."
-  (with-gensyms (props)
-    `(let ((,props (props ,propspec)))
+PROPERTIES is an unevaluated property application specification."
+  (with-gensyms (propspec)
+    `(let ((,propspec (props ,properties)))
        (defprop ,name ,type ,args
 	 (:hostattrs
-	  (eval-propspec-hostattrs ,props))
+	  (%eval-propspec-hostattrs *host* ,propspec))
 	 (:apply
-	  (eval-propspec ,props))))))
+	  (eval-propspec ,propspec))))))
 
 
 ;;;; hostattrs in property subroutines
