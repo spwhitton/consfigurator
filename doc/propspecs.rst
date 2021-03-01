@@ -38,5 +38,5 @@ cases.  For example, you can write::
 instead of::
 
   (deploys '(:ssh (:sudo :as "spwhitton@athena.example.com")) athena.example.com
-    `((additional-property ,val1)
-      (a-further-property ,val2)))
+    (make-propspec :props `((additional-property ,val1)
+                            (a-further-property  ,val2))))

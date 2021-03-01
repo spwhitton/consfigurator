@@ -100,10 +100,11 @@
 	   #:defdeploy-these
 	   #:defhostdeploy
 	   #:deploy
-	   #:deploy-these
-	   #:deploys
-	   #:deploys-these
 	   #:deploy*
+	   #:deploys
+	   #:deploy-these
+	   #:deploy-these*
+	   #:deploys-these
 	   #:continue-deploy*
 
 	   ;; data.lisp

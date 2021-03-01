@@ -409,7 +409,7 @@ achieved by sending the return value of this function into a REPL's stdin."
 		 (require "asdf")
 		 (let ((*standard-output* *error-output*))
 		   ,(wrap load-forms))
-		 ,(wrap `((deploy* ',remaining-connections ,*host*)))))))))
+		 ,(wrap `((%consfigure ',remaining-connections ,*host*)))))))))
 
 (defun request-lisp-systems ()
   "Request that all Lisp systems required by the host currently being deployed

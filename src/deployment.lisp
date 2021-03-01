@@ -19,20 +19,11 @@
 
 ;;;; Deployments
 
-(defun deploy* (connections host)
-  "Execute the deployment which is defined by the pair (CONNECTIONS . HOST).
+(defun %consfigure (connections host)
+  "Configurator's primary loop, recursively binding *CONNECTION* and *HOST*.
 
-This is the entry point to Consfigurator's primary loop.  Typically users use
-DEPLOY, DEPLOY-THESE, and the function definitions established by DEFDEPLOY,
-DEFDEPLOY-THESE, etc., rather than calling this function.  However, code which
-programmatically constructs deployments will need to call this function.
-
-Unlike DEPLOY there is no argument to supply additional properties, and there
-is no function DEPLOY-THESE*.  This is because merging/replacing properties
-into HOST's propspec cannot be done without either the implicit context
-established by a consfig (specifically, by IN-CONSFIG) or with an explicit
-specification of the SYSTEMS slot of the resultant property application
-specification."
+Assumes HOST has already had its :HOSTATTRS subroutines run, and arguments to
+connections in CONNECTIONS have been both normalised and preprocessed."
   (labels
       ((connect (connections)
 	 (destructuring-bind ((type . args) . remaining) connections
@@ -49,25 +40,91 @@ specification."
     ;; the source code of ASDF systems
     (let ((*host* (make-instance 'host :props (host-propspec host)
 				       :attrs (copy-list (hostattrs host)))))
-      (connect (normalise-connections connections)))))
+      (connect (if (eq :local (caar connections))
+		   connections
+		   (cons '(:local) connections))))))
 
-(defun normalise-connections (connections)
-  (let ((chain (loop for connection in (ensure-cons connections)
-		     collect (apply #'preprocess-connection-args
-				    (ensure-cons connection)))))
-    (if (eq :local (caar chain)) chain (cons '(:local) chain))))
+(defun deploy* (connections host &optional additional-properties)
+  "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
+except possibly with the property application specification
+ADDITIONAL-PROPERTIES also applied to HOST.
 
-(defmacro defdeploy (name (connection host) &body additional-properties)
-  "Define a function which does (DEPLOY CONNECTION HOST ADDITIONAL-PROPERTIES).
+This is the entry point to Consfigurator's primary loop.  Typically users use
+DEPLOY, DEPLOY-THESE, and the function definitions established by DEFDEPLOY,
+DEFDEPLOY-THESE, etc., rather than calling this function directly.  However,
+code which programmatically constructs deployments will need to call this."
+  (%consfigure (preprocess-connections connections)
+	       (if additional-properties
+		   (%union-propspec-into-host host additional-properties)
+		   host)))
+
+(defun deploy-these* (connections host &optional properties)
+  "Like DEPLOY*, but replace the properties of HOST with PROPERTIES.
+
+HOST has all its usual static informational attributes, as set by its usual
+properties, plus any set by PROPERTIES.  Static informational attributes set
+by PROPERTIES can override the host's usual static informational attributes,
+in the same way that later entries in the list of properties specified in
+DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
+  (%consfigure (preprocess-connections connections)
+	       (if properties
+		   (%replace-propspec-into-host host properties)
+		   host)))
+
+(defun continue-deploy* (remaining-connections)
+  "Complete the work of an enclosing call to DEPLOY* or DEPLOY-THESE*.
+
+Used by implementations of ESTABLISH-CONNECTION which need to do something
+like fork(2) and then return to Consfigurator's primary loop in the child."
+  (%consfigure remaining-connections *host*))
+
+(defmacro deploy (connections host &body additional-properties)
+  "Establish CONNECTIONS to HOST, and apply each of the host's usual
+properties, followed by specified by ADDITIONAL-PROPERTIES, an unevaluated
+property application specification.
+
+CONNECTION is a keyword identifying a connection type, a list beginning with
+such a keyword and followed by keyword arguments required to establish the
+connection, or a list of such lists.
+
+Then HOST has all its usual static informational attributes, plus any set by
+ADDITIONAL-PROPERTIES.  Static informational attributes set by
+ADDITIONAL-PROPERTIES can override the host's usual static informational
+attributes, in the same way that later entries in the list of properties
+specified in DEFHOST forms can override earlier entries (see DEFHOST's
+docstring)."
+  `(deploy* ',connections ,host ,(props additional-properties)))
+
+(defmacro deploy-these (connections host &body properties)
+  "Like DEPLOY, except apply each of the properties specified by PROPERTIES,
+and not the host's usual properties, unless they also appear in PROPERTIES.
+PROPERTIES is an unevaluated property application specification.
+
+This function is useful to apply one or two properties to a host right now,
+e.g. at the REPL when when testing new property definitions.  If HOST is
+usually deployed using a Lisp-type connection, and the property you are testing
+is :POSIX, you might use a connection type like :SSH so that you can quickly
+alternate between redefining your work-in-progress property and seeing what
+happens when you apply it to HOST.
+
+HOST has all its usual static informational attributes, as set by its usual
+properties, plus any set by PROPERTIES.  Static informational attributes set
+by PROPERTIES can override the host's usual static informational attributes,
+in the same way that later entries in the list of properties specified in
+DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
+  `(deploy-these* ',connections ,host ,(props properties)))
+
+(defmacro defdeploy (name (connections host) &body additional-properties)
+  "Define a function which does (DEPLOY CONNECTIONS HOST ADDITIONAL-PROPERTIES).
 You can then eval (NAME) to execute this deployment."
   `(defun ,name ()
-     (deploy ,connection ,host ,@additional-properties)))
+     (deploy ,connections ,host ,@additional-properties)))
 
-(defmacro defdeploy-these (name (connection host) &body properties)
-  "Define a function which does (DEPLOY-THESE CONNECTION HOST PROPERTIES).
+(defmacro defdeploy-these (name (connections host) &body properties)
+  "Define a function which does (DEPLOY-THESE CONNECTIONS HOST PROPERTIES).
 You can then eval (NAME) to execute this deployment."
   `(defun ,name ()
-     (deploy-these ,connection ,host ,@properties)))
+     (deploy-these ,connections ,host ,@properties)))
 
 ;; TODO some useful combination of DEFHOST and DEFHOSTDEPLOY so that you don't
 ;; have to use two forms to specify the default connection type.  Probably
@@ -89,94 +146,42 @@ For example, if you usually deploy properties to athena by SSH,
 and then you can eval (athena.silentflame.com) to apply athena's properties."
   `(defdeploy ,host-name (,connection ,host-name)))
 
-(defmacro deploy (connection host &body additional-properties)
-  "Establish a connection of type CONNECTION to HOST, and apply each of the
-host's usual properties, followed by specified by ADDITIONAL-PROPERTIES, an
-unevaluated property application specification.
+(defprop deploys :posix (connections host &optional additional-properties)
+  "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
+except possibly with the property application specification
+ADDITIONAL-PROPERTIES also applied to HOST, like DEPLOY.
 
-CONNECTION is either a keyword identifying a connection type, or a list
-beginning with such a keyword and followed by keyword arguments required to
-establish the connection.
+Useful to have one host act a controller, applying properties to other hosts.
+Also useful to set up VMs, chroots, disk images etc. on localhost."
+  (:preprocess
+   (list (preprocess-connections connections)
+	 (%union-propspec-into-host host additional-properties)))
+  (:hostattrs
+   (declare (ignore connections additional-properties))
+   (%propagate-hostattrs host))
+  (:apply
+   (declare (ignore additional-properties))
+   (%consfigure connections host)))
 
-Then HOST has all its usual static informational attributes, plus any set by
-ADDITIONAL-PROPERTIES.  Static informational attributes set by
-ADDITIONAL-PROPERTIES can override the host's usual static informational
-attributes, in the same way that later entries in the list of properties
-specified in DEFHOST forms can override earlier entries (see DEFHOST's
-docstring)."
-  (once-only (host)
-    (with-gensyms (propspec new-host)
-      `(let* ((,propspec ,(props additional-properties))
-	      (,new-host
-		(make-instance 'host
-			       :attrs (copy-list (slot-value ,host 'hostattrs))
-			       :props (append-propspecs
-				       (slot-value ,host 'propspec)
-				       ,propspec))))
-	 (let ((*host* ,new-host))
-	   (eval-propspec-hostattrs ,propspec))
-	 (deploy* ',connection ,new-host)))))
+(defprop deploys-these :posix (connections host &optional properties)
+  "Like DEPLOYS, except apply to HOST each of the properties specified by
+PROPERTIES, and not the host's usual properties, unless they also appear in
+PROPERTIES, like DEPLOY-THESE."
+  (:preprocess
+   (list (preprocess-connections connections)
+	 (%replace-propspec-into-host host properties)))
+  (:hostattrs
+   (declare (ignore connections properties))
+   (%propagate-hostattrs host))
+  (:apply
+   (declare (ignore properties))
+   (%consfigure connections host)))
 
-(defmacro deploy-these (connection host &body properties)
-  "Establish a connection of type CONNECTION to HOST, and apply each of
-the properties specified by PROPERTIES, an unevaluated property application
-specification (and not the host's usual properties, unless they also appear
-in PROPERTIES).
+(defun preprocess-connections (connections)
+  (loop for connection in (ensure-cons connections)
+	collect (apply #'preprocess-connection-args
+		       (ensure-cons connection))))
 
-CONNECTION is either a keyword identifying a connection type, or a list
-beginning with such a keyword and followed by keyword arguments required to
-establish the connection.
-
-This function is useful to apply one or two properties to a host right now,
-e.g. at the REPL when when testing new property definitions.  If HOST is
-usually deployed using a :lisp connection, and the property you are testing
-is :posix, you might use a connection type like :ssh so that you can quickly
-alternate between redefining your work-in-progress property and attempting to
-apply it to HOST.
-
-HOST has all its usual static informational attributes, as set by its usual
-properties, plus any set by PROPERTIES.  Static informational attributes set
-by PROPERTIES can override the host's usual static informational attributes,
-in the same way that later entries in the list of properties specified in
-DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
-  (with-gensyms (propspec new-host)
-    `(let* ((,propspec ,(props properties))
-	    (,new-host (make-instance 'host
-				      :attrs (copy-list
-					      (slot-value ,host 'hostattrs))
-				      :props ,propspec)))
-       (let ((*host* ,new-host))
-	 (eval-propspec-hostattrs ,propspec))
-       (deploy* ',connection ,new-host))))
-
-(defun continue-deploy* (remaining-connections)
-  "Complete the work of an enclosing call to DEPLOY*.
-
-Used by implementations of ESTABLISH-CONNECTION which need to do something like
-fork(2) and then return to Consfigurator's primary loop in the child."
-  (deploy* remaining-connections *host*))
-
-;; these might need to be special-cased in parsing propspecs, because we
-;; probably want it to be easy for the user to pass unevaluated propspecs to
-;; these, but we want the evaluation to happen in the root Lisp.
-;;
-;; also, :HOSTATTRS subroutines of these will want to call
-;; PREPROCESS-CONNECTION-ARGS in order to substitute in any values from
-;; prerequisite data as early as possible
-;;
-;; One possibility is to allow :hostattrs subroutines to modify the arguments
-;; which will get passed to the other routines, by giving them a special var
-;; bound to the current propapp.  Then they could apply
-;; preprocess-connection-args to the arguments.  (This suggests that deploy*
-;; becomes simply applying the DEPLOYS property to the root Lisp, hrm.)
-;;
-;; (defprop deploys :posix (connection host &rest additional-properties)
-;;   "Execute a Consfigurator deployment.
-;;
-;; Useful to have one host act a controller, applying properties to other hosts.
-;; Also useful to set up VMs, chroots, disk images etc. on localhost.")
-;;
-;; (defprop deploys-these :posix (connection host &rest properties)
-;;   "Execute a deployment, but replace the properties of host with PROPERTIES.
-;; This property is to the DEPLOYS property what the DEPLOY-THESE function is to
-;; the DEPLOY function.")
+(defun %propagate-hostattrs (host)
+  (dolist (attr (getf (hostattrs host) :data))
+    (push-hostattrs :data attr)))
