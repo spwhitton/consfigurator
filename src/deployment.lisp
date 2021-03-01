@@ -171,5 +171,7 @@ PROPERTIES, like DEPLOY-THESE."
 		       (ensure-cons connection))))
 
 (defun %propagate-hostattrs (host)
+  (dolist (system (propspec-systems (host-propspec host)))
+    (pushnew system (slot-value (host-propspec *host*) 'systems)))
   (dolist (attr (getf (hostattrs host) :data))
     (push-hostattrs :data attr)))
