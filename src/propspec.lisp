@@ -97,10 +97,10 @@ property's apply slot."))
 ;; does not use MAKE-PROPSPEC because we do not want the :PREPROCESS
 ;; subroutines to be run again when the object is read back in
 (defmethod print-object ((propspec propspec) stream)
-  (format stream "~S" `(make-instance
-			'propspec
-			:systems ',(slot-value propspec 'systems)
-			:props ',(slot-value propspec 'applications)))
+  (format stream "#.~S" `(make-instance
+			  'propspec
+			  :systems ',(slot-value propspec 'systems)
+			  :props ',(slot-value propspec 'applications)))
   propspec)
 
 

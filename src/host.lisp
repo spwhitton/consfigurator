@@ -34,10 +34,10 @@
 be applied to the host.")))
 
 (defmethod print-object ((host host) stream)
-  (format stream "~S" `(make-instance
-			'host
-			:attrs ',(slot-value host 'hostattrs)
-			:props ,(slot-value host 'propspec)))
+  (format stream "#.~S" `(make-instance
+			  'host
+			  :attrs ',(slot-value host 'hostattrs)
+			  :props ,(slot-value host 'propspec)))
   host)
 
 (defmethod %eval-propspec-hostattrs ((host host) (propspec propspec))
