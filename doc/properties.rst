@@ -10,8 +10,19 @@ special meaning in unevaluated property application specifications.
 Property subroutines
 --------------------
 
-A property is composed of four subroutines, which all take the same
-arguments.  At least one of ``:hostattrs`` or ``:apply`` must be present.
+A property is composed of up to five subroutines, which all have the same
+lambda list (take the same arguments).  At least one of ``:hostattrs``,
+``:apply`` or ``:unapply`` must be present.
+
+``:preprocess`` subroutines
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Executed in the root Lisp to modify the arguments that will be passed to the
+other subroutines; should return a fresh list of the new arguments.  This
+subroutine is called on each atomic property application within a property
+application specification before the effects of property combinators have been
+applied.  That is, it is effectively executed on atomic property applications
+in isolation from the property application specifications in which they occur.
 
 ``:hostattrs`` subroutines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

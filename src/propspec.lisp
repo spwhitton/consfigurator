@@ -81,6 +81,21 @@ systems, resolve unapply, onchange etc., and then look in the value cell of
 each PROPERTY to find a property, and pass each of ARGS to the function in the
 property's apply slot."))
 
+(defun make-propspec (&key (systems nil systems-supplied-p) props)
+  (setq props (copy-tree props))
+  (labels ((preprocess (item)
+	     (cond
+	       ((and (listp item) (isprop (car item)))
+		(rplacd item (apply (proppp (car item)) (cdr item))))
+	       ((consp item)
+		(mapc #'preprocess item)))))
+    (preprocess props))
+  (if systems-supplied-p
+      (make-instance 'propspec :props props :systems systems)
+      (make-instance 'propspec :props props)))
+
+;; does not use MAKE-PROPSPEC because we do not want the :PREPROCESS
+;; subroutines to be run again when the object is read back in
 (defmethod print-object ((propspec propspec) stream)
   (format stream "~S" `(make-instance
 			'propspec
@@ -193,11 +208,12 @@ specification."
 					:test #'string=)))
 		       `(list ',first ,@rest)
 		       `(list ,@(mapcar #'make-eval-propspec form)))))))
-    `(make-instance
-      'propspec
+    `(make-propspec
       ,@(and systems-supplied-p `(:systems ,systems))
       :props (list ,@(mapcar #'make-eval-propspec forms)))))
 
+;; doesn't use MAKE-PROPSPEC because each of the propspecs will already have
+;; had its :PREPROCESS subroutines run
 (defmethod append-propspecs ((first propspec) (second propspec))
   (make-instance 'propspec
 		 :props (append (slot-value first 'applications)

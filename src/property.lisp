@@ -26,7 +26,7 @@
 ;; make it a bit more difficult for someone who hasn't read that part of the
 ;; docs to accidentally violate immutability.
 
-(defun setprop (sym type &key args desc hostattrs check apply unapply)
+(defun setprop (sym type &key args desc preprocess hostattrs check apply unapply)
   ;; use non-keyword keys to avoid clashes with other packages
   (when type
     (setf (get sym 'type) type))
@@ -34,6 +34,8 @@
     (setf (get sym 'args) args))
   (when desc
     (setf (get sym 'desc) desc))
+  (when preprocess
+    (setf (get sym 'preprocess) preprocess))
   (when hostattrs
     (setf (get sym 'hostattrs) hostattrs))
   (when check
@@ -49,10 +51,17 @@
 	      apply)))
   (when unapply
     (setf (get sym 'unapply) unapply))
+  (setf (get sym 'property) t)
   sym)
+
+(defun isprop (prop)
+  (and (symbolp prop) (get prop 'property nil)))
 
 (defun proptype (prop)
   (get prop 'type))
+
+(defun proppp (prop)
+  (get prop 'preprocess (lambda (&rest args) args)))
 
 (defun propapptype (propapp)
   (get (car propapp) 'type))
@@ -96,7 +105,7 @@
     (loop for form in forms
 	  if (keywordp (car form))
 	  do (setf (getf slots (car form)) (cdr form)))
-    (loop for kw in '(:hostattrs :check :apply :unapply)
+    (loop for kw in '(:preprocess :hostattrs :check :apply :unapply)
 	  do (if-let ((slot (getf slots kw)))
 	       (setf (getf slots kw)
 		     ;; inside this lambda we could do some checking of, e.g.,
