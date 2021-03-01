@@ -157,6 +157,14 @@ PROPERTIES, like DEPLOY-THESE."
    (declare (ignore properties))
    (%consfigure connections host)))
 
+(defmacro deploys. (x y &body z)
+  "Dummy macro definition so Emacs knows how to indent certain sexps."
+  (declare (ignore x y z)))
+
+(defmacro deploys-these. (x y &body z)
+  "Dummy macro definition so Emacs knows how to indent certain sexps."
+  (declare (ignore x y z)))
+
 (defun preprocess-connections (connections)
   (loop for connection in (ensure-cons connections)
 	collect (apply #'preprocess-connection-args
