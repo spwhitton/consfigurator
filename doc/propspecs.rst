@@ -40,3 +40,6 @@ instead of::
   (deploys '(:ssh (:sudo :as "spwhitton@athena.example.com")) athena.example.com
     (make-propspec :props `((additional-property ,val1)
                             (a-further-property  ,val2))))
+
+(though note the parentheses around the two property applications remain,
+unlike in ``DEPLOY``, ``DEFHOST`` etc.).
