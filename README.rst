@@ -105,12 +105,10 @@ Try it out / quick start
          :pgp :location #P"/path/to/com.example.consfig.gpg")
 
         (defhost athena.example.com
+	    (:deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl))
           "Web and file server."
 	  (file:has-content "/etc/foo" '("these" "are" "my" "lines"))
 	  (file:contains-lines "/etc/some.conf" '("FOO=bar")))
-
-        (defhostdeploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl)
-	               athena.example.com)
 
     Here, "spwhitton" is my username on athena; we have to tell Consfigurator
     what user it will be when it tries to sudo, so it knows whose password it

@@ -98,7 +98,6 @@
 	   ;; deployment.lisp
 	   #:defdeploy
 	   #:defdeploy-these
-	   #:defhostdeploy
 	   #:deploy
 	   #:deploy*
 	   #:deploys

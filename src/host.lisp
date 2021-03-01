@@ -40,11 +40,17 @@ be applied to the host.")))
 			:props ,(slot-value host 'propspec)))
   host)
 
-(defmacro defhost (hostname &body properties)
+(defmacro defhost (hostname (&key deploy) &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
 HOSTNAME can be a string or a symbol.  In either case, the host will get a
 static informational property with its hostname as a string, and the symbol
 whose name is the hostname will be bound to the host object.
+
+DEPLOY represents the usual way you'll connect to the host to deploy
+properties, and if specified, a function named HOSTNAME will be defined to
+deploy the host using that connection chain.  This is an optional convenience
+feature; you can always use DEPLOY and DEPLOY-THESE to apply properties to the
+host using an arbitrary chain of connections.
 
 If the first entry in PROPERTIES is a string, it will be considered a
 human-readable description of the host.  Otherwise, PROPERTIES is an
@@ -72,4 +78,6 @@ entries."
        (defparameter ,hostname-sym
 	 (%replace-propspec-into-host (make-instance 'host :attrs ',attrs)
 				      ,(props properties))
-	 ,(car (getf attrs :desc))))))
+	 ,(car (getf attrs :desc)))
+       ,@(when deploy
+	   `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))

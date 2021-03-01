@@ -126,26 +126,6 @@ You can then eval (NAME) to execute this deployment."
   `(defun ,name ()
      (deploy-these ,connections ,host ,@properties)))
 
-;; TODO some useful combination of DEFHOST and DEFHOSTDEPLOY so that you don't
-;; have to use two forms to specify the default connection type.  Probably
-;; want argument order to be similar to DEPLOY, DEPLOY-THESE etc.
-(defmacro defhostdeploy (connection host-name)
-  "Where HOST-NAME names a host as defined with DEFHOST, define a function
-which does (deploy CONNECTION (symbol-value HOST)).
-You can then eval (HOST-NAME) to execute this deployment.
-
-For example, if you usually deploy properties to athena by SSH,
-
-    (defhost athena.silentflame.com
-      (foo)
-      (bar)
-      ...)
-
-    (defhostdeploy :ssh athena.silentflame.com)
-
-and then you can eval (athena.silentflame.com) to apply athena's properties."
-  `(defdeploy ,host-name (,connection ,host-name)))
-
 (defprop deploys :posix (connections host &optional additional-properties)
   "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
 except possibly with the property application specification
