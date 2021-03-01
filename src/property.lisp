@@ -42,13 +42,12 @@
     (setf (get sym 'check) check))
   (when apply
     (setf (get sym 'apply) apply)
-    (eval `(defun ,sym ()))
-    (setf (symbol-function sym)
-	  (if check
+    (let ((f (if check
 	      (lambda (&rest args)
 		(unless (apply check args)
 		  (apply apply args)))
 	      apply)))
+      (eval `(defun ,sym ,args ,f))))
   (when unapply
     (setf (get sym 'unapply) unapply))
   (setf (get sym 'property) t)
