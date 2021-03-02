@@ -62,18 +62,19 @@ We also have a few nice macros defined, though nothing too clever yet.
 Try it out / quick start
 ========================
 
-1. ``apt-get install sbcl cl-ppcre cl-interpol cl-alexandria cl-babel``, or
-   ``(ql:quickload "cl-ppcre")``, ``(ql:quickload "alexandria")``,
-   ``(ql:quickload "cl-interpol")`` and ``(ql:quickload "babel")`` (see
-   https://www.quicklisp.org/).
+1. Enable `Debian experimental`_, then ``apt-get install
+   cl-consfigurator/experimental`` (should work fine on Debian stable, testing
+   and unstable), or ``(ql:quickload "consfigurator")`` (see `Quicklisp`_).
+   If you would like to follow development more closely, you can clone this
+   repo to ``~/.local/share/common-lisp/source`` and ASDF should pick it up.
 
-2. Install Consfigurator.  One way to do that is to clone this git repository
-   into ``~/.local/share/common-lisp/source``.
+.. _Quicklisp: https://www.quicklisp.org/
+.. _Debian experimental: https://wiki.debian.org/DebianExperimental
 
-3. Create a new directory ``consfig`` somewhere where ASDF will pick it up,
+2. Create a new directory ``consfig`` somewhere where ASDF will pick it up,
    such as ``~/common-lisp/consfig``.
 
-4. Define a Lisp system which represents your configuration.
+3. Define a Lisp system which represents your configuration.
 
     ~/common-lisp/consfig/com.example.consfig.asd::
 
@@ -93,7 +94,7 @@ Try it out / quick start
                             (#:cmd       #:consfigurator.property.cmd)
                             (#:data.pgp  #:consfigurator.data.pgp)))
 
-5. Define some hosts and deployments.
+4. Define some hosts and deployments.
 
     ~/common-lisp/consfig/consfig.lisp::
 
@@ -115,10 +116,10 @@ Try it out / quick start
     needs.  If you have passwordless sudo access configured, you can skip the
     ``:AS`` keyword parameter and its argument.
 
-6. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
+5. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
    prompt.  Evaluate ``(asdf:load-system "consfigurator")``.
 
-7. When it's asked to use sudo to become root, Consfigurator will query your
+6. When it's asked to use sudo to become root, Consfigurator will query your
    registered sources of secrets to try to find the password it will need to
    give to sudo.  You can easily write code to let Consfigurator query your
    own sources of secrets, but for the purposes of this guide we'll use the
@@ -131,11 +132,11 @@ Try it out / quick start
 				      "spwhitton"
 				      "s3cre+")
 
-8. Now you can evaluate ``(asdf:load-system "com.example.consfig")`` followed
+7. Now you can evaluate ``(asdf:load-system "com.example.consfig")`` followed
    by ``(in-package :com.example.consfig)`` (or ``C-c ~`` in Emacs).  In the
    future, now the secrets store exists, you can start with this step.
 
-9. You should now be able to evaluate ``(athena.example.com)`` to deploy
+8. You should now be able to evaluate ``(athena.example.com)`` to deploy
    properties to athena, using the connection chain of SSH, sudo and then
    handing over to a remote Lisp image.
 
