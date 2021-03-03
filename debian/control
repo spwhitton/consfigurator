@@ -22,9 +22,9 @@ Depends:
  cl-interpol,
  cl-ppcre,
  ${misc:Depends},
- ${sphinxdoc:Depends},
 Recommends:
  sbcl,
+ ${sphinxdoc:Depends},
 Description: Lisp declarative configuration management system
  Consfigurator is a system for declarative configuration management using
  Common Lisp.  You can use it to configure hosts as root, deploy services as
