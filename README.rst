@@ -49,13 +49,17 @@ some of the unique properties of the activity of programming in Lisp.
 
 For example, using Lisp's interactivity, it's easy to test a new property
 you're working on without having to plumb it into your main deployments, which
-might be large and relatively slow to run.  Hit C-c C-c on your ``DEFPROP``
-form in Emacs, switch to the repl, and then use ``DEPLOY-THESE`` to run just
-that property against localhost or a local container, until it does what it
-should.  For this purpose you can use whatever connection type is most
-convenient -- perhaps you normally deploy using Consfigurator's support for
-starting up remote Lisp images, but you can swap in a simple, lighter-weight
-connection type for testing.
+might be large and relatively slow to run.  Hit ``C-c C-c`` on your
+``DEFPROP`` form in Emacs, switch to the repl, and then use ``DEPLOY-THESE``
+to run just that property against localhost or a local container, until it
+does what it should.
+
+For this purpose you can use whatever connection type is most convenient --
+perhaps you normally deploy using Consfigurator's support for starting up
+remote Lisp images, but you can swap in a simple, lighter-weight connection
+type for testing.  Another respect in which this is useful is that interactive
+debugging is not possible with connection types which start up remote Lisp
+images.
 
 We also have a few nice macros defined, though nothing too clever yet.
 
