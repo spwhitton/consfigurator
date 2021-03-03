@@ -63,155 +63,33 @@ images.
 
 We also have a few nice macros defined, though nothing too clever yet.
 
-Try it out / quick start
-========================
+Installation and usage
+======================
 
-1. Enable `Debian experimental`_, then ``apt-get install
-   cl-consfigurator/experimental`` (should work fine on Debian stable, testing
-   and unstable), or ``(ql:quickload "consfigurator")`` (see `Quicklisp`_).
-   If you would like to follow development more closely, you can clone this
-   repo to ``~/.local/share/common-lisp/source`` and ASDF should pick it up.
+Please see the `user's manual`_ which includes a tutorial/quick start guide.
 
-.. _Quicklisp: https://www.quicklisp.org/
-.. _Debian experimental: https://wiki.debian.org/DebianExperimental
-
-2. Create a new directory ``consfig`` somewhere where ASDF will pick it up,
-   such as ``~/common-lisp/consfig``.
-
-3. Define a Lisp system which represents your configuration.
-
-    ~/common-lisp/consfig/com.example.consfig.asd::
-
-        (asdf:defsystem :com.example.consfig
-          :serial t
-          :depends-on (#:consfigurator #:cl-interpol)
-          :components ((:file "package")
-                       (:file "consfig")))
-
-    ~/common-lisp/consfig/package.lisp::
-
-        (in-package :cl-user)
-
-        (defpackage :com.example.consfig
-          (:use #:cl #:consfigurator #:alexandria)
-          (:local-nicknames (#:file      #:consfigurator.property.file)
-                            (#:cmd       #:consfigurator.property.cmd)
-                            (#:data.pgp  #:consfigurator.data.pgp)))
-
-4. Define some hosts and deployments.
-
-    ~/common-lisp/consfig/consfig.lisp::
-
-        (in-package :com.example.consfig)
-        (in-consfig "com.example.consfig")
-	(named-readtables:in-readtable :interpol-syntax)
-
-	(try-register-data-source
-         :pgp :location #P"/path/to/com.example.consfig.gpg")
-
-        (defhost athena.example.com
-	    (:deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl))
-          "Web and file server."
-	  (file:has-content "/etc/foo" '("these" "are" "my" "lines"))
-	  (file:contains-lines "/etc/some.conf" '("FOO=bar")))
-
-    Here, "spwhitton" is my username on athena; we have to tell Consfigurator
-    what user it will be when it tries to sudo, so it knows whose password it
-    needs.  If you have passwordless sudo access configured, you can skip the
-    ``:AS`` keyword parameter and its argument.
-
-5. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
-   prompt.  Evaluate ``(asdf:load-system "consfigurator")``.
-
-6. When it's asked to use sudo to become root, Consfigurator will query your
-   registered sources of secrets to try to find the password it will need to
-   give to sudo.  You can easily write code to let Consfigurator query your
-   own sources of secrets, but for the purposes of this guide we'll use the
-   simple, PGP-based secrets source included with Consfigurator.  Unless
-   you've passwordless sudo access set up on athena, evaluate something like
-   this to initialise the store::
-
-     (consfigurator.data.pgp:set-data #P"/path/to/com.example.consfig.gpg"
-                                      "--user-passwd--athena.example.com"
-				      "spwhitton"
-				      "s3cre+")
-
-7. Now you can evaluate ``(asdf:load-system "com.example.consfig")`` followed
-   by ``(in-package :com.example.consfig)`` (or ``C-c ~`` in Emacs).  In the
-   future, now the secrets store exists, you can start with this step.
-
-8. You should now be able to evaluate ``(athena.example.com)`` to deploy
-   properties to athena, using the connection chain of SSH, sudo and then
-   handing over to a remote Lisp image.
-
-Other things to try
--------------------
-
-Note that some of these violate some of the ideas of declarative configuration
-management, because they apply individual properties without updating the
-definitions of hosts.  Sometimes that's the right thing to do, though, and
-Consfigurator makes it easy to reuse your property definitions in these
-non-declarative ways.
-
-Try deploying properties to athena using a different connection type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Evaluate something like::
-
-  (deploy :ssh athena.example.com)
-
-Apply a security update to all your systems
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-It's useful to be able to quickly apply a security update across multiple
-machines without otherwise interacting with their configuration.  Supposing
-you have defined a variable ``*ALL-MY-SERVERS*`` which is a list hosts defined
-with ``DEFHOST``, you can evaluate::
-
-  (dolist (server *all-my-servers*)
-    (deploy-these :ssh server
-                  (cmd:single "apt-get update && apt-get upgrade openssl")))
-
-Regex replace a file across hosts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-With ``*ALL-MY-SERVERS*`` as in the previous example,::
-
-  (dolist (server *all-my-servers*)
-    (deploy-these :ssh server
-                  (file:regex-replace-lines "/etc/baz" #?/foo/ "bar")))
-
-(relies on CL-INTERPOL syntax being enabled, as it is in the example consfig
-above)
-
-Portability and stability
-=========================
-
-- **Consfigurator is still stabilising and so there may be lots of breaking
-  changes.**
-
-- All of the code should be portable ANSI Common Lisp, but little to no
-  testing is done by the author on implementations other than SBCL, so testing
-  and portability patches are welcome.
-
-- Little attempt is made by the author to support systems other than Debian
-  GNU/Linux, but again, portability patches are welcome, and the design of
-  Consfigurator should enable supporting other systems.
+.. _user's manual: https://spwhitton.name/doc/consfigurator/
 
 Bug reports, patches etc.
 =========================
 
-Please see the included CONTRIBUTING.rst.
+Please see CONTRIBUTING.rst, included in the source tree, for information
+regarding the reporting of bugs and submission of patches/pull requests.
 
-Credits
+License
 =======
 
-Many of the good ideas here come straight from Joey Hess's Propellor_.  I'm
-working on Consfigurator because I think Propellor is great, but wanted to add
-Consfigurator's POSIX-type connections and arbitrary connection nesting, and I
-wanted to implement that in Lisp (Propellor only supports something equivalent
-to a single, unnested Lisp-type connection).  Additionally, after five years
-of using and extending Propellor, I've come to disagree with Joey about
-whether Haskell's type system helps or hinders using and extending Propellor.
+Copyright (C) 2020-2021  Sean Whitton
 
-.. Propellor_: https://propellor.branchable.com/
+Consfigurator is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+Consfigurator is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+details.
+
+You should have received a copy of the GNU General Public License along with
+Consfigurator.  If not, see <http://www.gnu.org/licenses/>.

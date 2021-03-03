@@ -6,6 +6,7 @@ Consfigurator user's manual
    :caption: Contents:
 
    introduction
+   installation
    connections
    properties
    hosts
