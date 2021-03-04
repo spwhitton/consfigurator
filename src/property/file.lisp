@@ -55,7 +55,7 @@ point in doing that here because WRITEFILE is synchronous."
   (:apply
    (data-uploaded (get-hostname) destination destination)))
 
-(defprop regex-replace-lines :posix (file regex replace)
+(defprop regex-replaced-lines :posix (file regex replace)
   "Like s/REGEX/REPLACE/ on the lines of FILE.
 Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
   (:apply

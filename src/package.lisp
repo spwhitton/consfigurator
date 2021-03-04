@@ -181,7 +181,7 @@
 	   #:contains-lines
 	   #:data-uploaded
 	   #:host-data-uploaded
-	   #:regex-replace-lines))
+	   #:regex-replaced-lines))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))
