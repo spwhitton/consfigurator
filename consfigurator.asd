@@ -26,5 +26,6 @@
 	       (:file "src/connection/chroot/fork")
 	       (:file "src/property/cmd")
 	       (:file "src/property/file")
+	       (:file "src/property/chroot")
 	       (:file "src/data/asdf")
 	       (:file "src/data/pgp")))

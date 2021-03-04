@@ -3,3 +3,4 @@
 
 (put 'deploys. 'common-lisp-indent-function '(4 4 2))
 (put 'deploys-these. 'common-lisp-indent-function '(4 4 2))
+(put 'chroot:os-bootstrapped. 'common-lisp-indent-function '(4 4 2))

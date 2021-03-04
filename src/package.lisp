@@ -103,10 +103,10 @@
 	   #:defdeploy-these
 	   #:deploy
 	   #:deploy*
-	   #:deploys
+	   #:deploys #:deploys.
 	   #:deploy-these
 	   #:deploy-these*
-	   #:deploys-these
+	   #:deploys-these #:deploys-these.
 	   #:continue-deploy*
 
 	   ;; data.lisp
@@ -165,6 +165,10 @@
   (:use #:cl
 	#:consfigurator
 	#:consfigurator.connection.shell-wrap))
+
+(defpackage :consfigurator.property.chroot
+  (:use #:cl #:consfigurator)
+  (:export #:os-bootstrapped #:os-bootstrapped.))
 
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)
