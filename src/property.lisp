@@ -68,8 +68,8 @@
 (defun collapse-types (&rest lists)
   (if (member :posix (flatten lists)) :posix :lisp))
 
-(defun propdesc (prop)
-  (get prop 'desc))
+(defun propdesc (prop &rest args)
+  (apply (get prop 'desc #'noop) args))
 
 (defun propargs (prop)
   (get prop 'args))
@@ -99,8 +99,10 @@
 
 (defmacro defprop (name type args &body forms)
   (let ((slots (list :args (list 'quote args))))
-    (when (stringp (car forms))
-      (setf (getf slots :desc) (pop forms)))
+    ;; set up a closure so that the user can use a plain string or a
+    ;; CL-INTERPOL string
+    (unless (and (listp (car forms)) (keywordp (caar forms)))
+      (setf (getf slots :desc) `(lambda ,args ,(pop forms))))
     (loop for form in forms
 	  if (keywordp (car form))
 	  do (setf (getf slots (car form)) (cdr form)))
