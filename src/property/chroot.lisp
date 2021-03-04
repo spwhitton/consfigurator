@@ -18,9 +18,9 @@
 (in-package :consfigurator.property.chroot)
 (named-readtables:in-readtable :interpol-syntax)
 
-(defgeneric os-bootstrap (host root &key)
+(defgeneric os-bootstrap (os root &key)
   (:documentation
-   "Bootstrap HOST's OS into ROOT, e.g. with debootstrap(1)."))
+   "Bootstrap OS into ROOT, e.g. with debootstrap(1)."))
 
 (defproplist os-bootstrapped :posix
     (options root properties &aux (host (make-host :props properties)))
@@ -33,4 +33,4 @@
    (declare (ignore options host))
    (test "-d" root))
   (:apply
-   (apply #'os-bootstrap host root options)))
+   (apply #'os-bootstrap (car (getf (hostattrs host) :os)) root options)))

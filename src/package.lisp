@@ -97,6 +97,7 @@
 	   ;; host.lisp
 	   #:defhost
 	   #:make-host
+	   #:hostattrs
 
 	   ;; deployment.lisp
 	   #:defdeploy
@@ -184,6 +185,15 @@
 	   #:secret-uploaded
 	   #:host-secret-uploaded
 	   #:regex-replaced-lines))
+
+(defpackage :consfigurator.property.os
+  (:use #:cl #:consfigurator)
+  (:export #:unixlike
+	   #:linux
+	   #:debian
+	   #:debian-stable
+	   #:debian-testing
+	   #:debian-unstable))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))
