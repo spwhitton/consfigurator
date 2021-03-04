@@ -33,6 +33,11 @@
     :documentation "Property application specification of the properties to
 be applied to the host.")))
 
+(defun make-host (&key hostattrs props)
+  (let ((host (make-instance 'host :attrs hostattrs :props props)))
+    (%eval-propspec-hostattrs host props)
+    host))
+
 (defmethod print-object ((host host) stream)
   (format stream "#.~S" `(make-instance
 			  'host

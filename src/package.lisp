@@ -96,6 +96,7 @@
 
 	   ;; host.lisp
 	   #:defhost
+	   #:make-host
 
 	   ;; deployment.lisp
 	   #:defdeploy
