@@ -117,14 +117,47 @@
 
 (defmacro defproplist (name type args &body properties)
   "Define a property which applies a property application specification.
-PROPERTIES is an unevaluated property application specification."
-  (with-gensyms (propspec)
-    `(let ((,propspec (props ,properties)))
-       (defprop ,name ,type ,args
-	 (:hostattrs
-	  (%eval-propspec-hostattrs *host* ,propspec))
-	 (:apply
-	  (eval-propspec ,propspec))))))
+ARGS is an ordinary lambda list, so you can use &AUX variables to compute
+intermediate values.  PROPERTIES is an unevaluated property application
+specification, but it will not be evaluated until the resulting property has
+been added to a host, so it should not contain any free variables other than
+as would be bound by (lambda ARGS).
+
+The evaluation of PROPERTIES, and the evaluation of any &AUX variables, should
+not have any side effects.  The evaluation will take place in the root Lisp.
+
+If the first element of PROPERTIES is a string, it will be considered a
+docstring for the resulting property.  If the first element of PROPERTIES
+after any such string is a list beginning with :DESC, the remainder will be
+used as the :DESC subroutine for the resulting property, like DEFPROP.
+
+It is usually better to use this macro to combine several smaller properties
+rather than writing a property which programmatically calls other properties.
+This is because using this macro takes care of calling property :HOSTATTRS
+subroutines at the right time."
+  (when (stringp (car properties)) (pop properties))
+  (let ((new-args (cons (gensym)
+			(loop for arg in args
+			      if (symbol-named &aux arg)
+				return accum
+			      else collect arg into accum)))
+	;; TODO :UNAPPLY which unapplies in reverse order
+	(slots (list :hostattrs '(lambda (propspec &rest ignore)
+				   (declare (ignore ignore))
+				   (%eval-propspec-hostattrs *host* propspec))
+		     :apply '(lambda (propspec &rest ignore)
+			       (declare (ignore ignore))
+			       (eval-propspec propspec)))))
+    (when (and (listp (car properties)) (eq :desc (caar properties)))
+      (setf (getf slots :desc)
+	    `(lambda ,new-args
+	       (declare (ignorable ,@new-args))
+	       ,@(cdr (pop properties)))))
+    (setf (getf slots :preprocess)
+	  `(lambda (&rest all-args)
+	     (cons (destructuring-bind ,args all-args ,(props properties))
+		   all-args)))
+    `(setprop ',name ,type ,@slots)))
 
 
 ;;;; hostattrs in property subroutines
