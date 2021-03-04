@@ -99,14 +99,13 @@
 
 (defmacro defprop (name type args &body forms)
   (let ((slots (list :args (list 'quote args))))
-    ;; set up a closure so that the user can use a plain string or a
-    ;; CL-INTERPOL string
-    (unless (and (listp (car forms)) (keywordp (caar forms)))
-      (setf (getf slots :desc) `(lambda ,args ,(pop forms))))
+    ;; if first element of forms is a plain string, consider it a docstring,
+    ;; and ignore
+    (when (stringp (car forms)) (pop forms))
     (loop for form in forms
 	  if (keywordp (car form))
 	  do (setf (getf slots (car form)) (cdr form)))
-    (loop for kw in '(:preprocess :hostattrs :check :apply :unapply)
+    (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
 	  do (if-let ((slot (getf slots kw)))
 	       (setf (getf slots kw)
 		     ;; inside this lambda we could do some checking of, e.g.,

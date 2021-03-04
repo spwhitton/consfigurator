@@ -14,6 +14,13 @@ A property is composed of up to five subroutines, which all have the same
 lambda list (take the same arguments).  At least one of ``:hostattrs``,
 ``:apply`` or ``:unapply`` must be present.
 
+``:desc`` subroutines
+~~~~~~~~~~~~~~~~~~~~~
+
+Pure function of the property's arguments which returns a description of
+applying the property, to be used in stdout by deployments to inform the user
+what work is being done.
+
 ``:preprocess`` subroutines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
