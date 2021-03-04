@@ -135,7 +135,9 @@ Useful to have one host act a controller, applying properties to other hosts.
 Also useful to set up VMs, chroots, disk images etc. on localhost."
   (:preprocess
    (list (preprocess-connections connections)
-	 (%union-propspec-into-host host additional-properties)))
+	 (if additional-properties
+	     (%union-propspec-into-host host additional-properties)
+	     host)))
   (:hostattrs
    (declare (ignore connections additional-properties))
    (%propagate-hostattrs host))
