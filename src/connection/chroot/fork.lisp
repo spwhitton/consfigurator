@@ -38,6 +38,7 @@
   (unless (lisp-connection-p)
     (error "Forking into a chroot requires a Lisp-type connection"))
   #-(or sbcl) (error "Don't know how to safely fork() in this Lisp")
+  ;; TODO copy required prerequisite data into the chroot
   (mapc #'force-output
 	(list *standard-output* *error-output* *debug-io* *terminal-io*))
   (let ((child (fork)))
@@ -48,6 +49,11 @@
       (0
        (handler-case
 	   (progn
+	     ;; TODO either (reset-data-sources), or bind a restart to ignore
+	     ;; data source errors, as they may or may not be available inside
+	     ;; the chroot, depending on whether the data source code needs to
+	     ;; read files outside of the chroot or already has the data
+	     ;; cached, a socket open etc.
 	     (mapc #'clear-input
 		   (list *standard-input* *debug-io* *terminal-io*))
 	     (unless (zerop (chroot into))
