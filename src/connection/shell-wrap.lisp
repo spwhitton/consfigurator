@@ -35,11 +35,18 @@
 				 path
 				 contents
 				 umask)
+  ;; TODO do we want a CONNECTION-ERROR condition?
   (with-remote-temporary-file (temp :connection conn)
-    (connection-run conn (if umask
-			     (format nil "( umask ~O; cat >~A )" umask temp)
-			     #?"cat >${temp}")
-		    contents)
-    (connection-run conn
-		    #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
-		    nil)))
+    (multiple-value-bind (out exit)
+	(connection-run conn (if umask
+				 (format nil "( umask ~O; cat >~A )"
+					 umask temp)
+				 #?"cat >${temp}")
+			contents)
+      (unless (zerop exit) (error "Failed to write ~A: ~A" temp out)))
+    (multiple-value-bind (out exit)
+	(connection-run
+	 conn
+	 #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
+	 nil)
+      (unless (zerop exit) (error "Failed to write ~A: ~A" temp out)))))
