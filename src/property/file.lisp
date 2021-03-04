@@ -55,6 +55,22 @@ point in doing that here because WRITEFILE is synchronous."
   (:apply
    (data-uploaded (get-hostname) destination destination)))
 
+(defprop secret-uploaded :posix (iden1 iden2 destination)
+  (:hostattrs
+   (declare (ignore destination))
+   (require-data iden1 iden2))
+  (:apply
+   (when (test "-e" destination)
+     (mrun "chmod" "600" destination))
+   (writefile destination (get-data-stream iden1 iden2)
+	      :try-preserve t :umask #o077)))
+
+(defprop host-secret-uploaded :posix (destination)
+  (:hostattrs
+   (require-data (get-hostname) destination))
+  (:apply
+   (secret-uploaded (get-hostname) destination destination)))
+
 (defprop regex-replaced-lines :posix (file regex replace)
   "Like s/REGEX/REPLACE/ on the lines of FILE.
 Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."

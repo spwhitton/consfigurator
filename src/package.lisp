@@ -181,6 +181,8 @@
 	   #:contains-lines
 	   #:data-uploaded
 	   #:host-data-uploaded
+	   #:secret-uploaded
+	   #:host-secret-uploaded
 	   #:regex-replaced-lines))
 
 (defpackage :consfigurator.data.asdf
