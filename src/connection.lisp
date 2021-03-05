@@ -198,7 +198,7 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
 	  finally
 	     (when accum
 	       (setq cmd (format nil "env ~{~A~^ ~} ~A"
-				 (escape-sh-command accum)
+				 (mapcar #'escape-sh-token accum)
 				 cmd))))
      ,@forms))
 
