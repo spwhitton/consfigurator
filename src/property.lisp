@@ -45,10 +45,13 @@
 	     (setf (fdefinition sym)
 		   (if check
 		       (lambda (&rest args)
-			 (unless (apply check args)
-			   (apply apply args)))
+			 (if (apply check args)
+			     :no-change
+			     (apply apply args)))
 		       apply)))
-      (setf (fdefinition sym) #'noop))
+      (setf (fdefinition sym) (lambda (&rest ignore)
+				(declare (ignore ignore))
+				:no-change)))
   (when unapply
     (setf (get sym 'unapply) unapply))
   (setf (get sym 'property) t)
