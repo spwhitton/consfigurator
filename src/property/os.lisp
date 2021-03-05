@@ -38,7 +38,7 @@
   (:hostattrs
    (push-hostattrs :os
 		   (make-instance 'debian-stable
-				  :architecture architecture :suite suite))))
+				  :arch architecture :suite suite))))
 
 (defclass debian-testing (debian)
   ((suite :initform "testing")))
@@ -47,7 +47,7 @@
   (:hostattrs
    (push-hostattrs :os
 		   (make-instance 'debian-testing
-				  :architecture architecture))))
+				  :arch architecture))))
 
 (defclass debian-unstable (debian)
   ((suite :initform "unstable")))
@@ -56,4 +56,4 @@
   (:hostattrs
    (push-hostattrs :os
 		   (make-instance 'debian-unstable
-				  :architecture architecture))))
+				  :arch architecture))))
