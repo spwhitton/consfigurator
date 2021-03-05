@@ -40,14 +40,15 @@
     (setf (get sym 'hostattrs) hostattrs))
   (when check
     (setf (get sym 'check) check))
-  (when apply
-    (setf (get sym 'apply) apply)
-    (setf (fdefinition sym)
-	  (if check
-	      (lambda (&rest args)
-		(unless (apply check args)
-		  (apply apply args)))
-	      apply)))
+  (if apply
+      (progn (setf (get sym 'apply) apply)
+	     (setf (fdefinition sym)
+		   (if check
+		       (lambda (&rest args)
+			 (unless (apply check args)
+			   (apply apply args)))
+		       apply)))
+      (setf (fdefinition sym) #'noop))
   (when unapply
     (setf (get sym 'unapply) unapply))
   (setf (get sym 'property) t)
