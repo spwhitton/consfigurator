@@ -188,7 +188,11 @@ an atomic property application."
 	    do (asdf:load-system system)))
   (loop for form in (slot-value propspec 'applications)
 	for propapp = (compile-propapp form)
-	do (propappapply propapp)))
+	do (let ((change-made (not (eq :no-change (propappapply propapp)))))
+	     (format t "~@[~A :: ~]~@[~A ... ~]~:[ok~;done~]~%"
+		     (get-hostname)
+		     (propappdesc propapp)
+		     change-made))))
 
 (defmethod propspec->type ((propspec propspec))
   "Return :lisp if any types of the properties to be applied by PROPSPEC is

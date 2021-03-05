@@ -72,6 +72,9 @@
 (defun propdesc (prop &rest args)
   (apply (get prop 'desc #'noop) args))
 
+(defun propappdesc (propapp)
+  (apply #'propdesc propapp))
+
 (defun propargs (prop)
   (get prop 'args))
 
