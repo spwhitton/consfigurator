@@ -45,6 +45,9 @@ Used in property :HOSTATTRS subroutines."
 (defclass debian-stable (debian) ())
 
 (defprop debian-stable :posix (suite architecture)
+  (:desc
+   (declare (ignore architecture))
+   #?{Host is Debian "${suite}"})
   (:hostattrs
    (push-hostattrs :os
 		   (make-instance 'debian-stable
@@ -54,6 +57,9 @@ Used in property :HOSTATTRS subroutines."
   ((suite :initform "testing")))
 
 (defprop debian-testing :posix (architecture)
+  (:desc
+   (declare (ignore architecture))
+   "Host is Debian testing")
   (:hostattrs
    (push-hostattrs :os
 		   (make-instance 'debian-testing
@@ -63,6 +69,9 @@ Used in property :HOSTATTRS subroutines."
   ((suite :initform "unstable")))
 
 (defprop debian-unstable :posix (architecture)
+  (:desc
+   (declare (ignore architecture))
+   "Host is Debian unstable")
   (:hostattrs
    (push-hostattrs :os
 		   (make-instance 'debian-unstable
