@@ -181,8 +181,14 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
 	       (:may-fail (setq may-fail t))
 	       (:input (setq input (pop args)))
 	       (:env (setq env (pop args)))
-	       (t (push (typecase arg (pathname (unix-namestring arg)) (t arg))
-			cmd)))
+	       (t (mapc (lambda (e)
+			  (push (typecase e
+				  (pathname
+				   (unix-namestring e))
+				  (t
+				   e))
+				cmd))
+			(ensure-list arg))))
 	  while args
 	  finally (nreversef cmd))
     (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
@@ -204,6 +210,10 @@ shell command and its parameters, or, as a special case, a single string
 specifying the shell command, with any necessary escaping already performed.
 It is recommended that all keywords and corresponding values come first,
 followed by argument(s) specifying the shell command to execute.
+
+You can additionally supply lists of arguments and these will be spliced into
+the resulting list of arguments to be passed to the command.  I.e.
+(run \"a\" (list \"b\" \"c\")) is equivalent to (run \"a\" \"b\" \"c\").
 
 Keyword arguments accepted:
 
