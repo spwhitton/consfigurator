@@ -16,6 +16,16 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.property.os)
+(named-readtables:in-readtable :interpol-syntax)
+
+(defun required (type)
+  "Error out if the OS of the host being deployed is not of type TYPE.
+
+Used in property :HOSTATTRS subroutines."
+  (let ((os (class-of (car (get-hostattrs :os)))))
+    (unless (and os (subtypep os type))
+      (error 'inapplicable-property
+	     :text #?"Property requires OS of type ${type}"))))
 
 (defclass unixlike () ())
 

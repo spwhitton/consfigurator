@@ -189,7 +189,8 @@
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
-  (:export #:unixlike
+  (:export #:required
+	   #:unixlike
 	   #:linux
 	   #:debianlike
 	   #:debian
