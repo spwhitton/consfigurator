@@ -174,11 +174,12 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
 			   :exit-code exit))))
 
 (defmacro %process-run-args (&body forms)
-  `(let (cmd input may-fail for-exit env)
+  `(let (cmd input may-fail for-exit env princ)
     (loop for arg = (pop args)
 	  do (case arg
 	       (:for-exit (setq may-fail t for-exit t))
 	       (:may-fail (setq may-fail t))
+	       (:princ    (setq princ t))
 	       (:input (setq input (pop args)))
 	       (:env (setq env (pop args)))
 	       (t (mapc (lambda (e)
@@ -221,6 +222,8 @@ Keyword arguments accepted:
     does not exit nonzero, usually because it is being called partly or only
     for its exit code
 
+  - :PRINC -- send a copy of the output to *STANDARD-OUTPUT*
+
   - :INPUT INPUT -- pass the content of the string or stream INPUT on stdin
 
   - :ENV ENVIRONMENT -- where ENVIRONMENT is a plist specifying environment
@@ -236,7 +239,8 @@ case return only the exit code."
 	  (connection-run *connection* cmd input)
 	(let ((out (readfile stdout)))
 	  (if (or may-fail (= exit 0))
-	      (if for-exit exit (values out err exit))
+	      (progn (when princ (format t "~{    ~A~%~}" (lines out)))
+		     (if for-exit exit (values out err exit)))
 	      (error 'run-failed
 		     :cmd cmd :stdout out :stderr err :exit-code exit)))))))
 
@@ -256,7 +260,8 @@ start with RUN."
     (multiple-value-bind (out exit)
 	  (connection-run *connection* cmd input)
       (if (or may-fail (= exit 0))
-	  (if for-exit exit (values out exit))
+	  (progn (when princ (format t "~{    ~A~%~}" (lines out)))
+		 (if for-exit exit (values out exit)))
 	  (error 'run-failed
 		 :cmd cmd
 		 :stdout out

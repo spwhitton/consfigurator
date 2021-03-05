@@ -23,7 +23,7 @@
   (values))
 
 (defun lines (text)
-  (split-string (stripln text) :separator '(#\Newline)))
+  (split-string (stripln text) :separator '(#\Newline #\Return)))
 
 (defun unlines (lines)
   (format nil "~{~A~%~}" lines))
