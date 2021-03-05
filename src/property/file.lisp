@@ -28,7 +28,11 @@ point in doing that here because WRITEFILE is synchronous."
 	:no-change
 	(writefile file (unlines new-lines) :try-preserve t))))
 
-(defprop has-content :posix (path lines)
+(defprop has-content :posix (path content)
+  "Ensure there is a file at PATH whose content is the string CONTENT."
+  (:apply (writefile path content)))
+
+(defprop has-content-lines :posix (path lines)
   "Ensure there is a file at PATH whose lines are the elements of LINES."
   (:apply (writefile path (unlines lines))))
 

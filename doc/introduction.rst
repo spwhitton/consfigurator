@@ -40,10 +40,16 @@ Try it out / quick start
 	(try-register-data-source
          :pgp :location #P"/path/to/com.example.consfig.gpg")
 
+	(defparameter my-substitution "substititions")
+
         (defhost athena.example.com
 	    (:deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl))
           "Web and file server."
-	  (file:has-content "/etc/foo" '("these" "are" "my" "lines"))
+	  (file:has-content "/etc/foo"
+	    #?{Here is my file content.
+	You can use ${my-substitution} thanks to CL-INTERPOL.
+	And it's multiline.})
+	  (file:has-content-lines "/etc/bar" '("these" "are" "my" "lines"))
 	  (file:contains-lines "/etc/some.conf" '("FOO=bar")))
 
     Here, "spwhitton" is my username on athena; we have to tell Consfigurator
