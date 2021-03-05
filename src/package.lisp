@@ -191,6 +191,7 @@
   (:use #:cl #:consfigurator)
   (:export #:unixlike
 	   #:linux
+	   #:debianlike
 	   #:debian
 	   #:debian-stable
 	   #:debian-testing

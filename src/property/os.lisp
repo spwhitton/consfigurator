@@ -25,7 +25,9 @@
     :documentation
     "Keyword whose name is Debian's name for this architecture, e.g. :AMD64")))
 
-(defclass debian (linux)
+(defclass debianlike (linux) ())
+
+(defclass debian (debianlike)
   ((suite :initarg :suite
 	  :reader debian-suite
 	  :initform (error "Must provide suite"))))
