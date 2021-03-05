@@ -162,6 +162,11 @@ subroutines at the right time."
 
 ;;;; hostattrs in property subroutines
 
+(define-condition inapplicable-property (error)
+  ((text :initarg :text :reader inapplicable-property-text))
+  (:report (lambda (condition stream)
+	     (format stream "~A" (inapplicable-property-text condition)))))
+
 (defun get-hostattrs (k)
   "Retrieve the list of static informational attributes of type KEY.
 
