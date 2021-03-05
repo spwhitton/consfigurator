@@ -27,7 +27,7 @@
   (:check
    (all-installed packages))
   (:apply
-   (apt-get :print "-y" "install" packages)))
+   (apt-get :princ "-y" "install" packages)))
 
 (defun all-installed (packages)
   (loop
