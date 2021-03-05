@@ -175,6 +175,12 @@ an atomic property application."
 
 (defmethod eval-propspec ((propspec propspec))
   "Apply properties as specified by PROPSPEC."
+  ;; TODO should have this check in the closures produced by DEFPROP too, so
+  ;; that we will catch attempts to programmatically apply :LISP properties.
+  ;; for the check here, could offer a restart to apply all the properties up
+  ;; to but not including the first :LISP property (we don't just want to
+  ;; apply all non-:LISP because that might violate dependencies established
+  ;; by the order of the elements of PROPSPEC's props)
   (when (and (subtypep (class-of *connection*) 'posix-connection)
 	     (eq :lisp (propspec->type propspec)))
     (error "Cannot apply :LISP properties using a POSIX connection"))
