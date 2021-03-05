@@ -198,6 +198,12 @@
 	   #:debian-testing
 	   #:debian-unstable))
 
+(defpackage :consfigurator.property.apt
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:re  #:cl-ppcre)
+		    (#:os  #:consfigurator.property.os))
+  (:export #:installed))
+
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))
 

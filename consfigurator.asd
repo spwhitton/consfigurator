@@ -27,6 +27,7 @@
 	       (:file "src/property/cmd")
 	       (:file "src/property/file")
 	       (:file "src/property/os")
+	       (:file "src/property/apt")
 	       (:file "src/property/chroot")
 	       (:file "src/data/asdf")
 	       (:file "src/data/pgp")))
