@@ -182,7 +182,6 @@
   (:use #:cl #:consfigurator #:alexandria)
   (:local-nicknames (#:re #:cl-ppcre))
   (:export #:has-content
-	   #:has-content-lines
 	   #:contains-lines
 	   #:data-uploaded
 	   #:host-data-uploaded
