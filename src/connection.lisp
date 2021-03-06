@@ -157,35 +157,54 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
    (stderr :initarg :stderr :reader failed-stderr)
    (exit-code :initarg :exit-code :reader failed-exit-code)))
 
-(defmacro with-remote-temporary-file ((file &key (connection '*connection*))
+(defmacro with-remote-temporary-file ((file
+				       &key
+					 (connection '*connection*)
+					 (directory nil directory-supplied-p))
 				      &body body)
+  "Execute BODY with FILE containing the path to a freshly created remote file,
+which will be cleaned up when BODY is finished."
+  ;; it would be nicer if we could just use (file &rest args) but we need to
+  ;; look at CONNECTION ourselves, and we need to avoid CONNECTION being
+  ;; evaluated more than once
   (once-only (connection)
-    `(let ((,file (mktemp ,connection)))
+    `(let ((,file (mktemp ,@(and directory-supplied-p
+				 `(:directory ,directory))
+			  :connection ,connection)))
        (unwind-protect
 	    (progn ,@body)
 	 (connection-run ,connection
 			 (format nil "rm -f ~A" (escape-sh-token ,file))
 			 nil)))))
 
-(defun mktemp (&optional (connection *connection*))
-  "Make a temporary file on the remote side."
-  (multiple-value-bind (out exit)
-      ;; mktemp(1) is not POSIX; the only POSIX way is this m4 way,
-      ;; apparently, but even though m4(1) is POSIX it seems like it could
-      ;; often be absent, so have a fallback.  Avoid passing any arguments to
-      ;; mktemp(1) as these may differ on different platforms.
-      (connection-run
-       connection
-       "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp"
-       nil)
-    (let ((lines (lines out)))
-      (if (and (zerop exit) lines)
-	  (car lines)
-	  (error 'run-failed
-		 :cmd "(attempt to make a temporary file on remote)"
-		 :stdout out
-		 :stderr "(merged with stdout)"
-		 :exit-code exit)))))
+(defun mktemp (&key (connection *connection*) directory)
+  "Make a temporary file on the remote side, in DIRECTORY, defaulting to /tmp."
+  (let ((template (if directory
+		      (unix-namestring
+		       (merge-pathnames
+			"tmp.XXXXXX" (ensure-directory-pathname directory)))
+		      "'${TMPDIR:-/tmp}'/tmp.XXXXXX")))
+    (multiple-value-bind (out exit)
+	;; mktemp(1) is not POSIX; the only POSIX way is this M4 way,
+	;; apparently, but even though m4(1) is POSIX it seems like it could
+	;; often be absent, so have a fallback.  It would be better to avoid
+	;; passing any arguments to mktemp(1) as these may differ on different
+	;; platforms, but hopefully just a template is okay.
+	;;
+	;; While GNU M4 mkstemp makes the temporary file at most readable and
+	;; writeable by its owner, POSIX doesn't require this, so set a umask.
+	(connection-run
+	 connection
+	 #?"umask 077; echo 'mkstemp(${template})' | m4 2>/dev/null || mktemp '${template}'"
+	 nil)
+      (let ((lines (lines out)))
+	(if (and (zerop exit) lines)
+	    (car lines)
+	    (error 'run-failed
+		   :cmd "(attempt to make a temporary file on remote)"
+		   :stdout out
+		   :stderr "(merged with stdout)"
+		   :exit-code exit))))))
 
 (defmacro %process-run-args (&body forms)
   `(let (cmd input may-fail for-exit env princ)
