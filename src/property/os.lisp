@@ -22,7 +22,7 @@
   "Error out if the OS of the host being deployed is not of type TYPE.
 
 Used in property :HOSTATTRS subroutines."
-  (let ((os (class-of (car (get-hostattrs :os)))))
+  (let ((os (class-of (get-hostattrs-car :os))))
     (unless (and os (subtypep os type))
       (error 'inapplicable-property
 	     :text #?"Property requires OS of type ${type}"))))

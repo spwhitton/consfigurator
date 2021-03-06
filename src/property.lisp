@@ -180,6 +180,9 @@ subroutines at the right time."
 Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."
   (getf (slot-value *host* 'hostattrs) k))
 
+(defun get-hostattrs-car (k)
+  (car (get-hostattrs k)))
+
 (defun push-hostattrs (k &rest vs)
   "Push new static informational attributes VS of type KEY.
 
@@ -198,4 +201,4 @@ Called by property :HOSTATTRS subroutines."
   "Get the hostname of the host to which properties are being applied.
 
 Called by property subroutines."
-  (car (get-hostattrs :hostname)))
+  (get-hostattrs-car :hostname))

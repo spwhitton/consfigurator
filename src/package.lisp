@@ -87,6 +87,7 @@
 	   #:defproplist
 	   #:inapplicable-property
 	   #:get-hostattrs
+	   #:get-hostattrs-car
 	   #:push-hostattrs
 	   #:get-hostname
 	   #:require-data
