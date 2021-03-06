@@ -52,4 +52,4 @@
 	 conn
 	 #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
 	 nil)
-      (unless (zerop exit) (error "Failed to write ~A: ~A" temp out)))))
+      (unless (zerop exit) (error "Failed to write ~A: ~A" path out)))))
