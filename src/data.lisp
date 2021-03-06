@@ -345,10 +345,6 @@ of the current connection, where each entry is of the form
 		    "-type" "f" "-printf" "%P\\n")
 	    (and (zerop exit) (lines out)))))
 
-;; TODO on remote side, catch read errors and signal our own which says
-;; something more specific -- "This has probably been caused by an attempt to
-;; use a property application specification or set of static informational
-;; attributes which cannot be serialised by the Lisp printer"
 (defun continue-deploy*-program (remaining-connections)
   "Return a program to complete the work of an enclosing call to DEPLOY*.
 
@@ -373,38 +369,51 @@ achieved by sending the return value of this function into a REPL's stdin."
 		     (invoke-restart 'skip-data-source))))
 	      (let ((*remote-lisp* t))
 		,@forms))))
-    (let ((intern-forms
-	    (loop for name in '("MISSING-DATA-SOURCE"
-				"SKIP-DATA-SOURCE"
-				"*REMOTE-LISP*")
-		  collect
-		  `(export (intern ,name (find-package "CONSFIGURATOR"))
-			   (find-package "CONSFIGURATOR"))))
-	  (proclamations `((proclaim '(special *remote-lisp*))))
-	  (load-forms
-	    (loop for system
-		    in (slot-value (slot-value *host* 'propspec) 'systems)
-		  collect `(load
-			    ,(caddar
-			      (remove-if-not
-			       (lambda (d)
-				 (string= (car d) "--lisp-system")
-				 (string= (cadr d) (normalise-system system)))
-			       (slot-value *connection* 'cached-data))))))
-	  (*package* (find-package "COMMON-LISP-USER")))
-      ;; need line breaks in between so that packages exist before we try to
-      ;; have remote Lisp read sexps containing symbols from those packages
-      (format nil "~{~A~^~%~}"
-	      (mapcar
-	       #'prin1-to-string
-	       `((make-package "CONSFIGURATOR")
-		 ,@intern-forms
-		 ,@proclamations
-		 (define-condition missing-data-source (error) ())
-		 (require "asdf")
-		 (let ((*standard-output* *error-output*))
-		   ,(wrap load-forms))
-		 ,(wrap `((%consfigure ',remaining-connections ,*host*)))))))))
+    (let* ((intern-forms
+	     (loop for name in '("MISSING-DATA-SOURCE"
+				 "SKIP-DATA-SOURCE"
+				 "*REMOTE-LISP*")
+		   collect
+		   `(export (intern ,name (find-package "CONSFIGURATOR"))
+			    (find-package "CONSFIGURATOR"))))
+	   (proclamations `((proclaim '(special *remote-lisp*))))
+	   (load-forms
+	     (loop for system
+		     in (slot-value (slot-value *host* 'propspec) 'systems)
+		   collect `(load
+			     ,(caddar
+			       (remove-if-not
+				(lambda (d)
+				  (string= (car d) "--lisp-system")
+				  (string= (cadr d) (normalise-system system)))
+				(slot-value *connection* 'cached-data))))))
+	   (forms `((make-package "CONSFIGURATOR")
+		    ,@intern-forms
+		    ,@proclamations
+		    (define-condition missing-data-source (error) ())
+		    (require "asdf")
+		    (let ((*standard-output* *error-output*))
+		      ,(wrap load-forms))
+		    ,(wrap `((%consfigure ',remaining-connections ,*host*))))))
+      (handler-case
+	  (with-standard-io-syntax
+	    ;; need line breaks in between so that packages exist before we
+	    ;; try to have remote Lisp read sexps containing symbols from
+	    ;; those packages
+	    (format nil "~{~A~^~%~}" (mapcar #'prin1-to-string forms)))
+	(print-not-readable (c)
+	  (error "The Lisp printer could not serialise ~A for
+transmission to the remote Lisp.
+
+This is probably because your property application specification and/or static
+informational attributes contain values which the Lisp printer does not know
+how to print.  If ~:*~A is something like a function object then you need to
+rework your deployment so that it does not end up in the propspec or
+hostattrs; see \"Pitfalls\" in the Consfigurator user manual.
+
+If ~:*~A is a simple object then you may be able to resolve this by defining
+a PRINT-OBJECT method for your class."
+		 (print-not-readable-object c)))))))
 
 (defun request-lisp-systems ()
   "Request that all Lisp systems required by the host currently being deployed
