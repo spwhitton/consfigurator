@@ -44,36 +44,26 @@ root Lisp is running on, as the root Lisp's uid."))
 (defmethod connection-readfile ((connection local-connection) path)
   (read-file-string path))
 
-;; in the following two functions, we cannot use UIOP:WITH-TEMPORARY-FILE
-;; etc., because those do not ensure the file is only readable by us, and we
-;; might be writing a secret key
-
 (defmethod connection-writefile ((connection local-connection)
 				 path
-				 (content string)
+				 content
 				 mode)
+  ;; we cannot use UIOP:WITH-TEMPORARY-FILE etc., because those do not ensure
+  ;; the file is only readable by us, and we might be writing a secret key
   (with-remote-temporary-file
       (temp :connection connection
 	    :directory (pathname-directory-pathname path))
     (run-program `("chmod" ,(format nil "~O" mode) ,temp))
-    (with-open-file (stream temp :direction :output :if-exists :supersede)
-      (write-string content stream))
-    (run-program `("mv" ,temp ,path))))
-
-(defmethod connection-writefile ((connection local-connection)
-				 path
-				 (content stream)
-				 mode
-				 &aux
-				   (type (stream-element-type content)))
-  (with-remote-temporary-file
-      (temp :connection connection
-	    :directory (pathname-directory-pathname path))
-    (run-program `("chmod" ,(format nil "~O" mode) ,temp))
-    (with-open-file (stream temp :direction :output
-				 :if-exists :supersede
-				 :element-type type)
-      (copy-stream-to-stream content stream :element-type type))
+    (etypecase content
+      (string
+       (with-open-file (stream temp :direction :output :if-exists :supersede)
+	 (write-string content stream)))
+      (stream
+       (let ((type (stream-element-type content)))
+	 (with-open-file (stream temp :direction :output
+				      :if-exists :supersede
+				      :element-type type)
+	   (copy-stream-to-stream content stream :element-type type)))))
     (run-program `("mv" ,temp ,path))))
 
 (defmethod connection-upload ((connection local-connection) from to)
