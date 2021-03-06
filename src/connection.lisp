@@ -330,7 +330,7 @@ start with RUN."
       ;; seems there is nothing like stat(1) in POSIX, and note that
       ;; --reference for chmod(1) and chown(1) is not POSIX
       (re:register-groups-bind
-	  (((lambda (s) (remove #\- s)) umode gmode omode) uid gid)
+	  (((lambda (s) (delete #\- s)) umode gmode omode) uid gid)
 	  (#?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
 	   (mrun "ls" "-nd" path) :sharedp t)
 	(connection-writefile *connection* path content mode)
