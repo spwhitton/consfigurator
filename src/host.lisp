@@ -109,5 +109,5 @@ entries."
 	 (%replace-propspec-into-host (make-instance 'host :attrs ',attrs)
 				      ,(props properties))
 	 ,(car (getf attrs :desc)))
-       ,@(when deploy
-	   `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))
+       ,@(and deploy
+	      `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))
