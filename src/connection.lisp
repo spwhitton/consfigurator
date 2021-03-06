@@ -101,7 +101,7 @@ error condition just because EXIT is non-zero."))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
-;; only functional difference between WRITEFILE AND upload is what args they
+;; only functional difference between WRITEFILE and UPLOAD is what args they
 ;; take: a string vs. a path.  for a given connection type, they may have same
 ;; or different implementations.
 
