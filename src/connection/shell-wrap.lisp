@@ -33,16 +33,19 @@
 
 (defmethod connection-writefile ((conn shell-wrap-connection)
 				 path
-				 contents
-				 umask)
-  ;; TODO do we want a CONNECTION-ERROR condition?
-  (with-remote-temporary-file (temp :connection conn)
+				 content
+				 mode)
+  (with-remote-temporary-file
+      (temp :connection conn :directory (pathname-directory-pathname path))
+    ;; TODO do we want a CONNECTION-ERROR condition to tidy this up?
     (multiple-value-bind (out exit)
-	(connection-run conn (if umask
-				 (format nil "( umask ~O; cat >~A )"
-					 umask temp)
-				 #?"cat >${temp}")
-			contents)
+	(connection-run conn
+			(format nil "chmod ~O ~A" mode
+				(escape-sh-token temp))
+			nil)
+      (unless (zerop exit) (error "Failed to chmod ~A: ~A" temp out)))
+    (multiple-value-bind (out exit)
+	(connection-run conn #?"cat >${temp}" content)
       (unless (zerop exit) (error "Failed to write ~A: ~A" temp out)))
     (multiple-value-bind (out exit)
 	(connection-run

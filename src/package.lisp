@@ -153,7 +153,7 @@
 	#:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.connection.local
-  (:use #:cl #:consfigurator #:alexandria #:cffi)
+  (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
 
 (defpackage :consfigurator.connection.debian-sbcl

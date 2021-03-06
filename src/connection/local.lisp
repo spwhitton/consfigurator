@@ -44,35 +44,37 @@ root Lisp is running on, as the root Lisp's uid."))
 (defmethod connection-readfile ((connection local-connection) path)
   (read-file-string path))
 
-(defcfun "umask" :int (mode :int))
-
-;; TODO this is not safe if there are multiple threads
-(defmacro with-umask ((umask) &body forms)
-  (with-gensyms (old)
-    `(let ((,old (umask ,umask)))
-       (unwind-protect
-	    (progn ,@forms)
-	 (umask ,old)))))
+;; in the following two functions, we cannot use UIOP:WITH-TEMPORARY-FILE
+;; etc., because those do not ensure the file is only readable by us, and we
+;; might be writing a secret key
 
 (defmethod connection-writefile ((connection local-connection)
 				 path
-				 (contents string)
-				 umask)
-  (with-umask (umask)
-    (with-open-file (stream path :direction :output :if-exists :supersede)
-      (write-string contents stream))))
+				 (content string)
+				 mode)
+  (with-remote-temporary-file
+      (temp :connection connection
+	    :directory (pathname-directory-pathname path))
+    (run-program `("chmod" ,(format nil "~O" mode) ,temp))
+    (with-open-file (stream temp :direction :output :if-exists :supersede)
+      (write-string content stream))
+    (run-program `("mv" ,temp ,path))))
 
 (defmethod connection-writefile ((connection local-connection)
 				 path
-				 (contents stream)
-				 umask
+				 (content stream)
+				 mode
 				 &aux
-				   (type (stream-element-type contents)))
-  (with-umask (umask)
-    (with-open-file (stream path :direction :output
+				   (type (stream-element-type content)))
+  (with-remote-temporary-file
+      (temp :connection connection
+	    :directory (pathname-directory-pathname path))
+    (run-program `("chmod" ,(format nil "~O" mode) ,temp))
+    (with-open-file (stream temp :direction :output
 				 :if-exists :supersede
 				 :element-type type)
-      (copy-stream-to-stream contents stream :element-type type))))
+      (copy-stream-to-stream content stream :element-type type))
+    (run-program `("mv" ,temp ,path))))
 
 (defmethod connection-upload ((connection local-connection) from to)
   (copy-file from to))

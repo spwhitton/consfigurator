@@ -105,20 +105,29 @@ error condition just because EXIT is non-zero."))
 ;; take: a string vs. a path.  for a given connection type, they may have same
 ;; or different implementations.
 
-(defgeneric connection-writefile (connection path input umask)
+(defgeneric connection-writefile (connection path content mode)
   (:documentation
    "Subroutine to replace/create the contents of files on the host.
 
-INPUT is the new contents of the file or a stream which will produce it.
+CONTENT is the new contents of the file or a stream which will produce it.
 
-Implementations can specialise on both the CONNECTION and INPUT arguments, if
-they need to handle streams and strings differently."))
+MODE is the octal mode that the file should have by the time this function
+returns.  Implementations should ensure that CONTENT is not stored on disk
+with a mode greater than MODE, and also that if CONTENT is stored on disk
+outside of (UIOP:PATHNAME-DIRECTORY-PATHNAME PATH), then it does not
+have a mode greater than 700.  It is recommended that implementations write
+CONTENT to a temporary file in (UIOP:PATHNAME-DIRECTORY-PATHNAME PATH),
+change the mode of that file to MODE, and then rename to PATH.
+WITH-REMOTE-TEMPORARY-FILE can be used to do this.
+
+Implementations can specialise on both the CONNECTION and CONTENT arguments,
+if they need to handle streams and strings differently."))
 
 (defmethod connection-writefile :around ((connection connection)
 					 path
 					 content
-					 umask)
-  (declare (ignore path content umask))
+					 mode)
+  (declare (ignore path content mode))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
