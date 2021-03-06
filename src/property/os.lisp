@@ -42,6 +42,12 @@ Used in property :HOSTATTRS subroutines."
 	  :reader debian-suite
 	  :initform (error "Must provide suite"))))
 
+(defmethod print-object ((os debian) stream)
+  (format stream "#.~S" `(make-instance 'debian
+					:arch ,(linux-architecture os)
+					:suite ,(debian-suite os)))
+  os)
+
 (defclass debian-stable (debian) ())
 
 (defprop debian-stable :posix (suite architecture)
