@@ -163,7 +163,7 @@
   (:use #:cl #:consfigurator #:cffi))
 
 (defpackage :consfigurator.connection.chroot.fork
-  (:use #:cl #:consfigurator #:cffi))
+  (:use #:cl #:consfigurator #-(or sbcl) #:cffi))
 
 (defpackage :consfigurator.connection.chroot.shell
   (:use #:cl
