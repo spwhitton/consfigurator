@@ -178,12 +178,14 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
        connection
        "echo 'mkstemp('${TMPDIR:-/tmp}'/tmp.XXXXXX)' | m4 2>/dev/null || mktemp"
        nil)
-    (if (= exit 0)
-	(car (lines out))
-	(error 'run-failed :cmd "(attempt to make a temporary file on remote)"
-			   :stdout out
-			   :stderr "(merged with stdout)"
-			   :exit-code exit))))
+    (let ((lines (lines out)))
+      (if (and (zerop exit) lines)
+	  (car lines)
+	  (error 'run-failed
+		 :cmd "(attempt to make a temporary file on remote)"
+		 :stdout out
+		 :stderr "(merged with stdout)"
+		 :exit-code exit)))))
 
 (defmacro %process-run-args (&body forms)
   `(let (cmd input may-fail for-exit env princ)
