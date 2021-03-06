@@ -111,7 +111,7 @@ error condition just because EXIT is non-zero."))
 
 CONTENT is the new contents of the file or a stream which will produce it.
 
-MODE is the octal mode that the file should have by the time this function
+MODE is the numeric mode that the file should have by the time this function
 returns.  Implementations should ensure that CONTENT is not stored on disk
 with a mode greater than MODE, and also that if CONTENT is stored on disk
 outside of (UIOP:PATHNAME-DIRECTORY-PATHNAME PATH), then it does not
