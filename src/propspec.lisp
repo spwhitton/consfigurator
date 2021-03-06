@@ -170,9 +170,6 @@ an atomic property application."
       (t
        propapp))))
 
-(defvar *remote-lisp* nil
-  "Whether this Lisp is one started up within a call to DEPLOY*.")
-
 (defmethod eval-propspec ((propspec propspec))
   "Apply properties as specified by PROPSPEC."
   ;; TODO should have this check in the closures produced by DEFPROP too, so

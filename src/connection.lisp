@@ -24,6 +24,18 @@
   "Object representing the currently active connection.
 Deployments dynamically bind this variable and then apply properties.")
 
+(defvar *host* nil
+  "Object representing the host at the end of the current connection chain.
+Deployments bind this variable.  Its global value should remain nil.
+
+The main point of this is to allow properties to access the context in which
+they're being applied.")
+
+(defvar *remote-lisp* nil
+  "Whether this Lisp is one started up within a call to DEPLOY*.
+Currently only used within EVAL-PROPSPEC, and not exported.  Try to avoid
+assuming whether or not code is running in the root Lisp.")
+
 ;; generic function operating on keywords which identify connection types
 (defgeneric establish-connection (type remaining &key)
   (:documentation
@@ -291,10 +303,3 @@ start with RUN."
 	  ;; we may not be able to chown; that's okay
 	  (mrun :may-fail #?"chown ${uid}:${gid} ${path}")))
       (connection-writefile *connection* path content umask)))
-
-(defvar *host* nil
-  "Object representing the host at the end of the current connection chain.
-Deployments bind this variable.  Its global value should remain nil.
-
-The main point of this is to allow properties to access the context in which
-they're being applied.")
