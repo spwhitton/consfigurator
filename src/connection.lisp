@@ -319,17 +319,25 @@ start with RUN."
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))
 
-(defun writefile (path content &key try-preserve (umask #o022))
-  (if (and try-preserve (test "-f" path))
-      (destructuring-bind (umode gmode wmode uid gid)
-	  ;; seems there is nothing like stat(1) in POSIX
-	  (re:all-matches-as-strings
-	   #?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
-	   (mrun "ls" "-nd" path))
-	(connection-writefile *connection* path content umask)
+(defun writefile (path content &key (mode #o644 mode-supplied-p))
+  ;; If (lisp-connection-p), the file already exists, and it's not owned by
+  ;; us, we could (have a keyword argument to) bypass CONNECTION-WRITEFILE and
+  ;; just WRITE-STRING to the file.  That way we don't replace the file with
+  ;; one owned by us, which we might not be able to chown back as non-root.
+  ;;
+  ;; The following, simpler behaviour should fit most sysadmin needs.
+  (if (test "-f" path)
+      ;; seems there is nothing like stat(1) in POSIX, and note that
+      ;; --reference for chmod(1) and chown(1) is not POSIX
+      (re:register-groups-bind
+	  (((lambda (s) (remove #\- s)) umode gmode omode) uid gid)
+	  (#?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
+	   (mrun "ls" "-nd" path) :sharedp t)
+	(connection-writefile *connection* path content mode)
 	(let ((path (escape-sh-token path)))
-	  ;; assume that if we can write it we can chmod it
-	  (mrun #?"chmod u=${umode},g=${gmode},w=${wmode} ${path}")
+	  (unless mode-supplied-p
+	    ;; assume that if we can write it we can chmod it
+	    (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${path}"))
 	  ;; we may not be able to chown; that's okay
 	  (mrun :may-fail #?"chown ${uid}:${gid} ${path}")))
-      (connection-writefile *connection* path content umask)))
+      (connection-writefile *connection* path content mode)))

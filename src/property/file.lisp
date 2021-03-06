@@ -26,7 +26,7 @@ point in doing that here because WRITEFILE is synchronous."
 	 (new-lines (funcall function orig-lines)))
     (if (equal orig-lines new-lines)
 	:no-change
-	(writefile file (unlines new-lines) :try-preserve t))))
+	(writefile file (unlines new-lines)))))
 
 (defprop has-content :posix (path content)
   "Ensure there is a file at PATH whose content is CONTENT.
@@ -40,8 +40,7 @@ CONTENT can be a list of lines or a single string."
 	 (existing-lines (lines (readfile path))))
      (dolist (existing-line existing-lines)
        (deletef new-lines existing-line :test #'string=))
-     (writefile path (unlines (nconc existing-lines new-lines))
-		:try-preserve t))))
+     (writefile path (unlines (nconc existing-lines new-lines))))))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
   (:hostattrs
@@ -61,10 +60,7 @@ CONTENT can be a list of lines or a single string."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (when (test "-e" destination)
-     (mrun "chmod" "600" destination))
-   (writefile destination (get-data-stream iden1 iden2)
-	      :try-preserve t :umask #o077)))
+   (writefile destination (get-data-stream iden1 iden2) :mode #o600)))
 
 (defprop host-secret-uploaded :posix (destination)
   (:hostattrs
