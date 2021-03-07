@@ -44,6 +44,12 @@ Alternatively, publish a git branch somewhere publically accessible (a
 GitHub fork is fine) and write to me asking me to merge it.  I may
 convert your branch back into patches when sending you feedback :)
 
+IRC channel
+===========
+
+You can ask questions and discuss Consfigurator in ``#consfigurator`` on
+server ``irc.oftc.net``.
+
 Reporting bugs
 ==============
 
