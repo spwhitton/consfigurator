@@ -64,7 +64,9 @@ For an example of usage, see the :SUDO connection type."))
     :documentation
     "The value of *CONNECTION* at the time this connection was established.")
    (cached-data
-    :initform nil)))
+    :initform nil
+    :documentation
+    "Items of prerequisite data known to be cached on the remote side.")))
 
 (defclass lisp-connection (connection) ())
 
