@@ -202,3 +202,11 @@ Called by property :HOSTATTRS subroutines."
 
 Called by property subroutines."
   (get-hostattrs-car :hostname))
+
+
+;;;; :APPLY subroutines
+
+(define-condition failed-change (error)
+  ((text :initarg :text :reader inapplicable-property-text))
+  (:report (lambda (condition stream)
+	     (format stream "~A" (inapplicable-property-text condition)))))

@@ -91,6 +91,7 @@
 	   #:push-hostattrs
 	   #:get-hostname
 	   #:require-data
+	   #:failed-change
 
 	   ;; propspec.lisp
 	   #:in-consfig
