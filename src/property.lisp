@@ -207,6 +207,6 @@ Called by property subroutines."
 ;;;; :APPLY subroutines
 
 (define-condition failed-change (error)
-  ((text :initarg :text :reader inapplicable-property-text))
+  ((text :initarg :text :reader failed-change-text))
   (:report (lambda (condition stream)
-	     (format stream "~A" (inapplicable-property-text condition)))))
+	     (format stream "~A" (failed-change-text condition)))))
