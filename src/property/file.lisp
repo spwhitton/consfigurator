@@ -32,9 +32,9 @@ point in doing that here because WRITEFILE is synchronous."
   "Ensure there is a file at PATH whose content is CONTENT.
 CONTENT can be a list of lines or a single string."
   (declare (indent 1))
-  (:apply (writefile path (if (listp content)
-			      (unlines content)
-			      (format nil "~A~&" content)))))
+  (:apply (writefile path (etypecase content
+			    (cons (unlines content))
+			    (string (format nil "~A~&" content))))))
 
 (defprop contains-lines :posix (path lines)
   "Ensure there is a file at PATH containing each of LINES once."
