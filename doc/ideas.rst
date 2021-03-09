@@ -56,6 +56,13 @@ Core
   useful surrounding a set of DEPLOYS applications, to concurrently deploy a
   number of hosts.
 
+- A combinator which makes a list of properties unordered, i.e., later ones
+  don't depend on earlier ones.  Then when applying, if we get FAILED-CHANGE,
+  we can just move on to the next property.  The implicit dependency
+  relationships in the absence of this combinator is a good default, as almost
+  every defproplist will want that.  But we might want to make this combinator
+  implicit in DEFHOST.
+
 Project & packaging
 -------------------
 
