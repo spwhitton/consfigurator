@@ -1,5 +1,5 @@
-Property application specifications
-===================================
+Property application specifications ("propspecs")
+=================================================
 
 Combinators
 -----------
@@ -7,8 +7,8 @@ Combinators
 Currently supported: ``(unapply (foo 1 2 3))``, ``((foo 1 2 3) on-change (bar
 4 5 6) on-change (baz 7 8 9))`` and combinations thereof.
 
-Unevaluated property application specifications
------------------------------------------------
+Unevaluated property application specifications ("unevaluated propspecs")
+-------------------------------------------------------------------------
 
 In an atomic property application within an unevaluated property application
 specification, if the symbol naming the property ends with the character

@@ -128,8 +128,8 @@ Host
 ~~~~
 
 A machine, container, chroot, or similar.  Has a plist of static informational
-*host attributes*, usually including at least a hostname, and a property
-application specification defining the properties it has.
+*host attributes* ("hostattrs"), usually including at least a hostname, and a
+property application specification defining the properties it has.
 
 Property
 ~~~~~~~~
@@ -173,8 +173,8 @@ Root Lisp
 The Lisp image you control directly when you execute deployments.  Typically
 running on your development laptop/workstation (and not as the ``root`` user).
 
-Property application specification
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Property application specification ("propspec")
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An ordered list specifying the properties that a host has and/or lacks.  For
 example,::
@@ -186,8 +186,8 @@ example,::
 Property application specifications are always applied in order, so properties
 later in the list implicitly depend on properties earlier in the list.
 
-Unevaluated property application specification
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Unevaluated property application specification ("unevaluated propspec")
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A property application specification, except in atomic property applications
 of the form ``(PROPERTY . ARGS)``, ``ARGS`` are expressions to be evaluated to
