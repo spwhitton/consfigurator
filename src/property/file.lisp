@@ -31,6 +31,7 @@ point in doing that here because WRITEFILE is synchronous."
 (defprop has-content :posix (path content)
   "Ensure there is a file at PATH whose content is CONTENT.
 CONTENT can be a list of lines or a single string."
+  (declare (indent 1))
   (:apply (writefile path (if (listp content) (unlines content) content))))
 
 (defprop contains-lines :posix (path lines)

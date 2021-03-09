@@ -22,7 +22,8 @@
 			  #:getenv
 			  #:subdirectories
 			  #:directory-files
-			  #:file-exists-p)
+			  #:file-exists-p
+			  #:with-current-directory)
   (:export ;; re-export from UIOP
 	   #:strcat
 	   #:string-prefix-p
@@ -43,6 +44,7 @@
 	   #:subdirectories
 	   #:directory-files
 	   #:file-exists-p
+	   #:with-current-directory
 
 	   ;; util.lisp
 	   #:lines
