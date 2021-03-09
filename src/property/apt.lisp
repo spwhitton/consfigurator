@@ -18,6 +18,12 @@
 (in-package :consfigurator.property.apt)
 (named-readtables:in-readtable :interpol-syntax)
 
+(defmacro with-maybe-update (form)
+  `(handler-case ,form
+     (run-failed ()
+       (apt-get :princ "update")
+       ,form)))
+
 (defprop installed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are installed."
   (:desc #?"apt installed @{packages}")
@@ -27,7 +33,7 @@
   (:check
    (all-installed packages))
   (:apply
-   (apt-get :princ "-y" "install" packages)))
+   (with-maybe-update (apt-get :princ "-y" "install" packages))))
 
 (defun all-installed (packages)
   (loop
