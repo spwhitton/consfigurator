@@ -120,7 +120,8 @@
 		     ;; posix-connection.  possibly a condition with a restart
 		     ;; which allows skipping over this property
 		     `(lambda ,args ,@slot))))
-    `(setprop ',name ,type ,@slots)))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (setprop ',name ,type ,@slots))))
 
 (defmacro defproplist (name type args &body properties)
   "Define a property which applies a property application specification.
@@ -164,7 +165,8 @@ subroutines at the right time."
 	  `(lambda (&rest all-args)
 	     (cons (destructuring-bind ,args all-args ,(props properties))
 		   all-args)))
-    `(setprop ',name ,type ,@slots)))
+    `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (setprop ',name ,type ,@slots))))
 
 
 ;;;; hostattrs in property subroutines
