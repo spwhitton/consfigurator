@@ -282,9 +282,9 @@ case return only the exit code."
       (multiple-value-bind (err exit)
 	  (connection-run *connection* cmd input)
 	(let ((out (readfile stdout)))
+	  (when princ (format t "~{    ~A~%~}" (lines out)))
 	  (if (or may-fail (= exit 0))
-	      (progn (when princ (format t "~{    ~A~%~}" (lines out)))
-		     (if for-exit exit (values out err exit)))
+	      (if for-exit exit (values out err exit))
 	      (error 'run-failed
 		     :cmd cmd :stdout out :stderr err :exit-code exit)))))))
 
@@ -302,10 +302,10 @@ separate the streams might want to use this too, but usually it is best to
 start with RUN."
   (%process-run-args
     (multiple-value-bind (out exit)
-	  (connection-run *connection* cmd input)
+	(connection-run *connection* cmd input)
+      (when princ (format t "~{    ~A~%~}" (lines out)))
       (if (or may-fail (= exit 0))
-	  (progn (when princ (format t "~{    ~A~%~}" (lines out)))
-		 (if for-exit exit (values out exit)))
+	  (if for-exit exit (values out exit))
 	  (error 'run-failed
 		 :cmd cmd
 		 :stdout out
