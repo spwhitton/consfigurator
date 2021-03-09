@@ -209,7 +209,8 @@
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:re  #:cl-ppcre)
 		    (#:os  #:consfigurator.property.os))
-  (:export #:installed))
+  (:export #:installed
+	   #:removed))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))

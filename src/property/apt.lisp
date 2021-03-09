@@ -18,11 +18,17 @@
 (in-package :consfigurator.property.apt)
 (named-readtables:in-readtable :interpol-syntax)
 
+
+;;;; Macros
+
 (defmacro with-maybe-update (form)
   `(handler-case ,form
      (run-failed ()
        (apt-get :princ "update")
        ,form)))
+
+
+;;;; Properties
 
 (defprop installed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are installed."
@@ -31,18 +37,42 @@
    (declare (ignore packages))
    (os:required 'os:debianlike))
   (:check
-   (all-installed packages))
+   (all-installed-p packages))
   (:apply
    (with-maybe-update (apt-get :princ "-y" "install" packages))))
 
-(defun all-installed (packages)
-  (loop
-    with n = 0
-    with lines = (runlines :env '(:LANG "C") "apt-cache" "policy" packages)
-    for line in lines
-    when (re:scan #?/^\s+Installed:\s+(?!\(none\))/ line)
-      do (incf n)
-    finally (return (= n (length packages)))))
+(defprop removed :posix (&rest packages)
+  "Ensure all of the apt packages PACKAGES are removed."
+  (:desc #?"apt removed @{packages}")
+  (:hostattrs
+   (declare (ignore packages))
+   (os:required 'os:debianlike))
+  (:check
+   (none-installed-p packages))
+  (:apply
+   (apt-get :princ "-y" "remove" packages)))
+
+
+;;;; Reports on installation status
+
+(defun apt-cache-policy (packages)
+  (runlines :env '(:LANG "C") "apt-cache" "policy" packages))
+
+(defparameter apt-cache-policy-installed #?/^\s+Installed:\s+(?!\(none\))/)
+
+(defun all-installed-p (packages)
+  (loop with n = 0
+	for line in (apt-cache-policy packages)
+	when (re:scan apt-cache-policy-installed line)
+	  do (incf n)
+	finally (return (= n (length packages)))))
+
+(defun none-installed-p (packages)
+  (loop for line in (apt-cache-policy packages)
+	never (re:scan apt-cache-policy-installed line)))
+
+
+;;;; Utilities
 
 (defun apt-get (&rest args)
   (apply #'run
