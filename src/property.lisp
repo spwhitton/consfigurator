@@ -247,12 +247,19 @@ Called by property :HOSTATTRS subroutines."
   (dolist (v vs)
     (push v (getf (slot-value *host* 'hostattrs) k))))
 
+(defun pushnew-hostattrs (k &rest vs)
+  "Push new static informational attributes VS of type KEY.
+
+Called by property :HOSTATTRS subroutines."
+  (dolist (v vs)
+    (pushnew v (getf (slot-value *host* 'hostattrs) k))))
+
 (defun require-data (iden1 iden2)
   "Wrapper around PUSH-HOSTATTRS to indicate that a piece of prerequisite data
 is needed to deploy a property.
 
 Called by property :HOSTATTRS subroutines."
-  (push-hostattrs :data (cons iden1 iden2)))
+  (pushnew-hostattrs :data (cons iden1 iden2)))
 
 (defun get-hostname ()
   "Get the hostname of the host to which properties are being applied.

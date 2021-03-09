@@ -91,6 +91,7 @@
 	   #:get-hostattrs
 	   #:get-hostattrs-car
 	   #:push-hostattrs
+	   #:pushnew-hostattrs
 	   #:get-hostname
 	   #:require-data
 	   #:failed-change
