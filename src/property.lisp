@@ -111,7 +111,7 @@
     (when (stringp (car forms)) (pop forms))
     (loop for form in forms
 	  if (keywordp (car form))
-	  do (setf (getf slots (car form)) (cdr form)))
+	    do (setf (getf slots (car form)) (cdr form)))
     (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
 	  do (if-let ((slot (getf slots kw)))
 	       (setf (getf slots kw)
@@ -151,11 +151,11 @@ subroutines at the right time."
 			      else collect arg into accum)))
 	;; TODO :UNAPPLY which unapplies in reverse order
 	(slots (list :hostattrs '(lambda (propspec &rest ignore)
-				   (declare (ignore ignore))
-				   (%eval-propspec-hostattrs *host* propspec))
+				  (declare (ignore ignore))
+				  (%eval-propspec-hostattrs *host* propspec))
 		     :apply '(lambda (propspec &rest ignore)
-			       (declare (ignore ignore))
-			       (eval-propspec propspec)))))
+			      (declare (ignore ignore))
+			      (eval-propspec propspec)))))
     (when (and (listp (car properties)) (eq :desc (caar properties)))
       (setf (getf slots :desc)
 	    `(lambda ,new-args
