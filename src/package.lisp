@@ -114,10 +114,10 @@
 	   #:defdeploy-these
 	   #:deploy
 	   #:deploy*
-	   #:deploys #:deploys.
+	   #:deploys
 	   #:deploy-these
 	   #:deploy-these*
-	   #:deploys-these #:deploys-these.
+	   #:deploys-these
 	   #:continue-deploy*
 
 	   ;; data.lisp
