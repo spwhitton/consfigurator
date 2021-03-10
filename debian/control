@@ -28,8 +28,10 @@ Depends:
  cl-cffi,
  cl-interpol,
  cl-ppcre,
+ emacsen-common,
  ${misc:Depends},
 Recommends:
+ emacs,
  sbcl,
  ${sphinxdoc:Depends},
 Provides:
