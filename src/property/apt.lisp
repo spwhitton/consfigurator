@@ -75,7 +75,7 @@
   (let* ((suite (os:debian-suite os))
 	 (archive (mapcar (lambda (m) (cons m (cons suite sections)))
 			  (get-mirrors)))
-	 (security-suite (if (stringmem suite '("stretch" "jessie" "buster"))
+	 (security-suite (if (memstring= suite '("stretch" "jessie" "buster"))
 			     #?"${suite}/updates"
 			     #?"${suite}-security"))
 	 (security (and (not (subtypep (type-of os) 'os:debian-unstable))

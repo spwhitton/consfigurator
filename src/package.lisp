@@ -51,7 +51,7 @@
 	   #:unlines
 	   #:noop
 	   #:symbol-named
-	   #:stringmem
+	   #:memstring=
 
 	   #:version<
 	   #:version>
