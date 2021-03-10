@@ -45,12 +45,15 @@ Try it out / quick start
         (defhost athena.example.com
 	    (:deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl))
           "Web and file server."
+	  (os:debian-stable "buster" :amd64)
+	  (apt:standard-sources.list)
+	  (apt:installed "apache2")
 	  (file:has-content "/etc/foo"
 	    #?{Here is my file content.
 	You can use ${my-substitution} thanks to CL-INTERPOL.
 	And it's multiline.})
-	  (file:has-content-lines "/etc/bar" '("these" "are" "my" "lines"))
-	  (file:contains-lines "/etc/some.conf" '("FOO=bar")))
+	  (file:has-content "/etc/bar" '("or" "specify" "a" "list" "of" "lines""))
+	  (file:contains-lines "/etc/some.conf" '("FOO=bar"))) ; preserve rest of file contents
 
     Here, "spwhitton" is my username on athena; we have to tell Consfigurator
     what user it will be when it tries to sudo, so it knows whose password it
