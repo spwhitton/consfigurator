@@ -33,7 +33,7 @@ dch -r
 changed_files="consfigurator.asd emacs/consfigurator.el.in doc/conf.py debian/changelog"
 
 if ! dpkg-parsechangelog | grep -q "New upstream release."; then
-    echo >&2 'Debian changelog lacks line "New upstream release.""'
+    echo >&2 'Debian changelog lacks line "New upstream release."'
     git checkout -- $changed_files
     exit 1
 fi
