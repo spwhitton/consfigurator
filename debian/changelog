@@ -1,11 +1,12 @@
-consfigurator (0.2.1-2) UNRELEASED; urgency=medium
+consfigurator (0.3.0-1) experimental; urgency=medium
 
+  * New upstream release.
   * Install consfigurator.el using dh_elpa
     - Add build-deps on dh-elpa, each cl-* package used by Consfigurator, sbcl
     - Depend on emacsen-common and Recommend emacs
     - Add Provides: elpa-consfigurator.
 
- -- Sean Whitton <spwhitton@spwhitton.name>  Tue, 09 Mar 2021 23:23:03 -0700
+ -- Sean Whitton <spwhitton@spwhitton.name>  Wed, 10 Mar 2021 12:42:30 -0700
 
 consfigurator (0.2.1-1) experimental; urgency=medium
 
