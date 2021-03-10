@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Sean Whitton <spwhitton@spwhitton.name>
 Build-Depends:
  debhelper-compat (= 13),
+ dh-elpa,
  python3-sphinx,
  sphinx-common,
  texinfo,
@@ -27,6 +28,7 @@ Recommends:
  ${sphinxdoc:Depends},
 Provides:
  consfigurator,
+ elpa-consfigurator,
 Description: Lisp declarative configuration management system
  Consfigurator is a system for declarative configuration management using
  Common Lisp.  You can use it to configure hosts as root, deploy services as

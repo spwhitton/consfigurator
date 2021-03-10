@@ -1,10 +1,14 @@
 #!/usr/bin/make -f
 
+ELPA_NAME=consfigurator
+export ELPA_NAME
+
 %:
-	dh $@ --with sphinxdoc
+	dh $@ --with sphinxdoc,elpa
 
 override_dh_auto_build:
 	make -C doc html info
+	make -C emacs consfigurator.el
 
 override_dh_auto_clean:
 	find src -name "*.fasl" -delete
