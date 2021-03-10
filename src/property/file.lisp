@@ -79,3 +79,9 @@ Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
     file
     (lambda (lines)
       (mapcar (lambda (line) (re:regex-replace regex line replace)) lines)))))
+
+(defprop directory-exists :posix (dir)
+  "Ensure that a directory and its parents exists."
+  (:desc (strcat dir " exists"))
+  (:apply
+   (mrun "mkdir" "-p" dir)))

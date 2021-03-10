@@ -194,7 +194,8 @@
 	   #:host-data-uploaded
 	   #:secret-uploaded
 	   #:host-secret-uploaded
-	   #:regex-replaced-lines))
+	   #:regex-replaced-lines
+	   #:directory-exists))
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
