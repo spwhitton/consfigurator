@@ -19,13 +19,15 @@
 (named-readtables:in-readtable :interpol-syntax)
 
 
-;;;; Macros
+;;;; Static definitions
 
 (defmacro with-maybe-update (form)
   `(handler-case ,form
      (run-failed ()
        (apt-get :princ "update")
        ,form)))
+
+(define-constant sections '("main" "contrib" "non-free") :test #'equal)
 
 
 ;;;; Properties
@@ -51,6 +53,37 @@
    (none-installed-p packages))
   (:apply
    (apt-get :princ "-y" "remove" packages)))
+
+(defprop mirror :posix (uri)
+  (:desc #?"${uri} apt mirror selected")
+  (:hostattrs
+   (pushnew-hostattrs :apt.mirror uri)))
+
+(defun get-mirrors ()
+  (or (get-hostattrs :apt.mirror) (call-with-os #'get-default-mirrors)))
+
+(defmethod get-default-mirrors ((os os:debian))
+  '("http://deb.debian.org/debian"))
+
+(defprop standard-sources.list :posix ()
+  (:desc "Standard sources.list")
+  (:apply
+   (file:has-content "/etc/apt/sources.list"
+     (call-with-os #'standard-sources-for))))
+
+(defmethod standard-sources-for ((os os:debian))
+  (let* ((suite (os:debian-suite os))
+	 (archive (mapcar (lambda (m) (cons m (cons suite sections)))
+			  (get-mirrors)))
+	 (security-suite (if (stringmem suite '("stretch" "jessie" "buster"))
+			     #?"${suite}/updates"
+			     #?"${suite}-security"))
+	 (security (and (not (subtypep (type-of os) 'os:debian-unstable))
+			(list
+			 (cons "http://security.debian.org/debian-security"
+			       (cons security-suite sections))))))
+    (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
+	    (nconc archive security))))
 
 
 ;;;; Reports on installation status

@@ -51,6 +51,7 @@
 	   #:unlines
 	   #:noop
 	   #:symbol-named
+	   #:stringmem
 
 	   #:version<
 	   #:version>
@@ -95,6 +96,7 @@
 	   #:get-hostname
 	   #:require-data
 	   #:failed-change
+	   #:call-with-os
 
 	   ;; propspec.lisp
 	   #:in-consfig
@@ -203,14 +205,18 @@
 	   #:debian
 	   #:debian-stable
 	   #:debian-testing
-	   #:debian-unstable))
+	   #:debian-unstable
+	   #:debian-suite))
 
 (defpackage :consfigurator.property.apt
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:re  #:cl-ppcre)
-		    (#:os  #:consfigurator.property.os))
+		    (#:file  #:consfigurator.property.file)
+		    (#:os    #:consfigurator.property.os))
   (:export #:installed
-	   #:removed))
+	   #:removed
+	   #:mirror
+	   #:standard-sources.list))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))

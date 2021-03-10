@@ -274,3 +274,6 @@ Called by property subroutines."
   ((text :initarg :text :reader failed-change-text))
   (:report (lambda (condition stream)
 	     (format stream "~A" (failed-change-text condition)))))
+
+(defun call-with-os (f &rest args)
+  (apply (ensure-function f) (get-hostattrs-car :os) args))

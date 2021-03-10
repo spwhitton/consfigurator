@@ -37,6 +37,10 @@
     (string system)
     (symbol (string-downcase
 	     (symbol-name system)))))
+
+(defun stringmem (string list)
+  (member string list :test #'string=))
+
 
 ;;;; Version numbers
 
