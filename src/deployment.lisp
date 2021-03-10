@@ -38,8 +38,7 @@ connections in CONNECTIONS have been both normalised and preprocessed."
     ;; make a partial own-copy of HOST so that connections can add new pieces
     ;; of required prerequisite data; specifically, so that they can request
     ;; the source code of ASDF systems
-    (let ((*host* (make-instance 'host :props (host-propspec host)
-				       :attrs (copy-list (hostattrs host)))))
+    (let ((*host* (shallow-copy-host host)))
       (connect (if (eq :local (caar connections))
 		   connections
 		   (cons '(:local) connections))))))
@@ -55,7 +54,8 @@ DEFDEPLOY-THESE, etc., rather than calling this function directly.  However,
 code which programmatically constructs deployments will need to call this."
   (%consfigure (preprocess-connections connections)
 	       (if additional-properties
-		   (%union-propspec-into-host host additional-properties)
+		   (%union-propspec-into-host (shallow-copy-host host)
+					      additional-properties)
 		   host)))
 
 (defun deploy-these* (connections host &optional properties)
@@ -68,7 +68,8 @@ in the same way that later entries in the list of properties specified in
 DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
   (%consfigure (preprocess-connections connections)
 	       (if properties
-		   (%replace-propspec-into-host host properties)
+		   (%replace-propspec-into-host (shallow-copy-host host)
+						properties)
 		   host)))
 
 (defun continue-deploy* (remaining-connections)
@@ -163,6 +164,10 @@ PROPERTIES, like DEPLOY-THESE."
   (loop for connection in (ensure-cons connections)
 	collect (apply #'preprocess-connection-args
 		       (ensure-cons connection))))
+
+(defun shallow-copy-host (host)
+  (make-instance 'host :props (host-propspec host)
+		       :attrs (copy-list (hostattrs host))))
 
 (defun %propagate-hostattrs (host)
   (dolist (system (propspec-systems (host-propspec host)))
