@@ -58,7 +58,8 @@
 (defun apt-cache-policy (packages)
   (runlines :env '(:LANG "C") "apt-cache" "policy" packages))
 
-(defparameter apt-cache-policy-installed #?/^\s+Installed:\s+(?!\(none\))/)
+(define-constant apt-cache-policy-installed #?/^\s+Installed:\s+(?!\(none\))/
+  :test #'string=)
 
 (defun all-installed-p (packages)
   (loop with n = 0

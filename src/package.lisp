@@ -206,7 +206,7 @@
 	   #:debian-unstable))
 
 (defpackage :consfigurator.property.apt
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:re  #:cl-ppcre)
 		    (#:os  #:consfigurator.property.os))
   (:export #:installed
