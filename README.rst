@@ -22,7 +22,7 @@ Debian machine as an unprivileged user, using sudo to become root, and then
 starting up a Lisp image to execute your deployment code, you would just
 evaluate::
 
-  (deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl) athena.example.com)
+  (deploy ((:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl)) athena.example.com)
 
 Declarative configuration management systems like Consfigurator and Propellor_
 share a number of goals with projects like the `GNU Guix System`_ and
