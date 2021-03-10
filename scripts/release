@@ -1,0 +1,47 @@
+#!/bin/sh
+
+set -e
+
+if [ "$#" -ne 1 ]; then
+    echo >&2 "usage: scripts/release VERSION"
+    exit 1
+fi
+
+version=$1
+
+if ! (git diff-index --quiet --cached HEAD && \
+          git diff-files --quiet && \
+          test -z "$(git status --porcelain)" \
+     ) >/dev/null 2>&1; then
+    echo >&2 "must commit first"
+    exit 1
+fi
+
+perl -pi -we's/:version ".+"/:version "'$version'"/' consfigurator.asd
+perl -pi -we's/^;; Version: .+/;; Version: '$version'/' \
+     emacs/consfigurator.el.in
+perl -pi -we"s/release = '.+'/release = '$version'/" doc/conf.py
+
+dist=$(dpkg-parsechangelog -SDistribution)
+if [ "$dist" = "UNRELEASED" ]; then
+    dch -v$version-1 ""
+else
+    dch -v$version-1 New upstream release.
+fi
+dch -r
+
+changed_files="consfigurator.asd emacs/consfigurator.el.in doc/conf.py debian/changelog"
+
+if ! dpkg-parsechangelog | grep -q "New upstream release."; then
+    echo >&2 'Debian changelog lacks line "New upstream release.""'
+    git checkout -- $changed_files
+    exit 1
+fi
+
+msg="release Consfigurator $version (-1 to Debian experimental)"
+git commit -s -m"$msg" -- $changed_files
+git tag -s -m"$msg" v$version
+
+git deborig
+# need to pass -d here while we're uploading to experimental
+dgit sbuild -d unstable --run-piuparts --run-autopkgtest
