@@ -183,6 +183,8 @@ as would be bound by (lambda ARGS).
 
 The evaluation of PROPERTIES, and the evaluation of any &AUX variables, should
 not have any side effects.  The evaluation will take place in the root Lisp.
+In particular, at present, storing or retrieving static informational
+attributes is not supported.
 
 If the first element of PROPERTIES is a string, it will be considered a
 docstring for the resulting property.  If the first element of PROPERTIES
