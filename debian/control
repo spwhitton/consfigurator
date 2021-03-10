@@ -3,9 +3,15 @@ Section: admin
 Priority: optional
 Maintainer: Sean Whitton <spwhitton@spwhitton.name>
 Build-Depends:
+ cl-alexandria,
+ cl-babel,
+ cl-cffi,
+ cl-interpol,
+ cl-ppcre,
  debhelper-compat (= 13),
  dh-elpa,
  python3-sphinx,
+ sbcl,
  sphinx-common,
  texinfo,
 Standards-Version: 4.5.1
