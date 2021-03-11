@@ -9,7 +9,8 @@
 	       #:babel-streams
 	       #:cl-ppcre
 	       #:cl-interpol
-	       #:cffi)
+	       #:cffi
+	       #:trivial-macroexpand-all)
   :components ((:file "src/package")
 	       (:file "src/util")
 	       (:file "src/connection")

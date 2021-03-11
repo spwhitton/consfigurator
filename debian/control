@@ -8,6 +8,7 @@ Build-Depends:
  cl-cffi,
  cl-interpol,
  cl-ppcre,
+ cl-trivial-macroexpand-all,
  debhelper-compat (= 13),
  dh-elpa,
  python3-sphinx,
@@ -28,6 +29,7 @@ Depends:
  cl-cffi,
  cl-interpol,
  cl-ppcre,
+ cl-trivial-macroexpand-all,
  emacsen-common,
  ${misc:Depends},
 Recommends:

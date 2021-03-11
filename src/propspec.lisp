@@ -81,6 +81,62 @@ systems, resolve unapply, onchange etc., and then look in the value cell of
 each PROPERTY to find a property, and pass each of ARGS to the function in the
 property's apply slot."))
 
+(defun map-propspec-propapps (function propspec &optional env)
+  "Map FUNCTION over each propapp occurring in PROPSPEC after macroexpansion.
+FUNCTION designates a pure function from propapps to propapps."
+  ;; The work of this function cannot be implemented fully portably.  See
+  ;;
+  ;;     Michael Raskin.  2017.  Writing a best-effort portable code walker in
+  ;;     Common Lisp.  In Proceedings of 10th European Lisp Symposium, Vrije
+  ;;     Universiteit Brussel, Belgium, April 2017 (ELS2017).
+  ;;     DOI: 10.5281/zenodo.3254669
+  ;;
+  ;; for why.  However, it can be implemented in terms of MACROEXPAND-ALL,
+  ;; whose semantics are conventionally well-understood and which is available
+  ;; in most implementations of Common Lisp (we use the
+  ;; trivial-macroexpand-all library to get at these implementations).
+  (let* ((occurrent
+	   (delete-duplicates
+	    (delete-if-not #'isprop (flatten (macroexpand-all propspec env)))))
+	 (gensyms (loop for p in occurrent collect (gensym)))
+	 ;; We need to substitute twice like this because if FUNCTION returns
+	 ;; a form whose car is a member of OCCURRENT (as indeed it often will
+	 ;; be), we will get stuck in an infinite macroexpansion.
+	 (first-macrolets
+	   (loop for p in occurrent and g in gensyms
+		 collect `(,p (&rest args)
+			      (cons ',g args))))
+	 (second-macrolets
+	   (loop for p in occurrent and g in gensyms
+		 collect `(,g (&rest args)
+			      (funcall ,(ensure-function function)
+				       (cons ',p args))))))
+    ;; At least SB-CLTL2:MACROEXPAND-ALL leaves the MACROLET in, so use CADDR
+    ;; to remove it again -- if that turns out to be implementation-specific,
+    ;; our MACROEXPAND-ALL should be responsible for looking for it and
+    ;; stripping if necessary.  This is not just to avoid leaking our
+    ;; implementation to our callers -- if the MACROLET is not stripped after
+    ;; the first expansion, we'll be back in an infinite macroexpansion loop.
+    (caddr (macroexpand-all
+	    `(macrolet ,second-macrolets
+	       ,(caddr (macroexpand-all
+			`(macrolet ,first-macrolets ,propspec)
+			env)))
+	    env))))
+
+(defun macroexpand-all (form &optional env)
+  "Wrap TRIVIAL-MACROEXPAND-ALL:MACROEXPAND-ALL to convert silent failures to
+expand into errors."
+  (multiple-value-bind (expanded supported env-supported)
+      (trivial-macroexpand-all:macroexpand-all form env)
+    (cond
+      ((not supported)
+       (error "Don't know how to MACROEXPAND-ALL in this Lisp."))
+      ((and env (not env-supported))
+       (error "Don't know how to MACROEXPAND-ALL with env in this Lisp."))
+      (t
+       expanded))))
+
 (defun make-propspec (&key (systems nil systems-supplied-p) props)
   (setq props (copy-tree props))
   (labels ((preprocess (item)
