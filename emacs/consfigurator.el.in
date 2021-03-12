@@ -22,7 +22,12 @@
 
 ;;;###autoload
 (defun activate-consfigurator-indentation-hints ()
-  "Activate indentation hints for Consfigurator properties."
+  "Activate indentation hints for Consfigurator properties.
+
+Note that these hints assume you're using the recommended consfig
+defpackage, where the :consfigurator package is used unqualified,
+and packages providing properties have local nicknames
+corresponding to the final dot-delimited component of their names."
   (interactive)
   @putforms@)
 
