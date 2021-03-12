@@ -54,6 +54,13 @@ expand into errors."
       (t
        expanded))))
 
+(defun ordinary-ll-without-&aux (ll)
+  (loop for arg in ll
+	if (symbol-named &aux arg)
+	  return accum
+	else collect arg into accum
+	finally (return accum)))
+
 
 ;;;; Version numbers
 

@@ -193,11 +193,7 @@ rather than writing a property which programmatically calls other properties.
 This is because using this macro takes care of calling property :HOSTATTRS
 subroutines at the right time."
   (when (stringp (car properties)) (pop properties))
-  (let ((new-args (cons (gensym)
-			(loop for arg in args
-			      if (symbol-named &aux arg)
-				return accum
-			      else collect arg into accum)))
+  (let ((new-args (cons (gensym) (ordinary-ll-without-&aux args)))
 	;; TODO :UNAPPLY which unapplies in reverse order
 	(slots (list :hostattrs '(lambda (propspec &rest ignore)
 				  (declare (ignore ignore))
