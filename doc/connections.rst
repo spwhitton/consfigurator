@@ -1,6 +1,37 @@
 Connections
 ===========
 
+Connection chain specifications
+-------------------------------
+
+The normalised form is a list of lists, where the car of each inner list is a
+keyword symbol identifying a connection type, and the cdr of each inner list
+is arguments to that connection, e.g.::
+
+  ((:ssh :foo foo :bar bar) (:sudo :baz baz :quux quux))
+
+There are two notational simplifications permitted when passing connection
+chain specifications to properties, functions and macros.  Firstly, for each
+inner list which contains only a single keyword identifying a connection type
+and no arguments, this list may be replaced with only the keyword identifying
+the connection type, e.g.::
+
+  (:ssh (:sudo :baz baz :quux quux))
+
+Secondly, when there is exactly one connection and it takes no arguments, you
+may specify just the keyword identifying the connection type, e.g. ``:ssh``.
+
+Note that if there is a single connection but it takes arguments, you will
+need two sets of parentheses, i.e.::
+
+  ((:ssh :foo foo :bar bar))
+
+rather than::
+
+  (:ssh :foo foo :bar bar)
+
+which is invalid.
+
 Defining connection types
 -------------------------
 
