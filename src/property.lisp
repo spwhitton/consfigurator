@@ -152,6 +152,29 @@
       (setf (get sym 'indent) indent)
       (pushnew sym *properties-for-emacs*))))
 
+(defmacro define-dotted-property-macro (name args)
+  "Affix a period to the end of NAME and define a macro expanding into a
+propapp calling the original NAME after applying the dotted propapp rules.
+
+For most properties this is a dummy definition which will not be exported.
+However, for properties where someone might like to use the dotted propapp
+rules in unevaluated propspecs containing calls to the property, export the
+dotted name alongside NAME."
+  (let ((whole (gensym))
+	(new-args (ordinary-ll-without-&aux args)))
+    `(defmacro ,(intern (strcat (symbol-name name) ".")
+			(symbol-package name))
+	 ,(cons '&whole (cons whole new-args))
+       (declare (ignore ,@(ordinary-ll-variable-names new-args)))
+       (let ((first (if (and (listp (cadr ,whole))
+			     (or (keywordp (caadr ,whole))
+				 (and (listp (caadr ,whole))
+				      (keywordp (caaadr ,whole)))))
+			`',(cadr ,whole)
+			(cadr ,whole)))
+	     (rest (nreverse (cdr (reverse (cddr ,whole))))))
+	 `(,',name ,first ,@rest (props seqprops ,@(lastcar ,whole)))))))
+
 ;;; supported way to write properties is to use one of these two macros
 
 (defmacro defprop (name type args &body forms)
@@ -177,7 +200,8 @@
 		     ;; which allows skipping over this property
 		     `(lambda ,args ,@slot))))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (setprop ',name ,type ,@slots))))
+       (setprop ',name ,type ,@slots)
+       (define-dotted-property-macro ,name ,args))))
 
 (defmacro defproplist (name type args &body properties)
   "Define a property which applies a property application specification.
@@ -225,7 +249,8 @@ subroutines at the right time."
 	     (cons (destructuring-bind ,args all-args ,(props properties))
 		   all-args)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (setprop ',name ,type ,@slots))))
+       (setprop ',name ,type ,@slots)
+       (define-dotted-property-macro ,name ,args))))
 
 
 ;;;; hostattrs in property subroutines

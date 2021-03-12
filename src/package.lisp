@@ -117,7 +117,9 @@
 	   #:deploy
 	   #:deploy*
 	   #:deploys
+	   #:deploys.
 	   #:deploy-these
+	   #:deploys-these.
 	   #:deploy-these*
 	   #:deploys-these
 	   #:continue-deploy*
@@ -228,7 +230,8 @@
   (:local-nicknames (#:apt   #:consfigurator.property.apt)
 		    (#:os    #:consfigurator.property.os)
 		    (#:file  #:consfigurator.property.file))
-  (:export #:os-bootstrapped))
+  (:export #:os-bootstrapped
+	   #:os-bootstrapped.))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))

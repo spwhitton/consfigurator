@@ -61,6 +61,11 @@ expand into errors."
 	else collect arg into accum
 	finally (return accum)))
 
+(defun ordinary-ll-variable-names (ll)
+  (loop for arg in ll
+	unless (char= #\& (char (symbol-name arg) 0))
+	  collect (ensure-car arg)))
+
 
 ;;;; Version numbers
 
