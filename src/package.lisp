@@ -179,10 +179,6 @@
 	#:consfigurator
 	#:consfigurator.connection.shell-wrap))
 
-(defpackage :consfigurator.property.chroot
-  (:use #:cl #:consfigurator)
-  (:export #:os-bootstrapped #:os-bootstrapped.))
-
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)
   (:export #:single))
@@ -226,6 +222,13 @@
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:os  #:consfigurator.property.os))
   (:export #:has-account))
+
+(defpackage :consfigurator.property.chroot
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:apt   #:consfigurator.property.apt)
+		    (#:os    #:consfigurator.property.os)
+		    (#:file  #:consfigurator.property.file))
+  (:export #:os-bootstrapped))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))
