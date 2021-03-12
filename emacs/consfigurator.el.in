@@ -1,4 +1,4 @@
-;;; consfigurator.el --- utilities for working with Consfigurator consfigs
+;;; consfigurator.el --- Utilities for working with Consfigurator consfigs
 
 ;; Author: Sean Whitton <spwhitton@spwhitton.name>
 ;; Version: 0.3.1
