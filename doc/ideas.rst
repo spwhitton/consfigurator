@@ -69,3 +69,7 @@ Project & packaging
 - Define a semantics for version numbers (probably just like Propellor's),
   start keeping a NEWS file, move from Debian experimental to unstable,
   start actually announcing releases to sgo-software-announce.
+
+- Provide a ``:consfigurator`` named readtable which enables both CL-INTERPOL
+  and CL-HEREDOC syntax.  Use it in all source files, and for users in their
+  consfigs.
