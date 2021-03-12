@@ -18,14 +18,7 @@
 (in-package :consfigurator.property.os)
 (named-readtables:in-readtable :interpol-syntax)
 
-(defun required (type)
-  "Error out if the OS of the host being deployed is not of type TYPE.
-
-Used in property :HOSTATTRS subroutines."
-  (let ((os (class-of (get-hostattrs-car :os))))
-    (unless (and os (subtypep os type))
-      (error 'inapplicable-property
-	     :text #?"Property requires OS of type ${type}"))))
+;;;; Basic OS types
 
 (defclass unixlike () ())
 
@@ -82,3 +75,23 @@ Used in property :HOSTATTRS subroutines."
    (push-hostattrs :os
 		   (make-instance 'debian-unstable
 				  :arch architecture))))
+
+
+;;;; Utilities
+
+(defun required (type)
+  "Error out if the OS of the host being deployed is not of type TYPE.
+
+Used in property :HOSTATTRS subroutines."
+  (let ((os (class-of (get-hostattrs-car :os))))
+    (unless (and os (subtypep os type))
+      (error 'inapplicable-property
+	     :text #?"Property requires OS of type ${type}"))))
+
+(defun supports-arch-p (os arch)
+  "Can binaries of type ARCH run on OS?"
+  (typecase os
+    (debian (or (eq (linux-architecture os) arch)
+		(member arch (assoc (linux-architecture os)
+				    '((:amd64 :i386)
+				      (:i386  :amd64))))))))

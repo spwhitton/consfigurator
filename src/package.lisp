@@ -199,15 +199,16 @@
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
-  (:export #:required
-	   #:unixlike
+  (:export #:unixlike
 	   #:linux
 	   #:debianlike
 	   #:debian
 	   #:debian-stable
 	   #:debian-testing
 	   #:debian-unstable
-	   #:debian-suite))
+	   #:debian-suite
+	   #:required
+	   #:supports-arch-p))
 
 (defpackage :consfigurator.property.apt
   (:use #:cl #:alexandria #:consfigurator)
