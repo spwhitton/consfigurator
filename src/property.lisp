@@ -152,28 +152,43 @@
       (setf (get sym 'indent) indent)
       (pushnew sym *properties-for-emacs*))))
 
-(defmacro define-dotted-property-macro (name args)
+(defmacro define-dotted-property-macro (name args &aux (whole (gensym)))
   "Affix a period to the end of NAME and define a macro expanding into a
-propapp calling the original NAME after applying the dotted propapp rules.
+propapp calling the original NAME after applying the dotted propapp rules,
+to the extent that doing so makes sense given the structure of ARGS.
 
 For most properties this is a dummy definition which will not be exported.
 However, for properties where someone might like to use the dotted propapp
 rules in unevaluated propspecs containing calls to the property, export the
 dotted name alongside NAME."
-  (let ((whole (gensym))
-	(new-args (ordinary-ll-without-&aux args)))
-    `(defmacro ,(intern (strcat (symbol-name name) ".")
-			(symbol-package name))
-	 ,(cons '&whole (cons whole new-args))
-       (declare (ignore ,@(ordinary-ll-variable-names new-args)))
-       (let ((first (if (and (listp (cadr ,whole))
-			     (or (keywordp (caadr ,whole))
-				 (and (listp (caadr ,whole))
-				      (keywordp (caaadr ,whole)))))
-			`',(cadr ,whole)
-			(cadr ,whole)))
-	     (rest (nreverse (cdr (reverse (cddr ,whole))))))
-	 `(,',name ,first ,@rest (props seqprops ,@(lastcar ,whole)))))))
+  (multiple-value-bind (required optional rest kwargs)
+      (parse-ordinary-lambda-list args :allow-specializers nil)
+    (let* ((will-props (not (or rest kwargs)))
+	   (main (nconc required optional))
+	   (firstsym (ensure-car (car main)))
+	   (first (and firstsym
+		       `(if (and (listp ,firstsym)
+				 (or (keywordp (car ,firstsym))
+				     (and (listp (car ,firstsym))
+					  (keywordp (caar ,firstsym)))))
+			    `',,firstsym
+			    ,firstsym)))
+	   (middle (mapcar #'ensure-car (butlast (if first (cdr main) main))))
+	   (new-args
+	     (if will-props
+		 (setq rest (ensure-car (lastcar main))
+		       main (nconc (nbutlast main) (list '&rest rest)))
+		 (nconc (list '&whole whole) (ordinary-ll-without-&aux args)))))
+      `(defmacro ,(format-symbol (symbol-package name) "~A." name) ,new-args
+	 ,(cond
+	    ((and first will-props)
+	     ``(,',name ,,first ,,@middle (props eseqprops ,@,rest)))
+	    (will-props
+	     ``(,',name ,,@middle (props eseqprops ,@,rest)))
+	    (first
+	     `(cons ',name (cons ,first (cddr ,whole))))
+	    (t
+	     `(cons ',name (cdr ,whole))))))))
 
 ;;; supported way to write properties is to use one of these two macros
 

@@ -70,8 +70,8 @@ i. replacing each argument in each propapp with the result of evaluating that
    propspec occurs; and
 
 ii. wrapping a single property combinator which takes a variable number of
-    arguments around the resulting list of Lisp forms, usually ``PROPSEQ`` or
-    ``EPROPSEQ``.
+    arguments around the resulting list of Lisp forms, usually ``SEQPROPS`` or
+    ``ESEQPROPS``.
 
 That is, the arguments to propapps in unevaluated propspecs are forms which
 will produce the arguments to the properties, rather than those arguments
@@ -87,9 +87,11 @@ ii. the first argument is not evaluated if it is a list whose first element is
     a keyword, or a if it is a list of lists where the first element of the
     first list is a keyword; and
 
-iii. the last argument is treated as an embedded unevaluated propspec, and is
-     recursively converted into a propspec according to the usual evaluation
-     rules, where the surrounding combinator is ``EPROPSEQ``.
+iii. the last required or optional argument to the property to be applied is
+     converted to a ``&rest`` parameter and its elements are treated as an
+     embedded unevaluated propspec, which is recursively converted into a
+     propspec according to the usual evaluation rules, where the surrounding
+     combinator is ``ESEQPROPS``.
 
 The dotted propapp rules are implemented by ``DEFPROP`` and ``DEFPROPLIST``,
 which define a macro with the dotted name which performs the replacement.
@@ -97,16 +99,16 @@ which define a macro with the dotted name which performs the replacement.
 Available combinators
 ---------------------
 
-``PROPSEQ``
-~~~~~~~~~~~
+``SEQPROPS``
+~~~~~~~~~~~~~
 
 Function.  Applies each of the propapps passed as arguments without stopping
 if any of them signal a failed change.  Semantically, the propapps are ordered
 with respect to their ``:HOSTATTRS`` subroutines, but not with respect to
 their ``:APPLY`` subroutines.
 
-``EPROPSEQ``
-~~~~~~~~~~~~
+``ESEQPROPS``
+~~~~~~~~~~~~~
 
 Function.  Applies each of the propapps passed as arguments, stopping and
 signalling a failed change if any of the propapps signal a failed change.
@@ -136,8 +138,8 @@ The elements of unevaluated propspecs are typically arguments to macros, such
 that the context of evaluation for forms which produce the arguments to the
 propapps is the context in which the call to the containing macro appears.
 The single property combinator which will be wrapped around the list of forms
-depends on the macro.  ``DEFHOST`` uses ``PROPSEQ``, while ``DEFPROPLIST``
-uses ``EPROPSEQ``.
+depends on the macro.  ``DEFHOST`` uses ``SEQPROPS``, while ``DEFPROPLIST``
+uses ``ESEQPROPS``.
 
 The dotted propapp rules are intended to make applications of properties like
 ``DEPLOYS``, ``DEPLOYS-THESE`` and ``CHROOT:DEBOOTSTRAPPED``, which take
@@ -145,14 +147,12 @@ property application specifications as arguments, easier to read and write in
 the most common cases.  For example, you can write::
 
   (deploys. (:ssh (:sudo :as "spwhitton@athena.example.com")) athena.example.com
-    ((additional-property val1)
-     (a-further-property val2)))
+    (a-further-property  val1)
+    (additional-property val2))
 
 instead of::
 
   (deploys '(:ssh (:sudo :as "spwhitton@athena.example.com")) athena.example.com
-    (make-propspec :props `((additional-property ,val1)
-                            (a-further-property  ,val2))))
+    (make-propspec :props `((a-further-property  ,val1)
+                            (additional-property ,val2))))
 
-(though note the parentheses around the two propapps must remain, unlike in
-``DEPLOY``, ``DEFHOST`` etc.).
