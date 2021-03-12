@@ -38,7 +38,9 @@
   (unless (lisp-connection-p)
     (error "Forking into a chroot requires a Lisp-type connection"))
   #-(or sbcl) (error "Don't know how to safely fork() in this Lisp")
-  ;; TODO copy required prerequisite data into the chroot
+  ;; TODO copy required prerequisite data into the chroot -- propellor uses a
+  ;; bind mount but we might be the root Lisp, in which case we don't have a
+  ;; cache to bind mount in.  use chroot.shell connection to upload?
   (mapc #'force-output
 	(list *standard-output* *error-output* *debug-io* *terminal-io*))
   (let ((child (fork)))
@@ -49,11 +51,12 @@
       (0
        (handler-case
 	   (progn
-	     ;; TODO either (reset-data-sources), or bind a restart to ignore
-	     ;; data source errors, as they may or may not be available inside
-	     ;; the chroot, depending on whether the data source code needs to
-	     ;; read files outside of the chroot or already has the data
-	     ;; cached, a socket open etc.
+	     ;; TODO either (reset-data-sources), or bind a restart to convert
+	     ;; data source errors into failed-change (or ignore them?  or
+	     ;; what?), as they may or may not be available inside the chroot,
+	     ;; depending on whether the data source code needs to read files
+	     ;; outside of the chroot or already has the data cached, a socket
+	     ;; open etc.
 	     (mapc #'clear-input
 		   (list *standard-input* *debug-io* *terminal-io*))
 	     (unless (zerop (chroot into))
