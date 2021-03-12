@@ -125,12 +125,13 @@
 		 (terpri out))))))
 
 (defun store-indentation-info-for-emacs (sym args &optional info)
-  (let* ((short-name
+  (let* ((package-short-name
+	   (lastcar (split-string (package-name *package*) :separator ".")))
+	 (short-name
 	   (string-downcase
-	    (strcat
-	     (lastcar (split-string (package-name *package*) :separator "."))
-	     ":"
-	     (symbol-name sym))))
+	    (if (string= package-short-name "CONSFIGURATOR")
+		(symbol-name sym)
+		(strcat package-short-name ":" (symbol-name sym)))))
 	 (dotted-name (strcat short-name "."))
 	 indent)
     (cond
