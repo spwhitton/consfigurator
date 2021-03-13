@@ -146,12 +146,12 @@ systems."
 			    ,(slot-value first 'preprocessed-propspec)
 			    ,(slot-value second 'preprocessed-propspec))))
 
+(defvar *suppress-loading-systems* nil
+  "Bound by code which needs to prevent EVAL-PROPSPEC from attempting to load
+the ASDF systems associated with the propspec to be evaluated.")
+
 (defmethod eval-propspec ((propspec propspec))
-  ;; Don't try to load systems if we are a remote Lisp, as we don't upload the
-  ;; .asd files, and we don't want to load out of /usr/share/common-lisp as we
-  ;; might get a different version of the library at worst, or a lot of
-  ;; warnings at best
-  (unless *remote-lisp*
+  (unless *suppress-loading-systems*
     (dolist (system (propspec-systems propspec))
       (unless (asdf:component-loaded-p system)
 	(asdf:load-system system))))

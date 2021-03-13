@@ -367,16 +367,20 @@ achieved by sending the return value of this function into a REPL's stdin."
 		   (lambda (c)
 		     (declare (ignore c))
 		     (invoke-restart 'skip-data-source))))
-	      (let ((*remote-lisp* t))
+	      ;; don't try to load systems as we don't upload the .asd files,
+	      ;; and we don't want to load out of /usr/share/common-lisp or
+	      ;; something as we might get a different version of the library
+	      ;; at worst, or a lot of redefinition warnings at best
+	      (let ((*suppress-loading-systems* t))
 		,@forms))))
     (let* ((intern-forms
 	     (loop for name in '("MISSING-DATA-SOURCE"
 				 "SKIP-DATA-SOURCE"
-				 "*REMOTE-LISP*")
+				 "*SUPPRESS-LOADING-SYSTEMS*")
 		   collect
 		   `(export (intern ,name (find-package "CONSFIGURATOR"))
 			    (find-package "CONSFIGURATOR"))))
-	   (proclamations `((proclaim '(special *remote-lisp*))))
+	   (proclamations `((proclaim '(special *suppress-loading-systems*))))
 	   (load-forms
 	     (loop for system
 		     in (slot-value (slot-value *host* 'propspec) 'systems)

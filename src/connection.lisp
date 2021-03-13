@@ -31,11 +31,6 @@ Deployments bind this variable.  Its global value should remain nil.
 The main point of this is to allow properties to access the context in which
 they're being applied.")
 
-(defvar *remote-lisp* nil
-  "Whether this Lisp is one started up within a call to DEPLOY*.
-Currently only used within EVAL-PROPSPEC, and not exported.  Try to avoid
-assuming whether or not code is running in the root Lisp.")
-
 ;; generic function operating on keywords which identify connection types
 (defgeneric establish-connection (type remaining &key)
   (:documentation
