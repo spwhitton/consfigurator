@@ -188,7 +188,7 @@ dotted name alongside NAME."
 	    (will-props
 	     ``(,',name ,,@middle (props eseqprops ,@,rest)))
 	    (first
-	     `(cons ',name (cons ,first (cddr ,whole))))
+	     `(list* ',name ,first (cddr ,whole)))
 	    (t
 	     `(cons ',name (cdr ,whole))))))))
 

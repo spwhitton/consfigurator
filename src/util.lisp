@@ -126,8 +126,7 @@ expand into errors."
 	      (unless buffer (error "invalid encoding"))
 	      (push (code-char
 		     (read-from-string
-		      (coerce (cons #\# (cons #\x (nreverse buffer)))
-			      'string)))
+		      (coerce (list* #\# #\x (nreverse buffer)) 'string)))
 		    result)
 	      (setq buffer nil
 		    decoding nil))

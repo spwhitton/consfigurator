@@ -73,15 +73,15 @@
 
 (defmethod standard-sources-for ((os os:debian))
   (let* ((suite (os:debian-suite os))
-	 (archive (mapcar (lambda (m) (cons m (cons suite sections)))
+	 (archive (mapcar (lambda (m) (list* m suite sections))
 			  (get-mirrors)))
 	 (security-suite (if (memstring= suite '("stretch" "jessie" "buster"))
 			     #?"${suite}/updates"
 			     #?"${suite}-security"))
 	 (security (and (not (subtypep (type-of os) 'os:debian-unstable))
 			(list
-			 (cons "http://security.debian.org/debian-security"
-			       (cons security-suite sections))))))
+			 (list* "http://security.debian.org/debian-security"
+			       security-suite sections)))))
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
 	    (nconc archive security))))
 
