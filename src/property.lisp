@@ -290,3 +290,8 @@ Called by property subroutines."
         (unless (zerop new-uid)
           (error 'failed-change :text "property requires root to apply"))
         (setf (slot-value *connection* 'remote-uid) new-uid)))))
+
+(defun assert-connection-supports (type)
+  (unless (or (eq type :posix) (lisp-connection-p))
+    (error 'failed-change
+	   "Cannot apply :LISP properties using a POSIX-type connection")))
