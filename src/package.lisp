@@ -96,7 +96,7 @@
 	   #:get-hostname
 	   #:require-data
 	   #:failed-change
-           #:assert-euid-root
+	   #:assert-euid-root
 	   #:assert-connection-supports
 	   #:call-with-os
 
