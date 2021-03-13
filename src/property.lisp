@@ -27,12 +27,14 @@
 ;; make it a bit more difficult for someone who hasn't read that part of the
 ;; docs to accidentally violate immutability.
 
-(defun setprop (sym type &key args desc preprocess hostattrs check apply unapply indent)
+;; default TYPE to :LISP as we want an explicit declaration that something is
+;; compatible with :POSIX-type connections
+(defun setprop (sym &key (type :lisp) lambda desc preprocess hostattrs check apply unapply indent)
   ;; use non-keyword keys to avoid clashes with other packages
   (when type
     (setf (get sym 'type) type))
-  (when args
-    (setf (get sym 'args) args))
+  (when lambda
+    (setf (get sym 'lambda) lambda))
   (when desc
     (setf (get sym 'desc) desc))
   (when preprocess
@@ -55,7 +57,7 @@
 				:no-change)))
   (when unapply
     (setf (get sym 'unapply) unapply))
-  (store-indentation-info-for-emacs sym args indent)
+  (store-indentation-info-for-emacs sym lambda indent)
   (setf (get sym 'property) t)
   sym)
 
@@ -193,7 +195,7 @@ dotted name alongside NAME."
 ;;; supported way to write properties is to use one of these two macros
 
 (defmacro defprop (name type args &body forms)
-  (let ((slots (list :args (list 'quote args))))
+  (let ((slots (list :type type :lambda (list 'quote args))))
     ;; if first element of forms is a plain string, consider it a docstring,
     ;; and ignore
     (when (stringp (car forms)) (pop forms))
@@ -215,7 +217,7 @@ dotted name alongside NAME."
 		     ;; which allows skipping over this property
 		     `(lambda ,args ,@slot))))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (setprop ',name ,type ,@slots)
+       (setprop ',name ,@slots)
        (define-dotted-property-macro ,name ,args))))
 
 (defmacro defproplist (name type args &body properties)
@@ -243,7 +245,9 @@ subroutines at the right time."
   (when (stringp (car properties)) (pop properties))
   (let ((new-args (cons (gensym) (ordinary-ll-without-&aux args)))
 	;; TODO :UNAPPLY which unapplies in reverse order
-	(slots (list :hostattrs '(lambda (propspec &rest ignore)
+	(slots (list :type type
+		     :lambda `',args
+		     :hostattrs '(lambda (propspec &rest ignore)
 				  (declare (ignore ignore))
 				  (%eval-propspec-hostattrs *host* propspec))
 		     :apply '(lambda (propspec &rest ignore)
@@ -264,7 +268,7 @@ subroutines at the right time."
 	     (cons (destructuring-bind ,args all-args ,(props properties))
 		   all-args)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (setprop ',name ,type ,@slots)
+       (setprop ',name ,@slots)
        (define-dotted-property-macro ,name ,args))))
 
 
