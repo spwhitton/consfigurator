@@ -266,6 +266,9 @@ Called by property subroutines."
 
 ;;;; :APPLY subroutines
 
+;; INAPPLICABLE-PROPERTY is for :HOSTATTRS subroutines, FAILED-CHANGE is for
+;; problems with the connection and errors while actually attempting to apply
+
 (define-condition failed-change (error)
   ((text :initarg :text :reader failed-change-text))
   (:report (lambda (condition stream)
