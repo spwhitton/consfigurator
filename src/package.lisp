@@ -103,7 +103,6 @@
 	   ;; propspec.lisp
 	   #:in-consfig
 	   #:make-propspec
-	   #:continue-without-system
 
 	   ;; host.lisp
 	   #:host
