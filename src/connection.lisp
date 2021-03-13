@@ -66,7 +66,11 @@ For an example of usage, see the :SUDO connection type."))
    (cached-data
     :initform nil
     :documentation
-    "Items of prerequisite data known to be cached on the remote side.")))
+    "Items of prerequisite data known to be cached on the remote side.")
+   (remote-uid
+    :initform nil
+    :documentation
+    "Effective user-id of the remote (deploying) user")))
 
 (defclass lisp-connection (connection) ())
 
