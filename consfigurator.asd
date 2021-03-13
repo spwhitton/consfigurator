@@ -30,5 +30,6 @@
 	       (:file "src/property/os")
 	       (:file "src/property/apt")
 	       (:file "src/property/chroot")
+	       (:file "src/property/user")
 	       (:file "src/data/asdf")
 	       (:file "src/data/pgp")))

@@ -221,6 +221,11 @@
 	   #:mirror
 	   #:standard-sources.list))
 
+(defpackage :consfigurator.property.user
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:os  #:consfigurator.property.os))
+  (:export #:has-account))
+
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))
 
