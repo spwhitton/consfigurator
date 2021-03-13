@@ -182,15 +182,19 @@ dotted name alongside NAME."
 		       main (nconc (nbutlast main) (list '&rest rest)))
 		 (nconc (list '&whole whole) (ordinary-ll-without-&aux args)))))
       `(defmacro ,(format-symbol (symbol-package name) "~A." name) ,new-args
-	 ,(cond
-	    ((and first will-props)
-	     ``(,',name ,,first ,,@middle (props eseqprops ,@,rest)))
-	    (will-props
-	     ``(,',name ,,@middle (props eseqprops ,@,rest)))
-	    (first
-	     `(list* ',name ,first (cddr ,whole)))
-	    (t
-	     `(cons ',name (cdr ,whole))))))))
+	 ,@(cond
+	     ((and first will-props)
+	      `(`(,',name ,,first ,,@middle (props eseqprops ,@,rest))))
+	     (will-props
+	      `(`(,',name ,,@middle (props eseqprops ,@,rest))))
+	     (first
+	      `((declare (ignore ,@(cdr (ordinary-ll-variable-names
+					 (ordinary-ll-without-&aux args)))))
+		(list* ',name ,first (cddr ,whole))))
+	     (t
+	      `((declare (ignore ,@(ordinary-ll-variable-names
+				    (ordinary-ll-without-&aux args))))
+		(cons ',name (cdr ,whole)))))))))
 
 ;;; supported way to write properties is to use one of these two macros
 
