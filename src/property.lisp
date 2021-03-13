@@ -211,11 +211,11 @@ dotted name alongside NAME."
     (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
 	  do (if-let ((slot (getf slots kw)))
 	       (setf (getf slots kw)
-		     ;; inside this lambda we could do some checking of, e.g.,
-		     ;; whether we are :lisp but this connection is
-		     ;; posix-connection.  possibly a condition with a restart
-		     ;; which allows skipping over this property
-		     `(lambda ,args ,@slot))))
+		     `(lambda ,args
+			,@(and (eq type :lisp)
+			       (member kw '(:check :apply :unapply))
+			       `((assert-connection-supports :lisp)))
+			,@slot))))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (setprop ',name ,@slots)
        (define-dotted-property-macro ,name ,args))))
