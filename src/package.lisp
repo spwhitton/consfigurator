@@ -96,6 +96,7 @@
 	   #:get-hostname
 	   #:require-data
 	   #:failed-change
+           #:assert-euid-root
 	   #:call-with-os
 
 	   ;; propspec.lisp

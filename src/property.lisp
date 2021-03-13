@@ -16,6 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator)
+(named-readtables:in-readtable :interpol-syntax)
 
 ;;;; Properties
 
@@ -272,3 +273,17 @@ Called by property subroutines."
 
 (defun call-with-os (f &rest args)
   (apply (ensure-function f) (get-hostattrs-car :os) args))
+
+(defun assert-euid-root ()
+  "assert that the user doing the deploying has uid 0 (root)"
+  (if-let (uid (slot-value *connection* 'remote-uid))
+    (unless (zerop uid)
+      (error 'failed-change :text "property requires root to apply"))
+    (multiple-value-bind (out err exit)
+        (run :may-fail "id" "-u")
+      (unless (zerop exit)
+        (error 'failed-change :text #?"failed to run `id' on remote system: ${err}"))
+      (let ((new-uid (parse-integer out)))
+        (unless (zerop new-uid)
+          (error 'failed-change :text "property requires root to apply"))
+        (setf (slot-value *connection* 'remote-uid) new-uid)))))
