@@ -278,17 +278,18 @@ Called by property subroutines."
   (apply (ensure-function f) (get-hostattrs-car :os) args))
 
 (defun assert-euid-root ()
-  "assert that the user doing the deploying has uid 0 (root)"
+  "Assert that the remote user has uid 0 (root)"
   (if-let (uid (slot-value *connection* 'remote-uid))
     (unless (zerop uid)
-      (error 'failed-change :text "property requires root to apply"))
+      (error 'failed-change :text "Property requires root to apply"))
     (multiple-value-bind (out err exit)
         (run :may-fail "id" "-u")
       (unless (zerop exit)
-        (error 'failed-change :text #?"failed to run `id' on remote system: ${err}"))
+        (error 'failed-change
+	       :text #?"Failed to run id(1) on remote system: ${err}"))
       (let ((new-uid (parse-integer out)))
         (unless (zerop new-uid)
-          (error 'failed-change :text "property requires root to apply"))
+          (error 'failed-change :text "Property requires root to apply"))
         (setf (slot-value *connection* 'remote-uid) new-uid)))))
 
 (defun assert-connection-supports (type)

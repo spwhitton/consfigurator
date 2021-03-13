@@ -19,8 +19,8 @@
 (named-readtables:in-readtable :interpol-syntax)
 
 (defprop has-account :posix (user-name)
-  "ensure there is an account for USER-NAME."
-  (:desc #?"account for ${user-name}")
+  "Ensure there is an account for USER-NAME."
+  (:desc #?"Account for ${user-name}")
   (:check
    (user-exists user-name))
   (:apply
