@@ -102,7 +102,11 @@
 
 	   ;; propspec.lisp
 	   #:in-consfig
-	   #:make-propspec
+	   #:seqprops
+	   #:eseqprops
+	   #:silent-seqprops
+	   #:unapply
+	   #:on-change
 
 	   ;; host.lisp
 	   #:host

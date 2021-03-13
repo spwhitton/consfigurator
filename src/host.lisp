@@ -47,10 +47,8 @@ be applied to the host.")))
 
 (defmethod %eval-propspec-hostattrs ((host host) (propspec propspec))
   "Modify HOST in-place according to :HOSTATTRS subroutines."
-  (loop with *host* = host
-	for form in (propspec-props propspec)
-	for propapp = (compile-propapp form)
-	do (propappattrs propapp)))
+  (let ((*host* host))
+    (propappattrs (eval-propspec propspec))))
 
 ;; return values of the following two functions share structure, and thus are
 ;; not safe to use except on host objects that were just made, or that are
@@ -107,7 +105,7 @@ entries."
        (declaim (type host ,hostname-sym))
        (defparameter ,hostname-sym
 	 (%replace-propspec-into-host (make-instance 'host :attrs ',attrs)
-				      ,(props properties))
+				      (props seqprops ,@properties))
 	 ,(car (getf attrs :desc)))
        ,@(and deploy
 	      `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))

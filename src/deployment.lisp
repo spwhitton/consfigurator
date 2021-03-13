@@ -33,7 +33,7 @@ connections in CONNECTIONS have been both normalised and preprocessed."
 		       (apply #'establish-connection type remaining args)))
 	     (if remaining
 		 (connect remaining)
-		 (eval-propspec (host-propspec *host*)))
+		 (propappapply (eval-propspec (host-propspec *host*))))
 	     (connection-teardown *connection*)))))
     ;; make a partial own-copy of HOST so that connections can add new pieces
     ;; of required prerequisite data; specifically, so that they can request
@@ -94,7 +94,7 @@ ADDITIONAL-PROPERTIES can override the host's usual static informational
 attributes, in the same way that later entries in the list of properties
 specified in DEFHOST forms can override earlier entries (see DEFHOST's
 docstring)."
-  `(deploy* ',connections ,host ,(props additional-properties)))
+  `(deploy* ',connections ,host (props eseqprops ,@additional-properties)))
 
 (defmacro deploy-these (connections host &body properties)
   "Like DEPLOY, except apply each of the properties specified by PROPERTIES,
@@ -113,7 +113,7 @@ properties, plus any set by PROPERTIES.  Static informational attributes set
 by PROPERTIES can override the host's usual static informational attributes,
 in the same way that later entries in the list of properties specified in
 DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
-  `(deploy-these* ',connections ,host ,(props properties)))
+  `(deploy-these* ',connections ,host (props eseqprops ,@properties)))
 
 (defmacro defdeploy (name (connections host) &body additional-properties)
   "Define a function which does (DEPLOY CONNECTIONS HOST ADDITIONAL-PROPERTIES).

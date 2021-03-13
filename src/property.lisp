@@ -228,9 +228,10 @@ dotted name alongside NAME."
   "Define a property which applies a property application specification.
 ARGS is an ordinary lambda list, so you can use &AUX variables to compute
 intermediate values.  PROPERTIES is an unevaluated property application
-specification, but it will not be evaluated until the resulting property has
-been added to a host, so it should not contain any free variables other than
-as would be bound by (lambda ARGS).
+specification where the implicit surrounding combinator is ESEQPROP, but it
+will not be converted to a propspec until the resulting property has been
+added to a host,so it should not contain any free variables other than as
+would be bound by (lambda ARGS).
 
 The evaluation of PROPERTIES, and the evaluation of any &AUX variables, should
 not have any side effects.  The evaluation will take place in the root Lisp.
@@ -269,7 +270,8 @@ subroutines at the right time."
 	       ,@(cdr (pop properties)))))
     (setf (getf slots :preprocess)
 	  `(lambda (&rest all-args)
-	     (cons (destructuring-bind ,args all-args ,(props properties))
+	     (cons (destructuring-bind ,args all-args
+		     (props eseqprops ,@properties))
 		   all-args)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (setprop ',name ,@slots)

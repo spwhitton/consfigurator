@@ -56,12 +56,14 @@ Core
   useful surrounding a set of DEPLOYS applications, to concurrently deploy a
   number of hosts.
 
-- A combinator which makes a list of properties unordered, i.e., later ones
-  don't depend on earlier ones.  Then when applying, if we get FAILED-CHANGE,
-  we can just move on to the next property.  The implicit dependency
-  relationships in the absence of this combinator is a good default, as almost
-  every defproplist will want that.  But we might want to make this combinator
-  implicit in DEFHOST.
+- It might be useful to have a restart for the case where an attempt is made
+  to apply a list of properties containing some ``:LISP`` properties with a
+  POSIX-type connection which applies properties up to but not including the
+  first ``:LISP`` property in the sequence, to get as much work as possible
+  done without violating any dependency relationships (``SEQPROPS`` already
+  handles wanting to apply all of the ``:POSIX`` properties in the sequence).
+  But maybe this is unnecessarily complex -- wouldn't it be better to just
+  fail and fix your deployment definitions?
 
 Project & packaging
 -------------------
