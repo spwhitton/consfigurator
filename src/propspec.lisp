@@ -130,66 +130,77 @@ package applies to hosts."))))
     :reader propspec-systems
     :documentation
     "List of names of ASDF systems, the loading of all of which is sufficient
-to deploy this propspec.")
-   (preprocessed-propspec
-    :initarg :preprocessed-propspec
+to evaluate and to deploy this propspec."))
+  (:documentation
+   "Abstract superclass for propspecs.  Do not instantiate."))
+
+(defclass preprocessed-propspec (propspec)
+  ((preprocessed-propspec-expression
+    :initarg :propspec
     :documentation
     "Preprocessed propspec corresponding to the propspec represented by this
-PROPSPEC object.  A preprocessed propspec is not itself a valid propspec, so
-the value of this slot should be considered opaque."))
+object.  A preprocessed propspec is not itself a valid propspec, so the value
+of this slot should be considered opaque."))
   (:documentation
-   "Object representing a propspec; specifically, a property application
-specification expression associated with a list of ASDF systems.  Use
-MAKE-PROPSPEC to create instances of this class.
+   "A propspec which has been preprocessed.  The only valid methods operating
+directly on instances of this class are PROPSPEC-SYSTEMS, EVAL-PROPSPEC and
+PRINT-OBJECT."))
 
-The only valid methods operating directly on instances of this class are
-PROPSPEC-SYSTEMS, APPEND-PROPSPECS, EVAL-PROPSPEC and PRINT-OBJECT."))
+(defclass unpreprocessed-propspec (propspec)
+  ((propspec-expression
+    :initarg :propspec
+    :reader propspec-props)))
+
+(defgeneric preprocess-propspec (propspec)
+  (:documentation
+   "Quote all propapps in PROPSPEC, after calling :PREPROCESS subroutines."))
+
+(defmethod preprocess-propspec ((propspec unpreprocessed-propspec))
+  (make-instance 'preprocessed-propspec
+		 :systems (propspec-systems propspec)
+		 :propspec (map-propspec-propapps
+			    (lambda (propapp)
+			      (destructuring-bind (prop . args) propapp
+				`',(cons prop (apply (proppp prop) args))))
+			    (propspec-props propspec))))
 
 (defun make-propspec (&key (systems nil systems-supplied-p) propspec)
   "Convert a property application specification expression into a property
 application specification proper by associating it with a list of ASDF
 systems."
-  (let ((preprocessed (map-propspec-propapps
-		       (lambda (propapp)
-			 (destructuring-bind (prop . args) propapp
-			   `',(cons prop (apply (proppp prop) args))))
-		       propspec)))
-    (if systems-supplied-p
-	(make-instance 'propspec :systems systems
-				 :preprocessed-propspec preprocessed)
-	(make-instance 'propspec :preprocessed-propspec preprocessed))))
+  (if systems-supplied-p
+      (make-instance 'unpreprocessed-propspec
+		     :systems systems :propspec propspec)
+      (make-instance 'unpreprocessed-propspec :propspec propspec)))
 
-;; since there are no unquoted propapps remaining in the propspec, we could
-;; use MAKE-PROPSPEC here, but it is simpler just to use MAKE-INSTANCE
-(defmethod print-object ((propspec propspec) stream)
+(defmethod print-object ((propspec preprocessed-propspec) stream)
   (format stream "#.~S" `(make-instance
-			  'propspec
+			  'preprocessed-propspec
 			  :systems ',(slot-value propspec 'systems)
-			  :preprocessed-propspec
-			  ',(slot-value propspec 'preprocessed-propspec)))
+			  :propspec
+			  ',(slot-value propspec
+					'preprocessed-propspec-expression)))
   propspec)
 
-;; likewise, there aren't any unquoted propapps in either of FIRST and SECOND,
-;; so we could use MAKE-PROPSPEC, but it's simpler and more efficient not to
-(defmethod append-propspecs ((first propspec) (second propspec))
-  (make-instance
-   'propspec
-   :systems (union (slot-value first 'systems)
-		   (slot-value second 'systems))
-   :preprocessed-propspec `(silent-seqprops
-			    ,(slot-value first 'preprocessed-propspec)
-			    ,(slot-value second 'preprocessed-propspec))))
+;; this could be defined for preprocessed propspecs easily enough but we
+;; shouldn't need to append those
+(defmethod append-propspecs
+    ((first unpreprocessed-propspec) (second unpreprocessed-propspec))
+  (make-propspec :systems (union (propspec-systems first)
+				 (propspec-systems second))
+		 :propspec `(silent-seqprops ,(propspec-props first)
+					     ,(propspec-props second))))
 
 (defvar *suppress-loading-systems* nil
   "Bound by code which needs to prevent EVAL-PROPSPEC from attempting to load
 the ASDF systems associated with the propspec to be evaluated.")
 
-(defmethod eval-propspec ((propspec propspec))
+(defmethod eval-propspec ((propspec preprocessed-propspec))
   (unless *suppress-loading-systems*
     (dolist (system (propspec-systems propspec))
       (unless (asdf:component-loaded-p system)
 	(asdf:load-system system))))
-  (eval (slot-value propspec 'preprocessed-propspec)))
+  (eval (slot-value propspec 'preprocessed-propspec-expression)))
 
 (define-condition ambiguous-unevaluated-propspec (ambiguous-propspec) ()
   (:report

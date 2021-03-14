@@ -19,54 +19,78 @@
 
 ;;;; Hosts
 
-;; note that we expect any host object to be such that the :HOSTATTRS
-;; subroutines of its propspec has already been run.  so, run them when
-;; instantiating a new object, as DEFHOST does.
 (defclass host ()
   ((hostattrs
-    :initarg :attrs
+    :initarg :hostattrs
     :reader hostattrs
     :documentation "Plist of the host's static informational attributes.")
    (propspec
-    :initarg :props
+    :initarg :propspec
     :reader host-propspec
-    :documentation "Property application specification of the properties to
-be applied to the host.")))
+    :documentation "Propspec of the properties to be applied to the host."))
+  (:documentation "Abstract superclass for hosts.  Do not instantiate."))
 
-(defun make-host (&key hostattrs props)
-  (let ((host (make-instance 'host :attrs hostattrs :props props)))
-    (%eval-propspec-hostattrs host props)
-    host))
+(defclass preprocessed-host (host)
+  ((propspec
+    :type preprocessed-propspec))
+  (:documentation
+   "A host whose :PREPROCESS and :HOSTATTRS subroutines have been run."))
+
+(defclass unpreprocessed-host (host)
+  ((propspec
+    :type unpreprocessed-propspec))
+  (:documentation
+   "A host whose :PREPROCESS and :HOSTATTRS subroutines have not been run."))
+
+(defmethod shallow-copy-host ((host host))
+  (make-instance (type-of host)
+		 :hostattrs (copy-list (hostattrs host))
+		 :propspec (host-propspec host)))
+
+(defgeneric preprocess-host (host)
+  (:documentation
+   "Convert a host into a fresh preprocessed host if necessary, and
+unconditionally perform a shallow copy of the plist of static information
+attributes, so that implementations of ESTABLISH-CONNECTION can push new
+attributes (typically to request prerequisite data) without disturbing host
+values higher up the call stack."))
+
+(defmethod preprocess-host ((host preprocessed-host))
+  (shallow-copy-host host))
+
+(defmethod preprocess-host ((host unpreprocessed-host))
+  (let ((*host* (make-instance
+		 'preprocessed-host
+		 :hostattrs (copy-list (hostattrs host))
+		 :propspec (preprocess-propspec (host-propspec host)))))
+    (propappattrs (eval-propspec (host-propspec *host*)))
+    *host*))
+
+(defun make-host (&key hostattrs propspec)
+  (make-instance 'unpreprocessed-host
+		 :hostattrs hostattrs :propspec propspec))
 
 (defmethod print-object ((host host) stream)
   (format stream "#.~S" `(make-instance
-			  'host
-			  :attrs ',(slot-value host 'hostattrs)
-			  :props ,(slot-value host 'propspec)))
+			  ',(type-of host)
+			  :hostattrs ',(slot-value host 'hostattrs)
+			  :propspec ,(slot-value host 'propspec)))
   host)
-
-(defmethod %eval-propspec-hostattrs ((host host) (propspec propspec))
-  "Modify HOST in-place according to :HOSTATTRS subroutines."
-  (let ((*host* host))
-    (propappattrs (eval-propspec propspec))))
 
 ;; return values of the following two functions share structure, and thus are
 ;; not safe to use except on host objects that were just made, or that are
 ;; going straight into %CONSFIGURE
 
-(defmethod %union-propspec-into-host ((host host) (propspec propspec))
-  (prog1
-      (setq host (make-instance 'host
-				:attrs (hostattrs host)
-				:props (append-propspecs (host-propspec host)
-							 propspec)))
-    (%eval-propspec-hostattrs host propspec)))
+(defmethod %union-propspec-into-host
+    ((host unpreprocessed-host) (propspec propspec))
+  (make-instance 'unpreprocessed-host
+		 :hostattrs (hostattrs host)
+		 :propspec (append-propspecs (host-propspec host) propspec)))
 
-(defmethod %replace-propspec-into-host ((host host) (propspec propspec))
-  (prog1
-      (setq host (make-instance 'host
-				:attrs (hostattrs host) :props propspec))
-    (%eval-propspec-hostattrs host propspec)))
+(defmethod %replace-propspec-into-host
+    ((host unpreprocessed-host) (propspec unpreprocessed-propspec))
+  (make-instance 'unpreprocessed-host
+		 :hostattrs (hostattrs host) :propspec propspec))
 
 (defmacro defhost (hostname (&key deploy) &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
@@ -104,7 +128,7 @@ entries."
     `(progn
        (declaim (type host ,hostname-sym))
        (defparameter ,hostname-sym
-	 (%replace-propspec-into-host (make-instance 'host :attrs ',attrs)
+	 (%replace-propspec-into-host (make-host :hostattrs ',attrs)
 				      (props seqprops ,@properties))
 	 ,(car (getf attrs :desc)))
        ,@(and deploy

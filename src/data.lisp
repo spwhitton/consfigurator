@@ -359,6 +359,10 @@ The program returned is a single string consisting of a number of sexps
 separated by newlines.  Each sexp must be evaluated by the remote Lisp image
 before the following sexp is offered to its reader.  Usually this can be
 achieved by sending the return value of this function into a REPL's stdin."
+  (unless (eq (type-of *host*) 'preprocessed-host)
+    (error "Attempt to send unpreprocessed host to remote Lisp.
+
+Preprocessing must occur in the root Lisp."))
   (flet ((wrap (forms)
 	   `(handler-bind
 		(;; we can skip missing data sources because these are not

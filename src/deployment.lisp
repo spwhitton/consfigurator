@@ -35,10 +35,7 @@ connections in CONNECTIONS have been both normalised and preprocessed."
 		 (connect remaining)
 		 (propappapply (eval-propspec (host-propspec *host*))))
 	     (connection-teardown *connection*)))))
-    ;; make a partial own-copy of HOST so that connections can add new pieces
-    ;; of required prerequisite data; specifically, so that they can request
-    ;; the source code of ASDF systems
-    (let ((*host* (shallow-copy-host host)))
+    (let ((*host* (preprocess-host host)))
       (connect (if (eq :local (caar connections))
 		   connections
 		   (cons '(:local) connections))))))
@@ -136,9 +133,11 @@ Useful to have one host act a controller, applying properties to other hosts.
 Also useful to set up VMs, chroots, disk images etc. on localhost."
   (:preprocess
    (list (preprocess-connections connections)
-	 (if additional-properties
-	     (%union-propspec-into-host host additional-properties)
-	     host)))
+	 (preprocess-host
+	  (if additional-properties
+	      (%union-propspec-into-host (shallow-copy-host host)
+					 additional-properties)
+	      host))))
   (:hostattrs
    (declare (ignore connections additional-properties))
    (%propagate-hostattrs host))
@@ -152,7 +151,8 @@ PROPERTIES, and not the host's usual properties, unless they also appear in
 PROPERTIES, like DEPLOY-THESE."
   (:preprocess
    (list (preprocess-connections connections)
-	 (%replace-propspec-into-host host properties)))
+	 (preprocess-host
+	  (%replace-propspec-into-host (shallow-copy-host host) properties))))
   (:hostattrs
    (declare (ignore connections properties))
    (%propagate-hostattrs host))
@@ -164,10 +164,6 @@ PROPERTIES, like DEPLOY-THESE."
   (loop for connection in (ensure-cons connections)
 	collect (apply #'preprocess-connection-args
 		       (ensure-cons connection))))
-
-(defun shallow-copy-host (host)
-  (make-instance 'host :props (host-propspec host)
-		       :attrs (copy-list (hostattrs host))))
 
 (defun %propagate-hostattrs (host)
   (dolist (system (propspec-systems (host-propspec host)))

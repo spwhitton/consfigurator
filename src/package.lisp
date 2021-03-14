@@ -102,6 +102,8 @@
 
 	   ;; propspec.lisp
 	   #:in-consfig
+	   #:make-propspec
+	   #:append-propspecs
 	   #:seqprops
 	   #:eseqprops
 	   #:silent-seqprops
