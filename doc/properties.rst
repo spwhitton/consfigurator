@@ -7,6 +7,9 @@ Names
 The names of properties may not end in the character ``.``, because that has a
 special meaning in unevaluated property application specifications.
 
+Properties occupy the function cells of symbols, so do not try to define an
+ordinary function with the same name as a property.
+
 Property subroutines
 --------------------
 

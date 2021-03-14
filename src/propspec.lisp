@@ -19,6 +19,8 @@
 
 ;;;; Property application specifications
 
+(define-condition ambiguous-propspec (undefined-function) ())
+
 (defun map-propspec-propapps (function propspec &optional env)
   "Map FUNCTION over each propapp occurring in PROPSPEC after macroexpansion.
 FUNCTION designates a pure function from propapps to propapps.  PROPSPEC is a
@@ -34,22 +36,46 @@ property application specification expression."
   ;; whose semantics are conventionally well-understood and which is available
   ;; in most implementations of Common Lisp (we use the
   ;; trivial-macroexpand-all library to get at these implementations).
-  (let* ((occurrent
+  (let* ((all-symbols
 	   (delete-duplicates
-	    (delete-if-not #'isprop (flatten (macroexpand-all propspec env)))))
-	 (gensyms (loop for p in occurrent collect (gensym)))
-	 ;; We need to substitute twice like this because if FUNCTION returns
-	 ;; a form whose car is a member of OCCURRENT (as indeed it often will
-	 ;; be), we will get stuck in an infinite macroexpansion.
-	 (first-macrolets
-	   (loop for p in occurrent and g in gensyms
-		 collect `(,p (&rest args)
-			      (cons ',g args))))
+	    (delete-if-not #'symbolp (flatten (macroexpand-all propspec env)))))
+	 (occurrent-props (remove-if-not #'isprop all-symbols))
+	 (occurrent-other (nset-difference all-symbols occurrent-props))
+	 (gensyms-props (loop for p in occurrent-props collect (gensym)))
+	 (gensyms-other (loop for o in occurrent-other collect (gensym)))
+	 ;; As we are called during macro expansion at compile time by PROPS,
+	 ;; it could easily happen that some of the definitions of properties
+	 ;; referred to in PROPSPEC have not yet been loaded.  In that case
+	 ;; those properties would end up in OCCURRENT-OTHER and we would fail
+	 ;; to map them, which could result in us returning nonsense.
+	 ;;
+	 ;; To detect that situation we substitute for all symbols, and then
+	 ;; for any appearing in function call positions (which could be
+	 ;; unloaded properties), we check that they're fbound.  If they all
+	 ;; are, then we know ISPROP will have returned the correct answers.
 	 (second-macrolets
-	   (loop for p in occurrent and g in gensyms
+	   (loop for o in occurrent-other and g in gensyms-other
+		 collect `(,g (&rest args)
+			      (unless (fboundp ',o)
+				(error 'ambiguous-propspec :name ',o))
+			      (cons ',o args))))
+	 (third-macrolets
+	   (loop for p in occurrent-props and g in gensyms-props
 		 collect `(,g (&rest args)
 			      (funcall ,(ensure-function function)
-				       (cons ',p args))))))
+				       (cons ',p args)))))
+	 (first-macrolets
+	   (loop for s in (nconc occurrent-props occurrent-other)
+		 and g in (nconc gensyms-props gensyms-other)
+		 collect `(,s (&rest args)
+			      (cons ',g args)))))
+    ;; We need to substitute for gensyms back and forth like this because if
+    ;; FUNCTION returns a form whose car is a member of OCCURRENT-PROPS (as
+    ;; indeed it often will be), we would get stuck in an infinite
+    ;; macroexpansion if there was only one pass.  We break the undoing of the
+    ;; first substitution into two steps so that the substitution we do to
+    ;; verify that the propspec is not ambiguous is not visible to FUNCTION.
+    ;;
     ;; At least SB-CLTL2:MACROEXPAND-ALL leaves the MACROLET in, so use CADDR
     ;; to remove it again -- if that turns out to be implementation-specific,
     ;; our MACROEXPAND-ALL should be responsible for looking for it and
@@ -57,9 +83,12 @@ property application specification expression."
     ;; implementation to our callers -- if the MACROLET is not stripped after
     ;; the first expansion, we'll be back in an infinite macroexpansion loop.
     (caddr (macroexpand-all
-	    `(macrolet ,second-macrolets
+	    `(macrolet ,third-macrolets
 	       ,(caddr (macroexpand-all
-			`(macrolet ,first-macrolets ,propspec)
+			`(macrolet ,second-macrolets
+			   ,(caddr (macroexpand-all
+				    `(macrolet ,first-macrolets ,propspec)
+				    env)))
 			env)))
 	    env))))
 
@@ -157,6 +186,18 @@ the ASDF systems associated with the propspec to be evaluated.")
 	(asdf:load-system system))))
   (eval (slot-value propspec 'preprocessed-propspec)))
 
+(define-condition ambiguous-unevaluated-propspec (ambiguous-propspec) ()
+  (:report
+   (lambda (condition stream)
+     (format
+      stream
+      "The function, property or property combinator ~A is undefined.
+
+Ensure that all functions, properties and property combinators used in an
+unevaluated propspec are defined before that unevaluated propspec is
+processed."
+      (cell-error-name condition)))))
+
 (defmacro props (combinator &rest forms &aux replaced-propapps)
   "Apply variadic COMBINATOR to FORMS and convert from an unevaluated property
 application specification expression to a property application specification."
@@ -170,9 +211,14 @@ application specification expression to a property application specification."
 		   `(list ',(cadr propapp) ,@(cddr propapp))
 		   `',tree)
 		 `(list ,@(mapcar #'walk tree)))))
-    `(make-propspec
-      :propspec ,(walk (map-propspec-propapps #'replace-propapp
-					      (cons combinator forms))))))
+    (let ((propspec (handler-case
+			(walk (map-propspec-propapps #'replace-propapp
+						     (cons combinator forms)))
+		      (ambiguous-propspec (c)
+			;; resignal with a more specific error message
+			(error 'ambiguous-unevaluated-propspec
+			       :name (cell-error-name c))))))
+      `(make-propspec :propspec ,propspec))))
 
 
 ;;;; Property combinators
