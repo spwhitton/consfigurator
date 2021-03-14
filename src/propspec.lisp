@@ -23,8 +23,13 @@
 
 (defun map-propspec-propapps (function propspec &optional env)
   "Map FUNCTION over each propapp occurring in PROPSPEC after macroexpansion.
-FUNCTION designates a pure function from propapps to propapps.  PROPSPEC is a
-property application specification expression."
+FUNCTION designates a (ideally pure) function from propapps to propapps.
+PROPSPEC is a property application specification expression.
+
+Note that a limitation of this particular implementation is that any further
+propapps within the cdr of the propapp received by FUNCTION will have had
+their cars temporarily replaced by uninterned symbols.  But using a property
+for its return value in this way would not be sensible."
   ;; The work of this function cannot be implemented fully portably.  See
   ;;
   ;;     Michael Raskin.  2017.  Writing a best-effort portable code walker in
