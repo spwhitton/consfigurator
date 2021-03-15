@@ -212,32 +212,29 @@ dotted name alongside NAME."
 
 ;;; supported way to write properties is to use one of these two macros
 
-(defmacro defprop (name type args &body forms)
+(defmacro defprop (name type args &body body)
   (let ((slots (list :type type :lambda (list 'quote args))))
-    ;; if first element of forms is a plain string, consider it a docstring,
-    ;; and ignore
-    (when (stringp (car forms)) (pop forms))
-    ;; now extract any DECLARE form
-    (when (and (listp (car forms))
-	       (eql 'declare (caar forms)))
-      ;; currently INDENT is the only supported declaration so we can just
-      ;; take the cadadr
-      (setf (getf slots :indent) (cadadr (pop forms))))
-    (loop for form in forms
-	  if (keywordp (car form))
-	    do (setf (getf slots (car form)) (cdr form)))
-    (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
-	  do (if-let ((slot (getf slots kw)))
-	       (setf (getf slots kw)
-		     `(lambda ,args
-			,@(and (eq type :lisp)
-			       (member kw '(:check :apply :unapply))
-			       `((assert-connection-supports :lisp)))
-			,@slot))))
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (record-known-property ',name)
-       (setprop ',name ,@slots)
-       (define-dotted-property-macro ,name ,args))))
+    (multiple-value-bind (forms declarations)
+	(parse-body body :documentation t)
+      (when (> (length declarations) 1)
+	(error "Multiple DECLARE forms unsupported."))
+      (when-let ((indent (cadr (assoc 'indent (cdar declarations)))))
+	(setf (getf slots :indent) indent))
+      (loop for form in forms
+	    if (keywordp (car form))
+	      do (setf (getf slots (car form)) (cdr form)))
+      (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
+	    do (if-let ((slot (getf slots kw)))
+		 (setf (getf slots kw)
+		       `(lambda ,args
+			  ,@(and (eq type :lisp)
+				 (member kw '(:check :apply :unapply))
+				 `((assert-connection-supports :lisp)))
+			  ,@slot))))
+      `(eval-when (:compile-toplevel :load-toplevel :execute)
+	 (record-known-property ',name)
+	 (setprop ',name ,@slots)
+	 (define-dotted-property-macro ,name ,args)))))
 
 (defmacro defproplist (name type args &body properties)
   "Define a property which applies a property application specification.
