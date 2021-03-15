@@ -41,19 +41,6 @@
 (defun memstring= (string list)
   (member string list :test #'string=))
 
-(defun macroexpand-all (form &optional env)
-  "Wrap TRIVIAL-MACROEXPAND-ALL:MACROEXPAND-ALL to convert silent failures to
-expand into errors."
-  (multiple-value-bind (expanded supported env-supported)
-      (trivial-macroexpand-all:macroexpand-all form env)
-    (cond
-      ((not supported)
-       (error "Don't know how to MACROEXPAND-ALL in this Lisp."))
-      ((and env (not env-supported))
-       (error "Don't know how to MACROEXPAND-ALL with env in this Lisp."))
-      (t
-       expanded))))
-
 (defun ordinary-ll-without-&aux (ll)
   (loop for arg in ll
 	if (eq '&aux arg) return accum

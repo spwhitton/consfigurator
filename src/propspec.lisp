@@ -21,15 +21,39 @@
 
 (define-condition ambiguous-propspec (undefined-function) ())
 
-(defun map-propspec-propapps (function propspec &optional env)
-  "Map FUNCTION over each propapp occurring in PROPSPEC after macroexpansion.
-FUNCTION designates a (ideally pure) function from propapps to propapps.
-PROPSPEC is a property application specification expression.
+(define-condition invalid-or-ambiguous-propspec (error)
+  ((broken-propspec :initarg :propspec :reader broken-propspec))
+  (:report
+   (lambda (condition stream)
+     (format
+      stream
+"MACROEXPAND-ALL could not process the following propspec.  This can happen
+because the propspec is invalid, or because it contains references to
+properties whose definitions have not been loaded.
 
-Note that a limitation of this particular implementation is that any further
-propapps within the cdr of the propapp received by FUNCTION will have had
-their cars temporarily replaced by uninterned symbols.  But using a property
-for its return value in this way would not be sensible."
+Ensure that all functions, properties and property combinators used in a
+propspec are defined before that propspec is processed by Consfigurator.
+
+~A"
+      (broken-propspec condition)))))
+
+(defvar *replaced-propapps* nil
+  "Internal dynamic variable used in MAP-PROPSPEC-PROPAPPS.")
+
+(defun map-propspec-propapps
+    (function propspec &optional reconstruct env &aux *replaced-propapps*)
+  "Map FUNCTION over each propapp occurring in PROPSPEC after macroexpansion.
+FUNCTION designates a pure function from propapps to propapps. PROPSPEC is a
+property application specification expression.
+
+RECONSTRUCT is a boolean flag indicating whether to return code which will
+evaluate to the resultant propspec rather than that propspec itself; if t,
+FUNCTION too should return code which will evaluate to propapps rather than
+propapps themselves.  This is useful for when this function is called by
+macros.  ENV is the ENV argument to be passed along to MACROEXPAND-ALL.
+
+Note that this implementation will fail to map propapps appearing within the
+arguments to properties in propapps, but that should not be needed."
   ;; The work of this function cannot be implemented fully portably.  See
   ;;
   ;;     Michael Raskin.  2017.  Writing a best-effort portable code walker in
@@ -41,61 +65,71 @@ for its return value in this way would not be sensible."
   ;; whose semantics are conventionally well-understood and which is available
   ;; in most implementations of Common Lisp (we use the
   ;; trivial-macroexpand-all library to get at these implementations).
-  (let* ((all-symbols
-	   (delete-duplicates
-	    (delete-if-not #'symbolp (flatten (macroexpand-all propspec env)))))
-	 (occurrent-props (remove-if-not #'isprop all-symbols))
-	 (occurrent-other (nset-difference all-symbols occurrent-props))
-	 (gensyms-props (loop for p in occurrent-props collect (gensym)))
-	 (gensyms-other (loop for o in occurrent-other collect (gensym)))
-	 ;; As we are called during macro expansion at compile time by PROPS,
-	 ;; it could easily happen that some of the definitions of properties
-	 ;; referred to in PROPSPEC have not yet been loaded.  In that case
-	 ;; those properties would end up in OCCURRENT-OTHER and we would fail
-	 ;; to map them, which could result in us returning nonsense.
-	 ;;
-	 ;; To detect that situation we substitute for all symbols, and then
-	 ;; for any appearing in function call positions (which could be
-	 ;; unloaded properties), we check that they're fbound.  If they all
-	 ;; are, then we know ISPROP will have returned the correct answers.
-	 (second-macrolets
-	   (loop for o in occurrent-other and g in gensyms-other
-		 collect `(,g (&rest args)
-			      (unless (fboundp ',o)
-				(error 'ambiguous-propspec :name ',o))
-			      (cons ',o args))))
-	 (third-macrolets
-	   (loop for p in occurrent-props and g in gensyms-props
-		 collect `(,g (&rest args)
-			      (funcall ,(ensure-function function)
-				       (cons ',p args)))))
-	 (first-macrolets
-	   (loop for s in (nconc occurrent-props occurrent-other)
-		 and g in (nconc gensyms-props gensyms-other)
-		 collect `(,s (&rest args)
-			      (cons ',g args)))))
-    ;; We need to substitute for gensyms back and forth like this because if
-    ;; FUNCTION returns a form whose car is a member of OCCURRENT-PROPS (as
-    ;; indeed it often will be), we would get stuck in an infinite
-    ;; macroexpansion if there was only one pass.  We break the undoing of the
-    ;; first substitution into two steps so that the substitution we do to
-    ;; verify that the propspec is not ambiguous is not visible to FUNCTION.
+  (labels
+      ((macrolet-and-expand (macrolets form)
+	 (multiple-value-bind (expanded supported env-supported)
+	     (trivial-macroexpand-all:macroexpand-all
+	      `(macrolet ,macrolets ,form) env)
+	   (unless supported
+	     (error "Don't know how to MACROEXPAND-ALL in this Lisp."))
+	   (when (and env (not env-supported))
+	     (error "Don't know how to MACROEXPAND-ALL with env in this Lisp."))
+	   ;; At least SB-CLTL2:MACROEXPAND-ALL leaves the MACROLET in, so use
+	   ;; CADDR to remove it again -- if that turns out to be
+	   ;; implementation-specific, we can look for what we added and
+	   ;; remove it.
+	   ;;
+	   ;; This is not just to avoid leaking our implementation to our
+	   ;; callers -- if we call this function more than once with old
+	   ;; calls to MACROLET left in, we can get stuck in infinite macro
+	   ;; expansion loops.
+	   (caddr expanded)))
+       (walk (tree)
+	 (if (atom tree)
+	     (if-let ((propapp (gethash tree *replaced-propapps*)))
+	       (funcall function propapp)
+	       (if reconstruct `',tree tree))
+	     (let ((walked (mapcar #'walk tree)))
+	       (if reconstruct (cons 'list walked) walked)))))
+    ;; First we need to find all the propapps, after macro expansion.
+    ;; Propapps contain the arguments to be passed to properties rather than
+    ;; expressions which will evaluate to those arguments, and some of these
+    ;; might be lists, which will look like invalid function calls to the code
+    ;; walker.  So we macrolet every known property so that the code walker
+    ;; does not assume these arguments are to be evaluated as arguments to
+    ;; ordinary functions are.
     ;;
-    ;; At least SB-CLTL2:MACROEXPAND-ALL leaves the MACROLET in, so use CADDR
-    ;; to remove it again -- if that turns out to be implementation-specific,
-    ;; our MACROEXPAND-ALL should be responsible for looking for it and
-    ;; stripping if necessary.  This is not just to avoid leaking our
-    ;; implementation to our callers -- if the MACROLET is not stripped after
-    ;; the first expansion, we'll be back in an infinite macroexpansion loop.
-    (caddr (macroexpand-all
-	    `(macrolet ,third-macrolets
-	       ,(caddr (macroexpand-all
-			`(macrolet ,second-macrolets
-			   ,(caddr (macroexpand-all
-				    `(macrolet ,first-macrolets ,propspec)
-				    env)))
-			env)))
-	    env))))
+    ;; We can't just set up the macrolets to map FUNCTION over the propapp and
+    ;; return the result because if FUNCTION returns a propapp whose car is
+    ;; the same (as indeed it often will be) then we would get stuck in an
+    ;; infinite macro expansion.  So we substitute back and forth for gensyms.
+    (let ((expanded
+	    (handler-case
+		(macrolet-and-expand *known-property-macrolets* propspec)
+	      (error ()
+		(error 'invalid-or-ambiguous-propspec :propspec propspec)))))
+      ;; Now we use a dummy macro expansion pass to find any symbols without
+      ;; function definitions occurring in function call positions.  These
+      ;; could potentially be properties whose definitions have not been
+      ;; loaded -- especially since we get called at compile time by PROPS --
+      ;; and if so, we would return an incorrect result because the previous
+      ;; step will not have identified all the propapps in the propspec.  So
+      ;; error out if we detect that situation.
+      (macrolet-and-expand
+       (loop for leaf in (delete-duplicates (flatten expanded))
+	     if (and (symbolp leaf) (not (isprop leaf)))
+	       collect `(,leaf (&rest args)
+			       (unless (fboundp ',leaf)
+				 (error 'ambiguous-propspec :name ',leaf))
+			       ;; return something which looks like an
+			       ;; ordinary function call to the code walker,
+			       ;; so that it will recurse into ARGS
+			       (cons (gensym) args)))
+       expanded)
+      ;; Finally, substitute the mapped propapps back in to the propspec.
+      (let ((*replaced-propapps*
+	      (alist-hash-table *replaced-propapps* :test 'eq)))
+	(walk expanded)))))
 
 (defmacro in-consfig (systems)
   "Sets the variable *CONSFIG* in the current package to SYSTEMS, or (SYSTEMS)
@@ -214,26 +248,18 @@ unevaluated propspec are defined before that unevaluated propspec is
 processed."
       (cell-error-name condition)))))
 
-(defmacro props (combinator &rest forms &aux replaced-propapps)
+(defmacro props (combinator &rest forms)
   "Apply variadic COMBINATOR to FORMS and convert from an unevaluated property
 application specification expression to a property application specification."
-  (labels ((replace-propapp (propapp)
-	     (let ((gensym (gensym)))
-	       (push (cons gensym propapp) replaced-propapps)
-	       gensym))
-	   (walk (tree)
-	     (if (atom tree)
-		 (if-let ((propapp (assoc tree replaced-propapps)))
-		   `(list ',(cadr propapp) ,@(cddr propapp))
-		   `',tree)
-		 `(list ,@(mapcar #'walk tree)))))
-    (let ((propspec (handler-case
-			(walk (map-propspec-propapps #'replace-propapp
-						     (cons combinator forms)))
-		      (ambiguous-propspec (c)
-			;; resignal with a more specific error message
-			(error 'ambiguous-unevaluated-propspec
-			       :name (cell-error-name c))))))
+  (flet ((evaluate (propapp)
+	   `(list ',(car propapp) ,@(cdr propapp))))
+    (let ((propspec
+	    (handler-case
+		(map-propspec-propapps #'evaluate (cons combinator forms) t)
+	      (ambiguous-propspec (c)
+		;; resignal with a more specific error message
+		(error 'ambiguous-unevaluated-propspec
+		       :name (cell-error-name c))))))
       `(make-propspec :propspec ,propspec))))
 
 
