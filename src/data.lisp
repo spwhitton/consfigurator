@@ -371,20 +371,13 @@ Preprocessing must occur in the root Lisp."))
 		   (lambda (c)
 		     (declare (ignore c))
 		     (invoke-restart 'skip-data-source))))
-	      ;; don't try to load systems as we don't upload the .asd files,
-	      ;; and we don't want to load out of /usr/share/common-lisp or
-	      ;; something as we might get a different version of the library
-	      ;; at worst, or a lot of redefinition warnings at best
-	      (let ((*suppress-loading-systems* t))
-		,@forms))))
+	      ,@forms)))
     (let* ((intern-forms
 	     (loop for name in '("MISSING-DATA-SOURCE"
-				 "SKIP-DATA-SOURCE"
-				 "*SUPPRESS-LOADING-SYSTEMS*")
+				 "SKIP-DATA-SOURCE")
 		   collect
 		   `(export (intern ,name (find-package "CONSFIGURATOR"))
 			    (find-package "CONSFIGURATOR"))))
-	   (proclamations `((proclaim '(special *suppress-loading-systems*))))
 	   (load-forms
 	     (loop for system
 		     in (slot-value (slot-value *host* 'propspec) 'systems)
@@ -397,7 +390,6 @@ Preprocessing must occur in the root Lisp."))
 				(slot-value *connection* 'cached-data))))))
 	   (forms `((make-package "CONSFIGURATOR")
 		    ,@intern-forms
-		    ,@proclamations
 		    (define-condition missing-data-source (error) ())
 		    (require "asdf")
 		    (let ((*standard-output* *error-output*))

@@ -225,15 +225,7 @@ systems."
 		 :propspec `(silent-seqprops ,(propspec-props first)
 					     ,(propspec-props second))))
 
-(defvar *suppress-loading-systems* nil
-  "Bound by code which needs to prevent EVAL-PROPSPEC from attempting to load
-the ASDF systems associated with the propspec to be evaluated.")
-
 (defmethod eval-propspec ((propspec preprocessed-propspec))
-  (unless *suppress-loading-systems*
-    (dolist (system (propspec-systems propspec))
-      (unless (asdf:component-loaded-p system)
-	(asdf:load-system system))))
   (eval (slot-value propspec 'preprocessed-propspec-expression)))
 
 (define-condition ambiguous-unevaluated-propspec (ambiguous-propspec) ()
