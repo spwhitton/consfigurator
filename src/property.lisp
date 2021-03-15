@@ -259,32 +259,34 @@ It is usually better to use this macro to combine several smaller properties
 rather than writing a property which programmatically calls other properties.
 This is because using this macro takes care of calling property :HOSTATTRS
 subroutines at the right time."
-  (when (stringp (car properties)) (pop properties))
   (let ((new-args (cons (gensym) (ordinary-ll-without-&aux args)))
-	;; TODO :UNAPPLY which unapplies in reverse order
 	(slots (list :type type
 		     :lambda `',args
 		     :hostattrs '(lambda (propspec &rest ignore)
 				  (declare (ignore ignore))
-				  (%eval-propspec-hostattrs *host* propspec))
+				  (propappattrs (eval-propspec propspec)))
 		     :apply '(lambda (propspec &rest ignore)
 			      (declare (ignore ignore))
-			      (eval-propspec propspec)))))
-    (when (and (listp (car properties))
-	       (eql 'declare (caar properties)))
-      ;; currently INDENT is the only supported declaration so we can just
-      ;; take the cadadr
-      (setf (getf slots :indent) (cadadr (pop properties))))
-    (when (and (listp (car properties)) (eq :desc (caar properties)))
-      (setf (getf slots :desc)
-	    `(lambda ,new-args
-	       (declare (ignorable ,@new-args))
-	       ,@(cdr (pop properties)))))
-    (setf (getf slots :preprocess)
-	  `(lambda (&rest all-args)
-	     (cons (destructuring-bind ,args all-args
-		     (props eseqprops ,@properties))
-		   all-args)))
+			      (propappapply (eval-propspec propspec)))
+		     :unapply '(lambda (propspec &rest ignore)
+				(declare (ignore ignore))
+				(propappunapply (eval-propspec propspec))))))
+    (multiple-value-bind (forms declarations)
+	(parse-body properties :documentation t)
+      (when (> (length declarations) 1)
+	(error "Multiple DECLARE forms unsupported."))
+      (when-let ((indent (cadr (assoc 'indent (cdar declarations)))))
+	(setf (getf slots :indent) indent))
+      (when (and (listp (car forms)) (eq :desc (caar forms)))
+	(setf (getf slots :desc)
+	      `(lambda ,new-args
+		 (declare (ignorable ,@new-args))
+		 ,@(cdr (pop forms)))))
+      (setf (getf slots :preprocess)
+	    `(lambda (&rest all-args)
+	       (cons (destructuring-bind ,args all-args
+		       (props eseqprops ,@forms))
+		     all-args))))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (record-known-property ',name)
        (setprop ',name ,@slots)
