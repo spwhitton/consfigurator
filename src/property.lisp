@@ -106,8 +106,8 @@
 (defun propappunapply (propapp)
   (apply #'propunapply propapp))
 
-(defvar *properties-for-emacs* nil
-  "List of properties whose symbols have Emacs indentation information.")
+(defvar *known-properties* nil
+  "All properties whose definitions have been loaded.")
 
 (defun dump-properties-for-emacs (from to)
   (let ((put-forms
@@ -116,7 +116,7 @@
 	     (loop
 	       for (prop . indent)
 		 in (nreverse (mappend (lambda (s) (get s 'indent))
-				       *properties-for-emacs*))
+				       *known-properties*))
 	       do (format s "  (put '~A 'common-lisp-indent-function '~A)~%"
 			  prop indent))))))
     (with-open-file (in from)
@@ -151,8 +151,7 @@
 	 (when (plusp n)
 	   (push (cons dotted-name n) indent)))))
     (when indent
-      (setf (get sym 'indent) indent)
-      (pushnew sym *properties-for-emacs*))))
+      (setf (get sym 'indent) indent))))
 
 (defmacro define-dotted-property-macro (name args &aux (whole (gensym)))
   "Affix a period to the end of NAME and define a macro expanding into a
@@ -221,6 +220,7 @@ dotted name alongside NAME."
 			       `((assert-connection-supports :lisp)))
 			,@slot))))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (pushnew ',name *known-properties*)
        (setprop ',name ,@slots)
        (define-dotted-property-macro ,name ,args))))
 
@@ -274,6 +274,7 @@ subroutines at the right time."
 		     (props eseqprops ,@properties))
 		   all-args)))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
+       (pushnew ',name *known-properties*)
        (setprop ',name ,@slots)
        (define-dotted-property-macro ,name ,args))))
 
