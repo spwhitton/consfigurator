@@ -242,7 +242,7 @@ ARGS is an ordinary lambda list, so you can use &AUX variables to compute
 intermediate values.  PROPERTIES is an unevaluated property application
 specification where the implicit surrounding combinator is ESEQPROP, but it
 will not be converted to a propspec until the resulting property has been
-added to a host,so it should not contain any free variables other than as
+added to a host, so it should not contain any free variables other than as
 would be bound by (lambda ARGS).
 
 The evaluation of PROPERTIES, and the evaluation of any &AUX variables, should
