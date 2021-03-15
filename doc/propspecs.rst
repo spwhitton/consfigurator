@@ -54,6 +54,8 @@ iv. when each of **S** are loaded, calling ``PROPERTY`` with ``ARGS`` will
     apply each of the propapps occurring in **P** in accordance with the
     combinators occuring in **P**.
 
+A property application specification should not contain any binding forms.
+
 We do not always cleanly distinguish between property application
 specifications and property application specification expressions, and the
 abbreviation "propspec" refers to both.  It is usually clear from the context
