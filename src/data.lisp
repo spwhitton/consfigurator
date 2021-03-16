@@ -345,6 +345,11 @@ of the current connection, where each entry is of the form
 		    "-type" "f" "-printf" "%P\\n")
 	    (and (zerop exit) (lines out)))))
 
+;; TODO unclear whether the need for this is a bug in trivial-macroexpand-all
+(define-constant +continue-deploy*-program-implementation-specific+
+  "#+sbcl (require \"sb-cltl2\")"
+  :test #'equal)
+
 (defun continue-deploy*-program (remaining-connections)
   "Return a program to complete the work of an enclosing call to DEPLOY*.
 
@@ -400,7 +405,9 @@ Preprocessing must occur in the root Lisp."))
 	    ;; need line breaks in between so that packages exist before we
 	    ;; try to have remote Lisp read sexps containing symbols from
 	    ;; those packages
-	    (format nil "~{~A~^~%~}" (mapcar #'prin1-to-string forms)))
+	    (format nil "~A~%~{~A~^~%~}"
+		    +continue-deploy*-program-implementation-specific+
+		    (mapcar #'prin1-to-string forms)))
 	(print-not-readable (c)
 	  (error "The Lisp printer could not serialise ~A for
 transmission to the remote Lisp.
