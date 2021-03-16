@@ -179,15 +179,17 @@ running on your development laptop/workstation (and not as the ``root`` user).
 Property application specification ("propspec")
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An ordered list specifying the properties that a host has and/or lacks.  For
-example,::
+A specification, in Consfigurator's DSL, for the properties that a host has
+and/or lacks.  For example,::
 
-  '((apt:installed postfix)
-    (etc-default:set "locale" "LANG" "en_GB.UTF-8")
-    (unapply (com.example.consfig.services:mail-satellite)))
 
-Property application specifications are always applied in order, so properties
-later in the list implicitly depend on properties earlier in the list.
+  (eseqprops (apt:installed postfix)
+             (etc-default:set "locale" "LANG" "en_GB.UTF-8")
+             (unapply (com.example.consfig.services:mail-satellite)))
+
+Property application specifications are applied in order, so properties later
+in the list usually implicitly depend on properties earlier in the list,
+though some property combinators can undo this.
 
 Unevaluated property application specification ("unevaluated propspec")
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -199,10 +201,11 @@ themselves.  An unevaluated property application specification can be
 converted into a property application specification by evaluating each of
 ``ARGS``.
 
-The main place you will find an unevaluated property application specification
-is in a call to ``DEFHOST``.  That macro converts an unevaluated property
-application specification into code which will produce the corresponding
-property application specification.
+The main places you will find an unevaluated property application
+specification is in calls to ``DEFHOST``, ``DEPLOY``, ``DEPLOY-THESE`` and
+``DEFPROPLIST``.  Theses macros converts an unevaluated property application
+specification into code which will produce the corresponding property
+application specification.
 
 Prerequisite data
 ~~~~~~~~~~~~~~~~~
