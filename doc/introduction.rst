@@ -127,6 +127,9 @@ above)
 Concepts and terminology
 ------------------------
 
+We make some simplifications.  More precise definitions appear later in this
+manual.
+
 Host
 ~~~~
 
