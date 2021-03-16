@@ -316,7 +316,7 @@ application specification expression to a property application specification."
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
     (retprop :type (proptype psym)
-	     :lambda (propargs psym)
+	     :lambda (proplambda psym)
 	     :desc (lambda (&rest args)
 		     (strcat "Unapply: " (apply #'propdesc psym args)))
 	     :check (complement (get psym 'check))

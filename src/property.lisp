@@ -32,9 +32,9 @@
 (defun setprop (sym &key (type :lisp) lambda desc preprocess hostattrs check apply unapply indent)
   ;; use non-keyword keys to avoid clashes with other packages
   (when type
-    (setf (get sym 'type) type))
+    (setf (get sym 'ptype) type))
   (when lambda
-    (setf (get sym 'lambda) lambda))
+    (setf (get sym 'plambda) lambda))
   (when desc
     (setf (get sym 'desc) desc))
   (when preprocess
@@ -44,7 +44,7 @@
   (when check
     (setf (get sym 'check) check))
   (when apply
-    (setf (get sym 'apply) apply))
+    (setf (get sym 'papply) apply))
   (when unapply
     (setf (get sym 'unapply) unapply))
   (store-indentation-info-for-emacs sym lambda indent)
@@ -55,13 +55,13 @@
   (and (symbolp prop) (get prop 'property nil)))
 
 (defun proptype (prop)
-  (get prop 'type))
+  (get prop 'ptype))
 
 (defun proppp (prop)
   (get prop 'preprocess (lambda (&rest args) args)))
 
 (defun propapptype (propapp)
-  (get (car propapp) 'type))
+  (get (car propapp) 'ptype))
 
 (defun collapse-types (&rest lists)
   (if (member :posix (flatten lists)) :posix :lisp))
@@ -72,8 +72,8 @@
 (defun propappdesc (propapp)
   (apply #'propdesc propapp))
 
-(defun propargs (prop)
-  (get prop 'args))
+(defun proplambda (prop)
+  (get prop 'plambda))
 
 (defun propattrs (prop &rest args)
   (apply (get prop 'hostattrs #'noop) args))
@@ -92,7 +92,7 @@
     (let ((check (get prop 'check)))
       (if (and check (apply check args))
 	  :no-change
-	  (apply (get prop 'apply (constantly :no-change)) args)))))
+	  (apply (get prop 'papply (constantly :no-change)) args)))))
 
 (defun propappunapply (propapp)
   (destructuring-bind (prop . args) propapp
