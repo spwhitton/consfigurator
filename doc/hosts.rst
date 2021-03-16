@@ -18,3 +18,21 @@ other kinds of attribute, it might be that later entries supercede earlier
 ones, or that the entries should be combined in some way.  Property ``:APPLY``
 subroutines decide how to interpret each type of static informational
 attribute.
+
+Reserved names for static informational attributes
+--------------------------------------------------
+
+For attributes that will only be used among a co-ordinating group of
+properties, use a non-keyword symbol, whose package is one in which some or
+all of those properties are defined.  This minimises the risk of any clashes.
+Many attributes, however, will be shared across properties, and should use
+keyword symbols.  The semantics of these attributes are documented here:
+
+- ``:HOSTNAME``: the host's hostname
+
+- ``:DATA``: items of prerequisite data required by the host
+
+- ``:OS``: the operating system of the host
+
+- ``:APT.MIRROR``: for hosts running Debian or a Debian derivative, the host's
+  preferred apt mirror
