@@ -204,6 +204,7 @@
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
+  (:shadow #:typecase)
   (:export #:unixlike
 	   #:linux
 	   #:debianlike
@@ -212,6 +213,7 @@
 	   #:debian-testing
 	   #:debian-unstable
 	   #:debian-suite
+	   #:typecase
 	   #:required
 	   #:supports-arch-p))
 

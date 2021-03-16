@@ -323,3 +323,27 @@ application specification expression to a property application specification."
 	     :apply (get psym 'unapply)
 	     :unapply (get psym 'apply)
 	     :args args)))
+
+;; TODO should move this into property/os.lisp once we determine the API for
+;; property combinator helper macros
+(define-function-property-combinator os-typecase* (&rest cases)
+  (flet ((choose-propapp ()
+	   (or (loop with host = (class-of (get-hostattrs-car :os))
+		     for (type propapp) on cases by #'cddr
+		     when (subtypep host type) return propapp)
+	       (error 'inapplicable-property
+		      :text "Host's OS fell through OS:TYPECASE."))))
+    (retprop :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
+					 collect (propapptype propapp)))
+	     :desc (lambda (&rest args)
+		     (declare (ignore args))
+		     (propappdesc (choose-propapp)))
+	     :check (lambda (&rest args)
+		      (declare (ignore args))
+		      (propappcheck (choose-propapp)))
+	     :apply (lambda (&rest args)
+		      (declare (ignore args))
+		      (propappapply (choose-propapp)))
+	     :unapply (lambda (&rest args)
+			(declare (ignore args))
+			(propappunapply (choose-propapp))))))

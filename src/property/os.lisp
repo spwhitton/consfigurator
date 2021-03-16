@@ -77,6 +77,18 @@
 				  :arch architecture))))
 
 
+;;;; Property combinators
+
+;; TODO should move OS-TYPECASE* here, once figure out API for property
+;; combinator helper macros
+(defmacro typecase (&rest cases)
+  `(consfigurator::os-typecase*
+    ,@(loop for case in cases
+	    collect `',(intern (symbol-name (car case))
+			       (find-package :consfigurator.property.os))
+	    collect (cadr case))))
+
+
 ;;;; Utilities
 
 (defun required (type)
@@ -90,7 +102,7 @@ Used in property :HOSTATTRS subroutines."
 
 (defun supports-arch-p (os arch)
   "Can binaries of type ARCH run on OS?"
-  (typecase os
+  (cl:typecase os
     (debian (or (eq (linux-architecture os) arch)
 		(member arch (assoc (linux-architecture os)
 				    '((:amd64 :i386)
