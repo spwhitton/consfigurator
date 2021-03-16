@@ -43,18 +43,8 @@
     (setf (get sym 'hostattrs) hostattrs))
   (when check
     (setf (get sym 'check) check))
-  (if apply
-      (progn (setf (get sym 'apply) apply)
-	     (setf (fdefinition sym)
-		   (if check
-		       (lambda (&rest args)
-			 (if (apply check args)
-			     :no-change
-			     (apply apply args)))
-		       apply)))
-      (setf (fdefinition sym) (lambda (&rest ignore)
-				(declare (ignore ignore))
-				:no-change)))
+  (when apply
+    (setf (get sym 'apply) apply))
   (when unapply
     (setf (get sym 'unapply) unapply))
   (store-indentation-info-for-emacs sym lambda indent)
@@ -98,13 +88,18 @@
   (apply #'propcheck propapp))
 
 (defun propappapply (propapp)
-  (apply (symbol-function (car propapp)) (cdr propapp)))
-
-(defun propunapply (prop &rest args)
-  (apply (get prop 'unapply #'noop) args))
+  (destructuring-bind (prop . args) propapp
+    (let ((check (get prop 'check)))
+      (if (and check (apply check args))
+	  :no-change
+	  (apply (get prop 'apply (constantly :no-change)) args)))))
 
 (defun propappunapply (propapp)
-  (apply #'propunapply propapp))
+  (destructuring-bind (prop . args) propapp
+    (let ((check (get prop 'check)))
+      (if (and check (not (apply check args)))
+	  :no-change
+	  (apply (get prop 'unapply (constantly :no-change)) args)))))
 
 (defvar *known-properties* nil
   "All properties whose definitions have been loaded.")
@@ -210,6 +205,15 @@ dotted name alongside NAME."
 				    (ordinary-ll-without-&aux args))))
 		(cons ',name (cdr ,whole)))))))))
 
+(defmacro define-property (name lambda &rest slots)
+  `(progn
+     (record-known-property ',name)
+     (setprop ',name ,@slots)
+     (defun ,name ,lambda
+       (propappapply (list ',name ,@(ordinary-ll-variable-names
+				     (ordinary-ll-without-&aux lambda)))))
+     (define-dotted-property-macro ,name ,lambda)))
+
 ;;; supported way to write properties is to use one of these two macros
 
 (defmacro defprop (name type args &body body)
@@ -231,10 +235,7 @@ dotted name alongside NAME."
 				 (member kw '(:check :apply :unapply))
 				 `((assert-connection-supports :lisp)))
 			  ,@slot))))
-      `(eval-when (:compile-toplevel :load-toplevel :execute)
-	 (record-known-property ',name)
-	 (setprop ',name ,@slots)
-	 (define-dotted-property-macro ,name ,args)))))
+      `(define-property ,name ,args ,@slots))))
 
 (defmacro defproplist (name type args &body properties)
   "Define a property which applies a property application specification.
@@ -287,10 +288,7 @@ subroutines at the right time."
 	       (cons (destructuring-bind ,args all-args
 		       (props eseqprops ,@forms))
 		     all-args))))
-    `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (record-known-property ',name)
-       (setprop ',name ,@slots)
-       (define-dotted-property-macro ,name ,args))))
+    `(define-property ,name ,args ,@slots)))
 
 
 ;;;; hostattrs in property subroutines
