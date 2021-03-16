@@ -87,6 +87,7 @@
 	   #:propattrs
 	   #:propunapply
 	   #:defprop
+	   #:defpropspec
 	   #:defproplist
 	   #:inapplicable-property
 	   #:get-hostattrs

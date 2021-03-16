@@ -205,90 +205,127 @@ dotted name alongside NAME."
 				    (ordinary-ll-without-&aux args))))
 		(cons ',name (cdr ,whole)))))))))
 
-(defmacro define-property (name lambda &rest slots)
-  `(progn
-     (record-known-property ',name)
-     (setprop ',name ,@slots)
-     (defun ,name ,lambda
-       (propappapply (list ',name ,@(ordinary-ll-variable-names
-				     (ordinary-ll-without-&aux lambda)))))
-     (define-dotted-property-macro ,name ,lambda)))
+(defmacro define-property-defining-macro
+    (mname (typev lambdav slotsv formsv) &body mbody)
+  "Define macro MNAME which be used to define properties, and which works by
+parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
+  (multiple-value-bind (mforms mdeclarations mdocstring)
+      (parse-body mbody :documentation t)
+    (declare (ignore mdeclarations))
+    (with-gensyms (name body declarations)
+      `(defmacro ,mname (,name ,typev ,lambdav &body ,body)
+	 ,@(and mdocstring `(,mdocstring))
+	 (let ((,slotsv (list :type ,typev :lambda `',,lambdav)))
+	   (multiple-value-bind (,formsv ,declarations)
+	       (parse-body ,body :documentation t)
+	     (when (> (length ,declarations) 1)
+	       (error "Multiple DECLARE forms unsupported."))
+	     (when-let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
+	       (setf (getf ,slotsv :indent) indent))
+	     ,@mforms
+	     `(progn
+		(record-known-property ',,name)
+		(setprop ',,name ,@,slotsv)
+		(defun ,,name ,,lambdav
+		  (propappapply
+		   (list ',,name ,@(ordinary-ll-variable-names
+				    (ordinary-ll-without-&aux ,lambdav)))))
+		(define-dotted-property-macro ,,name ,,lambdav))))))))
 
-;;; supported way to write properties is to use one of these two macros
+;; supported ways to write properties are DEFPROP, DEFPROPSPEC and DEFPROPLIST
 
-(defmacro defprop (name type args &body body)
-  (let ((slots (list :type type :lambda (list 'quote args))))
-    (multiple-value-bind (forms declarations)
-	(parse-body body :documentation t)
-      (when (> (length declarations) 1)
-	(error "Multiple DECLARE forms unsupported."))
-      (when-let ((indent (cadr (assoc 'indent (cdar declarations)))))
-	(setf (getf slots :indent) indent))
-      (loop for form in forms
-	    if (keywordp (car form))
-	      do (setf (getf slots (car form)) (cdr form)))
-      (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
-	    do (if-let ((slot (getf slots kw)))
-		 (setf (getf slots kw)
-		       `(lambda ,args
-			  ,@(and (eq type :lisp)
-				 (member kw '(:check :apply :unapply))
-				 `((assert-connection-supports :lisp)))
-			  ,@slot))))
-      `(define-property ,name ,args ,@slots))))
+(define-property-defining-macro defprop (type lambda slots forms)
+  "Define a property by providing code for its subroutines."
+  (loop for form in forms
+	if (keywordp (car form))
+	  do (setf (getf slots (car form)) (cdr form)))
+  (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
+	do (if-let ((slot (getf slots kw)))
+	     (setf (getf slots kw)
+		   `(lambda ,lambda
+		      ,@(and (eq type :lisp)
+			     (member kw '(:check :apply :unapply))
+			     `((assert-connection-supports :lisp)))
+		      ,@slot)))))
 
-(defmacro defproplist (name type args &body properties)
-  "Define a property which applies a property application specification.
-ARGS is an ordinary lambda list, so you can use &AUX variables to compute
-intermediate values.  PROPERTIES is an unevaluated property application
-specification where the implicit surrounding combinator is ESEQPROP, but it
-will not be converted to a propspec until the resulting property has been
-added to a host, so it should not contain any free variables other than as
-would be bound by (lambda ARGS).
+(defun defpropspec-preprocess (&rest args)
+  (list (list :propspec nil :orig-args args)))
 
-The evaluation of PROPERTIES, and the evaluation of any &AUX variables, should
-not have any side effects.  The evaluation will take place in the root Lisp.
-In particular, at present, storing or retrieving static informational
-attributes is not supported.
+(defun defpropspec-apply (plist)
+  (propappapply (eval-propspec (getf plist :propspec))))
+
+(defun defpropspec-unapply (plist)
+  (propappunapply (eval-propspec (getf plist :propspec))))
+
+(define-property-defining-macro defpropspec (type lambda slots forms)
+  "Define a property which constructs, evaluates and applies a propspec.
+This is how you can define a property which works by calling other properties,
+in accordance with property combinators.
+
+Except in very simple cases, it is usually better to use this macro (or
+DEFPROPLIST) to combine several smaller properties rather than writing a
+property using DEFPROP which programmatically calls other properties. This is
+because using this macro takes care of calling property :HOSTATTRS
+subroutines at the right time.
+
+If the first element of the body is a string, it will be considered a
+docstring for the resulting property.  If the first element of the body after
+any such string is a list beginning with :DESC, the remainder will be used as
+the :DESC subroutine for the resulting property, like DEFPROP.  Otherwise, the
+body defines a function of the arguments specified by the lambda list which
+returns the propspec to be evaluated and applied.  It should be a pure
+function aside from retrieving hostattrs.
+
+You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
+  ;; This is implemented by effectively pushing a null pointer to the front of
+  ;; the propapp's arguments at :PREPROCESS-time, calling the user's code with
+  ;; the other arguments to the propapp at :HOSTATTRS-time, and storing the
+  ;; resulting propspec at the other end of the pointer, so that the :APPLY
+  ;; and :UNAPPLY subroutines can get at it.  We have to keep the original
+  ;; arguments to the propapp around for the sake of the :DESC subroutine.
+  (setf (get slots :preprocess) #'defpropspec-preprocess)
+  (setf (get slots :apply) #'defpropspec-apply)
+  (setf (get slots :unapply) #'defpropspec-unapply)
+  (when (and (listp (car forms)) (eq :desc (caar forms)))
+    (setf (getf slots :desc)
+	  `(lambda (plist)
+	     (destructuring-bind ,lambda
+		 (getf plist :orig-args)
+	       ,@(cdr (pop forms))))))
+  (setf (getf slots :hostattrs)
+	`(lambda (plist)
+	   (let ((propspec (preprocess-propspec
+			    (destructuring-bind ,lambda
+				(getf plist :orig-args)
+			      ,@forms))))
+	     (setf (getf plist :propspec) propspec)
+	     (propappattrs (eval-propspec propspec))))))
+
+(defmacro defproplist (name type lambda &body properties)
+  "Like DEFPROPSPEC, but define the function which yields the propspec using the
+unevaluated property application specification PROPERTIES, where the implicit
+surrounding combinator is ESEQPROPS.
 
 If the first element of PROPERTIES is a string, it will be considered a
 docstring for the resulting property.  If the first element of PROPERTIES
 after any such string is a list beginning with :DESC, the remainder will be
 used as the :DESC subroutine for the resulting property, like DEFPROP.
 
-It is usually better to use this macro to combine several smaller properties
-rather than writing a property which programmatically calls other properties.
-This is because using this macro takes care of calling property :HOSTATTRS
-subroutines at the right time."
-  (let ((new-args (cons (gensym) (ordinary-ll-without-&aux args)))
-	(slots (list :type type
-		     :lambda `',args
-		     :hostattrs '(lambda (propspec &rest ignore)
-				  (declare (ignore ignore))
-				  (propappattrs (eval-propspec propspec)))
-		     :apply '(lambda (propspec &rest ignore)
-			      (declare (ignore ignore))
-			      (propappapply (eval-propspec propspec)))
-		     :unapply '(lambda (propspec &rest ignore)
-				(declare (ignore ignore))
-				(propappunapply (eval-propspec propspec))))))
-    (multiple-value-bind (forms declarations)
-	(parse-body properties :documentation t)
-      (when (> (length declarations) 1)
-	(error "Multiple DECLARE forms unsupported."))
-      (when-let ((indent (cadr (assoc 'indent (cdar declarations)))))
-	(setf (getf slots :indent) indent))
-      (when (and (listp (car forms)) (eq :desc (caar forms)))
-	(setf (getf slots :desc)
-	      `(lambda ,new-args
-		 (declare (ignorable ,@new-args))
-		 ,@(cdr (pop forms)))))
-      (setf (getf slots :preprocess)
-	    `(lambda (&rest all-args)
-	       (cons (destructuring-bind ,args all-args
-		       (props eseqprops ,@forms))
-		     all-args))))
-    `(define-property ,name ,args ,@slots)))
+Otherwise, the body should not contain any references to variables other than
+those in LAMBDA.  LAMBDA is an ordinary lambda list, so you can use &AUX
+variables to compute intermediate values.  The evaluation of arguments to
+propapps in PROPERTIES, and the evaluation of any &AUX variables in LAMBDA,
+will happen at :HOSTATTRS-time for the host to which the resulting property is
+to be applied, so you can retrieve static informational attributes (unlike
+with unevaluated property application specifications appearing in DEFHOST
+forms).  The evaluation should otherwise be purely functional.
+
+You will usually be able to use DEFPROPLIST instead of DEFPROPSPEC.  However,
+sometimes you will need to fall back on DEFPROPSPEC.  For example, an
+unevaluated property application specification cannot express passing values
+other than constant values and propapps to property combinators."
+  `(defpropspec ,name ,type ,lambda
+     (props eseqprops ,@properties)))
 
 
 ;;;; hostattrs in property subroutines
