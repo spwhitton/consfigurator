@@ -29,7 +29,7 @@
 
 ;; default TYPE to :LISP as we want an explicit declaration that something is
 ;; compatible with :POSIX-type connections
-(defun setprop (sym &key (type :lisp) lambda desc preprocess hostattrs check apply unapply indent)
+(defun setprop (sym &key (type :lisp) lambda desc preprocess hostattrs check apply unapply)
   ;; use non-keyword keys to avoid clashes with other packages
   (when type
     (setf (get sym 'ptype) type))
@@ -47,7 +47,6 @@
     (setf (get sym 'papply) apply))
   (when unapply
     (setf (get sym 'unapply) unapply))
-  (store-indentation-info-for-emacs sym lambda indent)
   (setf (get sym 'property) t)
   sym)
 
@@ -220,17 +219,17 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 	       (parse-body ,body :documentation t)
 	     (when (> (length ,declarations) 1)
 	       (error "Multiple DECLARE forms unsupported."))
-	     (when-let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
-	       (setf (getf ,slotsv :indent) indent))
-	     ,@mforms
-	     `(progn
-		(record-known-property ',,name)
-		(setprop ',,name ,@,slotsv)
-		(defun ,,name ,,lambdav
-		  (propappapply
-		   (list ',,name ,@(ordinary-ll-variable-names
-				    (ordinary-ll-without-&aux ,lambdav)))))
-		(define-dotted-property-macro ,,name ,,lambdav))))))))
+	     (let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
+	       ,@mforms
+	       `(progn
+		  (record-known-property ',,name)
+		  (store-indentation-info-for-emacs ',,name ,,lambdav ,indent)
+		  (setprop ',,name ,@,slotsv)
+		  (defun ,,name ,,lambdav
+		    (propappapply
+		     (list ',,name ,@(ordinary-ll-variable-names
+				      (ordinary-ll-without-&aux ,lambdav)))))
+		  (define-dotted-property-macro ,,name ,,lambdav)))))))))
 
 ;; supported ways to write properties are DEFPROP, DEFPROPSPEC and DEFPROPLIST
 
