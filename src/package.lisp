@@ -107,6 +107,7 @@
 	   #:append-propspecs
 	   #:seqprops
 	   #:eseqprops
+	   #:with-requirements
 	   #:silent-seqprops
 	   #:unapply
 	   #:on-change

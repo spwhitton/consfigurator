@@ -288,6 +288,12 @@ application specification expression to a property application specification."
 			     (invoke-restart 'skip-property))))
 		      (apply-and-print propapps)))))
 
+(defmacro with-requirements (propapp &body requirements)
+  "Apply PROPAPP only after applying each dependency in REQUIREMENTS.
+Each item in REQUIREMENTS implicitly depends on the one preceding it, i.e., we
+apply the elements of REQUIREMENTS in reverse order."
+  `(eseqprops ,@(reverse requirements) ,propapp))
+
 (define-function-property-combinator silent-seqprops (&rest propapps)
   (retprop :type (collapse-types (mapcar #'propapptype propapps))
 	   :check (constantly nil)
