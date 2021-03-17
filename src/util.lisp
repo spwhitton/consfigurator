@@ -41,8 +41,25 @@
 (defun memstring= (string list)
   (member string list :test #'string=))
 
+(defun assert-ordinary-ll-member (arg)
+  "Assert that ARG is not an implementation-specific lambda list keyword or a
+lambda list keyword which is not permitted in ordinary lambda lists.
+
+Consfigurator's property-writing macros do not support lambda list keywords
+which fail this assertion."
+  (or
+   (not
+    (member arg
+	    '#.(set-difference lambda-list-keywords
+			       '(&optional &rest &key &allow-other-keys &aux))))
+   (simple-program-error
+    "Implementation-specific or non-ordinary lambda list keyword ~A not
+supported."
+    arg)))
+
 (defun ordinary-ll-without-&aux (ll)
   (loop for arg in ll
+	do (assert-ordinary-ll-member arg)
 	if (eq '&aux arg) return accum
 	  else collect arg into accum
 	finally (return accum)))
@@ -50,6 +67,7 @@
 (defun ordinary-ll-variable-names (ll)
   (loop for arg in ll
 	for arg* = (ensure-car arg)
+	do (assert-ordinary-ll-member arg)
 	unless (char= #\& (char (symbol-name arg*) 0))
 	  collect arg*))
 
