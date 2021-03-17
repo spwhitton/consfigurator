@@ -223,7 +223,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 	       ,@mforms
 	       `(progn
 		  (record-known-property ',,name)
-		  (store-indentation-info-for-emacs ',,name ,,lambdav ,indent)
+		  (store-indentation-info-for-emacs ',,name ',,lambdav ,indent)
 		  (setprop ',,name ,@,slotsv)
 		  ;; TODO Ideally we would use ,(ordinary-ll-without-&aux
 		  ;; ,lambdav) instead of (&rest args) here so that Emacs can
