@@ -44,7 +44,7 @@
 (defun ordinary-ll-without-&aux (ll)
   (loop for arg in ll
 	if (eq '&aux arg) return accum
-	else collect arg into accum
+	  else collect arg into accum
 	finally (return accum)))
 
 (defun ordinary-ll-variable-names (ll)
