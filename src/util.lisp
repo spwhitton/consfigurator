@@ -49,8 +49,9 @@
 
 (defun ordinary-ll-variable-names (ll)
   (loop for arg in ll
-	unless (char= #\& (char (symbol-name arg) 0))
-	  collect (ensure-car arg)))
+	for arg* = (ensure-car arg)
+	unless (char= #\& (char (symbol-name arg*) 0))
+	  collect arg*))
 
 
 ;;;; Version numbers
