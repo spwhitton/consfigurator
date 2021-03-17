@@ -137,6 +137,19 @@ property combinators.
 
 The ``PROPS`` macro converts an unevaluated propspec into a propspec.
 
+The evaluation of arguments to propapps in unevaluated propspecs appearing in
+calls to ``DEFHOST``, ``DEPLOYS.`` and ``DEPLOYS-THESE.`` cannot retrieve
+hostattrs, because these propspecs will be evaluated as part of the initial
+definitions of hosts, before they have any hostattrs.  By contrast, the
+unevaluated propspecs in calls to ``DEFPROPLIST``, ``DEPLOY``, and
+``DEPLOY-THESE``, and the code which produces propspecs in ``DEFPROPSPEC``,
+may retrieve hostattrs set by other properties, because that code is run in
+the context of a host which has already been defined.  You cannot retrieve
+hostattrs set by properties in the propspec resulting from evaluating the
+evaluated propspec, however, since that propspec has not yet been applied to
+the host.  New hostattrs should not be pushed outside of the definitions of
+``:HOSTATTRS`` subroutines.
+
 The elements of unevaluated propspecs are typically arguments to macros, such
 that the context of evaluation for forms which produce the arguments to the
 propapps is the context in which the call to the containing macro appears.

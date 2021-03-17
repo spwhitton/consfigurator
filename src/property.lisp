@@ -273,7 +273,9 @@ any such string is a list beginning with :DESC, the remainder will be used as
 the :DESC subroutine for the resulting property, like DEFPROP.  Otherwise, the
 body defines a function of the arguments specified by the lambda list which
 returns the propspec to be evaluated and applied.  It should be a pure
-function aside from retrieving hostattrs.
+function aside from retrieving hostattrs (as set by other properties applied
+to the hosts to which the resulting property is applied, not as set by the
+properties in the returned propspec).
 
 You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   ;; This is implemented by effectively pushing a null pointer to the front of
@@ -315,9 +317,10 @@ those in LAMBDA.  LAMBDA is an ordinary lambda list, so you can use &AUX
 variables to compute intermediate values.  The evaluation of arguments to
 propapps in PROPERTIES, and the evaluation of any &AUX variables in LAMBDA,
 will happen at :HOSTATTRS-time for the host to which the resulting property is
-to be applied, so you can retrieve static informational attributes (unlike
-with unevaluated property application specifications appearing in DEFHOST
-forms).  The evaluation should otherwise be purely functional.
+to be applied, so you can retrieve static informational attributes set by
+other properties applied to the host (unlike with unevaluated property
+application specifications appearing in DEFHOST forms).  The evaluation should
+otherwise be purely functional.
 
 You will usually be able to use DEFPROPLIST instead of DEFPROPSPEC.  However,
 sometimes you will need to fall back on DEFPROPSPEC.  For example, an
