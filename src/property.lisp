@@ -331,8 +331,16 @@ You will usually be able to use DEFPROPLIST instead of DEFPROPSPEC.  However,
 sometimes you will need to fall back on DEFPROPSPEC.  For example, an
 unevaluated property application specification cannot express passing values
 other than constant values and propapps to property combinators."
-  `(defpropspec ,name ,type ,lambda
-     (props eseqprops ,@properties)))
+  (let ((propspec
+	  (loop for remaining on properties
+		for car = (car remaining)
+		if (or (stringp car)
+		       (and (listp car) (member (car car) '(:desc declare))))
+		  collect car into begin
+		else
+		  return (nreverse
+			  (cons `(props eseqprops ,@remaining) begin)))))
+    `(defpropspec ,name ,type ,lambda ,@propspec)))
 
 
 ;;;; hostattrs in property subroutines
