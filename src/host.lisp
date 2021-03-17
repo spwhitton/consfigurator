@@ -89,8 +89,12 @@ values higher up the call stack."))
 
 (defmethod %replace-propspec-into-host
     ((host unpreprocessed-host) (propspec unpreprocessed-propspec))
+  ;; we have to preprocess HOST as functions that call us want the return
+  ;; value to have all the hostattrs it would have were PROPSPEC not to be
+  ;; substituted in
   (make-instance 'unpreprocessed-host
-		 :hostattrs (hostattrs host) :propspec propspec))
+		 :hostattrs (hostattrs (preprocess-host host))
+		 :propspec propspec))
 
 (defmacro defhost (hostname (&key deploy) &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
