@@ -225,10 +225,15 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 		  (record-known-property ',,name)
 		  (store-indentation-info-for-emacs ',,name ,,lambdav ,indent)
 		  (setprop ',,name ,@,slotsv)
-		  (defun ,,name ,,lambdav
-		    (propappapply
-		     (list ',,name ,@(ordinary-ll-variable-names
-				      (ordinary-ll-without-&aux ,lambdav)))))
+		  ;; TODO Ideally we would use ,(ordinary-ll-without-&aux
+		  ;; ,lambdav) instead of (&rest args) here so that Emacs can
+		  ;; show you what arguments the property really takes when
+		  ;; you're typing propapps and also programmatic calls to the
+		  ;; property.  But not sure what the cleanest way is to pass
+		  ;; all the args to propapply/propappapply, or whether we
+		  ;; should be doing that.
+		  (defun ,,name (&rest args)
+		    (apply #'propappapply ',,name args))
 		  (define-dotted-property-macro ,,name ,,lambdav)))))))))
 
 ;; supported ways to write properties are DEFPROP, DEFPROPSPEC and DEFPROPLIST
