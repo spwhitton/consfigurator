@@ -76,6 +76,11 @@ Used by implementations of ESTABLISH-CONNECTION which need to do something
 like fork(2) and then return to Consfigurator's primary loop in the child."
   (%consfigure remaining-connections *host*))
 
+;; in the following two macros, bind *HOST* so that evaluation of the
+;; unevaluated propspec can retrieve existing hostattrs; shallow copy just in
+;; case the evaluation of the arguments to propapps in the unevaluated
+;; propspec sets any new hostattrs, even though it's not meant to
+
 (defmacro deploy (connections host &body additional-properties)
   "Establish CONNECTIONS to HOST, and apply each of the host's usual
 properties, followed by specified by ADDITIONAL-PROPERTIES, an unevaluated
@@ -90,8 +95,17 @@ ADDITIONAL-PROPERTIES.  Static informational attributes set by
 ADDITIONAL-PROPERTIES can override the host's usual static informational
 attributes, in the same way that later entries in the list of properties
 specified in DEFHOST forms can override earlier entries (see DEFHOST's
-docstring)."
-  `(deploy* ',connections ,host (props eseqprops ,@additional-properties)))
+docstring).
+
+The evaluation of ADDITIONAL-PROPERTIES to produce a property application
+specification may retrieve existing hostattrs, but should not set any new
+ones (not to be confused with how the :HOSTATTRS subroutines of properties in
+ADDITIONAL-PROPERTIES may set additional hostattrs)."
+  (once-only (host)
+    `(deploy* ',connections
+	      ,host
+	      (let ((*host* (shallow-copy-host ,host)))
+		(props eseqprops ,@additional-properties)))))
 
 (defmacro deploy-these (connections host &body properties)
   "Like DEPLOY, except apply each of the properties specified by PROPERTIES,
@@ -109,8 +123,17 @@ HOST has all its usual static informational attributes, as set by its usual
 properties, plus any set by PROPERTIES.  Static informational attributes set
 by PROPERTIES can override the host's usual static informational attributes,
 in the same way that later entries in the list of properties specified in
-DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
-  `(deploy-these* ',connections ,host (props eseqprops ,@properties)))
+DEFHOST forms can override earlier entries (see DEFHOST's docstring).
+
+The evaluation of PROPERTIES to produce a property application specification
+may retrieve existing hostattrs, but should not set any new ones (not to be
+confused with how the :HOSTATTRS subroutines of properties in PROPERTIES may
+set additional hostattrs)."
+  (once-only (host)
+    `(deploy-these* ',connections
+		    ,host
+		    (let ((*host* (shallow-copy-host ,host)))
+		      (props eseqprops ,@properties)))))
 
 (defmacro defdeploy (name (connections host) &body additional-properties)
   "Define a function which does (DEPLOY CONNECTIONS HOST ADDITIONAL-PROPERTIES).
