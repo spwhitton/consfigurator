@@ -22,15 +22,15 @@
   (:documentation
    "Bootstrap OS into ROOT, e.g. with debootstrap(1)."))
 
-(defproplist os-bootstrapped :posix
-    (options root properties &aux (host (make-host :propspec properties)))
-  (:desc #?"Built chroot ${root}")
-  (%os-bootstrapped options root host)
-  (deploys `((:chroot :into ,root)) host))
-
 (defprop %os-bootstrapped :posix (options root host)
   (:check
    (declare (ignore options host))
    (test "-d" root))
   (:apply
    (apply #'os-bootstrap (car (getf (hostattrs host) :os)) root options)))
+
+(defproplist os-bootstrapped :posix
+    (options root properties &aux (host (make-host :propspec properties)))
+  (:desc "Built chroot ${root}")
+  (%os-bootstrapped options root host)
+  (deploys `((:chroot :into ,root)) host))
