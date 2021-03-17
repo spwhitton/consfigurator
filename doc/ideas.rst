@@ -65,14 +65,6 @@ Core
   But maybe this is unnecessarily complex -- wouldn't it be better to just
   fail and fix your deployment definitions?
 
-- It's not clear that the current implementation of DEFPROPLIST can support
-  everything we might want to do with it.  An alternative approach to try out
-  would be for a call to DEFPROPLIST to expand into a macro definition, where
-  the new macro expands into the properties to be combined with DEFPROPLIST,
-  surrounded by ESEQPROPS.  Calls to this new macro can then just be added to
-  propspecs by users.  So in effect we would have a macro which can be used in
-  place of a propapp.
-
 Project & packaging
 -------------------
 
