@@ -104,10 +104,10 @@
 			 (declare (ignore args))
 			 (propappunapply (choose-propapp))))))
 
-(defmacro typecase (&rest cases)
+(defmacro typecase (&body cases)
   `(host-typecase nil ,@cases))
 
-(defmacro host-typecase (host &rest cases)
+(defmacro host-typecase (host &body cases)
   `(os-typecase*
     ,host
     ,@(loop for case in cases
