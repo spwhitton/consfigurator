@@ -219,8 +219,8 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 	       (parse-body ,body :documentation t)
 	     (when (> (length ,declarations) 1)
 	       (error "Multiple DECLARE forms unsupported."))
+	     ,@mforms
 	     (let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
-	       ,@mforms
 	       `(progn
 		  (eval-when (:compile-toplevel :load-toplevel :execute)
 		    (record-known-property ',,name))
