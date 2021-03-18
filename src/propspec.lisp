@@ -330,3 +330,26 @@ apply the elements of REQUIREMENTS in reverse order."
 	      :unapply (get psym 'papply)
 	      :args args)))
 
+(defmacro on-change (propapp &body on-change)
+  "If applying PROPAPP makes a change, also apply each of of the propapps
+ON-CHANGE in order."
+  `(on-change* ,propapp ,@on-change))
+
+(define-function-property-combinator on-change* (propapp &rest propapps)
+  (:retprop :type (collapse-types (propapptype propapp)
+				  (mapcar #'propapptype propapps))
+	    :desc (get (car propapp) 'desc)
+	    :hostattrs (lambda (&rest args)
+			 (apply #'propattrs (car propapp) args))
+	    :check (get (car propapp) 'check)
+	    :apply (lambda (&rest args)
+		     (unless (eq (propappapply (cons (car propapp) args))
+				 :no-change)
+		       (dolist (propapp propapps)
+			 (propappapply propapp))))
+	    :unapply (lambda (&rest args)
+		       (unless (eq (propappunapply (cons (car propapp) args))
+				   :no-change)
+			 (dolist (propapp (reverse propapps))
+			   (propappunapply propapp))))
+	    :args (cdr propapp)))
