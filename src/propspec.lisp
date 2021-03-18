@@ -263,7 +263,7 @@ application specification expression to a property application specification."
     `(defun ,name ,args
        ,@docstring
        ,@declarations
-       (flet ((retprop (&rest all &key args &allow-other-keys)
+       (flet ((:retprop (&rest all &key args &allow-other-keys)
 		(let ((psym (gensym))
 		      (setprop-args (remove-from-plist all :args)))
 		  (apply #'setprop psym setprop-args)
@@ -271,13 +271,13 @@ application specification expression to a property application specification."
 	 ,@forms))))
 
 (define-function-property-combinator eseqprops (&rest propapps)
-  (retprop :type (collapse-types (mapcar #'propapptype propapps))
+  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
 	   :check (constantly nil)
 	   :hostattrs (lambda () (mapc #'propappattrs propapps))
 	   :apply (lambda () (apply-and-print propapps))))
 
 (define-function-property-combinator seqprops (&rest propapps)
-  (retprop :type (collapse-types (mapcar #'propapptype propapps))
+  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
 	   :check (constantly nil)
 	   :hostattrs (lambda () (mapc #'propappattrs propapps))
 	   :apply (lambda ()
@@ -295,16 +295,16 @@ apply the elements of REQUIREMENTS in reverse order."
   `(eseqprops ,@(reverse requirements) ,propapp))
 
 (define-function-property-combinator silent-seqprops (&rest propapps)
-  (retprop :type (collapse-types (mapcar #'propapptype propapps))
-	   :check (constantly nil)
-	   :hostattrs (lambda () (mapc #'propappattrs propapps))
-	   :apply (lambda ()
-		    (handler-bind
-			((failed-change
-			   (lambda (c)
-			     (declare (ignore c))
-			     (invoke-restart 'skip-property))))
-		      (mapc #'propappapply propapps)))))
+  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
+	    :check (constantly nil)
+	    :hostattrs (lambda () (mapc #'propappattrs propapps))
+	    :apply (lambda ()
+		     (handler-bind
+			 ((failed-change
+			    (lambda (c)
+			      (declare (ignore c))
+			      (invoke-restart 'skip-property))))
+		       (mapc #'propappapply propapps)))))
 
 ;; note that the :FAILED-CHANGE value is only used within this function and
 ;; should not be returned by property subroutines, per the spec
@@ -321,14 +321,14 @@ apply the elements of REQUIREMENTS in reverse order."
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
-    (retprop :type (proptype psym)
-	     :lambda (proplambda psym)
-	     :desc (lambda (&rest args)
-		     (strcat "Unapply: " (apply #'propdesc psym args)))
-	     :check (complement (get psym 'check))
-	     :apply (get psym 'unapply)
-	     :unapply (get psym 'apply)
-	     :args args)))
+    (:retprop :type (proptype psym)
+	      :lambda (proplambda psym)
+	      :desc (lambda (&rest args)
+		      (strcat "Unapply: " (apply #'propdesc psym args)))
+	      :check (complement (get psym 'check))
+	      :apply (get psym 'unapply)
+	      :unapply (get psym 'apply)
+	      :args args)))
 
 ;; TODO should move this into property/os.lisp once we determine the API for
 ;; property combinator helper macros
@@ -340,17 +340,17 @@ apply the elements of REQUIREMENTS in reverse order."
 	       (inapplicable-property
 		"Host's OS ~S fell through OS:TYPECASE."
 		(class-of (get-hostattrs-car :os))))))
-    (retprop :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
-					 collect (propapptype propapp)))
-	     :desc (lambda (&rest args)
-		     (declare (ignore args))
-		     (propappdesc (choose-propapp)))
-	     :check (lambda (&rest args)
+    (:retprop :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
+					  collect (propapptype propapp)))
+	      :desc (lambda (&rest args)
 		      (declare (ignore args))
-		      (propappcheck (choose-propapp)))
-	     :apply (lambda (&rest args)
-		      (declare (ignore args))
-		      (propappapply (choose-propapp)))
-	     :unapply (lambda (&rest args)
-			(declare (ignore args))
-			(propappunapply (choose-propapp))))))
+		      (propappdesc (choose-propapp)))
+	      :check (lambda (&rest args)
+		       (declare (ignore args))
+		       (propappcheck (choose-propapp)))
+	      :apply (lambda (&rest args)
+		       (declare (ignore args))
+		       (propappapply (choose-propapp)))
+	      :unapply (lambda (&rest args)
+			 (declare (ignore args))
+			 (propappunapply (choose-propapp))))))
