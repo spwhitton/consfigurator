@@ -47,11 +47,10 @@
     (setf (get sym 'papply) apply))
   (when unapply
     (setf (get sym 'unapply) unapply))
-  (setf (get sym 'property) t)
   sym)
 
 (defun isprop (prop)
-  (and (symbolp prop) (get prop 'property nil)))
+  (and (symbolp prop) (get prop 'isprop nil)))
 
 (defun proptype (prop)
   (get prop 'ptype))
@@ -110,6 +109,7 @@ This variable exists just to avoid consing these forms over and over again;
 see MAP-PROPSPEC-PROPAPPS for how they are used.")
 
 (defun record-known-property (psym)
+  (setf (get psym 'isprop) t)
   (push psym *known-properties*)
   (push `(,psym (&rest args)
 		(let ((gensym (gensym)))
@@ -222,7 +222,8 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 	     (let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
 	       ,@mforms
 	       `(progn
-		  (record-known-property ',,name)
+		  (eval-when (:compile-toplevel :load-toplevel :execute)
+		    (record-known-property ',,name))
 		  (store-indentation-info-for-emacs ',,name ',,lambdav ,indent)
 		  (setprop ',,name ,@,slotsv)
 		  ;; TODO Ideally we would use ,(ordinary-ll-without-&aux

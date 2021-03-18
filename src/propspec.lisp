@@ -109,17 +109,17 @@ arguments to properties in propapps, but that should not be needed."
 	      (error ()
 		(error 'invalid-or-ambiguous-propspec :propspec propspec)))))
       ;; Now we use a dummy macro expansion pass to find any symbols without
-      ;; function definitions occurring in function call positions.  These
-      ;; could potentially be properties whose definitions have not been
-      ;; loaded -- especially since we get called at compile time by PROPS --
-      ;; and if so, we would return an incorrect result because the previous
-      ;; step will not have identified all the propapps in the propspec.  So
-      ;; error out if we detect that situation.
+      ;; function or property definitions occurring in function call
+      ;; positions.  These could potentially be properties whose definitions
+      ;; have not been loaded -- especially since we get called at compile
+      ;; time by PROPS -- and if so, we would return an incorrect result
+      ;; because the previous step will not have identified all the propapps
+      ;; in the propspec.  So error out if we detect that situation.
       (macrolet-and-expand
        (loop for leaf in (delete-duplicates (flatten expanded))
 	     if (and (symbolp leaf) (not (isprop leaf)))
 	       collect `(,leaf (&rest args)
-			       (unless (fboundp ',leaf)
+			       (unless (or (fboundp ',leaf) (isprop ',leaf))
 				 (error 'ambiguous-propspec :name ',leaf))
 			       ;; return something which looks like an
 			       ;; ordinary function call to the code walker,
