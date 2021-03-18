@@ -79,10 +79,37 @@
 
 ;;;; Property combinators
 
-;; TODO should move OS-TYPECASE* here, once figure out API for property
-;; combinator helper macros
+(define-function-property-combinator os-typecase* (host &rest cases)
+  (flet ((choose-propapp ()
+	   (or (loop with os = (class-of (if host
+					     (car (getf (hostattrs host) :os))
+					     (get-hostattrs-car :os)))
+		     for (type propapp) on cases by #'cddr
+		     when (subtypep os type) return propapp)
+	       (inapplicable-property
+		"Host's OS ~S fell through OS:TYPECASE."
+		(class-of (get-hostattrs-car :os))))))
+    (:retprop :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
+					  collect (propapptype propapp)))
+	      :desc (lambda (&rest args)
+		      (declare (ignore args))
+		      (propappdesc (choose-propapp)))
+	      :check (lambda (&rest args)
+		       (declare (ignore args))
+		       (propappcheck (choose-propapp)))
+	      :apply (lambda (&rest args)
+		       (declare (ignore args))
+		       (propappapply (choose-propapp)))
+	      :unapply (lambda (&rest args)
+			 (declare (ignore args))
+			 (propappunapply (choose-propapp))))))
+
 (defmacro typecase (&rest cases)
-  `(consfigurator::os-typecase*
+  `(host-typecase nil ,@cases))
+
+(defmacro host-typecase (host &rest cases)
+  `(os-typecase*
+    ,host
     ,@(loop for case in cases
 	    collect `',(intern (symbol-name (car case))
 			       (find-package :consfigurator.property.os))

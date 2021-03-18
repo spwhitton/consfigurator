@@ -86,6 +86,13 @@
 	   ;; property.lisp
 	   #:propattrs
 	   #:propunapply
+	   #:collapse-types
+	   #:propapptype
+	   #:propappdesc
+	   #:propappattrs
+	   #:propappcheck
+	   #:propappapply
+	   #:propappunapply
 	   #:defprop
 	   #:defpropspec
 	   #:defproplist
@@ -105,6 +112,7 @@
 	   #:in-consfig
 	   #:make-propspec
 	   #:append-propspecs
+	   #:define-function-property-combinator
 	   #:seqprops
 	   #:eseqprops
 	   #:with-requirements
@@ -216,6 +224,7 @@
 	   #:debian-unstable
 	   #:debian-suite
 	   #:typecase
+	   #:host-typecase
 	   #:required
 	   #:supports-arch-p))
 
