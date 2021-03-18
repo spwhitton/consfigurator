@@ -220,22 +220,53 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 	     (when (> (length ,declarations) 1)
 	       (error "Multiple DECLARE forms unsupported."))
 	     ,@mforms
-	     (let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
+	     (let ((indent (cadr (assoc 'indent (cdar ,declarations))))
+		   ;; In the DEFUN below for calling the property
+		   ;; programmatically, we can only call the :CHECK subroutine
+		   ;; if it has the same lambda list as the :APPLY subroutine
+		   ;; (as it will for properties defined with DEFPROP).
+		   (check (and (getf ,slotsv :check)
+			       (equal (cadr (getf ,slotsv :check))
+				      (cadr (getf ,slotsv :apply)))
+			       `(when (progn ,@(cddr (getf ,slotsv :check)))
+				  (return-from ,,name :no-change)))))
 	       `(progn
 		  (eval-when (:compile-toplevel :load-toplevel :execute)
 		    (record-known-property ',,name))
 		  (store-indentation-info-for-emacs ',,name ',,lambdav ,indent)
 		  (setprop ',,name ,@,slotsv)
-		  ;; TODO Ideally we would use ,(ordinary-ll-without-&aux
-		  ;; ,lambdav) instead of (&rest args) here so that Emacs can
-		  ;; show you what arguments the property really takes when
-		  ;; you're typing propapps and also programmatic calls to the
-		  ;; property.  But not sure what the cleanest way is to pass
-		  ;; all the args to propapply/propappapply, or whether we
-		  ;; should be doing that.
-		  (defun ,,name (&rest args)
-		    (apply #'propappapply ',,name args))
-		  (define-dotted-property-macro ,,name ,,lambdav)))))))))
+		  (define-dotted-property-macro ,,name ,,lambdav)
+		  ;; Now prepare a DEFUN for the property, to enable calling
+		  ;; it programmatically within the :APPLY and :UNAPPLY
+		  ;; routines of other properties.  This can lead to clearer
+		  ;; code than going via DEFPROPSPEC/DEFPROPLIST for simple
+		  ;; things like installing packages.
+		  ,@(and
+		     (getf ,slotsv :apply)
+		     (destructuring-bind (sym ll . forms)
+			 (getf ,slotsv :apply)
+		       (declare (ignore sym))
+		       `((defun ,,name ,ll
+			   ;; Have to insert code to check connection type
+			   ;; because %CONSFIGURE won't see a programmatic
+			   ;; call and check this as is does for regular
+			   ;; propapps.
+			   ,@(and (eq ,typev :lisp)
+				  '((assert-connection-supports :lisp)))
+			   ;; Properties with :HOSTATTRS subroutines which set
+			   ;; new hostattrs should not be used
+			   ;; programmatically in this way, and using
+			   ;; properties with :HOSTATTRS subroutines which
+			   ;; only look at existing hostattrs has the
+			   ;; potential for trouble too, so issue a warning.
+			   ,@(and (getf ,slotsv :hostattrs)
+				  '((warn-programmatic-apply-hostattrs)))
+			   ,@(and check `(,check))
+			   ,@forms))))))))))))
+
+(defun warn-programmatic-apply-hostattrs ()
+  (warn "Calling property which has :HOSTATTRS subroutine programmatically.
+Use DEFPROPLIST/DEFPROPSPEC to avoid trouble."))
 
 ;; supported ways to write properties are DEFPROP, DEFPROPSPEC and DEFPROPLIST
 
@@ -247,11 +278,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
   (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
 	do (if-let ((slot (getf slots kw)))
 	     (setf (getf slots kw)
-		   `(lambda ,lambda
-		      ,@(and (eq type :lisp)
-			     (member kw '(:check :apply :unapply))
-			     `((assert-connection-supports :lisp)))
-		      ,@slot)))))
+		   `(lambda ,lambda ,@slot)))))
 
 (defun defpropspec-preprocess (&rest args)
   (list (list :propspec nil :orig-args args)))

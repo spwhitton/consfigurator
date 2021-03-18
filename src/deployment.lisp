@@ -25,7 +25,11 @@
 Assumes HOST has already had its :HOSTATTRS subroutines run, and arguments to
 connections in CONNECTIONS have been both normalised and preprocessed."
   (labels
-      ((connect (connections)
+      ((apply-propspec (propspec)
+	 (let ((propapp (eval-propspec propspec)))
+	   (assert-connection-supports (propapptype propapp))
+	   (propappapply propapp)))
+       (connect (connections)
 	 (destructuring-bind ((type . args) . remaining) connections
 	   ;; implementations of ESTABLISH-CONNECTION which call
 	   ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
@@ -33,7 +37,7 @@ connections in CONNECTIONS have been both normalised and preprocessed."
 		       (apply #'establish-connection type remaining args)))
 	     (if remaining
 		 (connect remaining)
-		 (propappapply (eval-propspec (host-propspec *host*))))
+		 (apply-propspec (host-propspec *host*)))
 	     (connection-teardown *connection*)))))
     (let ((*host* (preprocess-host host)))
       (connect (if (eq :local (caar connections))
