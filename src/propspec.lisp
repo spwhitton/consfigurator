@@ -337,8 +337,9 @@ apply the elements of REQUIREMENTS in reverse order."
 	   (or (loop with host = (class-of (get-hostattrs-car :os))
 		     for (type propapp) on cases by #'cddr
 		     when (subtypep host type) return propapp)
-	       (error 'inapplicable-property
-		      :text "Host's OS fell through OS:TYPECASE."))))
+	       (inapplicable-property
+		"Host's OS ~S fell through OS:TYPECASE."
+		(class-of (get-hostattrs-car :os))))))
     (retprop :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
 					 collect (propapptype propapp)))
 	     :desc (lambda (&rest args)

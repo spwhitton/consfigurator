@@ -97,8 +97,7 @@
 Used in property :HOSTATTRS subroutines."
   (let ((os (class-of (get-hostattrs-car :os))))
     (unless (and os (subtypep os type))
-      (error 'inapplicable-property
-	     :text #?"Property requires OS of type ${type}"))))
+      (inapplicable-property #?"Property requires OS of type ${type}"))))
 
 (defun supports-arch-p (os arch)
   "Can binaries of type ARCH run on OS?"

@@ -346,10 +346,10 @@ other than constant values and propapps to property combinators."
 
 ;;;; hostattrs in property subroutines
 
-(define-condition inapplicable-property (error)
-  ((text :initarg :text :reader inapplicable-property-text))
-  (:report (lambda (condition stream)
-	     (format stream "~A" (inapplicable-property-text condition)))))
+(define-simple-error inapplicable-property
+  "Signal, in a :HOSTATTRS subroutine, that the host's hostattrs indicate that
+this property cannot be applied to this host.  E.g. the property will try to
+install an apt package but the host is FreeBSD.")
 
 (defun get-hostattrs (k)
   "Retrieve the list of static informational attributes of type KEY.
@@ -390,13 +390,9 @@ Called by property subroutines."
 
 ;;;; :APPLY subroutines
 
-;; INAPPLICABLE-PROPERTY is for :HOSTATTRS subroutines, FAILED-CHANGE is for
-;; problems with the connection and errors while actually attempting to apply
-
-(define-condition failed-change (error)
-  ((text :initarg :text :reader failed-change-text))
-  (:report (lambda (condition stream)
-	     (format stream "~A" (failed-change-text condition)))))
+(define-simple-error failed-change
+  "Signal problems with the connection and errors while actually attempting to
+apply or unapply properties.")
 
 (defun call-with-os (f &rest args)
   (apply (ensure-function f) (get-hostattrs-car :os) args))
@@ -405,18 +401,17 @@ Called by property subroutines."
   "Assert that the remote user has uid 0 (root)"
   (if-let (uid (slot-value *connection* 'remote-uid))
     (unless (zerop uid)
-      (error 'failed-change :text "Property requires root to apply"))
+      (failed-change "Property requires root to apply"))
     (multiple-value-bind (out err exit)
         (run :may-fail "id" "-u")
       (unless (zerop exit)
-        (error 'failed-change
-	       :text #?"Failed to run id(1) on remote system: ${err}"))
+        (failed-change #?"Failed to run id(1) on remote system: ${err}"))
       (let ((new-uid (parse-integer out)))
         (unless (zerop new-uid)
-          (error 'failed-change :text "Property requires root to apply"))
+          (failed-change "Property requires root to apply"))
         (setf (slot-value *connection* 'remote-uid) new-uid)))))
 
 (defun assert-connection-supports (type)
   (unless (or (eq type :posix) (lisp-connection-p))
-    (error 'failed-change
-	   "Cannot apply :LISP properties using a POSIX-type connection")))
+    (failed-change
+     "Cannot apply :LISP properties using a POSIX-type connection")))

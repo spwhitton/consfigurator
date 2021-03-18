@@ -71,6 +71,14 @@ supported."
 	unless (char= #\& (char (symbol-name arg*) 0))
 	  collect arg*))
 
+(defmacro define-simple-error (name &optional docstring)
+  `(progn
+     (define-condition ,name (simple-error) ()
+       ,@(and docstring `((:documentation ,docstring))))
+     (defun ,name (message &rest args)
+       ,@(and docstring `(,docstring))
+       (error ',name :format-control message :format-arguments args))))
+
 
 ;;;; Version numbers
 
