@@ -327,6 +327,6 @@ apply the elements of REQUIREMENTS in reverse order."
 		      (strcat "Unapply: " (apply #'propdesc psym args)))
 	      :check (complement (get psym 'check))
 	      :apply (get psym 'unapply)
-	      :unapply (get psym 'apply)
+	      :unapply (get psym 'papply)
 	      :args args)))
 
