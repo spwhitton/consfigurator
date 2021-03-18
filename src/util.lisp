@@ -79,6 +79,11 @@ supported."
        ,@(and docstring `(,docstring))
        (error ',name :format-control message :format-arguments args))))
 
+(defun strip-declarations (forms)
+  (loop while (and (listp (car forms)) (eq 'declare (caar forms)))
+	do (pop forms)
+	finally (return forms)))
+
 
 ;;;; Version numbers
 

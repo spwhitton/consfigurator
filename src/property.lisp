@@ -221,6 +221,30 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 	       (error "Multiple DECLARE forms unsupported."))
 	     ,@mforms
 	     (let ((indent (cadr (assoc 'indent (cdar ,declarations))))
+		   ;; Instead of complicating this to support more
+		   ;; declarations, could avoid the need for it by defining a
+		   ;; function which just calls PROPAPPAPPLY.  Note that we
+		   ;; would need to parse the lambda list in order to get all
+		   ;; the variable names, so we don't have to just use (&REST
+		   ;; ARGS) which is worse for the user.
+		   (defun-declarations
+		     (loop
+		       for form in (append (getf ,slotsv :check)
+					   (getf ,slotsv :apply))
+		       when (and (listp form) (eq 'declare (car form)))
+			 nconc
+			 (loop
+			   for declaration in (cdr form)
+			   collect
+			   (case (car declaration)
+			     (ignore
+			      (cons 'ignorable (cdr declaration)))
+			     (ignorable
+			      declaration)
+			     (t
+			      (simple-program-error
+			       "Unsupported declaration ~S in property subroutine."
+			       (car declaration)))))))
 		   ;; In the DEFUN below for calling the property
 		   ;; programmatically, we can only call the :CHECK subroutine
 		   ;; if it has the same lambda list as the :APPLY subroutine
@@ -228,7 +252,8 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 		   (check (and (getf ,slotsv :check)
 			       (equal (cadr (getf ,slotsv :check))
 				      (cadr (getf ,slotsv :apply)))
-			       `(when (progn ,@(cddr (getf ,slotsv :check)))
+			       `(when (progn ,@(cddr (strip-declarations
+						      (getf ,slotsv :check))))
 				  (return-from ,,name :no-change)))))
 	       `(progn
 		  (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -247,6 +272,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 			 (getf ,slotsv :apply)
 		       (declare (ignore sym))
 		       `((defun ,,name ,ll
+			   (declare ,@defun-declarations)
 			   ;; Have to insert code to check connection type
 			   ;; because %CONSFIGURE won't see a programmatic
 			   ;; call and check this as is does for regular
@@ -262,7 +288,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 			   ,@(and (getf ,slotsv :hostattrs)
 				  '((warn-programmatic-apply-hostattrs)))
 			   ,@(and check `(,check))
-			   ,@forms))))))))))))
+			   ,@(strip-declarations forms)))))))))))))
 
 (defun warn-programmatic-apply-hostattrs ()
   (warn "Calling property which has :HOSTATTRS subroutine programmatically.
