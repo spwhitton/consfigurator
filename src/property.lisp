@@ -280,15 +280,6 @@ Use DEFPROPLIST/DEFPROPSPEC to avoid trouble."))
 	     (setf (getf slots kw)
 		   `(lambda ,lambda ,@slot)))))
 
-(defun defpropspec-preprocess (&rest args)
-  (list (list :propspec nil :orig-args args)))
-
-(defun defpropspec-apply (plist)
-  (propappapply (eval-propspec (getf plist :propspec))))
-
-(defun defpropspec-unapply (plist)
-  (propappunapply (eval-propspec (getf plist :propspec))))
-
 (define-property-defining-macro defpropspec (type lambda slots forms)
   "Define a property which constructs, evaluates and applies a propspec.
 This is how you can define a property which works by calling other properties,
@@ -317,9 +308,15 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   ;; resulting propspec at the other end of the pointer, so that the :APPLY
   ;; and :UNAPPLY subroutines can get at it.  We have to keep the original
   ;; arguments to the propapp around for the sake of the :DESC subroutine.
-  (setf (getf slots :preprocess) '#'defpropspec-preprocess)
-  (setf (getf slots :apply) '#'defpropspec-apply)
-  (setf (getf slots :unapply) '#'defpropspec-unapply)
+  (setf (getf slots :preprocess)
+	'(lambda (&rest args)
+	  (list (list :propspec nil :orig-args args))))
+  (setf (getf slots :apply)
+	'(lambda (plist)
+	  (propappapply (eval-propspec (getf plist :propspec)))))
+  (setf (getf slots :unapply)
+	'(lambda (plist)
+	  (propappunapply (eval-propspec (getf plist :propspec)))))
   (when (and (listp (car forms)) (eq :desc (caar forms)))
     (setf (getf slots :desc)
 	  `(lambda (plist)
