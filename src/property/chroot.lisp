@@ -31,6 +31,8 @@
 
 (defproplist os-bootstrapped :posix
     (options root properties &aux (host (make-host :propspec properties)))
-  (:desc "Built chroot ${root}")
+  (:desc
+   (declare (ignore options host))
+   #?"Built chroot ${root}")
   (%os-bootstrapped options root host)
   (deploys `((:chroot :into ,root)) host))
