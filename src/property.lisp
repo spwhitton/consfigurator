@@ -346,7 +346,7 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   (when (form-beginning-with :desc (car forms))
     (setf (getf slots :desc)
 	  `(lambda (plist)
-	     (destructuring-bind ,lambda
+	     (destructuring-bind ,(ordinary-ll-without-&aux lambda)
 		 (getf plist :orig-args)
 	       ,@(cdr (pop forms))))))
   (setf (getf slots :hostattrs)
