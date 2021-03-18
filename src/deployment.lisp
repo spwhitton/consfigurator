@@ -22,8 +22,8 @@
 (defun %consfigure (connections host)
   "Configurator's primary loop, recursively binding *CONNECTION* and *HOST*.
 
-Assumes HOST has already had its :HOSTATTRS subroutines run, and arguments to
-connections in CONNECTIONS have been both normalised and preprocessed."
+Assumes arguments to connections in CONNECTIONS have been both normalised and
+preprocessed."
   (labels
       ((apply-propspec (propspec)
 	 (let ((propapp (eval-propspec propspec)))
