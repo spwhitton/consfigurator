@@ -231,7 +231,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 		     (loop
 		       for form in (append (getf ,slotsv :check)
 					   (getf ,slotsv :apply))
-		       when (and (listp form) (eq 'declare (car form)))
+		       when (form-beginning-with declare form)
 			 nconc
 			 (loop
 			   for declaration in (cdr form)
@@ -343,7 +343,7 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   (setf (getf slots :unapply)
 	'(lambda (plist)
 	  (propappunapply (eval-propspec (getf plist :propspec)))))
-  (when (and (listp (car forms)) (eq :desc (caar forms)))
+  (when (form-beginning-with :desc (car forms))
     (setf (getf slots :desc)
 	  `(lambda (plist)
 	     (destructuring-bind ,lambda

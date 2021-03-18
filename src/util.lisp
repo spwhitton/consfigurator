@@ -79,8 +79,11 @@ supported."
        ,@(and docstring `(,docstring))
        (error ',name :format-control message :format-arguments args))))
 
+(defmacro form-beginning-with (sym form)
+  `(and (listp ,form) (eq ',sym (car ,form))))
+
 (defun strip-declarations (forms)
-  (loop while (and (listp (car forms)) (eq 'declare (caar forms)))
+  (loop while (form-beginning-with declare (car forms))
 	do (pop forms)
 	finally (return forms)))
 
