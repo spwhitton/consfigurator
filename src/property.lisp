@@ -252,8 +252,8 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 		   (check (and (getf ,slotsv :check)
 			       (equal (cadr (getf ,slotsv :check))
 				      (cadr (getf ,slotsv :apply)))
-			       `(when (progn ,@(cddr (strip-declarations
-						      (getf ,slotsv :check))))
+			       `(when (progn ,@(strip-declarations
+						(cddr (getf ,slotsv :check))))
 				  (return-from ,,name :no-change)))))
 	       `(progn
 		  (eval-when (:compile-toplevel :load-toplevel :execute)
