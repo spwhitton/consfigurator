@@ -308,6 +308,7 @@ Use DEFPROPLIST/DEFPROPSPEC to avoid trouble."))
 
 (define-property-defining-macro defpropspec (type lambda slots forms)
   "Define a property which constructs, evaluates and applies a propspec.
+
 This is how you can define a property which works by calling other properties,
 in accordance with property combinators.
 

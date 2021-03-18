@@ -18,21 +18,36 @@
 (in-package :consfigurator.property.chroot)
 (named-readtables:in-readtable :interpol-syntax)
 
-(defgeneric os-bootstrap (os root &key)
-  (:documentation
-   "Bootstrap OS into ROOT, e.g. with debootstrap(1)."))
-
-(defprop %os-bootstrapped :posix (options root host)
+(defprop %debootstrapped :posix (options root host)
+  "Bootstrap The Universal Operating System into ROOT using debootstrap(1)."
   (:check
    (declare (ignore options host))
-   (test "-d" root))
-  (:apply
-   (apply #'os-bootstrap (car (getf (hostattrs host) :os)) root options)))
+   ;; check whether a previous debootstrap failed partway through
+   (if (test "-d" (merge-pathnames "debootstrap/"
+				   (ensure-directory-pathname root)))
+       (progn (mrun "rm" "-rf" root) nil)
+       (test "-d" root))))
+
+(defpropspec %os-bootstrapper-installed :posix (host)
+  `(os:host-typecase ,host
+     (debian
+      (os:typecase
+	(debian (apt:installed "debootstrap"))))))
+
+(defpropspec %os-bootstrapped :posix (options root host)
+  "Bootstrap OS into ROOT, e.g. with debootstrap(1)."
+  (once-only (host)
+    `(os:host-typecase ,host
+       (debian (%debootstrapped ,options ,root ,host)))))
 
 (defproplist os-bootstrapped :posix
-    (options root properties &aux (host (make-host :propspec properties)))
+  (options root properties
+	   &aux (host (preprocess-host (make-host :propspec properties))))
+  "Bootstrap an OS into ROOT and apply PROPERTIES.
+OPTIONS is a value to pass to the OS-specific bootstrapping property."
   (:desc
-   (declare (ignore options host))
+   (declare (ignore options properties))
    #?"Built chroot ${root}")
+  (%os-bootstrapper-installed host)
   (%os-bootstrapped options root host)
   (deploys `((:chroot :into ,root)) host))

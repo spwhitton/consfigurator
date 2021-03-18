@@ -125,6 +125,7 @@
 	   #:defhost
 	   #:make-host
 	   #:hostattrs
+	   #:preprocess-host
 
 	   ;; deployment.lisp
 	   #:defdeploy
@@ -244,7 +245,7 @@
   (:export #:has-account))
 
 (defpackage :consfigurator.property.chroot
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:consfigurator #:alexandria)
   (:local-nicknames (#:apt   #:consfigurator.property.apt)
 		    (#:os    #:consfigurator.property.os)
 		    (#:file  #:consfigurator.property.file))
