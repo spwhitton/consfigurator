@@ -289,9 +289,9 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   ;; resulting propspec at the other end of the pointer, so that the :APPLY
   ;; and :UNAPPLY subroutines can get at it.  We have to keep the original
   ;; arguments to the propapp around for the sake of the :DESC subroutine.
-  (setf (getf slots :preprocess) #'defpropspec-preprocess)
-  (setf (getf slots :apply) #'defpropspec-apply)
-  (setf (getf slots :unapply) #'defpropspec-unapply)
+  (setf (getf slots :preprocess) '#'defpropspec-preprocess)
+  (setf (getf slots :apply) '#'defpropspec-apply)
+  (setf (getf slots :unapply) '#'defpropspec-unapply)
   (when (and (listp (car forms)) (eq :desc (caar forms)))
     (setf (getf slots :desc)
 	  `(lambda (plist)
