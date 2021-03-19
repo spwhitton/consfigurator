@@ -62,6 +62,9 @@
 		   (list *standard-input* *debug-io* *terminal-io*))
 	     (unless (zerop (chroot into))
 	       (error "chroot(2) failed; are you root?"))
+	     ;; chdir, else our current working directory is a pointer to
+	     ;; something outside the chroot
+	     (uiop:chdir "/")
 	     ;; it would be nice to reenter Consfigurator's primary loop by
 	     ;; just calling (return-from establish-connection
 	     ;; (establish-connection :local)) here, but we need to kill off
