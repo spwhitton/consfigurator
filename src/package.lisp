@@ -243,6 +243,9 @@
   (:export #:installed
 	   #:removed
 	   #:mirror
+	   #:uses-parent-mirror
+	   #:proxy
+	   #:uses-parent-proxy
 	   #:standard-sources.list))
 
 (defpackage :consfigurator.property.user

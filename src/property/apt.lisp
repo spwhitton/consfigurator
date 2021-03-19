@@ -59,6 +59,22 @@
   (:hostattrs
    (pushnew-hostattrs :apt.mirror uri)))
 
+(defproplist uses-parent-mirror :posix ()
+  (:desc #?"Uses parent's apt mirror")
+  (mirror (get-parent-hostattrs-car :apt.mirror)))
+
+(defprop proxy :posix (uri)
+  (:desc #?"${uri} apt proxy selected")
+  (:hostattrs
+   (pushnew-hostattrs :apt.proxy uri))
+  (:apply
+   (file:has-content "/etc/apt/apt.conf.d/20proxy"
+		     (format nil "Acquire::HTTP::Proxy \"~A\";~%" uri))))
+
+(defproplist uses-parent-proxy :posix ()
+  (:desc #?"Uses parent's apt proxy")
+  (proxy (get-parent-hostattrs-car :apt.proxy)))
+
 (defun get-mirrors ()
   (or (get-hostattrs :apt.mirror) (call-with-os #'get-default-mirrors)))
 
