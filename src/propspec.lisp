@@ -272,7 +272,7 @@ application specification expression to a property application specification."
        ,@docstring
        ,@declarations
        (flet ((:retprop (&rest all &key args &allow-other-keys)
-		(let ((psym (gensym))
+		(let ((psym (gensym ,(symbol-name name)))
 		      (setprop-args (remove-from-plist all :args)))
 		  (apply #'setprop psym setprop-args)
 		  (return-from ,name (list* psym args)))))
