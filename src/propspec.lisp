@@ -277,6 +277,13 @@ expression."
 		  (return-from ,name (list* psym args)))))
 	 ,@forms))))
 
+(defmacro with-skip-failed-changes (&body forms)
+  `(handler-bind ((failed-change
+		    (lambda (c)
+		      (declare (ignore c))
+		      (invoke-restart 'skip-property))))
+     ,@forms))
+
 (define-function-property-combinator eseqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
 	   :check (constantly nil)
@@ -288,11 +295,7 @@ expression."
 	   :check (constantly nil)
 	   :hostattrs (lambda () (mapc #'propappattrs propapps))
 	   :apply (lambda ()
-		    (handler-bind
-			((failed-change
-			   (lambda (c)
-			     (declare (ignore c))
-			     (invoke-restart 'skip-property))))
+		    (with-skip-failed-changes
 		      (apply-and-print propapps)))))
 
 (defmacro with-requirements (propapp &body requirements)
@@ -306,11 +309,7 @@ apply the elements of REQUIREMENTS in reverse order."
 	    :check (constantly nil)
 	    :hostattrs (lambda () (mapc #'propappattrs propapps))
 	    :apply (lambda ()
-		     (handler-bind
-			 ((failed-change
-			    (lambda (c)
-			      (declare (ignore c))
-			      (invoke-restart 'skip-property))))
+		     (with-skip-failed-changes
 		       (mapc #'propappapply propapps)))))
 
 ;; note that the :FAILED-CHANGE value is only used within this function and
