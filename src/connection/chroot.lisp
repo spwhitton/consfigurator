@@ -30,7 +30,7 @@ circumstances in which it is known that we cannot fork, not that we are sure
 we can fork -- a thread might be only partly initialised at the time we check,
 for example, such that we don't see it."
   (and
-   #+sbcl (not (sb-thread:list-all-threads))))
+   #+sbcl (> 2 (length (sb-thread:list-all-threads)))))
 
 (defmethod establish-connection ((type (eql :chroot)) remaining &key into)
   (establish-connection (if (and (lisp-connection-p)
