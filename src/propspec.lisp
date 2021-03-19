@@ -207,6 +207,14 @@ systems."
 		     :systems systems :propspec propspec)
       (make-instance 'unpreprocessed-propspec :propspec propspec)))
 
+(defmethod print-object ((propspec unpreprocessed-propspec) stream)
+  (format stream "#.~S" `(make-instance
+			  'unpreprocessed-propspec
+			  :systems ',(slot-value propspec 'systems)
+			  :propspec
+			  ',(slot-value propspec 'propspec-expression)))
+  propspec)
+
 (defmethod print-object ((propspec preprocessed-propspec) stream)
   (format stream "#.~S" `(make-instance
 			  'preprocessed-propspec
