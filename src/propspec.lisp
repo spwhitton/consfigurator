@@ -286,17 +286,17 @@ expression."
 
 (define-function-property-combinator eseqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
-	   :check (constantly nil)
-	   :hostattrs (lambda () (mapc #'propappattrs propapps))
-	   :apply (lambda () (apply-and-print propapps))))
+	    :check (constantly nil)
+	    :hostattrs (lambda () (mapc #'propappattrs propapps))
+	    :apply (lambda () (apply-and-print propapps))))
 
 (define-function-property-combinator seqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
-	   :check (constantly nil)
-	   :hostattrs (lambda () (mapc #'propappattrs propapps))
-	   :apply (lambda ()
-		    (with-skip-failed-changes
-		      (apply-and-print propapps)))))
+	    :check (constantly nil)
+	    :hostattrs (lambda () (mapc #'propappattrs propapps))
+	    :apply (lambda ()
+		     (with-skip-failed-changes
+		       (apply-and-print propapps)))))
 
 (defmacro with-requirements (propapp &body requirements)
   "Apply PROPAPP only after applying each dependency in REQUIREMENTS.
