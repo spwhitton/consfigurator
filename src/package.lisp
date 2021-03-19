@@ -52,6 +52,7 @@
 	   #:noop
 	   #:symbol-named
 	   #:memstring=
+	   #:plist-to-cmd-args
 
 	   #:version<
 	   #:version>
