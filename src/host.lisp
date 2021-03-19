@@ -132,7 +132,9 @@ entries."
     `(progn
        (declaim (type host ,hostname-sym))
        (defparameter ,hostname-sym
-	 (make-host :hostattrs ',attrs :propspec (props seqprops ,@properties))
+	 (make-host :hostattrs ',attrs
+		    :propspec (make-propspec
+			       :propspec (props seqprops ,@properties)))
 	 ,(car (getf attrs :desc)))
        ,@(and deploy
 	      `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))

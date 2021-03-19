@@ -250,17 +250,16 @@ processed."
 
 (defmacro props (combinator &rest forms)
   "Apply variadic COMBINATOR to FORMS and convert from an unevaluated property
-application specification expression to a property application specification."
+application specification expression to a property application specification
+expression."
   (flet ((evaluate (propapp)
 	   `(list ',(car propapp) ,@(cdr propapp))))
-    (let ((propspec
-	    (handler-case
-		(map-propspec-propapps #'evaluate (cons combinator forms) t)
-	      (ambiguous-propspec (c)
-		;; resignal with a more specific error message
-		(error 'ambiguous-unevaluated-propspec
-		       :name (cell-error-name c))))))
-      `(make-propspec :propspec ,propspec))))
+    (handler-case
+	(map-propspec-propapps #'evaluate (cons combinator forms) t)
+      (ambiguous-propspec (c)
+	;; resignal with a more specific error message
+	(error 'ambiguous-unevaluated-propspec
+	       :name (cell-error-name c))))))
 
 
 ;;;; Property combinators

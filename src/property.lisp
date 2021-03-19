@@ -192,9 +192,11 @@ dotted name alongside NAME."
       `(defmacro ,(format-symbol (symbol-package name) "~A." name) ,new-args
 	 ,@(cond
 	     ((and first will-props)
-	      `(`(,',name ,,first ,,@middle (props eseqprops ,@,rest))))
+	      `(`(,',name ,,first ,,@middle (make-propspec
+					     :propspec (props eseqprops ,@,rest)))))
 	     (will-props
-	      `(`(,',name ,,@middle (props eseqprops ,@,rest))))
+	      `(`(,',name ,,@middle (make-propspec
+				     :propspec (props eseqprops ,@,rest)))))
 	     (first
 	      `((declare (ignore ,@(cdr (ordinary-ll-variable-names
 					 (ordinary-ll-without-&aux args)))))
@@ -323,10 +325,10 @@ docstring for the resulting property.  If the first element of the body after
 any such string is a list beginning with :DESC, the remainder will be used as
 the :DESC subroutine for the resulting property, like DEFPROP.  Otherwise, the
 body defines a function of the arguments specified by the lambda list which
-returns the propspec to be evaluated and applied.  It should be a pure
-function aside from retrieving hostattrs (as set by other properties applied
-to the hosts to which the resulting property is applied, not as set by the
-properties in the returned propspec).
+returns the property application specification expression to be evaluated and
+applied.  It should be a pure function aside from retrieving hostattrs (as set
+by other properties applied to the hosts to which the resulting property is
+applied, not as set by the properties in the returned propspec).
 
 You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   ;; This is implemented by effectively pushing a null pointer to the front of
@@ -353,9 +355,11 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   (setf (getf slots :hostattrs)
 	`(lambda (plist)
 	   (let ((propspec (preprocess-propspec
-			    (destructuring-bind ,lambda
-				(getf plist :orig-args)
-			      ,@forms))))
+			    (make-propspec
+			     :systems (propspec-systems (host-propspec *host*))
+			     :propspec (destructuring-bind ,lambda
+					   (getf plist :orig-args)
+					 ,@forms)))))
 	     (setf (getf plist :propspec) propspec)
 	     (propappattrs (eval-propspec propspec))))))
 

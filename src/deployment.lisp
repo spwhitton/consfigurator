@@ -109,7 +109,8 @@ ADDITIONAL-PROPERTIES may set additional hostattrs)."
     `(deploy* ',connections
 	      ,host
 	      (let ((*host* (shallow-copy-host ,host)))
-		(props eseqprops ,@additional-properties)))))
+		(make-propspec
+		 :propspec (props eseqprops ,@additional-properties))))))
 
 (defmacro deploy-these (connections host &body properties)
   "Like DEPLOY, except apply each of the properties specified by PROPERTIES,
@@ -137,7 +138,8 @@ set additional hostattrs)."
     `(deploy-these* ',connections
 		    ,host
 		    (let ((*host* (shallow-copy-host ,host)))
-		      (props eseqprops ,@properties)))))
+		      (make-propspec
+		       :propspec (props eseqprops ,@properties))))))
 
 (defmacro defdeploy (name (connections host) &body additional-properties)
   "Define a function which does (DEPLOY CONNECTIONS HOST ADDITIONAL-PROPERTIES).
