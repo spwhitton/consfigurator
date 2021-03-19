@@ -222,12 +222,14 @@
   (:shadow #:typecase)
   (:export #:unixlike
 	   #:linux
+	   #:linux-architecture
 	   #:debianlike
 	   #:debian
 	   #:debian-stable
 	   #:debian-testing
 	   #:debian-unstable
 	   #:debian-suite
+	   #:debian-architecture
 	   #:typecase
 	   #:host-typecase
 	   #:required

@@ -76,6 +76,10 @@
 		   (make-instance 'debian-unstable
 				  :arch architecture))))
 
+(defmethod debian-architecture ((os linux))
+  "Return a string representing the architecture of OS as used by Debian."
+  (string-downcase (symbol-name (linux-architecture os))))
+
 
 ;;;; Property combinators
 
