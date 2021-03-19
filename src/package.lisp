@@ -99,6 +99,8 @@
 	   #:inapplicable-property
 	   #:get-hostattrs
 	   #:get-hostattrs-car
+	   #:get-parent-hostattrs
+	   #:get-parent-hostattrs-car
 	   #:push-hostattrs
 	   #:pushnew-hostattrs
 	   #:get-hostname
@@ -124,6 +126,7 @@
 	   #:host
 	   #:defhost
 	   #:make-host
+	   #:make-child-host
 	   #:hostattrs
 	   #:preprocess-host
 

@@ -70,6 +70,14 @@ values higher up the call stack."))
   (make-instance 'unpreprocessed-host
 		 :hostattrs hostattrs :propspec propspec))
 
+(defun make-child-host (&key hostattrs propspec)
+  "Make a host object to represent a chroot, container or the like.
+Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
+  (make-instance
+   'unpreprocessed-host
+   :propspec propspec
+   :hostattrs (list* :parent-hostattrs (hostattrs *host*) hostattrs)))
+
 (defmethod print-object ((host host) stream)
   (format stream "#.~S" `(make-instance
 			  ',(type-of host)
