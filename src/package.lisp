@@ -113,6 +113,8 @@
 
 	   ;; propspec.lisp
 	   #:in-consfig
+	   #:propspec-systems
+	   #:propspec-props
 	   #:make-propspec
 	   #:append-propspecs
 	   #:define-function-property-combinator
@@ -267,9 +269,10 @@
 
 (defpackage :consfigurator.property.chroot
   (:use #:cl #:consfigurator #:alexandria)
-  (:local-nicknames (#:apt   #:consfigurator.property.apt)
-		    (#:os    #:consfigurator.property.os)
-		    (#:file  #:consfigurator.property.file))
+  (:local-nicknames (#:service   #:consfigurator.property.service)
+		    (#:apt       #:consfigurator.property.apt)
+		    (#:os        #:consfigurator.property.os)
+		    (#:file      #:consfigurator.property.file))
   (:export #:os-bootstrapped
 	   #:os-bootstrapped.))
 

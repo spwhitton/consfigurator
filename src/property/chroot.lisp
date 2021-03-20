@@ -26,7 +26,21 @@
    (if (test "-d" (merge-pathnames "debootstrap/"
 				   (ensure-directory-pathname root)))
        (progn (mrun "rm" "-rf" root) nil)
-       (test "-d" root))))
+       (test "-d" root)))
+  (:apply
+   (let* ((os (car (getf (hostattrs host) :os)))
+	  (args (list (if (os:supports-arch-p (get-hostattrs-car :os)
+					      (os:linux-architecture os))
+			  "debootstrap" "qemu-debootstrap")
+		      (plist-to-cmd-args options)
+		      (strcat "--arch=" (os:debian-architecture os))
+		      (os:debian-suite os)
+		      root)))
+     (when-let ((proxy (get-hostattrs-car :apt.proxy)))
+       (setq args (list* :env (list :http_proxy proxy) args)))
+     (when-let ((mirror (get-hostattrs-car :apt.mirror)))
+       (nconcf args (list mirror)))
+     (apply #'run args))))
 
 (defpropspec %os-bootstrapper-installed :posix (host)
   `(os:host-typecase ,host
@@ -44,8 +58,22 @@
 
 (defproplist os-bootstrapped :posix
     (options root properties
-	     &aux (host (preprocess-host
-			 (make-child-host :propspec properties))))
+	     &aux (host
+		   (preprocess-host
+		    (make-child-host
+		     :propspec
+		     (make-propspec
+		      :systems (propspec-systems properties)
+		      ;; Note that this apply-and-unapply approach will not
+		      ;; work as part of a larger propspec because unapplying
+		      ;; SERVICE:NO-SERVICES doesn't remove the :NO-SERVICES
+		      ;; hostattr.  It's only okay because we know that the
+		      ;; unapplication is the last property that will be
+		      ;; applied to HOST (though perhaps not to the chroot).
+		      :propspec `(eseqprops
+				  (service:no-services)
+				  ,(propspec-props properties)
+				  (unapply (service:no-services))))))))
   "Bootstrap an OS into ROOT and apply PROPERTIES.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc
