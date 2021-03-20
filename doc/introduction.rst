@@ -67,6 +67,8 @@ Try it out / quick start
 	    (os:debian-unstable :amd64)
 	    (apt:standard-sources.list)
 
+	    ;; These two properties are not for debootstrap(1) for but apt
+	    ;; inside the chroot.
 	    (apt:uses-parent-proxy) ; use the apt-cacher-ng set up outside chroot
 	    (apt:uses-parent-mirror))) ; use the apt mirror set up above
 
