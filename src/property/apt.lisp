@@ -54,6 +54,15 @@
   (:apply
    (apt-get :princ "-y" "remove" packages)))
 
+(defproplist service-installed-running :posix (package)
+  "Where PACKAGE installs a service named PACKAGE, ensure it is installed and
+running.
+
+E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
+  (:desc #?"${package} installed and running")
+  (installed package)
+  (service:running package))
+
 (defprop mirror :posix (uri)
   (:desc #?"${uri} apt mirror selected")
   (:hostattrs
@@ -74,6 +83,11 @@
 (defproplist uses-parent-proxy :posix ()
   (:desc #?"Uses parent's apt proxy")
   (proxy (get-parent-hostattrs-car :apt.proxy)))
+
+(defproplist uses-local-cacher :posix ()
+  (:desc "apt uses local apt cacher")
+  (service-installed-running "apt-cacher-ng")
+  (proxy "http://localhost:3142"))
 
 (defun get-mirrors ()
   (or (get-hostattrs :apt.mirror) (call-with-os #'get-default-mirrors)))

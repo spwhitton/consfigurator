@@ -246,15 +246,18 @@
 
 (defpackage :consfigurator.property.apt
   (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:re  #:cl-ppcre)
-		    (#:file  #:consfigurator.property.file)
-		    (#:os    #:consfigurator.property.os))
+  (:local-nicknames (#:re         #:cl-ppcre)
+		    (#:file       #:consfigurator.property.file)
+		    (#:os         #:consfigurator.property.os)
+		    (#:service    #:consfigurator.property.service))
   (:export #:installed
 	   #:removed
+	   #:service-installed-running
 	   #:mirror
 	   #:uses-parent-mirror
 	   #:proxy
 	   #:uses-parent-proxy
+	   #:uses-local-cacher
 	   #:standard-sources.list))
 
 (defpackage :consfigurator.property.user
