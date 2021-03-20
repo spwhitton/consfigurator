@@ -46,14 +46,29 @@ Try it out / quick start
 	    (:deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl))
           "Web and file server."
 	  (os:debian-stable "buster" :amd64)
+
+	  (apt:mirror "http://my.local.mirror.example.com/")
+	  (apt:uses-local-cacher) ; sets up apt-cacher-ng
 	  (apt:standard-sources.list)
-	  (apt:installed "apache2")
+
+	  (apt:service-installed-running "apache2")
+
 	  (file:has-content "/etc/foo"
 	    #?{Here is my file content.
 	You can use ${my-substitution} thanks to CL-INTERPOL.
 	And it's multiline.  CL-HEREDOC is another option.})
 	  (file:has-content "/etc/bar" '("or" "specify" "a" "list" "of" "lines""))
-	  (file:contains-lines "/etc/some.conf" '("FOO=bar"))) ; preserve rest of file contents
+	  (file:contains-lines "/etc/some.conf" '("FOO=bar")) ; preserve rest of file contents
+
+	  ;; This will call debootstrap(1) in a way which respects the apt
+	  ;; cacher and mirror configured above, so setting up multiple
+	  ;; chroots with the same OS will be fast.
+	  (chroot:os-bootstrapped. nil "/srv/chroot/test"
+	    (os:debian-unstable :amd64)
+	    (apt:standard-sources.list)
+
+	    (apt:uses-parent-proxy) ; use the apt-cacher-ng set up outside chroot
+	    (apt:uses-parent-mirror))) ; use the apt mirror set up above
 
     Here, "spwhitton" is my username on athena; we have to tell Consfigurator
     what user it will be when it tries to sudo, so it knows whose password it
