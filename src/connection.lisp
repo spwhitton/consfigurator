@@ -320,7 +320,11 @@ start with RUN."
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))
 
-(defun writefile (path content &key (mode #o644 mode-supplied-p))
+(defun writefile (path content
+		  &key (mode #o644 mode-supplied-p)
+		  &aux (namestring (etypecase path
+				     (pathname (unix-namestring path))
+				     (string path))))
   ;; If (lisp-connection-p), the file already exists, and it's not owned by
   ;; us, we could (have a keyword argument to) bypass CONNECTION-WRITEFILE and
   ;; just WRITE-STRING to the file.  That way we don't replace the file with
@@ -334,11 +338,14 @@ start with RUN."
 	  (((lambda (s) (delete #\- s)) umode gmode omode) uid gid)
 	  (#?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
 	   (mrun "ls" "-nd" path) :sharedp t)
-	(connection-writefile *connection* path content mode)
-	(let ((path (escape-sh-token path)))
+	(connection-writefile *connection*
+			      namestring
+			      content
+			      mode)
+	(let ((namestring (escape-sh-token namestring)))
 	  (unless mode-supplied-p
 	    ;; assume that if we can write it we can chmod it
-	    (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${path}"))
+	    (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${namestring}"))
 	  ;; we may not be able to chown; that's okay
 	  (mrun :may-fail #?"chown ${uid}:${gid} ${path}")))
-      (connection-writefile *connection* path content mode)))
+      (connection-writefile *connection* namestring content mode)))
