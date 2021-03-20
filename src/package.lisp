@@ -237,6 +237,13 @@
 	   #:required
 	   #:supports-arch-p))
 
+(defpackage :consfigurator.property.service
+  (:use #:cl #:alexandria #:consfigurator)
+  (:local-nicknames (#:os    #:consfigurator.property.os)
+		    (#:file  #:consfigurator.property.file))
+  (:export #:no-services
+	   #:running))
+
 (defpackage :consfigurator.property.apt
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:re  #:cl-ppcre)
