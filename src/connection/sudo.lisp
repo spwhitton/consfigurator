@@ -52,7 +52,8 @@
 		   as
 		   (destructuring-bind (user host)
 		       (split-string as :separator "@")
-		     (get-data-string (strcat "--user-passwd--" host) user)))))
+		     (get-data-protected-string
+		      (strcat "--user-passwd--" host) user)))))
 
 (defmethod establish-connection ((type (eql :sudo))
 				 remaining
@@ -66,7 +67,9 @@
 		 ;; we'll send the password followed by ^M, then the real
 		 ;; stdin.  use CODE-CHAR in this way so that we can be sure
 		 ;; ASCII ^M is what will get emitted.
-		 :password (strcat password (string (code-char 13)))))
+		 :password (and password
+				(strcat (passphrase password)
+					(string (code-char 13))))))
 
 (defclass sudo-connection (shell-wrap-connection)
   ((user

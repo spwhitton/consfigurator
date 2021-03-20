@@ -167,6 +167,8 @@
 	   #:get-data-string
 	   #:upload-all-prerequisite-data
 	   #:request-lisp-systems
+	   #:passphrase
+	   #:get-data-protected-string
 	   #:continue-deploy*-program))
 
 (defpackage :consfigurator.connection.shell-wrap

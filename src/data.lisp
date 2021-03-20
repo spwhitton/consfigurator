@@ -350,6 +350,32 @@ of the current connection, where each entry is of the form
   "#+sbcl (require \"sb-cltl2\")"
   :test #'equal)
 
+
+;;;; Passphrases
+
+(defclass passphrase ()
+  ((passphrase :initarg :passphrase :reader passphrase)))
+
+(defun get-data-protected-string (iden1 iden2)
+  "Like GET-DATA-STRING, but wrap the content in an object which is unprintable
+by default.  Intended for code which fetches passwords and wants to lessen the
+chance of those passwords showing up in the clear in the Lisp debugger."
+  (make-instance 'passphrase :passphrase (get-data-string iden1 iden2)))
+
+(defvar *allow-printing-passphrases* nil)
+
+(defmethod print-object ((passphrase passphrase) stream)
+  (if *allow-printing-passphrases*
+      (format stream "#.~S"
+	      `(make-instance 'passphrase
+			      :passphrase ,(passphrase passphrase)))
+      (print-unreadable-object (passphrase stream)
+	(format stream "PASSPHRASE")))
+  passphrase)
+
+
+;;;; Programs for remote Lisp images
+
 (defun continue-deploy*-program (remaining-connections)
   "Return a program to complete the work of an enclosing call to DEPLOY*.
 
@@ -402,12 +428,13 @@ Preprocessing must occur in the root Lisp."))
 		    ,(wrap `((%consfigure ',remaining-connections ,*host*))))))
       (handler-case
 	  (with-standard-io-syntax
-	    ;; need line breaks in between so that packages exist before we
-	    ;; try to have remote Lisp read sexps containing symbols from
-	    ;; those packages
-	    (format nil "~A~%~{~A~^~%~}"
-		    +continue-deploy*-program-implementation-specific+
-		    (mapcar #'prin1-to-string forms)))
+	    (let ((*allow-printing-passphrases* t))
+	      ;; need line breaks in between so that packages exist before we
+	      ;; try to have remote Lisp read sexps containing symbols from
+	      ;; those packages
+	      (format nil "~A~%~{~A~^~%~}"
+		      +continue-deploy*-program-implementation-specific+
+		      (mapcar #'prin1-to-string forms))))
 	(print-not-readable (c)
 	  (error "The Lisp printer could not serialise ~A for
 transmission to the remote Lisp.
