@@ -36,7 +36,9 @@
 
 (defpropspec %os-bootstrapped :posix (options root host)
   "Bootstrap OS into ROOT, e.g. with debootstrap(1)."
-  (once-only (host)
+  ;; evaluate HOST once; can't use ONCE-ONLY because gensyms not serialisable
+  ;; for sending to remote Lisp images
+  (let ((host host))
     `(os:host-typecase ,host
        (debian (%debootstrapped ,options ,root ,host)))))
 
