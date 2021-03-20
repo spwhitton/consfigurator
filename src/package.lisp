@@ -210,6 +210,8 @@
   (:local-nicknames (#:re #:cl-ppcre))
   (:export #:has-content
 	   #:contains-lines
+	   #:has-mode
+	   #:does-not-exist
 	   #:data-uploaded
 	   #:host-data-uploaded
 	   #:secret-uploaded

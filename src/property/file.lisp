@@ -16,6 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.property.file)
+(named-readtables:in-readtable :interpol-syntax)
 
 (defun map-file-lines (file function)
   "Apply FUNCTION to the lines of FILE.  Safe to use in a :POSIX property.
@@ -44,6 +45,18 @@ CONTENT can be a list of lines or a single string."
      (dolist (existing-line existing-lines)
        (deletef new-lines existing-line :test #'string=))
      (writefile path (unlines (nconc existing-lines new-lines))))))
+
+(defprop has-mode :posix (path mode)
+  "Ensure that a file has a particular numeric mode."
+  (:desc (format nil "~A has mode ~O" path mode))
+  (:apply
+   (mrun (format nil "chmod ~O ~A" mode path))))
+
+(defprop does-not-exist :posix (path)
+  "Ensure that a file does not exist."
+  (:desc #?"${path} does not exist")
+  (:check (test "!" "-e" path))
+  (:apply (run "rm" "-f" path)))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
   (:hostattrs
