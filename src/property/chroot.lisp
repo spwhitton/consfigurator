@@ -18,7 +18,7 @@
 (in-package :consfigurator.property.chroot)
 (named-readtables:in-readtable :interpol-syntax)
 
-(defprop %debootstrapped :posix (options root host)
+(defprop %debootstrapped :posix (root host &rest options)
   "Bootstrap The Universal Operating System into ROOT using debootstrap(1)."
   (:check
    (declare (ignore options host))
@@ -40,13 +40,13 @@
   ;; for sending to remote Lisp images
   (let ((host host))
     `(os:host-typecase ,host
-       (debian (%debootstrapped ,options ,root ,host)))))
+       (debian (%debootstrapped ,root ,host ,@options)))))
 
 (defproplist os-bootstrapped :posix
   (options root properties
 	   &aux (host (preprocess-host (make-host :propspec properties))))
   "Bootstrap an OS into ROOT and apply PROPERTIES.
-OPTIONS is a value to pass to the OS-specific bootstrapping property."
+OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc
    (declare (ignore options properties))
    #?"Built chroot ${root}")
