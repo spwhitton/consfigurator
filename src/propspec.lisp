@@ -286,13 +286,11 @@ expression."
 
 (define-function-property-combinator eseqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
-	    :check (constantly nil)
 	    :hostattrs (lambda () (mapc #'propappattrs propapps))
 	    :apply (lambda () (apply-and-print propapps))))
 
 (define-function-property-combinator seqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
-	    :check (constantly nil)
 	    :hostattrs (lambda () (mapc #'propappattrs propapps))
 	    :apply (lambda ()
 		     (with-skip-failed-changes
@@ -306,7 +304,6 @@ apply the elements of REQUIREMENTS in reverse order."
 
 (define-function-property-combinator silent-seqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
-	    :check (constantly nil)
 	    :hostattrs (lambda () (mapc #'propappattrs propapps))
 	    :apply (lambda ()
 		     (with-skip-failed-changes
@@ -347,7 +344,6 @@ ON-CHANGE in order."
 	    :desc (get (car propapp) 'desc)
 	    :hostattrs (lambda (&rest args)
 			 (apply #'propattrs (car propapp) args))
-	    :check (get (car propapp) 'check)
 	    :apply (lambda (&rest args)
 		     (unless (eq (propappapply (cons (car propapp) args))
 				 :no-change)
