@@ -40,7 +40,9 @@ preprocessed."
 		 (apply-propspec (host-propspec *host*)))
 	     (connection-teardown *connection*)))))
     (let ((*host* (preprocess-host host)))
-      (connect (if (eq :local (caar connections))
+      ;; prepend :LOCAL only if it's not already there and there is no
+      ;; connection already established
+      (connect (if (or *connection* (eq :local (caar connections)))
 		   connections
 		   (cons '(:local) connections))))))
 
