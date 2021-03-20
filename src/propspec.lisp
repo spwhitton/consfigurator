@@ -336,7 +336,8 @@ apply the elements of REQUIREMENTS in reverse order."
 	      :lambda (proplambda psym)
 	      :desc (lambda (&rest args)
 		      (strcat "Unapply: " (apply #'propdesc psym args)))
-	      :check (complement (get psym 'check))
+	      :check (when-let ((check (get psym 'check)))
+		       (complement check))
 	      :hostattrs (lambda (&rest args)
 			   ;; run the :HOSTATTRS subroutine but throw away any
 			   ;; new hostattrs; when unapplying, the :HOSTATTRS
