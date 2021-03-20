@@ -207,7 +207,7 @@ and/or lacks.  For example,::
 
 Property application specifications are applied in order, so properties later
 in the list usually implicitly depend on properties earlier in the list,
-though some property combinators can undo this.
+though some property combinators can change this.
 
 Unevaluated property application specification ("unevaluated propspec")
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
