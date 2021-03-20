@@ -16,6 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator)
+(named-readtables:in-readtable :consfigurator)
 
 (defun noop (&rest args)
   "Accept any arguments and do nothing."

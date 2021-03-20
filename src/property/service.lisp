@@ -16,7 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.property.service)
-(named-readtables:in-readtable :interpol-syntax)
+(named-readtables:in-readtable :consfigurator)
 
 ;;;; Controlling services using service(1)
 

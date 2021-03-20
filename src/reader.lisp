@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2020-2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,16 +15,9 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :consfigurator.property.cmd)
-(named-readtables:in-readtable :consfigurator)
+(in-package :consfigurator)
 
-(defprop single :posix (&rest args)
-  "A property which can be applied by running a single shell command.  ARGS is
-either a single string specifying a shell-escaped command, or number of
-strings which will be shell-escaped and then concatenated.
-
-(Note that bypassing the shell can only be done within a :LISP property.)
-
-Keyword argument :ENV is a plist of environment variables to be set when
-running the command, using env(1)."
-  (:apply (apply #'run args)))
+(named-readtables:defreadtable :consfigurator
+  (:merge :standard)
+  (:dispatch-macro-char #\# #\? #'cl-interpol:interpol-reader)
+  (:dispatch-macro-char #\# #\> #'cl-heredoc:read-heredoc))

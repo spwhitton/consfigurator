@@ -16,7 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.connection.shell-wrap)
-(named-readtables:in-readtable :interpol-syntax)
+(named-readtables:in-readtable :consfigurator)
 
 (defclass shell-wrap-connection (posix-connection) ())
 

@@ -35,7 +35,7 @@ Try it out / quick start
 
         (in-package :com.example.consfig)
         (in-consfig "com.example.consfig")
-	(named-readtables:in-readtable :interpol-syntax)
+	(named-readtables:in-readtable :consfigurator)
 
 	(try-register-data-source
          :pgp :location #P"/path/to/com.example.consfig.gpg")

@@ -8,10 +8,13 @@
 	       #:babel
 	       #:babel-streams
 	       #:cl-ppcre
+	       #:cl-heredoc
 	       #:cl-interpol
+	       #:named-readtables
 	       #:cffi
 	       #:trivial-macroexpand-all)
   :components ((:file "src/package")
+	       (:file "src/reader")
 	       (:file "src/util")
 	       (:file "src/connection")
 	       (:file "src/property")

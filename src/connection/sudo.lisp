@@ -16,7 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.connection.sudo)
-(named-readtables:in-readtable :interpol-syntax)
+(named-readtables:in-readtable :consfigurator)
 
 ;; Note that a password needed to sudo is technically not a piece of
 ;; prerequisite data required by a deployment, because it is not used in

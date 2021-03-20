@@ -16,6 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.data.pgp)
+(named-readtables:in-readtable :consfigurator)
 
 ;; Simple PGP-encrypted file source of prerequisite data
 

@@ -16,7 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.property.os)
-(named-readtables:in-readtable :interpol-syntax)
+(named-readtables:in-readtable :consfigurator)
 
 ;;;; Basic OS types
 

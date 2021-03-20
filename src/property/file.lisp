@@ -16,7 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.property.file)
-(named-readtables:in-readtable :interpol-syntax)
+(named-readtables:in-readtable :consfigurator)
 
 (defun map-file-lines (file function)
   "Apply FUNCTION to the lines of FILE.  Safe to use in a :POSIX property.

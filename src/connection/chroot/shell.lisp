@@ -16,6 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.connection.chroot.shell)
+(named-readtables:in-readtable :consfigurator)
 
 (defmethod establish-connection ((type (eql :chroot.shell)) remaining &key into)
   (declare (ignore remaining))

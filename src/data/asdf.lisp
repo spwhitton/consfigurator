@@ -16,6 +16,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (in-package :consfigurator.data.asdf)
+(named-readtables:in-readtable :consfigurator)
 
 ;; could we have both :asdf-monolithic and :asdf-something_else where in the
 ;; latter we filter out the names of systems already known to be available on
