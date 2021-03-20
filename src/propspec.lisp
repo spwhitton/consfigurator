@@ -343,7 +343,7 @@ apply the elements of REQUIREMENTS in reverse order."
 			   ;; run the :HOSTATTRS subroutine but throw away any
 			   ;; new hostattrs; when unapplying, the :HOSTATTRS
 			   ;; subroutine is only to check compatibility
-			   (let ((*host* (shallow-copy-host *host*)))
+			   (with-preserve-hostattrs
 			     (apply #'propattrs psym args)))
 	      :apply (get psym 'unapply)
 	      :unapply (get psym 'papply)

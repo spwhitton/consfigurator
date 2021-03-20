@@ -48,6 +48,14 @@
 		 :hostattrs (copy-list (hostattrs host))
 		 :propspec (host-propspec host)))
 
+(defmacro with-preserve-hostattrs (&body forms)
+  "Evaluate FORMS then throw away any newly added hostattrs.
+Useful in property combinators when you need to run some :HOSTATTRS
+subroutines but ignore any new hostattrs they may push.  Shouldn't be used in
+properties."
+  `(let ((*host* (shallow-copy-host *host*)))
+     ,@forms))
+
 (defgeneric preprocess-host (host)
   (:documentation
    "Convert a host into a fresh preprocessed host if necessary, and

@@ -132,6 +132,7 @@
 	   #:make-child-host
 	   #:hostattrs
 	   #:preprocess-host
+	   #:with-preserve-hostattrs
 
 	   ;; deployment.lisp
 	   #:defdeploy
