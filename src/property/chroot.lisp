@@ -43,8 +43,9 @@
        (debian (%debootstrapped ,root ,host ,@options)))))
 
 (defproplist os-bootstrapped :posix
-  (options root properties
-	   &aux (host (preprocess-host (make-host :propspec properties))))
+    (options root properties
+	     &aux (host (preprocess-host
+			 (make-child-host :propspec properties))))
   "Bootstrap an OS into ROOT and apply PROPERTIES.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc
