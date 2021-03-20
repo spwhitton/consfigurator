@@ -27,7 +27,7 @@
        (apt-get :princ "update")
        ,form)))
 
-(define-constant sections '("main" "contrib" "non-free") :test #'equal)
+(define-constant +sections+ '("main" "contrib" "non-free") :test #'equal)
 
 
 ;;;; Properties
@@ -89,7 +89,7 @@
 
 (defmethod standard-sources-for ((os os:debian))
   (let* ((suite (os:debian-suite os))
-	 (archive (mapcar (lambda (m) (list* m suite sections))
+	 (archive (mapcar (lambda (m) (list* m suite +sections+))
 			  (get-mirrors)))
 	 (security-suite (if (memstring= suite '("stretch" "jessie" "buster"))
 			     #?"${suite}/updates"
@@ -97,7 +97,7 @@
 	 (security (and (not (subtypep (type-of os) 'os:debian-unstable))
 			(list
 			 (list* "http://security.debian.org/debian-security"
-			       security-suite sections)))))
+			       security-suite +sections+)))))
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
 	    (nconc archive security))))
 
