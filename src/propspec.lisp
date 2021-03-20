@@ -287,14 +287,18 @@ expression."
 (define-function-property-combinator eseqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
 	    :hostattrs (lambda () (mapc #'propappattrs propapps))
-	    :apply (lambda () (apply-and-print propapps))))
+	    :apply (lambda () (apply-and-print propapps))
+	    :unapply (lambda () (apply-and-print propapps t))))
 
 (define-function-property-combinator seqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
 	    :hostattrs (lambda () (mapc #'propappattrs propapps))
 	    :apply (lambda ()
 		     (with-skip-failed-changes
-		       (apply-and-print propapps)))))
+		       (apply-and-print propapps)))
+	    :unapply (lambda ()
+		       (with-skip-failed-changes
+			 (apply-and-print propapps t)))))
 
 (defmacro with-requirements (propapp &body requirements)
   "Apply PROPAPP only after applying each dependency in REQUIREMENTS.
@@ -307,20 +311,24 @@ apply the elements of REQUIREMENTS in reverse order."
 	    :hostattrs (lambda () (mapc #'propappattrs propapps))
 	    :apply (lambda ()
 		     (with-skip-failed-changes
-		       (mapc #'propappapply propapps)))))
+		       (mapc #'propappapply propapps)))
+	    :unapply (lambda ()
+		       (with-skip-failed-changes
+			 (mapc #'propappunapply (reverse propapps))))))
 
 ;; note that the :FAILED-CHANGE value is only used within this function and
 ;; should not be returned by property subroutines, per the spec
-(defun apply-and-print (propapps)
-  (dolist (propapp propapps)
-    (let* ((result (restart-case (propappapply propapp)
+(defun apply-and-print (propapps &optional unapply)
+  (dolist (pa (if unapply (reverse propapps) propapps))
+    (let* ((result (restart-case
+		       (if unapply (propappunapply pa) (propappapply pa))
 		     (skip-property () :failed-change)))
 	   (status (case result
 		     (:no-change     "ok")
 		     (:failed-change "failed")
 		     (t              "done"))))
       (format t "~@[~A :: ~]~@[~A ... ~]~A~%"
-	      (get-hostname) (propappdesc propapp) status))))
+	      (get-hostname) (propappdesc pa) status))))
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
