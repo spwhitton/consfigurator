@@ -45,7 +45,7 @@
   (:desc #?"Starting services disabled")
   (%no-services)
   (os:typecase
-    (debian (%policy-rc.d))))
+    (debianlike (%policy-rc.d))))
 
 (defprop running :posix (service)
   "Attempt to start service using service(1).

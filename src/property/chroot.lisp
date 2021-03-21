@@ -46,7 +46,7 @@
   `(os:host-typecase ,host
      (debian
       (os:typecase
-	(debian (apt:installed "debootstrap"))))))
+	(debianlike (apt:installed "debootstrap"))))))
 
 (defpropspec %os-bootstrapped :posix (options root host)
   "Bootstrap OS into ROOT, e.g. with debootstrap(1)."
