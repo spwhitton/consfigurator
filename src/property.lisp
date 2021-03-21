@@ -85,19 +85,23 @@
 (defun propappcheck (propapp)
   (apply #'propcheck propapp))
 
+(defun propapply (prop &rest args)
+  (let ((check (get prop 'check)))
+    (if (and check (apply check args))
+	:no-change
+	(apply (get prop 'papply (constantly :no-change)) args))))
+
 (defun propappapply (propapp)
-  (destructuring-bind (prop . args) propapp
-    (let ((check (get prop 'check)))
-      (if (and check (apply check args))
-	  :no-change
-	  (apply (get prop 'papply (constantly :no-change)) args)))))
+  (apply #'propapply propapp))
+
+(defun propunapply (prop &rest args)
+  (let ((check (get prop 'check)))
+    (if (and check (not (apply check args)))
+	:no-change
+	(apply (get prop 'unapply (constantly :no-change)) args))))
 
 (defun propappunapply (propapp)
-  (destructuring-bind (prop . args) propapp
-    (let ((check (get prop 'check)))
-      (if (and check (not (apply check args)))
-	  :no-change
-	  (apply (get prop 'unapply (constantly :no-change)) args)))))
+  (apply #'propappunapply propapp))
 
 (defvar *known-properties* nil
   "All properties whose definitions have been loaded.")
