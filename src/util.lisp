@@ -72,6 +72,44 @@ supported."
 	unless (char= #\& (char (symbol-name arg*) 0))
 	  collect arg*))
 
+(defmacro defun-which-calls (name call lambda-list &body forms &aux remaining)
+  (with-gensyms (result)
+    (multiple-value-bind (required optional rest kwargs aokeys)
+	(parse-ordinary-lambda-list lambda-list)
+      (when (and aokeys (not rest))
+	(simple-program-error
+	 "&ALLOW-OTHER-KEYS without &REST in property lambda list not supported."))
+      (let ((call* (destructuring-bind (first . rest) (ensure-cons call)
+		     `(#',first ,@rest)))
+	    (normalisedll (reverse required)))
+	(when optional
+	  (push '&optional normalisedll)
+	  (loop for (name init suppliedp) in optional
+		for suppliedp* = (or suppliedp (gensym))
+		do (push `(,name ,init ,suppliedp*) normalisedll)
+		do (push `(when ,suppliedp* (push ,name ,result)) remaining)))
+	(when rest
+	  (push '&rest normalisedll)
+	  (push rest normalisedll)
+	  (push `(dolist (r ,rest) (push r ,result)) remaining))
+	(when kwargs
+	  (push '&key normalisedll)
+	  (loop for ((keyword-name name) init suppliedp) in kwargs
+		for suppliedp* = (if (or rest suppliedp) suppliedp (gensym))
+		do (push `((,keyword-name ,name) ,init ,suppliedp*)
+			 normalisedll)
+		unless rest do (push `(when ,suppliedp*
+					(push ,keyword-name ,result)
+					(push ,name ,result))
+				     remaining)))
+	(when aokeys
+	  (push '&allow-other-keys normalisedll))
+	`(defun ,name ,(nreverse normalisedll)
+	   ,@forms
+	   (apply ,@call* ,@required (let (,result)
+				       ,@(nreverse remaining)
+				       (nreverse ,result))))))))
+
 (defmacro define-simple-error (name &optional docstring)
   `(progn
      (define-condition ,name (simple-error) ()
