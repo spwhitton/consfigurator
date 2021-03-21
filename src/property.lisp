@@ -125,8 +125,8 @@ This variable exists just to avoid consing these forms over and over again;
 see MAP-PROPSPEC-PROPAPPS for how they are used.")
 
 (defun record-known-property (psym)
-  (setf (get psym 'isprop) t)
-  (unless (member psym *known-properties* :test #'eq)
+  (unless (get psym 'isprop)
+    (setf (get psym 'isprop) t)
     (push psym *known-properties*)
     (push `(,psym (&rest args)
 		  (let ((gensym (gensym)))
