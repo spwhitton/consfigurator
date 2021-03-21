@@ -269,7 +269,7 @@ expression."
   (multiple-value-bind (forms declarations docstring)
       (parse-body body :documentation t)
     `(defun ,name ,args
-       ,@docstring
+       ,@(and docstring `(,docstring))
        ,@declarations
        (flet ((:retprop (&rest all &key args &allow-other-keys)
 		(let ((psym (gensym ,(symbol-name name)))
