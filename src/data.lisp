@@ -421,6 +421,11 @@ Preprocessing must occur in the root Lisp."))
 				  (string= (cadr d) (normalise-system system)))
 				(slot-value *connection* 'cached-data))))))
 	   (forms `((make-package "CONSFIGURATOR")
+		    ;; Work around bug in CL-HEREDOC that cl-heredoc.asd must
+		    ;; be loaded for this package to be defined; this does not
+		    ;; work with ASDF:MONOLITHIC-CONCATENATE-SOURCE-OP, which
+		    ;; does not bundle the .asd files.
+		    (use-package :cl (make-package "CL-HEREDOC-SYSTEM"))
 		    ,@intern-forms
 		    (define-condition missing-data-source (error) ())
 		    (require "asdf")
