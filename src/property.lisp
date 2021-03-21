@@ -85,18 +85,13 @@
 (defun propappcheck (propapp)
   (apply #'propcheck propapp))
 
-(defmacro with-error-is-failed-change (&body forms)
+(defmacro with-some-errors-are-failed-change (&body forms)
   `(handler-case (progn ,@forms)
-     (failed-change (c)
-       ;; resignal
-       (apply #'failed-change
-	      (simple-condition-format-control c)
-	      (simple-condition-format-arguments c)))
-     (error (c)
-       (failed-change "~&Attempt to (un)apply property failed:~%~A" c))))
+     (run-failed (c)
+       (failed-change "~&Unhandled failed command: ~%~A" c))))
 
 (defun propapply (prop &rest args)
-  (with-error-is-failed-change
+  (with-some-errors-are-failed-change
     (let ((check (get prop 'check)))
       (if (and check (apply check args))
 	  :no-change
@@ -106,7 +101,7 @@
   (apply #'propapply propapp))
 
 (defun propunapply (prop &rest args)
-  (with-error-is-failed-change
+  (with-some-errors-are-failed-change
     (let ((check (get prop 'check)))
       (if (and check (not (apply check args)))
 	  :no-change
