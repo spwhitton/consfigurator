@@ -78,9 +78,8 @@
 				  (unapply (service:no-services))))))))
   "Bootstrap an OS into ROOT and apply PROPERTIES.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
-  (:desc
-   (declare (ignore options properties))
-   #?"Built chroot ${root}")
+  (:desc (declare (ignore options properties))
+	 #?"Built chroot @ ${root}")
   (%os-bootstrapper-installed host)
   (%os-bootstrapped options root host)
   (deploys `((:chroot :into ,root)) host))
