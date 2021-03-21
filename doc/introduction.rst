@@ -56,7 +56,7 @@ Try it out / quick start
 	  (file:has-content "/etc/foo"
 	    #?{Here is my file content.
 	You can use ${my-substitution} thanks to CL-INTERPOL.
-	And it's multiline.  CL-HEREDOC is another option.})
+	And it's multiline.  CL-HEREDOC is also available; useful for shell scripts.})
 	  (file:has-content "/etc/bar" '("or" "specify" "a" "list" "of" "lines""))
 	  (file:contains-lines "/etc/some.conf" '("FOO=bar")) ; preserve rest of file contents
 
