@@ -43,6 +43,7 @@
      (apply #'run args))))
 
 (defpropspec %os-bootstrapper-installed :posix (host)
+  (:desc (declare (ignore host)) "OS bootstrapper installed")
   `(os:host-typecase ,host
      (debian
       (os:typecase
@@ -52,6 +53,7 @@
   "Bootstrap OS into ROOT, e.g. with debootstrap(1)."
   ;; evaluate HOST once; can't use ONCE-ONLY because gensyms not serialisable
   ;; for sending to remote Lisp images
+  (:desc (declare (ignore options root host)) "OS bootstrapped")
   (let ((host host))
     `(os:host-typecase ,host
        (debian (%debootstrapped ,root ,host ,@options)))))
