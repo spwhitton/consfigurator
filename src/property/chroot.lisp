@@ -58,7 +58,7 @@
     `(os:host-typecase ,host
        (debian (%debootstrapped ,root ,host ,@options)))))
 
-(defproplist os-bootstrapped :posix
+(defproplist os-bootstrapped :lisp
     (options root properties
 	     &aux (host
 		   (preprocess-host
@@ -66,16 +66,8 @@
 		     :propspec
 		     (make-propspec
 		      :systems (propspec-systems properties)
-		      ;; Note that this apply-and-unapply approach will not
-		      ;; work as part of a larger propspec because unapplying
-		      ;; SERVICE:NO-SERVICES doesn't remove the :NO-SERVICES
-		      ;; hostattr.  It's only okay because we know that the
-		      ;; unapplication is the last property that will be
-		      ;; applied to HOST (though perhaps not to the chroot).
-		      :propspec `(eseqprops
-				  (service:no-services)
-				  ,(propspec-props properties)
-				  (unapply (service:no-services))))))))
+		      :propspec `(service:without-starting-services
+				   ,(propspec-props properties)))))))
   "Bootstrap an OS into ROOT and apply PROPERTIES.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc (declare (ignore options properties))

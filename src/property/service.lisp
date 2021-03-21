@@ -21,7 +21,6 @@
 ;;;; Controlling services using service(1)
 
 (define-constant +policyrcd+ #P"/usr/sbin/policy-rc.d" :test #'equal)
-(define-constant +policyrcd~+ #P"/usr/sbin/policy-rc.d~consfig" :test #'equal)
 
 (defprop %no-services :posix ()
   (:hostattrs
@@ -30,18 +29,20 @@
 (defprop %policy-rc.d :posix ()
   (:apply
    (assert-euid-root)
-   (when (test "-e" +policyrcd+ "-a" "!" "-e" +policyrcd~+)
-     (mrun "mv" +policyrcd+ +policyrcd~+))
    (file:has-content +policyrcd+ '("#!/bin/sh" "exit 101"))
    (file:has-mode +policyrcd+ #o755))
   (:unapply
    (assert-euid-root)
-   (if (test "-e" +policyrcd~+)
-       (mrun "mv" +policyrcd~+ +policyrcd+)
-       (file:does-not-exist +policyrcd+))))
+   (file:does-not-exist +policyrcd+)))
 
 (defproplist no-services :posix ()
-  "Disable starting services with service(1) and by the package manager."
+  "Disable starting services with service(1) and by the package manager.
+
+The implementation for Debian and Debian derivatives is currently very
+simplistic, and will interact badly with any other properties which want to
+use /usr/sbin/policy-rc.d.  However, if for all other purposes you use systemd
+configuration instead of editing /usr/sbin/policy-rc.d, this limitation should
+not affect you."
   (:desc #?"Starting services disabled")
   (%no-services)
   (os:typecase
@@ -56,3 +57,34 @@ properties."
   (:apply
    (unless (get-hostattrs-car :no-services)
      (run :may-fail "service" service "start"))))
+
+(define-function-property-combinator without-starting-services (&rest propapps)
+  "Apply PROPAPPS with SERVICE:NO-SERVICES temporarily in effect."
+  (let ((propapp (if (cdr propapps) (eseqprops propapps) (car propapps))))
+    (:retprop :type :lisp
+	      :hostattrs
+	      (lambda () (propappattrs propapp) (os:required 'os:debianlike))
+	      :apply
+	      (lambda (&aux (already-exists (file-exists-p +policyrcd+)))
+		(with-remote-temporary-file (temp :directory "/usr/sbin")
+		  (when already-exists
+		    (rename-file +policyrcd+ temp))
+		  (%policy-rc.d)
+		  (let ((before (get-universal-time)))
+		    ;; Sleep for one second so that we know BEFORE is in the
+		    ;; past.  (SLEEP 1) is only approximately one second so
+		    ;; check that it's actually been a second.
+		    (loop do (sleep 1) until (> (get-universal-time) before))
+		    (unwind-protect
+			 (with-preserve-hostattrs
+			   (push-hostattrs :no-services t)
+			   (propappapply propapp))
+		      (if already-exists
+			  ;; Check whether some property we applied set the
+			  ;; contents of /usr/sbin/policy-rc.d, in which case
+			  ;; we won't restore our backup.
+			  (unless (> (file-write-date +policyrcd+) before)
+			    (rename-file temp +policyrcd+))
+			  (when (file-exists-p +policyrcd+)
+			    (delete-file +policyrcd+)))))))
+	      :unapply (lambda () (propappunapply propapp)))))

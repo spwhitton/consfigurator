@@ -247,7 +247,8 @@
   (:local-nicknames (#:os    #:consfigurator.property.os)
 		    (#:file  #:consfigurator.property.file))
   (:export #:no-services
-	   #:running))
+	   #:running
+	   #:without-starting-services))
 
 (defpackage :consfigurator.property.apt
   (:use #:cl #:alexandria #:consfigurator)
