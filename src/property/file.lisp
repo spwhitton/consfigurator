@@ -52,11 +52,12 @@ CONTENT can be a list of lines or a single string."
   (:apply
    (mrun (format nil "chmod ~O ~A" mode path))))
 
-(defprop does-not-exist :posix (path)
-  "Ensure that a file does not exist."
-  (:desc #?"${path} does not exist")
-  (:check (test "!" "-e" path))
-  (:apply (run "rm" "-f" path)))
+(defprop does-not-exist :posix (&rest paths)
+  "Ensure that files do not exist."
+  (:desc (if (cdr paths)
+	     #?"@{paths} do not exist"
+	     #?"${(car paths)} does not exist"))
+  (:apply (mrun "rm" "-f" paths)))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
   (:hostattrs
