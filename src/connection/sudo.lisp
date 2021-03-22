@@ -68,14 +68,18 @@
 		 ;; stdin.  use CODE-CHAR in this way so that we can be sure
 		 ;; ASCII ^M is what will get emitted.
 		 :password (and password
-				(strcat (passphrase password)
-					(string (code-char 13))))))
+				(make-passphrase
+				 (strcat (passphrase password)
+					 (string (code-char 13)))))))
 
 (defclass sudo-connection (shell-wrap-connection)
   ((user
     :initarg :user)
    (password
     :initarg :password)))
+
+(defmethod get-sudo-password ((connection sudo-connection))
+  (passphrase (slot-value connection 'password)))
 
 (defmethod connection-shell-wrap ((connection sudo-connection) cmd)
   ;; wrap in sh -c so that it is more likely we are either asked for a
@@ -85,15 +89,15 @@
 	  (escape-sh-token (strcat "cd \"$HOME\"; " cmd))))
 
 (defmethod connection-run ((c sudo-connection) cmd (input null))
-  (call-next-method c cmd (slot-value c 'password)))
+  (call-next-method c cmd (get-sudo-password c)))
 
 (defmethod connection-run ((c sudo-connection) cmd (input string))
-  (call-next-method c cmd (strcat (slot-value c 'password) input)))
+  (call-next-method c cmd (strcat (get-sudo-password c) input)))
 
 (defmethod connection-run ((connection sudo-connection) cmd (input stream))
   (call-next-method connection
 		    cmd
-		    (if-let ((password (slot-value connection 'password)))
+		    (if-let ((password (get-sudo-password connection)))
 		      (make-concatenated-stream
 		       (if (subtypep (stream-element-type input) 'character)
 			   (make-string-input-stream password)

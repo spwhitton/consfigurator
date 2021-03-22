@@ -357,11 +357,15 @@ of the current connection, where each entry is of the form
 (defclass passphrase ()
   ((passphrase :initarg :passphrase :reader passphrase)))
 
+(defun make-passphrase (passphrase)
+  "Make an object which is unprintable by default to contain a passphrase."
+  (make-instance 'passphrase :passphrase passphrase))
+
 (defun get-data-protected-string (iden1 iden2)
   "Like GET-DATA-STRING, but wrap the content in an object which is unprintable
 by default.  Intended for code which fetches passwords and wants to lessen the
 chance of those passwords showing up in the clear in the Lisp debugger."
-  (make-instance 'passphrase :passphrase (get-data-string iden1 iden2)))
+  (make-passphrase (get-data-string iden1 iden2)))
 
 (defvar *allow-printing-passphrases* nil)
 

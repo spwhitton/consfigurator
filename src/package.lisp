@@ -175,6 +175,7 @@
 	   #:upload-all-prerequisite-data
 	   #:request-lisp-systems
 	   #:passphrase
+	   #:make-passphrase
 	   #:get-data-protected-string
 	   #:continue-deploy*-program))
 
