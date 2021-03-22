@@ -75,7 +75,7 @@ values higher up the call stack."))
     (propappattrs (eval-propspec (host-propspec *host*)))
     *host*))
 
-(defun make-host (&key hostattrs propspec)
+(defun make-host (&key hostattrs (propspec (make-propspec)))
   (make-instance 'unpreprocessed-host
 		 :hostattrs hostattrs :propspec propspec))
 
