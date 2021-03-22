@@ -40,8 +40,9 @@
       (inform t "done." :fresh-line nil)
       (unless (zerop exit)
         ;; print FORMS not PROGRAM because latter might contain sudo passwords
-        (error "~%~%Remote Lisp failed; we sent~%~%~A~%~%and stderr was:~%~A"
-               forms err))
+        (error
+	 "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~A"
+         err forms))
       (inform t "  Output was:" :fresh-line nil)
       (with-indented-inform (inform t (lines out)))))
   nil)
