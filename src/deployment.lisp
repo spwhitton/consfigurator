@@ -26,8 +26,8 @@
 Assumes arguments to connections in CONNECTIONS have been both normalised and
 preprocessed."
   (labels
-      ((apply-propspec (propspec)
-	 (let ((propapp (eval-propspec propspec)))
+      ((apply-*host*-propspec ()
+	 (let ((propapp (eval-propspec (host-propspec *host*))))
 	   (assert-connection-supports (propapptype propapp))
 	   (propappapply propapp)))
        (connect (connections)
@@ -38,14 +38,18 @@ preprocessed."
 		       (apply #'establish-connection type remaining args)))
 	     (if remaining
 		 (connect remaining)
-		 (apply-propspec (host-propspec *host*)))
+		 (apply-*host*-propspec))
 	     (connection-teardown *connection*)))))
     (let ((*host* (preprocess-host host)))
-      ;; prepend :LOCAL only if it's not already there and there is no
-      ;; connection already established
-      (connect (if (or *connection* (eq :local (caar connections)))
-		   connections
-		   (cons '(:local) connections))))))
+      (cond
+	((and connections (or *connection* (eq :local (caar connections))))
+	 (connect connections))
+	(connections
+	 (connect (cons '(:local) connections)))
+	(*connection*
+	 (apply-*host*-propspec))
+	(t
+	 (connect '((:local))))))))
 
 (defun deploy* (connections host &optional additional-properties)
   "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
@@ -81,7 +85,7 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 
 Used by implementations of ESTABLISH-CONNECTION which need to do something
 like fork(2) and then return to Consfigurator's primary loop in the child."
-  (%consfigure (or remaining-connections '((:local))) *host*))
+  (%consfigure remaining-connections *host*))
 
 ;; in the following two macros, bind *HOST* so that evaluation of the
 ;; unevaluated propspec can retrieve existing hostattrs; shallow copy just in
