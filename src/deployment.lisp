@@ -81,7 +81,7 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
 
 Used by implementations of ESTABLISH-CONNECTION which need to do something
 like fork(2) and then return to Consfigurator's primary loop in the child."
-  (%consfigure remaining-connections *host*))
+  (%consfigure (or remaining-connections '((:local))) *host*))
 
 ;; in the following two macros, bind *HOST* so that evaluation of the
 ;; unevaluated propspec can retrieve existing hostattrs; shallow copy just in
