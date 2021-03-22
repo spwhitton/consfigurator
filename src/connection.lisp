@@ -165,7 +165,15 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
   ((cmd :initarg :cmd :reader failed-cmd)
    (stdout :initarg :stdout :reader failed-stdout)
    (stderr :initarg :stderr :reader failed-stderr)
-   (exit-code :initarg :exit-code :reader failed-exit-code)))
+   (exit-code :initarg :exit-code :reader failed-exit-code))
+  (:report (lambda (condition stream)
+	     (format
+	      stream
+	      "~&'~A' failed, exit code ~A~%~%stdout was:~%~A~&~%stderr:~%~A"
+	      (failed-cmd condition)
+	      (failed-exit-code condition)
+	      (failed-stdout condition)
+	      (failed-stderr condition)))))
 
 (defmacro with-remote-temporary-file ((file
 				       &key
