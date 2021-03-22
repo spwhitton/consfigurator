@@ -24,9 +24,12 @@ Try it out / quick start
         (in-package :cl-user)
 
         (defpackage :com.example.consfig
-          (:use #:cl #:consfigurator #:alexandria)
-          (:local-nicknames (#:file      #:consfigurator.property.file)
+          (:use #:cl #:alexandria #:consfigurator)
+          (:local-nicknames (#:os        #:consfigurator.property.os)
+                            (#:apt       #:consfigurator.property.apt)
                             (#:cmd       #:consfigurator.property.cmd)
+                            (#:file      #:consfigurator.property.file)
+                            (#:chroot    #:consfigurator.property.chroot)
                             (#:data.pgp  #:consfigurator.data.pgp)))
 
 4. Define some hosts and deployments.
