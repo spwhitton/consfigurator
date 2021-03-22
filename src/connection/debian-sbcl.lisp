@@ -24,15 +24,18 @@
   (upload-all-prerequisite-data)
   (inform t "Waiting for remote Lisp to exit, this may take some time ... ")
   (force-output)
-  (let ((program (continue-deploy*-program remaining)))
+  (multiple-value-bind (program forms)
+      (continue-deploy*-program remaining)
     (multiple-value-bind (out err exit)
 	(run :may-fail :input program
 	     "sbcl" "--noinform" "--noprint"
 	     "--disable-debugger"
 	     "--no-sysinit" "--no-user-init")
-      (format t "done.")
-      (if (zerop exit)
-	  (format t "  Output was:~%~{    ~A~%~}" (lines out))
-	  (error "~%~%Remote Lisp failed; we sent~%~%~A~%~%and stderr was:~%~A"
-		 program err))))
+      (inform t "done." :fresh-line nil)
+      (unless (zerop exit)
+	;; print FORMS not PROGRAM because latter might contain sudo passwords
+	(error "~%~%Remote Lisp failed; we sent~%~%~A~%~%and stderr was:~%~A"
+	       forms err))
+      (inform t "  Output was:" :fresh-line nil)
+      (with-indented-inform (inform t (lines out)))))
   nil)

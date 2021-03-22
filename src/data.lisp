@@ -440,9 +440,11 @@ Preprocessing must occur in the root Lisp."))
 	      ;; need line breaks in between so that packages exist before we
 	      ;; try to have remote Lisp read sexps containing symbols from
 	      ;; those packages
-	      (format nil "~A~%~{~A~^~%~}"
-		      +continue-deploy*-program-implementation-specific+
-		      (mapcar #'prin1-to-string forms))))
+	      (values
+	       (format nil "~A~%~{~A~^~%~}"
+		       +continue-deploy*-program-implementation-specific+
+		       (mapcar #'prin1-to-string forms))
+	       forms)))
 	(print-not-readable (c)
 	  (error "The Lisp printer could not serialise ~A for
 transmission to the remote Lisp.
