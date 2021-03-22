@@ -46,7 +46,7 @@ Try it out / quick start
 	(defparameter my-substitution "substititions")
 
         (defhost athena.example.com
-	    (:deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :debian-sbcl))
+	    (:deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :sbcl))
           "Web and file server."
 	  (os:debian-stable "buster" :amd64)
 

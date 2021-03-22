@@ -58,11 +58,11 @@ use the ``chroot(2)`` system call anyway).  More generally, you should avoid
 using this connection type within a Lisp image which might try to execute
 other deployments in parallel.  Typical usage would be something like::
 
-  (deploy (:sudo :debian-sbcl (:chroot.fork :into "...")) ...)
+  (deploy (:sudo :sbcl (:chroot.fork :into "...")) ...)
 
 In some situations you might want to have a connection chain which effectively
-uses a connection type like ``:DEBIAN-SBCL`` twice in a row, so that the first
-Lisp image can execute deployments in parallel while the second forks into the
+uses a connection type like ``:SBCL`` twice in a row, so that the first Lisp
+image can execute deployments in parallel while the second forks into the
 chroot (typically by having a ``DEPLOYS`` property with connection type
-``:DEBIAN-SBCL`` as one of the properties applied by a deployment whose
-connection chain itself ends with ``:DEBIAN-SBCL``).
+``:SBCL`` as one of the properties applied by a deployment whose connection
+chain itself ends with ``:SBCL``).

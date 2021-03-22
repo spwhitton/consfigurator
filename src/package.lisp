@@ -198,9 +198,6 @@
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
 
-(defpackage :consfigurator.connection.debian-sbcl
-  (:use #:cl #:consfigurator))
-
 (defpackage :consfigurator.connection.chroot
   (:use #:cl #:consfigurator #:cffi))
 
@@ -271,6 +268,11 @@
 	   #:uses-parent-proxy
 	   #:uses-local-cacher
 	   #:standard-sources.list))
+
+(defpackage :consfigurator.connection.sbcl
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:os  #:consfigurator.property.os)
+		    (#:apt #:consfigurator.property.apt)))
 
 (defpackage :consfigurator.property.user
   (:use #:cl #:consfigurator)

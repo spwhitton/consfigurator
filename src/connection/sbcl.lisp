@@ -15,11 +15,21 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :consfigurator.connection.debian-sbcl)
+(in-package :consfigurator.connection.sbcl)
 (named-readtables:in-readtable :consfigurator)
 
-(defmethod establish-connection ((type (eql :debian-sbcl)) remaining &key)
-  (mrun "which sbcl >/dev/null 2>&1 || apt-get -y install sbcl")
+(defprop sbcl-available :posix ()
+  (:check
+   (zerop (mrun :for-exit "command" "-v" "sbcl")))
+  (:apply
+   (typecase (class-of (get-hostattrs-car :os))
+     (os:debianlike
+      (ignoring-hostattrs (apt:installed "sbcl")))
+     (t
+      (failed-change "Do not know how to install SBCL on this OS.")))))
+
+(defmethod establish-connection ((type (eql :sbcl)) remaining &key)
+  (sbcl-available)
   (request-lisp-systems)
   (upload-all-prerequisite-data)
   (inform t "Waiting for remote Lisp to exit, this may take some time ... ")

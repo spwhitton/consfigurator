@@ -34,8 +34,8 @@
 ;; passwords needed for establishing the remaining hops.  Depending on how the
 ;; connection type feeds instructions to the remote Lisp image, this may
 ;; involve writing your sudo password to a file under ~/.cache on the machine
-;; which runs the remote Lisp image.  At least :debian-sbcl avoids this by
-;; sending your password in on stdin.
+;; which runs the remote Lisp image.  At least :sbcl avoids this by sending
+;; your password in on stdin.
 
 ;; TODO Let's require the user pass :PASSWD or :NOPASSWD to indicate whether
 ;; we'll query prerequisite data sources and always try to send a password on

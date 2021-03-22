@@ -21,14 +21,13 @@
 ;; could we have both :asdf-monolithic and :asdf-something_else where in the
 ;; latter we filter out the names of systems already known to be available on
 ;; the remote side, so those don't need to be uploaded?  for example, the
-;; :debian-sbcl connection type can try to install them with apt on the remote
-;; side, then ask asdf for a concatenated source for everything excluding
-;; those.  if asdf can't be asked to do that, maybe we can ask it to produce
-;; one file per system, and then we eliminate those we don't want and
-;; concatenate the result ourselves.  maybe we can create a fake system object
-;; based on the real one, remove some deps from it according to a known
-;; mapping of systems to Debian package names, then ask asdf to concatenate
-;; that system
+;; :sbcl connection type can try to install them with apt on the remote side,
+;; then ask asdf for a concatenated source for everything excluding those.  if
+;; asdf can't be asked to do that, maybe we can ask it to produce one file per
+;; system, and then we eliminate those we don't want and concatenate the
+;; result ourselves.  maybe we can create a fake system object based on the
+;; real one, remove some deps from it according to a known mapping of systems
+;; to Debian package names, then ask asdf to concatenate that system
 
 (defmethod register-data-source ((type (eql :asdf)) &key)
   (cons #'asdf-data-source-check #'get-path-to-concatenated-system))
