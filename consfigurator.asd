@@ -20,6 +20,7 @@
 	       (:file "src/property")
 	       (:file "src/propspec")
 	       (:file "src/host")
+	       (:file "src/combinator")
 	       (:file "src/deployment")
 	       (:file "src/connection/local")
 	       (:file "src/data")
