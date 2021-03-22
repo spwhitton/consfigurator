@@ -257,6 +257,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
                          (%consfigure
                           nil
                           (make-host
+			   :hostattrs (hostattrs *host*)
                            :propspec
                            (make-propspec
                             :systems nil
