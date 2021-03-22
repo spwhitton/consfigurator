@@ -231,8 +231,11 @@ systems."
     ((first unpreprocessed-propspec) (second unpreprocessed-propspec))
   (make-propspec :systems (union (propspec-systems first)
 				 (propspec-systems second))
-		 :propspec `(silent-seqprops ,(propspec-props first)
-					     ,(propspec-props second))))
+		 :propspec (let ((firstp (propspec-props first))
+				 (secondp (propspec-props second)))
+			     (if (and firstp secondp)
+				 `(silent-seqprops ,firstp ,secondp)
+				 (or firstp secondp)))))
 
 (defmethod eval-propspec ((propspec preprocessed-propspec))
   (eval (slot-value propspec 'preprocessed-propspec-expression)))
