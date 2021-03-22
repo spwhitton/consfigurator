@@ -37,8 +37,8 @@ root Lisp is running on, as the root Lisp's uid."))
   (multiple-value-bind (output _ exit-code)
       ;; call sh(1) so we know we'll get POSIX
       (run-program `("sh" "-c" ,shell-cmd)
-		   :input input :output :string
-		   :error-output :output :ignore-error-status t)
+                   :input input :output :string
+                   :error-output :output :ignore-error-status t)
     (declare (ignore _))
     (values output exit-code)))
 
@@ -46,25 +46,25 @@ root Lisp is running on, as the root Lisp's uid."))
   (read-file-string path))
 
 (defmethod connection-writefile ((connection local-connection)
-				 path
-				 content
-				 mode)
+                                 path
+                                 content
+                                 mode)
   ;; we cannot use UIOP:WITH-TEMPORARY-FILE etc., because those do not ensure
   ;; the file is only readable by us, and we might be writing a secret key
   (with-remote-temporary-file
       (temp :connection connection
-	    :directory (pathname-directory-pathname path))
+            :directory (pathname-directory-pathname path))
     (run-program `("chmod" ,(format nil "~O" mode) ,temp))
     (etypecase content
       (string
        (with-open-file (stream temp :direction :output :if-exists :supersede)
-	 (write-string content stream)))
+         (write-string content stream)))
       (stream
        (let ((type (stream-element-type content)))
-	 (with-open-file (stream temp :direction :output
-				      :if-exists :supersede
-				      :element-type type)
-	   (copy-stream-to-stream content stream :element-type type)))))
+         (with-open-file (stream temp :direction :output
+                                      :if-exists :supersede
+                                      :element-type type)
+           (copy-stream-to-stream content stream :element-type type)))))
     (run-program `("mv" ,temp ,path))))
 
 (defmethod connection-upload ((connection local-connection) from to)

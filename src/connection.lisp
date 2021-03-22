@@ -125,9 +125,9 @@ Implementations can specialise on both the CONNECTION and CONTENT arguments,
 if they need to handle streams and strings differently."))
 
 (defmethod connection-writefile :around ((connection connection)
-					 path
-					 content
-					 mode)
+                                         path
+                                         content
+                                         mode)
   (declare (ignore path content mode))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
@@ -167,19 +167,19 @@ the root Lisp's machine.  For example, using rsync(1) over SSH."))
    (stderr :initarg :stderr :reader failed-stderr)
    (exit-code :initarg :exit-code :reader failed-exit-code))
   (:report (lambda (condition stream)
-	     (format
-	      stream
-	      "~&'~A' failed, exit code ~A~%~%stdout was:~%~A~&~%stderr:~%~A"
-	      (failed-cmd condition)
-	      (failed-exit-code condition)
-	      (failed-stdout condition)
-	      (failed-stderr condition)))))
+             (format
+              stream
+              "~&'~A' failed, exit code ~A~%~%stdout was:~%~A~&~%stderr:~%~A"
+              (failed-cmd condition)
+              (failed-exit-code condition)
+              (failed-stdout condition)
+              (failed-stderr condition)))))
 
 (defmacro with-remote-temporary-file ((file
-				       &key
-					 (connection '*connection*)
-					 (directory nil directory-supplied-p))
-				      &body body)
+                                       &key
+                                         (connection '*connection*)
+                                         (directory nil directory-supplied-p))
+                                      &body body)
   "Execute BODY with FILE containing the path to a freshly created remote file,
 which will be cleaned up when BODY is finished."
   ;; it would be nicer if we could just use (file &rest args) but we need to
@@ -187,71 +187,71 @@ which will be cleaned up when BODY is finished."
   ;; evaluated more than once
   (once-only (connection)
     `(let ((,file (mktemp ,@(and directory-supplied-p
-				 `(:directory ,directory))
-			  :connection ,connection)))
+                                 `(:directory ,directory))
+                          :connection ,connection)))
        (unwind-protect
-	    (progn ,@body)
-	 (connection-run ,connection
-			 (format nil "rm -f ~A" (escape-sh-token ,file))
-			 nil)))))
+            (progn ,@body)
+         (connection-run ,connection
+                         (format nil "rm -f ~A" (escape-sh-token ,file))
+                         nil)))))
 
 (defun mktemp (&key (connection *connection*) directory)
   "Make a temporary file on the remote side, in DIRECTORY, defaulting to /tmp."
   (let ((template (if directory
-		      (unix-namestring
-		       (merge-pathnames
-			"tmp.XXXXXX" (ensure-directory-pathname directory)))
-		      "'${TMPDIR:-/tmp}'/tmp.XXXXXX")))
+                      (unix-namestring
+                       (merge-pathnames
+                        "tmp.XXXXXX" (ensure-directory-pathname directory)))
+                      "'${TMPDIR:-/tmp}'/tmp.XXXXXX")))
     (multiple-value-bind (out exit)
-	;; mktemp(1) is not POSIX; the only POSIX way is this M4 way,
-	;; apparently, but even though m4(1) is POSIX it seems like it could
-	;; often be absent, so have a fallback.  It would be better to avoid
-	;; passing any arguments to mktemp(1) as these may differ on different
-	;; platforms, but hopefully just a template is okay.
-	;;
-	;; While GNU M4 mkstemp makes the temporary file at most readable and
-	;; writeable by its owner, POSIX doesn't require this, so set a umask.
-	(connection-run
-	 connection
-	 #?"umask 077; echo 'mkstemp(${template})' | m4 2>/dev/null || mktemp '${template}'"
-	 nil)
+        ;; mktemp(1) is not POSIX; the only POSIX way is this M4 way,
+        ;; apparently, but even though m4(1) is POSIX it seems like it could
+        ;; often be absent, so have a fallback.  It would be better to avoid
+        ;; passing any arguments to mktemp(1) as these may differ on different
+        ;; platforms, but hopefully just a template is okay.
+        ;;
+        ;; While GNU M4 mkstemp makes the temporary file at most readable and
+        ;; writeable by its owner, POSIX doesn't require this, so set a umask.
+        (connection-run
+         connection
+         #?"umask 077; echo 'mkstemp(${template})' | m4 2>/dev/null || mktemp '${template}'"
+         nil)
       (let ((lines (lines out)))
-	(if (and (zerop exit) lines)
-	    (car lines)
-	    (error 'run-failed
-		   :cmd "(attempt to make a temporary file on remote)"
-		   :stdout out
-		   :stderr "(merged with stdout)"
-		   :exit-code exit))))))
+        (if (and (zerop exit) lines)
+            (car lines)
+            (error 'run-failed
+                   :cmd "(attempt to make a temporary file on remote)"
+                   :stdout out
+                   :stderr "(merged with stdout)"
+                   :exit-code exit))))))
 
 (defmacro %process-run-args (&body forms)
   `(let (cmd input may-fail for-exit env inform)
     (loop for arg = (pop args)
-	  do (case arg
-	       (:for-exit  (setq may-fail t for-exit t))
-	       (:may-fail  (setq may-fail t))
-	       (:inform    (setq inform t))
-	       (:input (setq input (pop args)))
-	       (:env (setq env (pop args)))
-	       (t (mapc (lambda (e)
-			  (push (typecase e
-				  (pathname
-				   (unix-namestring e))
-				  (t
-				   e))
-				cmd))
-			(ensure-list arg))))
-	  while args
-	  finally (nreversef cmd))
+          do (case arg
+               (:for-exit  (setq may-fail t for-exit t))
+               (:may-fail  (setq may-fail t))
+               (:inform    (setq inform t))
+               (:input (setq input (pop args)))
+               (:env (setq env (pop args)))
+               (t (mapc (lambda (e)
+                          (push (typecase e
+                                  (pathname
+                                   (unix-namestring e))
+                                  (t
+                                   e))
+                                cmd))
+                        (ensure-list arg))))
+          while args
+          finally (nreversef cmd))
     (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
     (loop while env
-	  collect (format nil "~A=~A" (symbol-name (pop env)) (pop env))
-	    into accum
-	  finally
-	     (when accum
-	       (setq cmd (format nil "env ~{~A~^ ~} ~A"
-				 (mapcar #'escape-sh-token accum)
-				 cmd))))
+          collect (format nil "~A=~A" (symbol-name (pop env)) (pop env))
+            into accum
+          finally
+             (when accum
+               (setq cmd (format nil "env ~{~A~^ ~} ~A"
+                                 (mapcar #'escape-sh-token accum)
+                                 cmd))))
      ,@forms))
 
 (defun run (&rest args)
@@ -288,13 +288,13 @@ case return only the exit code."
       (setq cmd (format nil "( ~A ) >~A" cmd stdout))
       (informat 3 "RUN ~A" cmd)
       (multiple-value-bind (err exit)
-	  (connection-run *connection* cmd input)
-	(let ((out (readfile stdout)))
-	  (when inform (informat 1 "~{    ~A~%~}" (lines out)))
-	  (if (or may-fail (= exit 0))
-	      (if for-exit exit (values out err exit))
-	      (error 'run-failed
-		     :cmd cmd :stdout out :stderr err :exit-code exit)))))))
+          (connection-run *connection* cmd input)
+        (let ((out (readfile stdout)))
+          (when inform (informat 1 "~{    ~A~%~}" (lines out)))
+          (if (or may-fail (= exit 0))
+              (if for-exit exit (values out err exit))
+              (error 'run-failed
+                     :cmd cmd :stdout out :stderr err :exit-code exit)))))))
 
 (defun mrun (&rest args)
   "Like RUN but don't separate stdout and stderr (\"m\" for \"merged\"; note
@@ -311,15 +311,15 @@ start with RUN."
   (%process-run-args
     (informat 3 "MRUN ~A" cmd)
     (multiple-value-bind (out exit)
-	(connection-run *connection* cmd input)
+        (connection-run *connection* cmd input)
       (when inform (informat 1 "~{    ~A~%~}" (lines out)))
       (if (or may-fail (= exit 0))
-	  (if for-exit exit (values out exit))
-	  (error 'run-failed
-		 :cmd cmd
-		 :stdout out
-		 :stderr "(merged with stdout)"
-		 :exit-code exit)))))
+          (if for-exit exit (values out exit))
+          (error 'run-failed
+                 :cmd cmd
+                 :stdout out
+                 :stderr "(merged with stdout)"
+                 :exit-code exit)))))
 
 (defun runlines (&rest args)
   (lines (apply #'run args)))
@@ -331,10 +331,10 @@ start with RUN."
   (apply #'connection-readfile *connection* args))
 
 (defun writefile (path content
-		  &key (mode #o644 mode-supplied-p)
-		  &aux (namestring (etypecase path
-				     (pathname (unix-namestring path))
-				     (string path))))
+                  &key (mode #o644 mode-supplied-p)
+                  &aux (namestring (etypecase path
+                                     (pathname (unix-namestring path))
+                                     (string path))))
   ;; If (lisp-connection-p), the file already exists, and it's not owned by
   ;; us, we could (have a keyword argument to) bypass CONNECTION-WRITEFILE and
   ;; just WRITE-STRING to the file.  That way we don't replace the file with
@@ -345,17 +345,17 @@ start with RUN."
       ;; seems there is nothing like stat(1) in POSIX, and note that
       ;; --reference for chmod(1) and chown(1) is not POSIX
       (re:register-groups-bind
-	  (((lambda (s) (delete #\- s)) umode gmode omode) uid gid)
-	  (#?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
-	   (mrun "ls" "-nd" path) :sharedp t)
-	(connection-writefile *connection*
-			      namestring
-			      content
-			      mode)
-	(let ((namestring (escape-sh-token namestring)))
-	  (unless mode-supplied-p
-	    ;; assume that if we can write it we can chmod it
-	    (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${namestring}"))
-	  ;; we may not be able to chown; that's okay
-	  (mrun :may-fail #?"chown ${uid}:${gid} ${path}")))
+          (((lambda (s) (delete #\- s)) umode gmode omode) uid gid)
+          (#?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
+           (mrun "ls" "-nd" path) :sharedp t)
+        (connection-writefile *connection*
+                              namestring
+                              content
+                              mode)
+        (let ((namestring (escape-sh-token namestring)))
+          (unless mode-supplied-p
+            ;; assume that if we can write it we can chmod it
+            (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${namestring}"))
+          ;; we may not be able to chown; that's okay
+          (mrun :may-fail #?"chown ${uid}:${gid} ${path}")))
       (connection-writefile *connection* namestring content mode)))

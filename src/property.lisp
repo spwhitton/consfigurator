@@ -94,8 +94,8 @@
   (with-some-errors-are-failed-change
     (let ((check (get prop 'check)))
       (if (and check (apply check args))
-	  :no-change
-	  (apply (get prop 'papply (constantly :no-change)) args)))))
+          :no-change
+          (apply (get prop 'papply (constantly :no-change)) args)))))
 
 (defun propappapply (propapp)
   (apply #'propapply propapp))
@@ -104,8 +104,8 @@
   (with-some-errors-are-failed-change
     (let ((check (get prop 'check)))
       (if (and check (not (apply check args)))
-	  :no-change
-	  (apply (get prop 'unapply (constantly :no-change)) args)))))
+          :no-change
+          (apply (get prop 'unapply (constantly :no-change)) args)))))
 
 (defun propappunapply (propapp)
   (apply #'propappunapply propapp))
@@ -124,53 +124,53 @@ see MAP-PROPSPEC-PROPAPPS for how they are used.")
     (setf (get psym 'isprop) t)
     (push psym *known-properties*)
     (push `(,psym (&rest args)
-		  (let ((gensym (gensym)))
-		    (push (list* gensym ',psym args)
-			  *replaced-propapps*)
-		    gensym))
-	  *known-property-macrolets*)))
+                  (let ((gensym (gensym)))
+                    (push (list* gensym ',psym args)
+                          *replaced-propapps*)
+                    gensym))
+          *known-property-macrolets*)))
 
 (defun dump-properties-for-emacs (from to)
   (let ((put-forms
-	  (stripln
-	   (with-output-to-string (s)
-	     (loop
-	       for (prop . indent)
-		 in (nreverse (mappend (lambda (s) (get s 'indent))
-				       *known-properties*))
-	       do (format s "  (put '~A 'common-lisp-indent-function '~A)~%"
-			  prop indent))))))
+          (stripln
+           (with-output-to-string (s)
+             (loop
+               for (prop . indent)
+                 in (nreverse (mappend (lambda (s) (get s 'indent))
+                                       *known-properties*))
+               do (format s "  (put '~A 'common-lisp-indent-function '~A)~%"
+                          prop indent))))))
     (with-open-file (in from)
       (with-open-file (out to :direction :output :if-exists :supersede)
-	(loop for line = (read-line in nil)
-	      while line
-	      do (princ (re:regex-replace "  @putforms@" line put-forms) out)
-		 (terpri out))))))
+        (loop for line = (read-line in nil)
+              while line
+              do (princ (re:regex-replace "  @putforms@" line put-forms) out)
+                 (terpri out))))))
 
 (defun store-indentation-info-for-emacs (sym args &optional info)
   (let* ((package-short-name
-	   (lastcar (split-string (package-name *package*) :separator ".")))
-	 (short-name
-	   (string-downcase
-	    (if (string= package-short-name "CONSFIGURATOR")
-		(symbol-name sym)
-		(strcat package-short-name ":" (symbol-name sym)))))
-	 (dotted-name (strcat short-name "."))
-	 indent)
+           (lastcar (split-string (package-name *package*) :separator ".")))
+         (short-name
+           (string-downcase
+            (if (string= package-short-name "CONSFIGURATOR")
+                (symbol-name sym)
+                (strcat package-short-name ":" (symbol-name sym)))))
+         (dotted-name (strcat short-name "."))
+         indent)
     (cond
       (info
        (push (cons short-name info) indent)
        (push (cons dotted-name info) indent))
       ((not (find '&key args))
        (let ((n (1- (loop with n = 0
-			  for arg in args
-			  if (member arg '(&rest &body &aux))
-			    return (1+ n)
-			  unless (eq arg '&optional)
-			    do (incf n)
-			  finally (return n)))))
-	 (when (plusp n)
-	   (push (cons dotted-name n) indent)))))
+                          for arg in args
+                          if (member arg '(&rest &body &aux))
+                            return (1+ n)
+                          unless (eq arg '&optional)
+                            do (incf n)
+                          finally (return n)))))
+         (when (plusp n)
+           (push (cons dotted-name n) indent)))))
     (when indent
       (setf (get sym 'indent) indent))))
 
@@ -186,37 +186,37 @@ dotted name alongside NAME."
   (multiple-value-bind (required optional rest kwargs)
       (parse-ordinary-lambda-list args :allow-specializers nil)
     (let* ((will-props (not (or rest kwargs)))
-	   (main (nconc required optional))
-	   (firstsym (ensure-car (car main)))
-	   (first (and firstsym
-		       `(if (and (listp ,firstsym)
-				 (or (keywordp (car ,firstsym))
-				     (and (listp (car ,firstsym))
-					  (keywordp (caar ,firstsym)))))
-			    `',,firstsym
-			    ,firstsym)))
-	   (middle (mapcar #'ensure-car (butlast (if first (cdr main) main))))
-	   (new-args
-	     (if will-props
-		 (setq rest (ensure-car (lastcar main))
-		       main (nconc (nbutlast main) (list '&rest rest)))
-		 (nconc (list '&whole whole) (ordinary-ll-without-&aux args)))))
+           (main (nconc required optional))
+           (firstsym (ensure-car (car main)))
+           (first (and firstsym
+                       `(if (and (listp ,firstsym)
+                                 (or (keywordp (car ,firstsym))
+                                     (and (listp (car ,firstsym))
+                                          (keywordp (caar ,firstsym)))))
+                            `',,firstsym
+                            ,firstsym)))
+           (middle (mapcar #'ensure-car (butlast (if first (cdr main) main))))
+           (new-args
+             (if will-props
+                 (setq rest (ensure-car (lastcar main))
+                       main (nconc (nbutlast main) (list '&rest rest)))
+                 (nconc (list '&whole whole) (ordinary-ll-without-&aux args)))))
       `(defmacro ,(format-symbol (symbol-package name) "~A." name) ,new-args
-	 ,@(cond
-	     ((and first will-props)
-	      `(`(,',name ,,first ,,@middle (make-propspec
-					     :propspec (props eseqprops ,@,rest)))))
-	     (will-props
-	      `(`(,',name ,,@middle (make-propspec
-				     :propspec (props eseqprops ,@,rest)))))
-	     (first
-	      `((declare (ignore ,@(cdr (ordinary-ll-variable-names
-					 (ordinary-ll-without-&aux args)))))
-		(list* ',name ,first (cddr ,whole))))
-	     (t
-	      `((declare (ignore ,@(ordinary-ll-variable-names
-				    (ordinary-ll-without-&aux args))))
-		(cons ',name (cdr ,whole)))))))))
+         ,@(cond
+             ((and first will-props)
+              `(`(,',name ,,first ,,@middle (make-propspec
+                                             :propspec (props eseqprops ,@,rest)))))
+             (will-props
+              `(`(,',name ,,@middle (make-propspec
+                                     :propspec (props eseqprops ,@,rest)))))
+             (first
+              `((declare (ignore ,@(cdr (ordinary-ll-variable-names
+                                         (ordinary-ll-without-&aux args)))))
+                (list* ',name ,first (cddr ,whole))))
+             (t
+              `((declare (ignore ,@(ordinary-ll-variable-names
+                                    (ordinary-ll-without-&aux args))))
+                (cons ',name (cdr ,whole)))))))))
 
 (defmacro define-property-defining-macro
     (mname (typev lambdav slotsv formsv) &body mbody)
@@ -227,47 +227,47 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
     (declare (ignore mdeclarations))
     (with-gensyms (name body declarations)
       `(defmacro ,mname (,name ,typev ,lambdav &body ,body)
-	 ,@(and mdocstring `(,mdocstring))
-	 (let ((,slotsv (list :type ,typev :lambda `',,lambdav)))
-	   (multiple-value-bind (,formsv ,declarations)
-	       (parse-body ,body :documentation t)
-	     (when (> (length ,declarations) 1)
-	       (error "Multiple DECLARE forms unsupported."))
-	     ,@mforms
-	     (let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
-	       `(progn
-		  (eval-when (:compile-toplevel :load-toplevel :execute)
-		    (record-known-property ',,name))
-		  (store-indentation-info-for-emacs ',,name ',,lambdav ,indent)
-		  (setprop ',,name ,@,slotsv)
-		  (define-dotted-property-macro ,,name ,,lambdav)
-		  ;; Now prepare a DEFUN for the property, to enable calling
-		  ;; it programmatically within the :APPLY and :UNAPPLY
-		  ;; routines of other properties.  This can lead to clearer
-		  ;; code than going via DEFPROPSPEC/DEFPROPLIST for simple
-		  ;; things like installing packages.
-		  ,@(and
-		     (getf ,slotsv :apply)
-		     `((defun-with-args ,,name args ,,lambdav
-			 ;; Properties with :HOSTATTRS subroutines which set
-			 ;; new hostattrs should not be used programmatically
-			 ;; in this way, so issue a warning.
-			 ,@(and (getf ,slotsv :hostattrs)
-				'((programmatic-apply-hostattrs)))
-			 (%consfigure
-			  nil
-			  (make-host
-			   :propspec
-			   (make-propspec
-			    :systems nil
-			    :propspec (cons ',,name args)))))))))))))))
+         ,@(and mdocstring `(,mdocstring))
+         (let ((,slotsv (list :type ,typev :lambda `',,lambdav)))
+           (multiple-value-bind (,formsv ,declarations)
+               (parse-body ,body :documentation t)
+             (when (> (length ,declarations) 1)
+               (error "Multiple DECLARE forms unsupported."))
+             ,@mforms
+             (let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
+               `(progn
+                  (eval-when (:compile-toplevel :load-toplevel :execute)
+                    (record-known-property ',,name))
+                  (store-indentation-info-for-emacs ',,name ',,lambdav ,indent)
+                  (setprop ',,name ,@,slotsv)
+                  (define-dotted-property-macro ,,name ,,lambdav)
+                  ;; Now prepare a DEFUN for the property, to enable calling
+                  ;; it programmatically within the :APPLY and :UNAPPLY
+                  ;; routines of other properties.  This can lead to clearer
+                  ;; code than going via DEFPROPSPEC/DEFPROPLIST for simple
+                  ;; things like installing packages.
+                  ,@(and
+                     (getf ,slotsv :apply)
+                     `((defun-with-args ,,name args ,,lambdav
+                         ;; Properties with :HOSTATTRS subroutines which set
+                         ;; new hostattrs should not be used programmatically
+                         ;; in this way, so issue a warning.
+                         ,@(and (getf ,slotsv :hostattrs)
+                                '((programmatic-apply-hostattrs)))
+                         (%consfigure
+                          nil
+                          (make-host
+                           :propspec
+                           (make-propspec
+                            :systems nil
+                            :propspec (cons ',,name args)))))))))))))))
 
 (define-condition programmatic-apply-hostattrs (simple-warning) ())
 
 (defun programmatic-apply-hostattrs ()
   (warn 'programmatic-apply-hostattrs
-	:format-control
-	"Calling property which has :HOSTATTRS subroutine programmatically.
+        :format-control
+        "Calling property which has :HOSTATTRS subroutine programmatically.
 Use DEFPROPLIST/DEFPROPSPEC to avoid trouble."))
 
 (defmacro ignoring-hostattrs (form)
@@ -278,8 +278,8 @@ subroutine does not push any new hostattrs."
   (unless (and (listp form) (isprop (car form)))
     (simple-program-error "~A is not a programmatic call to a property." form))
   `(handler-bind ((programmatic-apply-hostattrs
-		    (lambda (w)
-		      (invoke-restart (find-restart 'muffle-warning w)))))
+                    (lambda (w)
+                      (invoke-restart (find-restart 'muffle-warning w)))))
      ,form))
 
 ;; supported ways to write properties are DEFPROP, DEFPROPSPEC and DEFPROPLIST
@@ -287,12 +287,12 @@ subroutine does not push any new hostattrs."
 (define-property-defining-macro defprop (type lambda slots forms)
   "Define a property by providing code for its subroutines."
   (loop for form in forms
-	if (keywordp (car form))
-	  do (setf (getf slots (car form)) (cdr form)))
+        if (keywordp (car form))
+          do (setf (getf slots (car form)) (cdr form)))
   (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
-	do (if-let ((slot (getf slots kw)))
-	     (setf (getf slots kw)
-		   `(lambda ,lambda ,@slot)))))
+        do (if-let ((slot (getf slots kw)))
+             (setf (getf slots kw)
+                   `(lambda ,lambda ,@slot)))))
 
 (define-property-defining-macro defpropspec (type lambda slots forms)
   "Define a property which constructs, evaluates and applies a propspec.
@@ -324,30 +324,30 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   ;; and :UNAPPLY subroutines can get at it.  We have to keep the original
   ;; arguments to the propapp around for the sake of the :DESC subroutine.
   (setf (getf slots :preprocess)
-	'(lambda (&rest args)
-	  (list (list :propspec nil :orig-args args))))
+        '(lambda (&rest args)
+          (list (list :propspec nil :orig-args args))))
   (setf (getf slots :apply)
-	'(lambda (plist)
-	  (propappapply (eval-propspec (getf plist :propspec)))))
+        '(lambda (plist)
+          (propappapply (eval-propspec (getf plist :propspec)))))
   (setf (getf slots :unapply)
-	'(lambda (plist)
-	  (propappunapply (eval-propspec (getf plist :propspec)))))
+        '(lambda (plist)
+          (propappunapply (eval-propspec (getf plist :propspec)))))
   (when (form-beginning-with :desc (car forms))
     (setf (getf slots :desc)
-	  `(lambda (plist)
-	     (destructuring-bind ,(ordinary-ll-without-&aux lambda)
-		 (getf plist :orig-args)
-	       ,@(cdr (pop forms))))))
+          `(lambda (plist)
+             (destructuring-bind ,(ordinary-ll-without-&aux lambda)
+                 (getf plist :orig-args)
+               ,@(cdr (pop forms))))))
   (setf (getf slots :hostattrs)
-	`(lambda (plist)
-	   (let ((propspec (preprocess-propspec
-			    (make-propspec
-			     :systems (propspec-systems (host-propspec *host*))
-			     :propspec (destructuring-bind ,lambda
-					   (getf plist :orig-args)
-					 ,@forms)))))
-	     (setf (getf plist :propspec) propspec)
-	     (propappattrs (eval-propspec propspec))))))
+        `(lambda (plist)
+           (let ((propspec (preprocess-propspec
+                            (make-propspec
+                             :systems (propspec-systems (host-propspec *host*))
+                             :propspec (destructuring-bind ,lambda
+                                           (getf plist :orig-args)
+                                         ,@forms)))))
+             (setf (getf plist :propspec) propspec)
+             (propappattrs (eval-propspec propspec))))))
 
 (defmacro defproplist (name type lambda &body properties)
   "Like DEFPROPSPEC, but define the function which yields the propspec using the
@@ -374,14 +374,14 @@ sometimes you will need to fall back on DEFPROPSPEC.  For example, an
 unevaluated property application specification cannot express passing values
 other than constant values and propapps to property combinators."
   (let ((propspec
-	  (loop for remaining on properties
-		for car = (car remaining)
-		if (or (stringp car)
-		       (and (listp car) (member (car car) '(:desc declare))))
-		  collect car into begin
-		else
-		  return (nreverse
-			  (cons `(props eseqprops ,@remaining) begin)))))
+          (loop for remaining on properties
+                for car = (car remaining)
+                if (or (stringp car)
+                       (and (listp car) (member (car car) '(:desc declare))))
+                  collect car into begin
+                else
+                  return (nreverse
+                          (cons `(props eseqprops ,@remaining) begin)))))
     `(defpropspec ,name ,type ,lambda ,@propspec)))
 
 

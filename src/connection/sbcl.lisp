@@ -37,15 +37,15 @@
   (multiple-value-bind (program forms)
       (continue-deploy*-program remaining)
     (multiple-value-bind (out err exit)
-	(run :may-fail :input program
-	     "sbcl" "--noinform" "--noprint"
-	     "--disable-debugger"
-	     "--no-sysinit" "--no-user-init")
+        (run :may-fail :input program
+             "sbcl" "--noinform" "--noprint"
+             "--disable-debugger"
+             "--no-sysinit" "--no-user-init")
       (inform t "done." :fresh-line nil)
       (unless (zerop exit)
-	;; print FORMS not PROGRAM because latter might contain sudo passwords
-	(error "~%~%Remote Lisp failed; we sent~%~%~A~%~%and stderr was:~%~A"
-	       forms err))
+        ;; print FORMS not PROGRAM because latter might contain sudo passwords
+        (error "~%~%Remote Lisp failed; we sent~%~%~A~%~%and stderr was:~%~A"
+               forms err))
       (inform t "  Output was:" :fresh-line nil)
       (with-indented-inform (inform t (lines out)))))
   nil)

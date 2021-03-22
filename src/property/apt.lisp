@@ -78,7 +78,7 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
    (pushnew-hostattrs :apt.proxy uri))
   (:apply
    (file:has-content "/etc/apt/apt.conf.d/20proxy"
-		     (format nil "Acquire::HTTP::Proxy \"~A\";~%" uri))))
+                     (format nil "Acquire::HTTP::Proxy \"~A\";~%" uri))))
 
 (defproplist uses-parent-proxy :posix ()
   (:desc #?"Uses parent's apt proxy")
@@ -103,17 +103,17 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
 
 (defmethod standard-sources-for ((os os:debian))
   (let* ((suite (os:debian-suite os))
-	 (archive (mapcar (lambda (m) (list* m suite +sections+))
-			  (get-mirrors)))
-	 (security-suite (if (memstring= suite '("stretch" "jessie" "buster"))
-			     #?"${suite}/updates"
-			     #?"${suite}-security"))
-	 (security (and (not (subtypep (type-of os) 'os:debian-unstable))
-			(list
-			 (list* "http://security.debian.org/debian-security"
-			       security-suite +sections+)))))
+         (archive (mapcar (lambda (m) (list* m suite +sections+))
+                          (get-mirrors)))
+         (security-suite (if (memstring= suite '("stretch" "jessie" "buster"))
+                             #?"${suite}/updates"
+                             #?"${suite}-security"))
+         (security (and (not (subtypep (type-of os) 'os:debian-unstable))
+                        (list
+                         (list* "http://security.debian.org/debian-security"
+                               security-suite +sections+)))))
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
-	    (nconc archive security))))
+            (nconc archive security))))
 
 
 ;;;; Reports on installation status
@@ -126,20 +126,20 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
 
 (defun all-installed-p (packages)
   (loop with n = 0
-	for line in (apt-cache-policy packages)
-	when (re:scan apt-cache-policy-installed line)
-	  do (incf n)
-	finally (return (= n (length packages)))))
+        for line in (apt-cache-policy packages)
+        when (re:scan apt-cache-policy-installed line)
+          do (incf n)
+        finally (return (= n (length packages)))))
 
 (defun none-installed-p (packages)
   (loop for line in (apt-cache-policy packages)
-	never (re:scan apt-cache-policy-installed line)))
+        never (re:scan apt-cache-policy-installed line)))
 
 
 ;;;; Utilities
 
 (defun apt-get (&rest args)
   (apply #'run
-	 :env '(:DEBIAN_FRONTEND "noninteractive"
-		:APT_LISTCHANGES_FRONTEND "none")
-	 "apt-get" args))
+         :env '(:DEBIAN_FRONTEND "noninteractive"
+                :APT_LISTCHANGES_FRONTEND "none")
+         "apt-get" args))

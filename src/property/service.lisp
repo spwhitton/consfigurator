@@ -62,29 +62,29 @@ properties."
   "Apply PROPAPPS with SERVICE:NO-SERVICES temporarily in effect."
   (let ((propapp (if (cdr propapps) (eseqprops propapps) (car propapps))))
     (:retprop :type :lisp
-	      :hostattrs
-	      (lambda () (propappattrs propapp) (os:required 'os:debianlike))
-	      :apply
-	      (lambda (&aux (already-exists (file-exists-p +policyrcd+)))
-		(with-remote-temporary-file (temp :directory "/usr/sbin")
-		  (when already-exists
-		    (rename-file +policyrcd+ temp))
-		  (%policy-rc.d)
-		  (let ((before (get-universal-time)))
-		    ;; Sleep for one second so that we know BEFORE is in the
-		    ;; past.  (SLEEP 1) is only approximately one second so
-		    ;; check that it's actually been a second.
-		    (loop do (sleep 1) until (> (get-universal-time) before))
-		    (unwind-protect
-			 (with-preserve-hostattrs
-			   (push-hostattrs :no-services t)
-			   (propappapply propapp))
-		      (if already-exists
-			  ;; Check whether some property we applied set the
-			  ;; contents of /usr/sbin/policy-rc.d, in which case
-			  ;; we won't restore our backup.
-			  (unless (> (file-write-date +policyrcd+) before)
-			    (rename-file temp +policyrcd+))
-			  (when (file-exists-p +policyrcd+)
-			    (delete-file +policyrcd+)))))))
-	      :unapply (lambda () (propappunapply propapp)))))
+              :hostattrs
+              (lambda () (propappattrs propapp) (os:required 'os:debianlike))
+              :apply
+              (lambda (&aux (already-exists (file-exists-p +policyrcd+)))
+                (with-remote-temporary-file (temp :directory "/usr/sbin")
+                  (when already-exists
+                    (rename-file +policyrcd+ temp))
+                  (%policy-rc.d)
+                  (let ((before (get-universal-time)))
+                    ;; Sleep for one second so that we know BEFORE is in the
+                    ;; past.  (SLEEP 1) is only approximately one second so
+                    ;; check that it's actually been a second.
+                    (loop do (sleep 1) until (> (get-universal-time) before))
+                    (unwind-protect
+                         (with-preserve-hostattrs
+                           (push-hostattrs :no-services t)
+                           (propappapply propapp))
+                      (if already-exists
+                          ;; Check whether some property we applied set the
+                          ;; contents of /usr/sbin/policy-rc.d, in which case
+                          ;; we won't restore our backup.
+                          (unless (> (file-write-date +policyrcd+) before)
+                            (rename-file temp +policyrcd+))
+                          (when (file-exists-p +policyrcd+)
+                            (delete-file +policyrcd+)))))))
+              :unapply (lambda () (propappunapply propapp)))))

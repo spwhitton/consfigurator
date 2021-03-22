@@ -31,46 +31,46 @@
 (defmethod register-data-source ((type (eql :pgp)) &key location)
   (unless (file-exists-p location)
     (error 'missing-data-source
-	   :text (format nil "Could not open ~A" location)))
+           :text (format nil "Could not open ~A" location)))
   (let ((mod (file-write-date location))
-	(cache (read-store location)))
+        (cache (read-store location)))
     (labels ((update-cache ()
-	       (let ((new-mod (file-write-date location)))
-		 (when (> new-mod mod)
-		   (setq mod new-mod
-			 cache (read-store location)))))
-	     (check (iden1 iden2)
-	       (update-cache)
-	       (cadr (data-assoc iden1 iden2 cache)))
-	     (extract (iden1 iden2)
-	       (update-cache)
-	       (let ((data (data-assoc iden1 iden2 cache)))
-		 (make-instance 'string-data
-				:iden1 iden1 :iden2 iden2
-				:string (cddr data) :version (cadr data)))))
+               (let ((new-mod (file-write-date location)))
+                 (when (> new-mod mod)
+                   (setq mod new-mod
+                         cache (read-store location)))))
+             (check (iden1 iden2)
+               (update-cache)
+               (cadr (data-assoc iden1 iden2 cache)))
+             (extract (iden1 iden2)
+               (update-cache)
+               (let ((data (data-assoc iden1 iden2 cache)))
+                 (make-instance 'string-data
+                                :iden1 iden1 :iden2 iden2
+                                :string (cddr data) :version (cadr data)))))
       (cons #'check #'extract))))
 
 (defun read-store (location)
   (handler-case
       (read-from-string
        (run-program
-	(escape-sh-command (list "gpg" "--decrypt" (unix-namestring location)))
-	:output :string))
+        (escape-sh-command (list "gpg" "--decrypt" (unix-namestring location)))
+        :output :string))
     (subprocess-error (error)
       (error 'missing-data-source
-	     :text (format nil "While attempt to decrypt, gpg exited with ~A"
-			   (uiop:subprocess-error-code error))))))
+             :text (format nil "While attempt to decrypt, gpg exited with ~A"
+                           (uiop:subprocess-error-code error))))))
 
 (defun put-store (location data)
   (run-program (list "gpg" "--encrypt")
-	       :input (make-string-input-stream (prin1-to-string data))
-	       :output (unix-namestring location)))
+               :input (make-string-input-stream (prin1-to-string data))
+               :output (unix-namestring location)))
 
 (defun data-assoc (iden1 iden2 data)
   (assoc (cons iden1 iden2) data
-	 :test (lambda (x y)
-		 (and (string= (car x) (car y))
-		      (string= (cdr x) (cdr y))))))
+         :test (lambda (x y)
+                 (and (string= (car x) (car y))
+                      (string= (cdr x) (cdr y))))))
 
 (defun get-data (location iden1 iden2)
   "Fetch a piece of prerequisite data.
@@ -83,9 +83,9 @@ Useful at the REPL."
 
 Useful at the REPL."
   (let ((data (delete-if
-	       (lambda (d)
-		 (and (string= (caar d) iden1) (string= (cdar d) iden2)))
-	       (and (file-exists-p location) (read-store location)))))
+               (lambda (d)
+                 (and (string= (caar d) iden1) (string= (cdar d) iden2)))
+               (and (file-exists-p location) (read-store location)))))
     (push (cons (cons iden1 iden2) (cons (get-universal-time) val)) data)
     (put-store location data)))
 

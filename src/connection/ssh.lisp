@@ -19,9 +19,9 @@
 (named-readtables:in-readtable :consfigurator)
 
 (defmethod establish-connection ((type (eql :ssh)) remaining
-				 &key
-				   (hop (get-hostname))
-				   user)
+                                 &key
+                                   (hop (get-hostname))
+                                   user)
   (declare (ignore remaining))
   (informat 1 "~&Establishing SSH connection to ~A" hop)
   (mrun "ssh" "-fN" hop)
@@ -44,8 +44,8 @@
 (defmethod connection-shell-wrap ((connection ssh-connection) cmd)
   ;; wrap in 'sh -c' in case the login shell is not POSIX
   (format nil "ssh ~A ~A"
-	  (ssh-host connection)
-	  (escape-sh-token (format nil "sh -c ~A" (escape-sh-token cmd)))))
+          (ssh-host connection)
+          (escape-sh-token (format nil "sh -c ~A" (escape-sh-token cmd)))))
 
 ;; rsync it straight to to its destination so rsync can do incremental updates
 (defmethod connection-upload ((c ssh-connection) from to)

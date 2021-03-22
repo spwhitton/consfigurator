@@ -24,24 +24,24 @@
 For efficiency, a :LISP property might want to use streams, but there's no
 point in doing that here because WRITEFILE is synchronous."
   (let* ((orig-lines (lines (readfile file)))
-	 (new-lines (funcall function orig-lines)))
+         (new-lines (funcall function orig-lines)))
     (if (equal orig-lines new-lines)
-	:no-change
-	(writefile file (unlines new-lines)))))
+        :no-change
+        (writefile file (unlines new-lines)))))
 
 (defprop has-content :posix (path content)
   "Ensure there is a file at PATH whose content is CONTENT.
 CONTENT can be a list of lines or a single string."
   (declare (indent 1))
   (:apply (writefile path (etypecase content
-			    (cons (unlines content))
-			    (string (format nil "~A~&" content))))))
+                            (cons (unlines content))
+                            (string (format nil "~A~&" content))))))
 
 (defprop contains-lines :posix (path lines)
   "Ensure there is a file at PATH containing each of LINES once."
   (:apply
    (let ((new-lines (copy-list lines))
-	 (existing-lines (lines (readfile path))))
+         (existing-lines (lines (readfile path))))
      (dolist (existing-line existing-lines)
        (deletef new-lines existing-line :test #'string=))
      (writefile path (unlines (nconc existing-lines new-lines))))))
@@ -55,8 +55,8 @@ CONTENT can be a list of lines or a single string."
 (defprop does-not-exist :posix (&rest paths)
   "Ensure that files do not exist."
   (:desc (if (cdr paths)
-	     #?"@{paths} do not exist"
-	     #?"${(car paths)} does not exist"))
+             #?"@{paths} do not exist"
+             #?"${(car paths)} does not exist"))
   (:apply (mrun "rm" "-f" paths)))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)

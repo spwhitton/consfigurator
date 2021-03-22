@@ -68,30 +68,30 @@ arguments to properties in propapps, but that should not be needed."
   ;; trivial-macroexpand-all library to get at these implementations).
   (labels
       ((macrolet-and-expand (macrolets form)
-	 (multiple-value-bind (expanded supported env-supported)
-	     (trivial-macroexpand-all:macroexpand-all
-	      `(macrolet ,macrolets ,form) env)
-	   (unless supported
-	     (error "Don't know how to MACROEXPAND-ALL in this Lisp."))
-	   (when (and env (not env-supported))
-	     (error "Don't know how to MACROEXPAND-ALL with env in this Lisp."))
-	   ;; At least SB-CLTL2:MACROEXPAND-ALL leaves the MACROLET in, so use
-	   ;; CADDR to remove it again -- if that turns out to be
-	   ;; implementation-specific, we can look for what we added and
-	   ;; remove it.
-	   ;;
-	   ;; This is not just to avoid leaking our implementation to our
-	   ;; callers -- if we call this function more than once with old
-	   ;; calls to MACROLET left in, we can get stuck in infinite macro
-	   ;; expansion loops.
-	   (caddr expanded)))
+         (multiple-value-bind (expanded supported env-supported)
+             (trivial-macroexpand-all:macroexpand-all
+              `(macrolet ,macrolets ,form) env)
+           (unless supported
+             (error "Don't know how to MACROEXPAND-ALL in this Lisp."))
+           (when (and env (not env-supported))
+             (error "Don't know how to MACROEXPAND-ALL with env in this Lisp."))
+           ;; At least SB-CLTL2:MACROEXPAND-ALL leaves the MACROLET in, so use
+           ;; CADDR to remove it again -- if that turns out to be
+           ;; implementation-specific, we can look for what we added and
+           ;; remove it.
+           ;;
+           ;; This is not just to avoid leaking our implementation to our
+           ;; callers -- if we call this function more than once with old
+           ;; calls to MACROLET left in, we can get stuck in infinite macro
+           ;; expansion loops.
+           (caddr expanded)))
        (walk (tree)
-	 (if (atom tree)
-	     (if-let ((propapp (gethash tree *replaced-propapps*)))
-	       (funcall function propapp)
-	       (if reconstruct `',tree tree))
-	     (let ((walked (mapcar #'walk tree)))
-	       (if reconstruct (cons 'list walked) walked)))))
+         (if (atom tree)
+             (if-let ((propapp (gethash tree *replaced-propapps*)))
+               (funcall function propapp)
+               (if reconstruct `',tree tree))
+             (let ((walked (mapcar #'walk tree)))
+               (if reconstruct (cons 'list walked) walked)))))
     ;; First we need to find all the propapps, after macro expansion.
     ;; Propapps contain the arguments to be passed to properties rather than
     ;; expressions which will evaluate to those arguments, and some of these
@@ -105,10 +105,10 @@ arguments to properties in propapps, but that should not be needed."
     ;; the same (as indeed it often will be) then we would get stuck in an
     ;; infinite macro expansion.  So we substitute back and forth for gensyms.
     (let ((expanded
-	    (handler-case
-		(macrolet-and-expand *known-property-macrolets* propspec)
-	      (error ()
-		(error 'invalid-or-ambiguous-propspec :propspec propspec)))))
+            (handler-case
+                (macrolet-and-expand *known-property-macrolets* propspec)
+              (error ()
+                (error 'invalid-or-ambiguous-propspec :propspec propspec)))))
       ;; Now we use a dummy macro expansion pass to find any symbols without
       ;; function or property definitions occurring in function call
       ;; positions.  These could potentially be properties whose definitions
@@ -118,19 +118,19 @@ arguments to properties in propapps, but that should not be needed."
       ;; in the propspec.  So error out if we detect that situation.
       (macrolet-and-expand
        (loop for leaf in (delete-duplicates (flatten expanded))
-	     if (and (symbolp leaf) (not (isprop leaf)))
-	       collect `(,leaf (&rest args)
-			       (unless (or (fboundp ',leaf) (isprop ',leaf))
-				 (error 'ambiguous-propspec :name ',leaf))
-			       ;; return something which looks like an
-			       ;; ordinary function call to the code walker,
-			       ;; so that it will recurse into ARGS
-			       (cons (gensym) args)))
+             if (and (symbolp leaf) (not (isprop leaf)))
+               collect `(,leaf (&rest args)
+                               (unless (or (fboundp ',leaf) (isprop ',leaf))
+                                 (error 'ambiguous-propspec :name ',leaf))
+                               ;; return something which looks like an
+                               ;; ordinary function call to the code walker,
+                               ;; so that it will recurse into ARGS
+                               (cons (gensym) args)))
        expanded)
       ;; Finally, substitute the mapped propapps back in to the propspec.
       (let ((*replaced-propapps*
-	      (alist-hash-table *replaced-propapps* :test 'eq)))
-	(walk expanded)))))
+              (alist-hash-table *replaced-propapps* :test 'eq)))
+        (walk expanded)))))
 
 (defmacro in-consfig (systems)
   "Sets the variable *CONSFIG* in the current package to SYSTEMS, or (SYSTEMS)
@@ -160,8 +160,8 @@ package applies to hosts."))))
   ((systems
     :initarg :systems
     :initform (or (symbol-value (find-symbol "*CONSFIG*"))
-		  (error
-		   "Looks like *CONSFIG* is not set; please call IN-CONSFIG"))
+                  (error
+                   "Looks like *CONSFIG* is not set; please call IN-CONSFIG"))
     :reader propspec-systems
     :documentation
     "List of names of ASDF systems, the loading of all of which is sufficient
@@ -192,12 +192,12 @@ PRINT-OBJECT."))
 
 (defmethod preprocess-propspec ((propspec unpreprocessed-propspec))
   (make-instance 'preprocessed-propspec
-		 :systems (propspec-systems propspec)
-		 :propspec (map-propspec-propapps
-			    (lambda (propapp)
-			      (destructuring-bind (prop . args) propapp
-				`',(cons prop (apply (proppp prop) args))))
-			    (propspec-props propspec))))
+                 :systems (propspec-systems propspec)
+                 :propspec (map-propspec-propapps
+                            (lambda (propapp)
+                              (destructuring-bind (prop . args) propapp
+                                `',(cons prop (apply (proppp prop) args))))
+                            (propspec-props propspec))))
 
 (defun make-propspec (&key (systems nil systems-supplied-p) propspec)
   "Convert a property application specification expression into a property
@@ -205,24 +205,24 @@ application specification proper by associating it with a list of ASDF
 systems."
   (if systems-supplied-p
       (make-instance 'unpreprocessed-propspec
-		     :systems systems :propspec propspec)
+                     :systems systems :propspec propspec)
       (make-instance 'unpreprocessed-propspec :propspec propspec)))
 
 (defmethod print-object ((propspec unpreprocessed-propspec) stream)
   (format stream "#.~S" `(make-instance
-			  'unpreprocessed-propspec
-			  :systems ',(slot-value propspec 'systems)
-			  :propspec
-			  ',(slot-value propspec 'propspec-expression)))
+                          'unpreprocessed-propspec
+                          :systems ',(slot-value propspec 'systems)
+                          :propspec
+                          ',(slot-value propspec 'propspec-expression)))
   propspec)
 
 (defmethod print-object ((propspec preprocessed-propspec) stream)
   (format stream "#.~S" `(make-instance
-			  'preprocessed-propspec
-			  :systems ',(slot-value propspec 'systems)
-			  :propspec
-			  ',(slot-value propspec
-					'preprocessed-propspec-expression)))
+                          'preprocessed-propspec
+                          :systems ',(slot-value propspec 'systems)
+                          :propspec
+                          ',(slot-value propspec
+                                        'preprocessed-propspec-expression)))
   propspec)
 
 ;; this could be defined for preprocessed propspecs easily enough but we
@@ -230,12 +230,12 @@ systems."
 (defmethod append-propspecs
     ((first unpreprocessed-propspec) (second unpreprocessed-propspec))
   (make-propspec :systems (union (propspec-systems first)
-				 (propspec-systems second))
-		 :propspec (let ((firstp (propspec-props first))
-				 (secondp (propspec-props second)))
-			     (if (and firstp secondp)
-				 `(silent-seqprops ,firstp ,secondp)
-				 (or firstp secondp)))))
+                                 (propspec-systems second))
+                 :propspec (let ((firstp (propspec-props first))
+                                 (secondp (propspec-props second)))
+                             (if (and firstp secondp)
+                                 `(silent-seqprops ,firstp ,secondp)
+                                 (or firstp secondp)))))
 
 (defmethod eval-propspec ((propspec preprocessed-propspec))
   (eval (slot-value propspec 'preprocessed-propspec-expression)))
@@ -257,10 +257,10 @@ processed."
 application specification expression to a property application specification
 expression."
   (flet ((evaluate (propapp)
-	   `(list ',(car propapp) ,@(cdr propapp))))
+           `(list ',(car propapp) ,@(cdr propapp))))
     (handler-case
-	(map-propspec-propapps #'evaluate (cons combinator forms) t)
+        (map-propspec-propapps #'evaluate (cons combinator forms) t)
       (ambiguous-propspec (c)
-	;; resignal with a more specific error message
-	(error 'ambiguous-unevaluated-propspec
-	       :name (cell-error-name c))))))
+        ;; resignal with a more specific error message
+        (error 'ambiguous-unevaluated-propspec
+               :name (cell-error-name c))))))

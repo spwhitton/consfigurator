@@ -92,8 +92,8 @@ sources are not expected to be available outside of the root Lisp."))
 (define-condition missing-data-source (error)
   ((text :initarg :text :reader missing-data-source-text))
   (:report (lambda (condition stream)
-	     (format stream "Missing data source: ~A"
-		     (missing-data-source-text condition)))))
+             (format stream "Missing data source: ~A"
+                     (missing-data-source-text condition)))))
 
 (defvar *data-sources* nil "Known sources of prerequisite data.")
 
@@ -104,9 +104,9 @@ sources are not expected to be available outside of the root Lisp."))
   "Register sources of prerequisite data.
 This function is typically called in consfigs."
   (when-let ((pair (and (not (find args *data-source-registrations*
-				   :test #'equal))
-			(restart-case (apply #'register-data-source args)
-			  (skip-data-source () nil)))))
+                                   :test #'equal))
+                        (restart-case (apply #'register-data-source args)
+                          (skip-data-source () nil)))))
     (push pair *data-sources*)
     (push args *data-source-registrations*)))
 
@@ -118,7 +118,7 @@ This function is typically called in consfigs."
   "Forget all data sources registered in this Lisp image.
 This function is typically called at the REPL."
   (setq *data-sources* nil
-	*data-source-registrations* nil))
+        *data-source-registrations* nil))
 
 (defun get-data-string (iden1 iden2)
   "Return the content of an item of prerequisite data as a string.
@@ -145,17 +145,17 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
     ;; else, look in local cache -- note that this won't exist in the root
     ;; Lisp, but only if we're a Lisp started up by a connection
     (if-let ((local-cached
-	      (car (remove-if-not (lambda (c)
-				    (and (string= (first c) iden1)
-					 (string= (second c) iden2)))
-				  (sort-prerequisite-data-cache
-				   (get-local-cached-prerequisite-data))))))
+              (car (remove-if-not (lambda (c)
+                                    (and (string= (first c) iden1)
+                                         (string= (second c) iden2)))
+                                  (sort-prerequisite-data-cache
+                                   (get-local-cached-prerequisite-data))))))
       (let ((file (apply #'local-data-pathname local-cached)))
-	(make-instance 'file-data
-		       :iden1 iden1
-		       :iden2 iden2
-		       :file file
-		       :mime (try-get-file-mime-type file)))
+        (make-instance 'file-data
+                       :iden1 iden1
+                       :iden2 iden2
+                       :file file
+                       :mime (try-get-file-mime-type file)))
       (error "Could not provide prerequisite data ~S | ~S" iden1 iden2))))
 
 (defmethod %get-data-stream ((data string-data))
@@ -165,7 +165,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 
 (defmethod %get-data-stream ((data file-data))
   (open (data-file data) :direction :input
-			 :element-type '(unsigned-byte 8)))
+                         :element-type '(unsigned-byte 8)))
 
 (defmethod %get-data-string ((data string-data))
   (data-string data))
@@ -175,71 +175,71 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
 
 (defun query-data-sources (iden1 iden2)
   (flet ((make-thunk (v iden1 iden2)
-	   (lambda ()
-	     (funcall v iden1 iden2))))
+           (lambda ()
+             (funcall v iden1 iden2))))
     (car (sort (loop for (ver . get) in *data-sources*
-		     for version = (funcall ver iden1 iden2)
-		     when version
-		       collect (cons version (make-thunk get iden1 iden2)))
-	       (lambda (x y)
-		 (version> (car x) (car y)))))))
+                     for version = (funcall ver iden1 iden2)
+                     when version
+                       collect (cons version (make-thunk get iden1 iden2)))
+               (lambda (x y)
+                 (version> (car x) (car y)))))))
 
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
 ;; Lisp images
 (defun upload-all-prerequisite-data (&optional (host *host*))
   (macrolet ((highest-version-in-cache (cache)
-	       `(third (car (remove-if-not (lambda (c)
-					     (and (string= (first c) iden1)
-						  (string= (second c) iden2)))
-					   ,cache)))))
+               `(third (car (remove-if-not (lambda (c)
+                                             (and (string= (first c) iden1)
+                                                  (string= (second c) iden2)))
+                                           ,cache)))))
     (loop with *data-sources* = (cons (register-data-source :asdf)
-				      *data-sources*)
+                                      *data-sources*)
 
-	  with sorted-local-cache  = (sort-prerequisite-data-cache
-				      (get-local-cached-prerequisite-data))
-	  with sorted-remote-cache = (sort-prerequisite-data-cache
-				      (get-remote-cached-prerequisite-data))
-	  for (iden1 . iden2) in (getf (slot-value host 'hostattrs) :data)
+          with sorted-local-cache  = (sort-prerequisite-data-cache
+                                      (get-local-cached-prerequisite-data))
+          with sorted-remote-cache = (sort-prerequisite-data-cache
+                                      (get-remote-cached-prerequisite-data))
+          for (iden1 . iden2) in (getf (slot-value host 'hostattrs) :data)
 
-	  for highest-local-cached-version  = (highest-version-in-cache
-					       sorted-local-cache)
-	  for highest-remote-cached-version = (highest-version-in-cache
-					       sorted-remote-cache)
-	  for (highest-source-version . highest-source)
-	    = (query-data-sources iden1 iden2)
+          for highest-local-cached-version  = (highest-version-in-cache
+                                               sorted-local-cache)
+          for highest-remote-cached-version = (highest-version-in-cache
+                                               sorted-remote-cache)
+          for (highest-source-version . highest-source)
+            = (query-data-sources iden1 iden2)
 
-	  if (and highest-source-version
-		  (or (not highest-remote-cached-version)
-		      (version< highest-remote-cached-version
-				highest-source-version)))
-	    do (connection-clear-data-cache iden1 iden2)
-	       (connection-upload-data (funcall highest-source))
-	  else if (and highest-local-cached-version
-		       (or (not highest-remote-cached-version)
-			   (version< highest-remote-cached-version
-				     highest-local-cached-version)))
-		 do (let ((file (local-data-pathname
-				 iden1
-				 iden2
-				 highest-local-cached-version)))
-		      (connection-clear-data-cache iden1 iden2)
-		      (connection-upload-data
-		       (make-instance 'file-data
-				      :iden1 iden1
-				      :iden2 iden2
-				      :version highest-local-cached-version
-				      :file file
-				      :mime (try-get-file-mime-type file))))
-	  else unless highest-remote-cached-version
-		 do (error "Could not provide prerequisite data ~S | ~S"
-			   iden1 iden2))))
+          if (and highest-source-version
+                  (or (not highest-remote-cached-version)
+                      (version< highest-remote-cached-version
+                                highest-source-version)))
+            do (connection-clear-data-cache iden1 iden2)
+               (connection-upload-data (funcall highest-source))
+          else if (and highest-local-cached-version
+                       (or (not highest-remote-cached-version)
+                           (version< highest-remote-cached-version
+                                     highest-local-cached-version)))
+                 do (let ((file (local-data-pathname
+                                 iden1
+                                 iden2
+                                 highest-local-cached-version)))
+                      (connection-clear-data-cache iden1 iden2)
+                      (connection-upload-data
+                       (make-instance 'file-data
+                                      :iden1 iden1
+                                      :iden2 iden2
+                                      :version highest-local-cached-version
+                                      :file file
+                                      :mime (try-get-file-mime-type file))))
+          else unless highest-remote-cached-version
+                 do (error "Could not provide prerequisite data ~S | ~S"
+                           iden1 iden2))))
 
 (defun try-get-file-mime-type (file)
   (handler-case (stripln (run-program
-			  (escape-sh-command (list "file" "-E"
-						   "--mime-type" "--brief"
-						   (unix-namestring file)))
-			  :output :string))
+                          (escape-sh-command (list "file" "-E"
+                                                   "--mime-type" "--brief"
+                                                   (unix-namestring file)))
+                          :output :string))
     (subprocess-error () nil)))
 
 (defun sort-prerequisite-data-cache (cache)
@@ -249,8 +249,8 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
   (destructuring-bind (last . rest)
       (nreverse (mapcar #'string->filename segments))
     (merge-pathnames last (reduce #'merge-pathnames
-				  (mapcar (lambda (s) (strcat s "/")) rest)
-				  :from-end t :initial-value root))))
+                                  (mapcar (lambda (s) (strcat s "/")) rest)
+                                  :from-end t :initial-value root))))
 
 (defun local-data-pathname (&rest args)
   (apply #'data-pathname (get-local-data-cache-dir) args))
@@ -262,18 +262,18 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
   "Wrapper around CONNECTION-UPLOAD to ensure it gets used only when
 appropriate.  Falls back to CONNECTION-WRITEFILE."
   (if (and (subtypep (type-of (slot-value *connection* 'parent))
-		     'consfigurator.connection.local:local-connection)
-	   (find-method #'connection-upload
-			'()
-			(mapcar #'class-of (list *connection* t t))
-			nil))
+                     'consfigurator.connection.local:local-connection)
+           (find-method #'connection-upload
+                        '()
+                        (mapcar #'class-of (list *connection* t t))
+                        nil))
       (connection-upload *connection* from to)
       (with-open-file (s from :element-type '(unsigned-byte 8))
-	(connection-writefile *connection* to s #o077))))
+        (connection-writefile *connection* to s #o077))))
 
 (defmethod connection-upload-data :around ((data data))
   (when (subtypep (class-of *connection*)
-		  'consfigurator.connection.local:local-connection)
+                  'consfigurator.connection.local:local-connection)
     (error "Attempt to upload data to the root Lisp; this is not allowed"))
   (with-slots (iden1 iden2 data-version) data
     (let ((*dest* (remote-data-pathname iden1 iden2 data-version)))
@@ -288,14 +288,14 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
   (declare (special *dest*))
   (let ((source (unix-namestring (data-file data))))
     (if (string-prefix-p "text/" (data-mime data))
-	(let ((dest (strcat (unix-namestring *dest*) ".gz")))
-	  (with-temporary-file (:pathname tmp)
-	    (run-program (strcat "gzip --rsyncable -c "
-				 (escape-sh-token source))
-			 :output tmp)
-	    (connection-try-upload tmp (unix-namestring dest))
-	    (mrun "gunzip" "--keep" dest)))
-	(connection-try-upload source *dest*))))
+        (let ((dest (strcat (unix-namestring *dest*) ".gz")))
+          (with-temporary-file (:pathname tmp)
+            (run-program (strcat "gzip --rsyncable -c "
+                                 (escape-sh-token source))
+                         :output tmp)
+            (connection-try-upload tmp (unix-namestring dest))
+            (mrun "gunzip" "--keep" dest)))
+        (connection-try-upload source *dest*))))
 
 (defmethod connection-upload-data ((data string-data))
   (declare (special *dest*))
@@ -304,13 +304,13 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
 (defun connection-clear-data-cache (iden1 iden2)
   (let ((dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))
     (mrun (strcat "rm -f "
-		  (unix-namestring (pathname-directory-pathname dir))
-		  "/*"))))
+                  (unix-namestring (pathname-directory-pathname dir))
+                  "/*"))))
 
 (defun get-local-data-cache-dir ()
   (ensure-directory-pathname
    (strcat (or (getenv "XDG_CACHE_HOME") (strcat (getenv "HOME") "/.cache"))
-	   "/consfigurator/data")))
+           "/consfigurator/data")))
 
 (defun get-local-cached-prerequisite-data ()
   "Return a list of items of prerequisite data in the cache local to this Lisp
@@ -318,15 +318,15 @@ process, where each entry is of the form
 
     '(iden1 iden2 version)."
   (loop for dir in (subdirectories (get-local-data-cache-dir))
-	nconc (loop for subdir in (subdirectories dir)
-		    nconc (loop for file in (directory-files subdir)
-				collect
-				(mapcar #'filename->string
-					(list (lastcar
-					       (pathname-directory dir))
-					      (lastcar
-					       (pathname-directory subdir))
-					      (pathname-name file)))))))
+        nconc (loop for subdir in (subdirectories dir)
+                    nconc (loop for file in (directory-files subdir)
+                                collect
+                                (mapcar #'filename->string
+                                        (list (lastcar
+                                               (pathname-directory dir))
+                                              (lastcar
+                                               (pathname-directory subdir))
+                                              (pathname-name file)))))))
 
 (defun get-remote-data-cache-dir ()
   (ensure-directory-pathname
@@ -340,11 +340,11 @@ of the current connection, where each entry is of the form
 
     '(iden1 iden2 version)."
   (mapcar (lambda (line)
-	    (mapcar #'filename->string (split-string line :separator "/")))
-	  (multiple-value-bind (out exit)
-	      (mrun :may-fail "find" (get-remote-data-cache-dir)
-		    "-type" "f" "-printf" "%P\\n")
-	    (and (zerop exit) (lines out)))))
+            (mapcar #'filename->string (split-string line :separator "/")))
+          (multiple-value-bind (out exit)
+              (mrun :may-fail "find" (get-remote-data-cache-dir)
+                    "-type" "f" "-printf" "%P\\n")
+            (and (zerop exit) (lines out)))))
 
 ;; TODO unclear whether the need for this is a bug in trivial-macroexpand-all
 (define-constant +continue-deploy*-program-implementation-specific+
@@ -372,10 +372,10 @@ chance of those passwords showing up in the clear in the Lisp debugger."
 (defmethod print-object ((passphrase passphrase) stream)
   (if *allow-printing-passphrases*
       (format stream "#.~S"
-	      `(make-instance 'passphrase
-			      :passphrase ,(passphrase passphrase)))
+              `(make-instance 'passphrase
+                              :passphrase ,(passphrase passphrase)))
       (print-unreadable-object (passphrase stream)
-	(format stream "PASSPHRASE")))
+        (format stream "PASSPHRASE")))
   passphrase)
 
 
@@ -400,57 +400,57 @@ achieved by sending the return value of this function into a REPL's stdin."
 
 Preprocessing must occur in the root Lisp."))
   (flet ((wrap (forms)
-	   `(handler-bind
-		(;; we can skip missing data sources because these are not
-		 ;; expected to be available outside of the root Lisp
-		 (missing-data-source
-		   (lambda (c)
-		     (declare (ignore c))
-		     (invoke-restart 'skip-data-source))))
-	      (let ((*consfigurator-debug-level* ,*consfigurator-debug-level*))
-		,@forms))))
+           `(handler-bind
+                (;; we can skip missing data sources because these are not
+                 ;; expected to be available outside of the root Lisp
+                 (missing-data-source
+                   (lambda (c)
+                     (declare (ignore c))
+                     (invoke-restart 'skip-data-source))))
+              (let ((*consfigurator-debug-level* ,*consfigurator-debug-level*))
+                ,@forms))))
     (let* ((intern-forms
-	     (loop for name in '("MISSING-DATA-SOURCE"
-				 "SKIP-DATA-SOURCE"
-				 "*CONSFIGURATOR-DEBUG-LEVEL*")
-		   collect
-		   `(export (intern ,name (find-package "CONSFIGURATOR"))
-			    (find-package "CONSFIGURATOR"))))
-	   (load-forms
-	     (loop for system
-		     in (slot-value (slot-value *host* 'propspec) 'systems)
-		   collect `(load
-			     ,(caddar
-			       (remove-if-not
-				(lambda (d)
-				  (string= (car d) "--lisp-system")
-				  (string= (cadr d) (normalise-system system)))
-				(slot-value *connection* 'cached-data))))))
-	   (forms `((make-package "CONSFIGURATOR")
-		    ;; Work around bug in CL-HEREDOC that cl-heredoc.asd must
-		    ;; be loaded for this package to be defined; this does not
-		    ;; work with ASDF:MONOLITHIC-CONCATENATE-SOURCE-OP, which
-		    ;; does not bundle the .asd files.
-		    (use-package :cl (make-package "CL-HEREDOC-SYSTEM"))
-		    ,@intern-forms
-		    (define-condition missing-data-source (error) ())
-		    (require "asdf")
-		    (let ((*standard-output* *error-output*))
-		      ,(wrap load-forms))
-		    ,(wrap `((%consfigure ',remaining-connections ,*host*))))))
+             (loop for name in '("MISSING-DATA-SOURCE"
+                                 "SKIP-DATA-SOURCE"
+                                 "*CONSFIGURATOR-DEBUG-LEVEL*")
+                   collect
+                   `(export (intern ,name (find-package "CONSFIGURATOR"))
+                            (find-package "CONSFIGURATOR"))))
+           (load-forms
+             (loop for system
+                     in (slot-value (slot-value *host* 'propspec) 'systems)
+                   collect `(load
+                             ,(caddar
+                               (remove-if-not
+                                (lambda (d)
+                                  (string= (car d) "--lisp-system")
+                                  (string= (cadr d) (normalise-system system)))
+                                (slot-value *connection* 'cached-data))))))
+           (forms `((make-package "CONSFIGURATOR")
+                    ;; Work around bug in CL-HEREDOC that cl-heredoc.asd must
+                    ;; be loaded for this package to be defined; this does not
+                    ;; work with ASDF:MONOLITHIC-CONCATENATE-SOURCE-OP, which
+                    ;; does not bundle the .asd files.
+                    (use-package :cl (make-package "CL-HEREDOC-SYSTEM"))
+                    ,@intern-forms
+                    (define-condition missing-data-source (error) ())
+                    (require "asdf")
+                    (let ((*standard-output* *error-output*))
+                      ,(wrap load-forms))
+                    ,(wrap `((%consfigure ',remaining-connections ,*host*))))))
       (handler-case
-	  (with-standard-io-syntax
-	    (let ((*allow-printing-passphrases* t))
-	      ;; need line breaks in between so that packages exist before we
-	      ;; try to have remote Lisp read sexps containing symbols from
-	      ;; those packages
-	      (values
-	       (format nil "~A~%~{~A~^~%~}"
-		       +continue-deploy*-program-implementation-specific+
-		       (mapcar #'prin1-to-string forms))
-	       forms)))
-	(print-not-readable (c)
-	  (error "The Lisp printer could not serialise ~A for
+          (with-standard-io-syntax
+            (let ((*allow-printing-passphrases* t))
+              ;; need line breaks in between so that packages exist before we
+              ;; try to have remote Lisp read sexps containing symbols from
+              ;; those packages
+              (values
+               (format nil "~A~%~{~A~^~%~}"
+                       +continue-deploy*-program-implementation-specific+
+                       (mapcar #'prin1-to-string forms))
+               forms)))
+        (print-not-readable (c)
+          (error "The Lisp printer could not serialise ~A for
 transmission to the remote Lisp.
 
 This is probably because your property application specification and/or static
@@ -461,7 +461,7 @@ hostattrs; see \"Pitfalls\" in the Consfigurator user manual.
 
 If ~:*~A is a simple object then you may be able to resolve this by defining
 a PRINT-OBJECT method for your class."
-		 (print-not-readable-object c)))))))
+                 (print-not-readable-object c)))))))
 
 (defun request-lisp-systems ()
   "Request that all Lisp systems required by the host currently being deployed

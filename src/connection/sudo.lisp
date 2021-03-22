@@ -47,30 +47,30 @@
 
 (defmethod preprocess-connection-args ((type (eql :sudo)) &key as (to "root"))
   (list :sudo
-	:user to
-	:password (and
-		   as
-		   (destructuring-bind (user host)
-		       (split-string as :separator "@")
-		     (get-data-protected-string
-		      (strcat "--user-passwd--" host) user)))))
+        :user to
+        :password (and
+                   as
+                   (destructuring-bind (user host)
+                       (split-string as :separator "@")
+                     (get-data-protected-string
+                      (strcat "--user-passwd--" host) user)))))
 
 (defmethod establish-connection ((type (eql :sudo))
-				 remaining
-				 &key
-				   user
-				   password)
+                                 remaining
+                                 &key
+                                   user
+                                   password)
   (declare (ignore remaining))
   (informat 1 "~&Establishing sudo connection to ~A" user)
   (make-instance 'sudo-connection
-		 :user user
-		 ;; we'll send the password followed by ^M, then the real
-		 ;; stdin.  use CODE-CHAR in this way so that we can be sure
-		 ;; ASCII ^M is what will get emitted.
-		 :password (and password
-				(make-passphrase
-				 (strcat (passphrase password)
-					 (string (code-char 13)))))))
+                 :user user
+                 ;; we'll send the password followed by ^M, then the real
+                 ;; stdin.  use CODE-CHAR in this way so that we can be sure
+                 ;; ASCII ^M is what will get emitted.
+                 :password (and password
+                                (make-passphrase
+                                 (strcat (passphrase password)
+                                         (string (code-char 13)))))))
 
 (defclass sudo-connection (shell-wrap-connection)
   ((user
@@ -85,8 +85,8 @@
   ;; wrap in sh -c so that it is more likely we are either asked for a
   ;; password for all our commands or not asked for one for any
   (format nil "sudo -HkS --prompt=\"\" --user=~A sh -c ~A"
-	  (slot-value connection 'user)
-	  (escape-sh-token (strcat "cd \"$HOME\"; " cmd))))
+          (slot-value connection 'user)
+          (escape-sh-token (strcat "cd \"$HOME\"; " cmd))))
 
 (defmethod connection-run ((c sudo-connection) cmd (input null))
   (call-next-method c cmd (get-sudo-password c)))
@@ -96,17 +96,17 @@
 
 (defmethod connection-run ((connection sudo-connection) cmd (input stream))
   (call-next-method connection
-		    cmd
-		    (if-let ((password (get-sudo-password connection)))
-		      (make-concatenated-stream
-		       (if (subtypep (stream-element-type input) 'character)
-			   (make-string-input-stream password)
-			   (babel-streams:make-in-memory-input-stream
-			    (babel:string-to-octets
-			     password :encoding :UTF-8)
-			    :element-type (stream-element-type input)))
-		       input)
-		      input)))
+                    cmd
+                    (if-let ((password (get-sudo-password connection)))
+                      (make-concatenated-stream
+                       (if (subtypep (stream-element-type input) 'character)
+                           (make-string-input-stream password)
+                           (babel-streams:make-in-memory-input-stream
+                            (babel:string-to-octets
+                             password :encoding :UTF-8)
+                            :element-type (stream-element-type input)))
+                       input)
+                      input)))
 
 (defmethod connection-upload ((c sudo-connection) from to)
   (connection-run c #?"cp ${from} ${to}" nil))

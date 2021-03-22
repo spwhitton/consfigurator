@@ -45,8 +45,8 @@
 
 (defmethod shallow-copy-host ((host host))
   (make-instance (type-of host)
-		 :hostattrs (copy-list (hostattrs host))
-		 :propspec (host-propspec host)))
+                 :hostattrs (copy-list (hostattrs host))
+                 :propspec (host-propspec host)))
 
 (defmacro with-preserve-hostattrs (&body forms)
   "Evaluate FORMS then throw away any newly added hostattrs.
@@ -69,15 +69,15 @@ values higher up the call stack."))
 
 (defmethod preprocess-host ((host unpreprocessed-host))
   (let ((*host* (make-instance
-		 'preprocessed-host
-		 :hostattrs (copy-list (hostattrs host))
-		 :propspec (preprocess-propspec (host-propspec host)))))
+                 'preprocessed-host
+                 :hostattrs (copy-list (hostattrs host))
+                 :propspec (preprocess-propspec (host-propspec host)))))
     (propappattrs (eval-propspec (host-propspec *host*)))
     *host*))
 
 (defun make-host (&key hostattrs (propspec (make-propspec)))
   (make-instance 'unpreprocessed-host
-		 :hostattrs hostattrs :propspec propspec))
+                 :hostattrs hostattrs :propspec propspec))
 
 (defun make-child-host (&key hostattrs propspec)
   "Make a host object to represent a chroot, container or the like.
@@ -89,9 +89,9 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
 
 (defmethod print-object ((host host) stream)
   (format stream "#.~S" `(make-instance
-			  ',(type-of host)
-			  :hostattrs ',(slot-value host 'hostattrs)
-			  :propspec ,(slot-value host 'propspec)))
+                          ',(type-of host)
+                          :hostattrs ',(slot-value host 'hostattrs)
+                          :propspec ,(slot-value host 'propspec)))
   host)
 
 ;; return values of the following two functions share structure, and thus are
@@ -101,8 +101,8 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
 (defmethod %union-propspec-into-host
     ((host unpreprocessed-host) (propspec propspec))
   (make-instance 'unpreprocessed-host
-		 :hostattrs (hostattrs host)
-		 :propspec (append-propspecs (host-propspec host) propspec)))
+                 :hostattrs (hostattrs host)
+                 :propspec (append-propspecs (host-propspec host) propspec)))
 
 (defmethod %replace-propspec-into-host
     ((host unpreprocessed-host) (propspec unpreprocessed-propspec))
@@ -110,8 +110,8 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
   ;; value to have all the hostattrs it would have were PROPSPEC not to be
   ;; substituted in
   (make-instance 'unpreprocessed-host
-		 :hostattrs (hostattrs (preprocess-host host))
-		 :propspec propspec))
+                 :hostattrs (hostattrs (preprocess-host host))
+                 :propspec propspec))
 
 (defmacro defhost (hostname (&key deploy) &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
@@ -142,16 +142,16 @@ entries."
     (etypecase hostname
       (string (setq hostname-sym (intern hostname)))
       (symbol (setq hostname-sym hostname
-		    hostname (string-downcase (symbol-name hostname)))))
+                    hostname (string-downcase (symbol-name hostname)))))
     (push hostname (getf attrs :hostname))
     (when (stringp (car properties))
       (push (pop properties) (getf attrs :desc)))
     `(progn
        (declaim (type host ,hostname-sym))
        (defparameter ,hostname-sym
-	 (make-host :hostattrs ',attrs
-		    :propspec (make-propspec
-			       :propspec (props seqprops ,@properties)))
-	 ,(car (getf attrs :desc)))
+         (make-host :hostattrs ',attrs
+                    :propspec (make-propspec
+                               :propspec (props seqprops ,@properties)))
+         ,(car (getf attrs :desc)))
        ,@(and deploy
-	      `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))
+              `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))

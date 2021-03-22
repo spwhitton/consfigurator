@@ -35,9 +35,9 @@ for example, such that we don't see it."
 
 (defmethod establish-connection ((type (eql :chroot)) remaining &key into)
   (establish-connection (if (and (lisp-connection-p)
-				 (can-chroot)
-				 (can-probably-fork))
-			    :chroot.fork
-			    :chroot.shell)
-			remaining
-			:into into))
+                                 (can-chroot)
+                                 (can-probably-fork))
+                            :chroot.fork
+                            :chroot.shell)
+                        remaining
+                        :into into))

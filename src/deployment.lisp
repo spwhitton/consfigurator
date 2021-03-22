@@ -27,29 +27,29 @@ Assumes arguments to connections in CONNECTIONS have been both normalised and
 preprocessed."
   (labels
       ((apply-*host*-propspec ()
-	 (let ((propapp (eval-propspec (host-propspec *host*))))
-	   (assert-connection-supports (propapptype propapp))
-	   (propappapply propapp)))
+         (let ((propapp (eval-propspec (host-propspec *host*))))
+           (assert-connection-supports (propapptype propapp))
+           (propappapply propapp)))
        (connect (connections)
-	 (destructuring-bind ((type . args) . remaining) connections
-	   ;; implementations of ESTABLISH-CONNECTION which call
-	   ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
-	   (when-let ((*connection*
-		       (apply #'establish-connection type remaining args)))
-	     (if remaining
-		 (connect remaining)
-		 (apply-*host*-propspec))
-	     (connection-teardown *connection*)))))
+         (destructuring-bind ((type . args) . remaining) connections
+           ;; implementations of ESTABLISH-CONNECTION which call
+           ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
+           (when-let ((*connection*
+                       (apply #'establish-connection type remaining args)))
+             (if remaining
+                 (connect remaining)
+                 (apply-*host*-propspec))
+             (connection-teardown *connection*)))))
     (let ((*host* (preprocess-host host)))
       (cond
-	((and connections (or *connection* (eq :local (caar connections))))
-	 (connect connections))
-	(connections
-	 (connect (cons '(:local) connections)))
-	(*connection*
-	 (apply-*host*-propspec))
-	(t
-	 (connect '((:local))))))))
+        ((and connections (or *connection* (eq :local (caar connections))))
+         (connect connections))
+        (connections
+         (connect (cons '(:local) connections)))
+        (*connection*
+         (apply-*host*-propspec))
+        (t
+         (connect '((:local))))))))
 
 (defun deploy* (connections host &optional additional-properties)
   "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
@@ -61,10 +61,10 @@ DEPLOY, DEPLOY-THESE, and the function definitions established by DEFDEPLOY,
 DEFDEPLOY-THESE, etc., rather than calling this function directly.  However,
 code which programmatically constructs deployments will need to call this."
   (%consfigure (preprocess-connections connections)
-	       (if additional-properties
-		   (%union-propspec-into-host (shallow-copy-host host)
-					      additional-properties)
-		   host)))
+               (if additional-properties
+                   (%union-propspec-into-host (shallow-copy-host host)
+                                              additional-properties)
+                   host)))
 
 (defun deploy-these* (connections host &optional properties)
   "Like DEPLOY*, but replace the properties of HOST with PROPERTIES.
@@ -75,10 +75,10 @@ by PROPERTIES can override the host's usual static informational attributes,
 in the same way that later entries in the list of properties specified in
 DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
   (%consfigure (preprocess-connections connections)
-	       (if properties
-		   (%replace-propspec-into-host (shallow-copy-host host)
-						properties)
-		   host)))
+               (if properties
+                   (%replace-propspec-into-host (shallow-copy-host host)
+                                                properties)
+                   host)))
 
 (defun continue-deploy* (remaining-connections)
   "Complete the work of an enclosing call to DEPLOY* or DEPLOY-THESE*.
@@ -113,13 +113,13 @@ specification may retrieve existing hostattrs, but should not set any new
 ones (not to be confused with how the :HOSTATTRS subroutines of properties in
 ADDITIONAL-PROPERTIES may set additional hostattrs)."
   (once-only ((host (if (stringp host)
-			`(make-host :hostattrs (list :hostname (list ,host)))
-			host)))
+                        `(make-host :hostattrs (list :hostname (list ,host)))
+                        host)))
     `(deploy* ',connections
-	      ,host
-	      (let ((*host* (shallow-copy-host ,host)))
-		(make-propspec
-		 :propspec (props eseqprops ,@additional-properties))))))
+              ,host
+              (let ((*host* (shallow-copy-host ,host)))
+                (make-propspec
+                 :propspec (props eseqprops ,@additional-properties))))))
 
 (defmacro deploy-these (connections host &body properties)
   "Like DEPLOY, except apply each of the properties specified by PROPERTIES,
@@ -144,13 +144,13 @@ may retrieve existing hostattrs, but should not set any new ones (not to be
 confused with how the :HOSTATTRS subroutines of properties in PROPERTIES may
 set additional hostattrs)."
   (once-only ((host (if (stringp host)
-			`(make-host :hostattrs (list :hostname (list ,host)))
-			host)))
+                        `(make-host :hostattrs (list :hostname (list ,host)))
+                        host)))
     `(deploy-these* ',connections
-		    ,host
-		    (let ((*host* (shallow-copy-host ,host)))
-		      (make-propspec
-		       :propspec (props eseqprops ,@properties))))))
+                    ,host
+                    (let ((*host* (shallow-copy-host ,host)))
+                      (make-propspec
+                       :propspec (props eseqprops ,@properties))))))
 
 (defmacro defdeploy (name (connections host) &body additional-properties)
   "Define a function which does (DEPLOY CONNECTIONS HOST ADDITIONAL-PROPERTIES).
@@ -173,11 +173,11 @@ Useful to have one host act a controller, applying properties to other hosts.
 Also useful to set up VMs, chroots, disk images etc. on localhost."
   (:preprocess
    (list (preprocess-connections connections)
-	 (preprocess-host
-	  (if additional-properties
-	      (%union-propspec-into-host (shallow-copy-host host)
-					 additional-properties)
-	      host))))
+         (preprocess-host
+          (if additional-properties
+              (%union-propspec-into-host (shallow-copy-host host)
+                                         additional-properties)
+              host))))
   (:hostattrs
    (declare (ignore connections additional-properties))
    (%propagate-hostattrs host))
@@ -191,8 +191,8 @@ PROPERTIES, and not the host's usual properties, unless they also appear in
 PROPERTIES, like DEPLOY-THESE."
   (:preprocess
    (list (preprocess-connections connections)
-	 (preprocess-host
-	  (%replace-propspec-into-host (shallow-copy-host host) properties))))
+         (preprocess-host
+          (%replace-propspec-into-host (shallow-copy-host host) properties))))
   (:hostattrs
    (declare (ignore connections properties))
    (%propagate-hostattrs host))
@@ -202,8 +202,8 @@ PROPERTIES, like DEPLOY-THESE."
 
 (defun preprocess-connections (connections)
   (loop for connection in (ensure-cons connections)
-	collect (apply #'preprocess-connection-args
-		       (ensure-cons connection))))
+        collect (apply #'preprocess-connection-args
+                       (ensure-cons connection))))
 
 (defun %propagate-hostattrs (host)
   (dolist (system (propspec-systems (host-propspec host)))

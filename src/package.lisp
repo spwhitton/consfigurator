@@ -4,180 +4,180 @@
   (:use #:cl #:alexandria)
   (:local-nicknames (#:re #:cl-ppcre))
   (:shadowing-import-from #:uiop
-			  #:strcat
-			  #:string-prefix-p
-			  #:split-string
-			  #:last-char
-			  #:escape-sh-command
-			  #:escape-sh-token
-			  #:run-program
-			  #:read-file-string
-			  #:copy-stream-to-stream
-			  #:subprocess-error
-			  #:stripln
-			  #:unix-namestring
-			  #:pathname-directory-pathname
-			  #:with-temporary-file
-			  #:ensure-directory-pathname
-			  #:getenv
-			  #:subdirectories
-			  #:directory-files
-			  #:file-exists-p
-			  #:with-current-directory)
+                          #:strcat
+                          #:string-prefix-p
+                          #:split-string
+                          #:last-char
+                          #:escape-sh-command
+                          #:escape-sh-token
+                          #:run-program
+                          #:read-file-string
+                          #:copy-stream-to-stream
+                          #:subprocess-error
+                          #:stripln
+                          #:unix-namestring
+                          #:pathname-directory-pathname
+                          #:with-temporary-file
+                          #:ensure-directory-pathname
+                          #:getenv
+                          #:subdirectories
+                          #:directory-files
+                          #:file-exists-p
+                          #:with-current-directory)
   (:export ;; re-export from UIOP
-	   #:strcat
-	   #:string-prefix-p
-	   #:split-string
-	   #:last-char
-	   #:escape-sh-command
-	   #:escape-sh-token
-	   #:run-program
-	   #:read-file-string
-	   #:copy-stream-to-stream
-	   #:subprocess-error
-	   #:stripln
-	   #:unix-namestring
-	   #:pathname-directory-pathname
-	   #:with-temporary-file
-	   #:ensure-directory-pathname
-	   #:getenv
-	   #:subdirectories
-	   #:directory-files
-	   #:file-exists-p
-	   #:with-current-directory
+           #:strcat
+           #:string-prefix-p
+           #:split-string
+           #:last-char
+           #:escape-sh-command
+           #:escape-sh-token
+           #:run-program
+           #:read-file-string
+           #:copy-stream-to-stream
+           #:subprocess-error
+           #:stripln
+           #:unix-namestring
+           #:pathname-directory-pathname
+           #:with-temporary-file
+           #:ensure-directory-pathname
+           #:getenv
+           #:subdirectories
+           #:directory-files
+           #:file-exists-p
+           #:with-current-directory
 
-	   ;; util.lisp
-	   #:lines
-	   #:unlines
-	   #:noop
-	   #:symbol-named
-	   #:memstring=
-	   #:plist-to-cmd-args
+           ;; util.lisp
+           #:lines
+           #:unlines
+           #:noop
+           #:symbol-named
+           #:memstring=
+           #:plist-to-cmd-args
 
-	   #:*consfigurator-debug-level*
-	   #:with-indented-inform
-	   #:inform
-	   #:informat
+           #:*consfigurator-debug-level*
+           #:with-indented-inform
+           #:inform
+           #:informat
 
-	   #:version<
-	   #:version>
-	   #:version<=
-	   #:version>=
+           #:version<
+           #:version>
+           #:version<=
+           #:version>=
 
-	   #:string->filename
-	   #:filename->string
+           #:string->filename
+           #:filename->string
 
-	   ;; connection.lisp
-	   #:establish-connection
-	   #:preprocess-connection-args
-	   #:connection
-	   #:lisp-connection
-	   #:posix-connection
-	   #:lisp-connection-p
-	   #:connection-run
-	   #:connection-readfile
-	   #:connection-writefile
-	   #:connection-upload
-	   #:connection-teardown
+           ;; connection.lisp
+           #:establish-connection
+           #:preprocess-connection-args
+           #:connection
+           #:lisp-connection
+           #:posix-connection
+           #:lisp-connection-p
+           #:connection-run
+           #:connection-readfile
+           #:connection-writefile
+           #:connection-upload
+           #:connection-teardown
 
-	   #:run
-	   #:mrun
-	   #:with-remote-temporary-file
-	   #:run-failed
-	   #:runlines
-	   #:test
-	   #:readfile
-	   #:writefile
+           #:run
+           #:mrun
+           #:with-remote-temporary-file
+           #:run-failed
+           #:runlines
+           #:test
+           #:readfile
+           #:writefile
 
-	   ;; property.lisp
-	   #:propattrs
-	   #:propunapply
-	   #:collapse-types
-	   #:propapptype
-	   #:propappdesc
-	   #:propappattrs
-	   #:propappcheck
-	   #:propappapply
-	   #:propappunapply
-	   #:ignoring-hostattrs
-	   #:defprop
-	   #:defpropspec
-	   #:defproplist
-	   #:inapplicable-property
-	   #:get-hostattrs
-	   #:get-hostattrs-car
-	   #:get-parent-hostattrs
-	   #:get-parent-hostattrs-car
-	   #:push-hostattrs
-	   #:pushnew-hostattrs
-	   #:get-hostname
-	   #:require-data
-	   #:failed-change
-	   #:assert-euid-root
-	   #:assert-connection-supports
-	   #:call-with-os
+           ;; property.lisp
+           #:propattrs
+           #:propunapply
+           #:collapse-types
+           #:propapptype
+           #:propappdesc
+           #:propappattrs
+           #:propappcheck
+           #:propappapply
+           #:propappunapply
+           #:ignoring-hostattrs
+           #:defprop
+           #:defpropspec
+           #:defproplist
+           #:inapplicable-property
+           #:get-hostattrs
+           #:get-hostattrs-car
+           #:get-parent-hostattrs
+           #:get-parent-hostattrs-car
+           #:push-hostattrs
+           #:pushnew-hostattrs
+           #:get-hostname
+           #:require-data
+           #:failed-change
+           #:assert-euid-root
+           #:assert-connection-supports
+           #:call-with-os
 
-	   ;; propspec.lisp
-	   #:in-consfig
-	   #:propspec-systems
-	   #:propspec-props
-	   #:make-propspec
-	   #:append-propspecs
-	   #:define-function-property-combinator
-	   #:seqprops
-	   #:eseqprops
-	   #:with-requirements
-	   #:silent-seqprops
-	   #:unapply
-	   #:on-change
+           ;; propspec.lisp
+           #:in-consfig
+           #:propspec-systems
+           #:propspec-props
+           #:make-propspec
+           #:append-propspecs
+           #:define-function-property-combinator
+           #:seqprops
+           #:eseqprops
+           #:with-requirements
+           #:silent-seqprops
+           #:unapply
+           #:on-change
 
-	   ;; host.lisp
-	   #:host
-	   #:defhost
-	   #:make-host
-	   #:make-child-host
-	   #:hostattrs
-	   #:preprocess-host
-	   #:with-preserve-hostattrs
+           ;; host.lisp
+           #:host
+           #:defhost
+           #:make-host
+           #:make-child-host
+           #:hostattrs
+           #:preprocess-host
+           #:with-preserve-hostattrs
 
-	   ;; deployment.lisp
-	   #:defdeploy
-	   #:defdeploy-these
-	   #:deploy
-	   #:deploy*
-	   #:deploys
-	   #:deploys.
-	   #:deploy-these
-	   #:deploys-these.
-	   #:deploy-these*
-	   #:deploys-these
-	   #:continue-deploy*
+           ;; deployment.lisp
+           #:defdeploy
+           #:defdeploy-these
+           #:deploy
+           #:deploy*
+           #:deploys
+           #:deploys.
+           #:deploy-these
+           #:deploys-these.
+           #:deploy-these*
+           #:deploys-these
+           #:continue-deploy*
 
-	   ;; data.lisp
-	   #:data
-	   #:iden1
-	   #:iden2
-	   #:data-version
-	   #:data-mime
-	   #:string-data
-	   #:data-string
-	   #:file-data
-	   #:data-file
-	   #:missing-data-source
+           ;; data.lisp
+           #:data
+           #:iden1
+           #:iden2
+           #:data-version
+           #:data-mime
+           #:string-data
+           #:data-string
+           #:file-data
+           #:data-file
+           #:missing-data-source
 
-	   #:try-register-data-source
-	   #:register-data-source
-	   #:reset-data-sources
-	   #:skip-data-source
-	   #:get-data-stream
-	   #:with-data-stream
-	   #:get-data-string
-	   #:upload-all-prerequisite-data
-	   #:request-lisp-systems
-	   #:passphrase
-	   #:make-passphrase
-	   #:get-data-protected-string
-	   #:continue-deploy*-program))
+           #:try-register-data-source
+           #:register-data-source
+           #:reset-data-sources
+           #:skip-data-source
+           #:get-data-stream
+           #:with-data-stream
+           #:get-data-string
+           #:upload-all-prerequisite-data
+           #:request-lisp-systems
+           #:passphrase
+           #:make-passphrase
+           #:get-data-protected-string
+           #:continue-deploy*-program))
 
 (defpackage :consfigurator.connection.shell-wrap
   (:use #:cl #:consfigurator)
@@ -185,15 +185,15 @@
 
 (defpackage :consfigurator.connection.ssh
   (:use #:cl
-	#:consfigurator
-	#:alexandria
-	#:consfigurator.connection.shell-wrap))
+        #:consfigurator
+        #:alexandria
+        #:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.connection.sudo
   (:use #:cl
-	#:consfigurator
-	#:alexandria
-	#:consfigurator.connection.shell-wrap))
+        #:consfigurator
+        #:alexandria
+        #:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
@@ -207,8 +207,8 @@
 
 (defpackage :consfigurator.connection.chroot.shell
   (:use #:cl
-	#:consfigurator
-	#:consfigurator.connection.shell-wrap))
+        #:consfigurator
+        #:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)
@@ -218,62 +218,62 @@
   (:use #:cl #:consfigurator #:alexandria)
   (:local-nicknames (#:re #:cl-ppcre))
   (:export #:has-content
-	   #:contains-lines
-	   #:has-mode
-	   #:does-not-exist
-	   #:data-uploaded
-	   #:host-data-uploaded
-	   #:secret-uploaded
-	   #:host-secret-uploaded
-	   #:regex-replaced-lines
-	   #:directory-exists))
+           #:contains-lines
+           #:has-mode
+           #:does-not-exist
+           #:data-uploaded
+           #:host-data-uploaded
+           #:secret-uploaded
+           #:host-secret-uploaded
+           #:regex-replaced-lines
+           #:directory-exists))
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
   (:shadow #:typecase)
   (:export #:unixlike
-	   #:linux
-	   #:linux-architecture
-	   #:debianlike
-	   #:debian
-	   #:debian-stable
-	   #:debian-testing
-	   #:debian-unstable
-	   #:debian-suite
-	   #:debian-architecture
-	   #:typecase
-	   #:host-typecase
-	   #:required
-	   #:supports-arch-p))
+           #:linux
+           #:linux-architecture
+           #:debianlike
+           #:debian
+           #:debian-stable
+           #:debian-testing
+           #:debian-unstable
+           #:debian-suite
+           #:debian-architecture
+           #:typecase
+           #:host-typecase
+           #:required
+           #:supports-arch-p))
 
 (defpackage :consfigurator.property.service
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os    #:consfigurator.property.os)
-		    (#:file  #:consfigurator.property.file))
+                    (#:file  #:consfigurator.property.file))
   (:export #:no-services
-	   #:running
-	   #:without-starting-services))
+           #:running
+           #:without-starting-services))
 
 (defpackage :consfigurator.property.apt
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:re         #:cl-ppcre)
-		    (#:file       #:consfigurator.property.file)
-		    (#:os         #:consfigurator.property.os)
-		    (#:service    #:consfigurator.property.service))
+                    (#:file       #:consfigurator.property.file)
+                    (#:os         #:consfigurator.property.os)
+                    (#:service    #:consfigurator.property.service))
   (:export #:installed
-	   #:removed
-	   #:service-installed-running
-	   #:mirror
-	   #:uses-parent-mirror
-	   #:proxy
-	   #:uses-parent-proxy
-	   #:uses-local-cacher
-	   #:standard-sources.list))
+           #:removed
+           #:service-installed-running
+           #:mirror
+           #:uses-parent-mirror
+           #:proxy
+           #:uses-parent-proxy
+           #:uses-local-cacher
+           #:standard-sources.list))
 
 (defpackage :consfigurator.connection.sbcl
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:os  #:consfigurator.property.os)
-		    (#:apt #:consfigurator.property.apt)))
+                    (#:apt #:consfigurator.property.apt)))
 
 (defpackage :consfigurator.property.user
   (:use #:cl #:consfigurator)
@@ -283,11 +283,11 @@
 (defpackage :consfigurator.property.chroot
   (:use #:cl #:consfigurator #:alexandria)
   (:local-nicknames (#:service   #:consfigurator.property.service)
-		    (#:apt       #:consfigurator.property.apt)
-		    (#:os        #:consfigurator.property.os)
-		    (#:file      #:consfigurator.property.file))
+                    (#:apt       #:consfigurator.property.apt)
+                    (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file))
   (:export #:os-bootstrapped
-	   #:os-bootstrapped.))
+           #:os-bootstrapped.))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))

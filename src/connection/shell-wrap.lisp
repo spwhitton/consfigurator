@@ -28,28 +28,28 @@
 (defmethod connection-readfile ((c shell-wrap-connection) path)
   (multiple-value-bind (out exit)
       (let ((path (escape-sh-token path)))
-	(connection-run c #?"test -r ${path} && cat ${path}" nil))
+        (connection-run c #?"test -r ${path} && cat ${path}" nil))
     (if (zerop exit) out (error "File ~S not readable" path))))
 
 (defmethod connection-writefile ((conn shell-wrap-connection)
-				 path
-				 content
-				 mode)
+                                 path
+                                 content
+                                 mode)
   (with-remote-temporary-file
       (temp :connection conn :directory (pathname-directory-pathname path))
     ;; TODO do we want a CONNECTION-ERROR condition to tidy this up?
     (multiple-value-bind (out exit)
-	(connection-run conn
-			(format nil "chmod ~O ~A" mode
-				(escape-sh-token temp))
-			nil)
+        (connection-run conn
+                        (format nil "chmod ~O ~A" mode
+                                (escape-sh-token temp))
+                        nil)
       (unless (zerop exit) (error "Failed to chmod ~A: ~A" temp out)))
     (multiple-value-bind (out exit)
-	(connection-run conn #?"cat >${temp}" content)
+        (connection-run conn #?"cat >${temp}" content)
       (unless (zerop exit) (error "Failed to write ~A: ~A" temp out)))
     (multiple-value-bind (out exit)
-	(connection-run
-	 conn
-	 #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
-	 nil)
+        (connection-run
+         conn
+         #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
+         nil)
       (unless (zerop exit) (error "Failed to write ~A: ~A" path out)))))

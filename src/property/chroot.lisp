@@ -24,18 +24,18 @@
    (declare (ignore options host))
    ;; check whether a previous debootstrap failed partway through
    (if (test "-d" (merge-pathnames "debootstrap/"
-				   (ensure-directory-pathname root)))
+                                   (ensure-directory-pathname root)))
        (progn (mrun "rm" "-rf" root) nil)
        (test "-d" root)))
   (:apply
    (let* ((os (car (getf (hostattrs host) :os)))
-	  (args (list (if (os:supports-arch-p (get-hostattrs-car :os)
-					      (os:linux-architecture os))
-			  "debootstrap" "qemu-debootstrap")
-		      (plist-to-cmd-args options)
-		      (strcat "--arch=" (os:debian-architecture os))
-		      (os:debian-suite os)
-		      root)))
+          (args (list (if (os:supports-arch-p (get-hostattrs-car :os)
+                                              (os:linux-architecture os))
+                          "debootstrap" "qemu-debootstrap")
+                      (plist-to-cmd-args options)
+                      (strcat "--arch=" (os:debian-architecture os))
+                      (os:debian-suite os)
+                      root)))
      (when-let ((proxy (get-hostattrs-car :apt.proxy)))
        (setq args (list* :env (list :http_proxy proxy) args)))
      (when-let ((mirror (get-hostattrs-car :apt.mirror)))
@@ -47,7 +47,7 @@
   `(os:host-typecase ,host
      (debian
       (os:typecase
-	(debianlike (apt:installed "debootstrap"))))))
+        (debianlike (apt:installed "debootstrap"))))))
 
 (defpropspec %os-bootstrapped :posix (options root host)
   "Bootstrap OS into ROOT, e.g. with debootstrap(1)."
@@ -60,18 +60,18 @@
 
 (defproplist os-bootstrapped :lisp
     (options root properties
-	     &aux (host
-		   (preprocess-host
-		    (make-child-host
-		     :propspec
-		     (make-propspec
-		      :systems (propspec-systems properties)
-		      :propspec `(service:without-starting-services
-				   ,(propspec-props properties)))))))
+             &aux (host
+                   (preprocess-host
+                    (make-child-host
+                     :propspec
+                     (make-propspec
+                      :systems (propspec-systems properties)
+                      :propspec `(service:without-starting-services
+                                   ,(propspec-props properties)))))))
   "Bootstrap an OS into ROOT and apply PROPERTIES.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc (declare (ignore options properties))
-	 #?"Built chroot @ ${root}")
+         #?"Built chroot @ ${root}")
   (%os-bootstrapper-installed host)
   (%os-bootstrapped options root host)
   (deploys `((:chroot :into ,root)) host))

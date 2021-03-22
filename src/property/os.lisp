@@ -32,13 +32,13 @@
 
 (defclass debian (debianlike)
   ((suite :initarg :suite
-	  :reader debian-suite
-	  :initform (error "Must provide suite"))))
+          :reader debian-suite
+          :initform (error "Must provide suite"))))
 
 (defmethod print-object ((os debian) stream)
   (format stream "#.~S" `(make-instance 'debian
-					:arch ,(linux-architecture os)
-					:suite ,(debian-suite os)))
+                                        :arch ,(linux-architecture os)
+                                        :suite ,(debian-suite os)))
   os)
 
 (defclass debian-stable (debian) ())
@@ -49,8 +49,8 @@
    #?{Host is Debian "${suite}"})
   (:hostattrs
    (push-hostattrs :os
-		   (make-instance 'debian-stable
-				  :arch architecture :suite suite))))
+                   (make-instance 'debian-stable
+                                  :arch architecture :suite suite))))
 
 (defclass debian-testing (debian)
   ((suite :initform "testing")))
@@ -61,8 +61,8 @@
    "Host is Debian testing")
   (:hostattrs
    (push-hostattrs :os
-		   (make-instance 'debian-testing
-				  :arch architecture))))
+                   (make-instance 'debian-testing
+                                  :arch architecture))))
 
 (defclass debian-unstable (debian)
   ((suite :initform "unstable")))
@@ -73,8 +73,8 @@
    "Host is Debian unstable")
   (:hostattrs
    (push-hostattrs :os
-		   (make-instance 'debian-unstable
-				  :arch architecture))))
+                   (make-instance 'debian-unstable
+                                  :arch architecture))))
 
 (defmethod debian-architecture ((os linux))
   "Return a string representing the architecture of OS as used by Debian."
@@ -85,28 +85,28 @@
 
 (define-function-property-combinator os-typecase* (host &rest cases)
   (flet ((choose-propapp ()
-	   (or (loop with os = (class-of (if host
-					     (car (getf (hostattrs host) :os))
-					     (get-hostattrs-car :os)))
-		     for (type propapp) on cases by #'cddr
-		     when (subtypep os type) return propapp)
-	       (inapplicable-property
-		"Host's OS ~S fell through OS:TYPECASE."
-		(class-of (get-hostattrs-car :os))))))
+           (or (loop with os = (class-of (if host
+                                             (car (getf (hostattrs host) :os))
+                                             (get-hostattrs-car :os)))
+                     for (type propapp) on cases by #'cddr
+                     when (subtypep os type) return propapp)
+               (inapplicable-property
+                "Host's OS ~S fell through OS:TYPECASE."
+                (class-of (get-hostattrs-car :os))))))
     (:retprop :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
-					  collect (propapptype propapp)))
-	      :desc (lambda (&rest args)
-		      (declare (ignore args))
-		      (propappdesc (choose-propapp)))
-	      :hostattrs (lambda (&rest args)
-			   (declare (ignore args))
-			   (propappattrs (choose-propapp)))
-	      :apply (lambda (&rest args)
-		       (declare (ignore args))
-		       (propappapply (choose-propapp)))
-	      :unapply (lambda (&rest args)
-			 (declare (ignore args))
-			 (propappunapply (choose-propapp))))))
+                                          collect (propapptype propapp)))
+              :desc (lambda (&rest args)
+                      (declare (ignore args))
+                      (propappdesc (choose-propapp)))
+              :hostattrs (lambda (&rest args)
+                           (declare (ignore args))
+                           (propappattrs (choose-propapp)))
+              :apply (lambda (&rest args)
+                       (declare (ignore args))
+                       (propappapply (choose-propapp)))
+              :unapply (lambda (&rest args)
+                         (declare (ignore args))
+                         (propappunapply (choose-propapp))))))
 
 (defmacro typecase (&body cases)
   `(host-typecase nil ,@cases))
@@ -115,9 +115,9 @@
   `(os-typecase*
     ,host
     ,@(loop for case in cases
-	    collect `',(intern (symbol-name (car case))
-			       (find-package :consfigurator.property.os))
-	    collect (cadr case))))
+            collect `',(intern (symbol-name (car case))
+                               (find-package :consfigurator.property.os))
+            collect (cadr case))))
 
 
 ;;;; Utilities
@@ -134,6 +134,6 @@ Used in property :HOSTATTRS subroutines."
   "Can binaries of type ARCH run on OS?"
   (cl:typecase os
     (debian (or (eq (linux-architecture os) arch)
-		(member arch (assoc (linux-architecture os)
-				    '((:amd64 :i386)
-				      (:i386  :amd64))))))))
+                (member arch (assoc (linux-architecture os)
+                                    '((:amd64 :i386)
+                                      (:i386  :amd64))))))))
