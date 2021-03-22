@@ -416,6 +416,7 @@ Preprocessing must occur in the root Lisp."))
                    collect
                    `(export (intern ,name (find-package "CONSFIGURATOR"))
                             (find-package "CONSFIGURATOR"))))
+	   (proclamations `((proclaim '(special *consfigurator-debug-level*))))
            (load-forms
              (loop for system
                      in (slot-value (slot-value *host* 'propspec) 'systems)
@@ -433,6 +434,7 @@ Preprocessing must occur in the root Lisp."))
                     ;; does not bundle the .asd files.
                     (use-package :cl (make-package "CL-HEREDOC-SYSTEM"))
                     ,@intern-forms
+		    ,@proclamations
                     (define-condition missing-data-source (error) ())
                     (require "asdf")
 		    ;; Hide the LOAD output unless loading failed, because
