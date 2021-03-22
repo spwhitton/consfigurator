@@ -54,6 +54,11 @@
 	   #:memstring=
 	   #:plist-to-cmd-args
 
+	   #:*consfigurator-debug-level*
+	   #:with-indented-inform
+	   #:inform
+	   #:informat
+
 	   #:version<
 	   #:version>
 	   #:version<=

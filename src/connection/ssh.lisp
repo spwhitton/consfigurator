@@ -23,7 +23,7 @@
 				   (hop (get-hostname))
 				   user)
   (declare (ignore remaining))
-  (format t "Establishing SSH connection to ~A~%" hop)
+  (informat 1 "~&Establishing SSH connection to ~A" hop)
   (mrun "ssh" "-fN" hop)
   (make-instance 'ssh-connection :hostname hop :user user))
 

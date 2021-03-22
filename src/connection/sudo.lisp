@@ -61,7 +61,7 @@
 				   user
 				   password)
   (declare (ignore remaining))
-  (format t "Establishing sudo connection to ~A~%" user)
+  (informat 1 "~&Establishing sudo connection to ~A" user)
   (make-instance 'sudo-connection
 		 :user user
 		 ;; we'll send the password followed by ^M, then the real

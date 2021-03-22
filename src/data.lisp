@@ -279,10 +279,10 @@ appropriate.  Falls back to CONNECTION-WRITEFILE."
     (let ((*dest* (remote-data-pathname iden1 iden2 data-version)))
       (declare (special *dest*))
       (mrun "mkdir" "-p" (pathname-directory-pathname *dest*))
-      (format t "Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
+      (informat 1 "~&Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
       (call-next-method)
       (push (list iden1 iden2 *dest*) (slot-value *connection* 'cached-data))
-      (format t "done.~%"))))
+      (inform 1 "done." :fresh-line nil))))
 
 (defmethod connection-upload-data ((data file-data))
   (declare (special *dest*))
@@ -403,10 +403,12 @@ Preprocessing must occur in the root Lisp."))
 		   (lambda (c)
 		     (declare (ignore c))
 		     (invoke-restart 'skip-data-source))))
-	      ,@forms)))
+	      (let ((*consfigurator-debug-level* ,*consfigurator-debug-level*))
+		,@forms))))
     (let* ((intern-forms
 	     (loop for name in '("MISSING-DATA-SOURCE"
-				 "SKIP-DATA-SOURCE")
+				 "SKIP-DATA-SOURCE"
+				 "*CONSFIGURATOR-DEBUG-LEVEL*")
 		   collect
 		   `(export (intern ,name (find-package "CONSFIGURATOR"))
 			    (find-package "CONSFIGURATOR"))))

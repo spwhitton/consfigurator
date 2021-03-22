@@ -131,6 +131,51 @@ supported."
 	   (push (strcat "--" (string-downcase (symbol-name k)) "=" v) args)))
 
 
+;;;; Progress & debug printing
+
+(defvar *consfigurator-debug-level* nil
+  "Integer.  Higher values mean be more verbose during deploys.")
+
+(defvar *inform-prefix* ";; ")
+
+(defmacro with-indented-inform (&body forms)
+  `(let ((*inform-prefix* (strcat *inform-prefix* "    ")))
+     ,@forms))
+
+(defun inform (level output &key strip-empty (fresh-line t))
+  "Print something to the user during deploys."
+  (unless (and (numberp level) (> level *consfigurator-debug-level*))
+    (let ((lines (loop for line in (etypecase output
+				     (cons output)
+				     (string (lines output)))
+		       ;; strip (first part of) prefix added by a remote Lisp
+		       for stripped = (if (string-prefix-p ";; " line)
+					  (subseq line 3)
+					  line)
+		       unless (and strip-empty (re:scan #?/\A\s*\z/ stripped))
+			 collect stripped)))
+      (when fresh-line
+	(fresh-line)
+	(princ *inform-prefix*))
+      (princ (pop lines))
+      (dolist (line lines)
+	(fresh-line)
+	(princ *inform-prefix*)
+	(princ line)))))
+
+(defun informat (level control-string &rest format-arguments)
+  "Print something to the user during deploys using FORMAT.
+Be sure to begin CONTROL-STRING with ~& unless you want to continue from
+previous output."
+  (if (string-prefix-p "~&" control-string)
+      (inform level
+	      (apply #'format nil (subseq control-string 2) format-arguments)
+	      :fresh-line t)
+      (inform level
+	      (apply #'format nil control-string format-arguments)
+	      :fresh-line nil)))
+
+
 ;;;; Version numbers
 
 (defun version< (x y)

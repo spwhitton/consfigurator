@@ -20,7 +20,7 @@
 
 (defmethod establish-connection ((type (eql :chroot.shell)) remaining &key into)
   (declare (ignore remaining))
-  (format t "Shelling into chroot at ~A~%" into)
+  (informat 1 "~&Shelling into chroot at ~A" into)
   (make-instance 'shell-chroot-connection :root into))
 
 (defclass shell-chroot-connection (shell-wrap-connection)

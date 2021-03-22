@@ -22,7 +22,7 @@
   (mrun "which sbcl >/dev/null 2>&1 || apt-get -y install sbcl")
   (request-lisp-systems)
   (upload-all-prerequisite-data)
-  (princ "Waiting for remote Lisp to exit, this may take some time ... ")
+  (inform t "Waiting for remote Lisp to exit, this may take some time ... ")
   (force-output)
   (let ((program (continue-deploy*-program remaining)))
     (multiple-value-bind (out err exit)

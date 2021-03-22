@@ -217,12 +217,12 @@ which will be cleaned up when BODY is finished."
 		   :exit-code exit))))))
 
 (defmacro %process-run-args (&body forms)
-  `(let (cmd input may-fail for-exit env princ)
+  `(let (cmd input may-fail for-exit env inform)
     (loop for arg = (pop args)
 	  do (case arg
-	       (:for-exit (setq may-fail t for-exit t))
-	       (:may-fail (setq may-fail t))
-	       (:princ    (setq princ t))
+	       (:for-exit  (setq may-fail t for-exit t))
+	       (:may-fail  (setq may-fail t))
+	       (:inform    (setq inform t))
 	       (:input (setq input (pop args)))
 	       (:env (setq env (pop args)))
 	       (t (mapc (lambda (e)
@@ -265,7 +265,7 @@ Keyword arguments accepted:
     does not exit nonzero, usually because it is being called partly or only
     for its exit code
 
-  - :PRINC -- send a copy of the output to *STANDARD-OUTPUT*
+  - :INFORM -- send a copy of the output to *STANDARD-OUTPUT*
 
   - :INPUT INPUT -- pass the content of the string or stream INPUT on stdin
 
@@ -278,10 +278,11 @@ case return only the exit code."
   (%process-run-args
     (with-remote-temporary-file (stdout)
       (setq cmd (format nil "( ~A ) >~A" cmd stdout))
+      (informat 3 "RUN ~A" cmd)
       (multiple-value-bind (err exit)
 	  (connection-run *connection* cmd input)
 	(let ((out (readfile stdout)))
-	  (when princ (format t "~{    ~A~%~}" (lines out)))
+	  (when inform (informat 1 "~{    ~A~%~}" (lines out)))
 	  (if (or may-fail (= exit 0))
 	      (if for-exit exit (values out err exit))
 	      (error 'run-failed
@@ -300,9 +301,10 @@ Some :POSIX properties which want to run a lot of commands and don't need to
 separate the streams might want to use this too, but usually it is best to
 start with RUN."
   (%process-run-args
+    (informat 3 "MRUN ~A" cmd)
     (multiple-value-bind (out exit)
 	(connection-run *connection* cmd input)
-      (when princ (format t "~{    ~A~%~}" (lines out)))
+      (when inform (informat 1 "~{    ~A~%~}" (lines out)))
       (if (or may-fail (= exit 0))
 	  (if for-exit exit (values out exit))
 	  (error 'run-failed

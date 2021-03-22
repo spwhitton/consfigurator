@@ -24,7 +24,7 @@
 (defmacro with-maybe-update (form)
   `(handler-case ,form
      (run-failed ()
-       (apt-get :princ "update")
+       (apt-get :inform "update")
        ,form)))
 
 (define-constant +sections+ '("main" "contrib" "non-free") :test #'equal)
@@ -41,7 +41,7 @@
   (:check
    (all-installed-p packages))
   (:apply
-   (with-maybe-update (apt-get :princ "-y" "install" packages))))
+   (with-maybe-update (apt-get :inform "-y" "install" packages))))
 
 (defprop removed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are removed."
@@ -52,7 +52,7 @@
   (:check
    (none-installed-p packages))
   (:apply
-   (apt-get :princ "-y" "remove" packages)))
+   (apt-get :inform "-y" "remove" packages)))
 
 (defproplist service-installed-running :posix (package)
   "Where PACKAGE installs a service named PACKAGE, ensure it is installed and

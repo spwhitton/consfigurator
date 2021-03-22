@@ -39,7 +39,7 @@
   (unless (lisp-connection-p)
     (error "Forking into a chroot requires a Lisp-type connection"))
   #-(or sbcl) (error "Don't know how to safely fork() in this Lisp")
-  (format t "Forking into chroot at ~A~%" into)
+  (informat 1 "~&Forking into chroot at ~A" into)
   ;; TODO copy required prerequisite data into the chroot -- propellor uses a
   ;; bind mount but we might be the root Lisp, in which case we don't have a
   ;; cache to bind mount in.  use chroot.shell connection to upload?

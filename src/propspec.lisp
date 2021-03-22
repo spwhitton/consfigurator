@@ -322,14 +322,15 @@ apply the elements of REQUIREMENTS in reverse order."
 (defun apply-and-print (propapps &optional unapply)
   (dolist (pa (if unapply (reverse propapps) propapps))
     (let* ((result (restart-case
-		       (if unapply (propappunapply pa) (propappapply pa))
+		       (with-indented-inform
+			 (if unapply (propappunapply pa) (propappapply pa)))
 		     (skip-property () :failed-change)))
 	   (status (case result
 		     (:no-change     "ok")
 		     (:failed-change "failed")
 		     (t              "done"))))
-      (format t "~@[~A :: ~]~@[~A ... ~]~A~%"
-	      (get-hostname) (propappdesc pa) status))))
+      (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
+		(get-hostname) (propappdesc pa) status))))
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
