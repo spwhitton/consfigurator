@@ -435,8 +435,20 @@ Preprocessing must occur in the root Lisp."))
                     ,@intern-forms
                     (define-condition missing-data-source (error) ())
                     (require "asdf")
-                    (let ((*standard-output* *error-output*))
-                      ,(wrap load-forms))
+		    ;; Hide the LOAD output unless loading failed, because
+		    ;; there will be a lot of spurious warnings due to not
+		    ;; compiling.
+		    (let ((string (make-array '(0)
+					      :element-type 'base-char
+					      :fill-pointer 0 :adjustable t)))
+		      (handler-case
+			  (with-output-to-string (stream string)
+			    (let ((*error-output* stream)
+				  (*standard-output* stream))
+			      ,(wrap load-forms)))
+			(serious-condition (c)
+			  (format *error-output* "~&Failed to LOAD:~%~A" c)
+			  (uiop:quit 2))))
                     ,(wrap `((%consfigure ',remaining-connections ,*host*))))))
       (handler-case
           (with-standard-io-syntax
