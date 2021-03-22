@@ -99,6 +99,7 @@
 	   #:propappcheck
 	   #:propappapply
 	   #:propappunapply
+	   #:ignoring-hostattrs
 	   #:defprop
 	   #:defpropspec
 	   #:defproplist

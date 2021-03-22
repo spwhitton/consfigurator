@@ -253,7 +253,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 			 ;; new hostattrs should not be used programmatically
 			 ;; in this way, so issue a warning.
 			 ,@(and (getf ,slotsv :hostattrs)
-				'((warn-programmatic-apply-hostattrs)))
+				'((programmatic-apply-hostattrs)))
 			 (%consfigure
 			  nil
 			  (make-host
@@ -262,9 +262,25 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 			    :systems nil
 			    :propspec (cons ',,name args)))))))))))))))
 
-(defun warn-programmatic-apply-hostattrs ()
-  (warn "Calling property which has :HOSTATTRS subroutine programmatically.
+(define-condition programmatic-apply-hostattrs (simple-warning) ())
+
+(defun programmatic-apply-hostattrs ()
+  (warn 'programmatic-apply-hostattrs
+	:format-control
+	"Calling property which has :HOSTATTRS subroutine programmatically.
 Use DEFPROPLIST/DEFPROPSPEC to avoid trouble."))
+
+(defmacro ignoring-hostattrs (form)
+  "Where FORM is a programmatic call to a property which has a :HOSTATTRS
+subroutine, muffle warnings about calling a property with a :HOSTATTRS
+subroutine programmatically.  Use this only when you know that the :HOSTATTRS
+subroutine does not push any new hostattrs."
+  (unless (and (listp form) (isprop (car form)))
+    (simple-program-error "~A is not a programmatic call to a property." form))
+  `(handler-bind ((programmatic-apply-hostattrs
+		    (lambda (w)
+		      (invoke-restart (find-restart 'muffle-warning w)))))
+     ,form))
 
 ;; supported ways to write properties are DEFPROP, DEFPROPSPEC and DEFPROPLIST
 
