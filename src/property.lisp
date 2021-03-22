@@ -309,12 +309,13 @@ subroutines at the right time.
 If the first element of the body is a string, it will be considered a
 docstring for the resulting property.  If the first element of the body after
 any such string is a list beginning with :DESC, the remainder will be used as
-the :DESC subroutine for the resulting property, like DEFPROP.  Otherwise, the
-body defines a function of the arguments specified by the lambda list which
-returns the property application specification expression to be evaluated and
-applied.  It should be a pure function aside from retrieving hostattrs (as set
-by other properties applied to the hosts to which the resulting property is
-applied, not as set by the properties in the returned propspec).
+the :DESC subroutine for the resulting property, like DEFPROP.  Supplying a
+:CHECK subroutine in the same way is also supported.  Otherwise, the body
+defines a function of the arguments specified by the lambda list which returns
+the property application specification expression to be evaluated and applied.
+It should be a pure function aside from retrieving hostattrs (as set by other
+properties applied to the hosts to which the resulting property is applied,
+not as set by the properties in the returned propspec).
 
 You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   ;; This is implemented by effectively pushing a null pointer to the front of
@@ -322,7 +323,8 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   ;; the other arguments to the propapp at :HOSTATTRS-time, and storing the
   ;; resulting propspec at the other end of the pointer, so that the :APPLY
   ;; and :UNAPPLY subroutines can get at it.  We have to keep the original
-  ;; arguments to the propapp around for the sake of the :DESC subroutine.
+  ;; arguments to the propapp around for the sake of the :DESC and :CHECK
+  ;; subroutines.
   (setf (getf slots :preprocess)
         '(lambda (&rest args)
           (list (list :propspec nil :orig-args args))))
@@ -332,12 +334,12 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   (setf (getf slots :unapply)
         '(lambda (plist)
           (propappunapply (eval-propspec (getf plist :propspec)))))
-  (when (form-beginning-with :desc (car forms))
-    (setf (getf slots :desc)
-          `(lambda (plist)
-             (destructuring-bind ,(ordinary-ll-without-&aux lambda)
-                 (getf plist :orig-args)
-               ,@(cdr (pop forms))))))
+  (loop while (and (listp (car forms)) (keywordp (caar forms)))
+	do (setf (getf slots (caar forms))
+		   `(lambda (plist)
+		      (destructuring-bind ,(ordinary-ll-without-&aux lambda)
+			  (getf plist :orig-args)
+			,@(cdr (pop forms))))))
   (setf (getf slots :hostattrs)
         `(lambda (plist)
            (let ((propspec (preprocess-propspec
@@ -358,6 +360,7 @@ If the first element of PROPERTIES is a string, it will be considered a
 docstring for the resulting property.  If the first element of PROPERTIES
 after any such string is a list beginning with :DESC, the remainder will be
 used as the :DESC subroutine for the resulting property, like DEFPROP.
+Supplying a :CHECK subroutine in the same way is also supported.
 
 Otherwise, the body should not contain any references to variables other than
 those in LAMBDA.  LAMBDA is an ordinary lambda list, so you can use &AUX
@@ -377,7 +380,8 @@ other than constant values and propapps to property combinators."
           (loop for remaining on properties
                 for car = (car remaining)
                 if (or (stringp car)
-                       (and (listp car) (member (car car) '(:desc declare))))
+                       (and (listp car) (member (car car)
+						'(:desc :check declare))))
                   collect car into begin
                 else
                   return (nreverse

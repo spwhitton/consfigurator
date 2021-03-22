@@ -18,18 +18,14 @@
 (in-package :consfigurator.connection.sbcl)
 (named-readtables:in-readtable :consfigurator)
 
-(defprop sbcl-available :posix ()
+(defproplist sbcl-available :posix ()
   (:check
    (zerop (mrun :for-exit "command" "-v" "sbcl")))
-  (:apply
-   (typecase (class-of (get-hostattrs-car :os))
-     (os:debianlike
-      (ignoring-hostattrs (apt:installed "sbcl")))
-     (t
-      (failed-change "Do not know how to install SBCL on this OS.")))))
+  (os:typecase
+      (debianlike (apt:installed "sbcl"))))
 
 (defmethod establish-connection ((type (eql :sbcl)) remaining &key)
-  (sbcl-available)
+  (ignoring-hostattrs (sbcl-available))
   (request-lisp-systems)
   (upload-all-prerequisite-data)
   (inform t "Waiting for remote Lisp to exit, this may take some time ... ")
