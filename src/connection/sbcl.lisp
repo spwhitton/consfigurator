@@ -40,7 +40,7 @@
       (inform t "done." :fresh-line nil)
       (unless (zerop exit)
         ;; print FORMS not PROGRAM because latter might contain sudo passwords
-        (error
+        (failed-change
 	 "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~A"
          err forms))
       (inform t "  Output was:" :fresh-line nil)
