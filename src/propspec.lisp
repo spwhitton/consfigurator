@@ -281,7 +281,10 @@ expression."
 (defmacro with-skip-failed-changes (&body forms)
   `(handler-bind ((failed-change
 		    (lambda (c)
-		      (declare (ignore c))
+		      (with-indented-inform
+			(informat t
+				  (simple-condition-format-control c)
+				  (simple-condition-format-arguments c)))
 		      (invoke-restart 'skip-property))))
      ,@forms))
 
