@@ -234,13 +234,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 	     (when (> (length ,declarations) 1)
 	       (error "Multiple DECLARE forms unsupported."))
 	     ,@mforms
-	     (let ((indent (cadr (assoc 'indent (cdar ,declarations))))
-		   ;; Current implementation can DEFUN the property only when
-		   ;; its :APPLY subroutine has the property's lambda list;
-		   ;; this will fail to hold only for DEFPROPLIST/DEFPROPSPEC.
-		   (can-defun
-		     (and (getf ,slotsv :apply)
-			  (equal (cadr (getf ,slotsv :apply)) ,lambdav))))
+	     (let ((indent (cadr (assoc 'indent (cdar ,declarations)))))
 	       `(progn
 		  (eval-when (:compile-toplevel :load-toplevel :execute)
 		    (record-known-property ',,name))
@@ -253,22 +247,20 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 		  ;; code than going via DEFPROPSPEC/DEFPROPLIST for simple
 		  ;; things like installing packages.
 		  ,@(and
-		     can-defun
-		     `((defun-which-calls ,,name (propapply ',,name) ,,lambdav
-			 ;; Have to insert code to check connection type
-			 ;; because %CONSFIGURE won't see a programmatic call
-			 ;; and check this as is does for regular propapps.
-			 ,@(and (eq ,typev :lisp)
-				'((assert-connection-supports :lisp)))
+		     (getf ,slotsv :apply)
+		     `((defun-with-args ,,name args ,,lambdav
 			 ;; Properties with :HOSTATTRS subroutines which set
 			 ;; new hostattrs should not be used programmatically
-			 ;; in this way, and using properties with :HOSTATTRS
-			 ;; subroutines which only look at existing hostattrs
-			 ;; has the potential for trouble too, so issue a
-			 ;; warning.
-			 ,@(and
-			    (getf ,slotsv :hostattrs)
-			    '((warn-programmatic-apply-hostattrs))))))))))))))
+			 ;; in this way, so issue a warning.
+			 ,@(and (getf ,slotsv :hostattrs)
+				'((warn-programmatic-apply-hostattrs)))
+			 (%consfigure
+			  nil
+			  (make-host
+			   :propspec
+			   (make-propspec
+			    :systems nil
+			    :propspec (cons ',,name args)))))))))))))))
 
 (defun warn-programmatic-apply-hostattrs ()
   (warn "Calling property which has :HOSTATTRS subroutine programmatically.
