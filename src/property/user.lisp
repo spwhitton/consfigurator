@@ -1,6 +1,7 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
 ;;; Copyright (C) 2021  David Bremner <david@tethera.net>
+;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -26,6 +27,19 @@
   (:apply
    (assert-euid-root)
    (run "useradd" "-m" username)))
+
+(defprop has-login-shell :posix (username shell)
+  "Ensures that USERNAME has login shell SHELL."
+  (:desc #?"${username} has login shell ${shell}")
+  (:check
+   (string= (passwd-entry 6 username) shell))
+  (:apply
+   (file:contains-lines "/etc/shells" shell)
+   (mrun "chsh" "--shell" shell username)))
+
+(defun passwd-entry (n username)
+  (nth n (split-string (stripln (run "getent" "passwd" username))
+		       :separator ":")))
 
 (defun user-exists (username)
   (zerop (run :for-exit "getent" "passwd" username)))

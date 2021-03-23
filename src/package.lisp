@@ -277,8 +277,10 @@
 
 (defpackage :consfigurator.property.user
   (:use #:cl #:consfigurator)
-  (:local-nicknames (#:os  #:consfigurator.property.os))
-  (:export #:has-account))
+  (:local-nicknames (#:file  #:consfigurator.property.file)
+		    (#:os    #:consfigurator.property.os))
+  (:export #:has-account
+	   #:has-login-shell))
 
 (defpackage :consfigurator.property.chroot
   (:use #:cl #:consfigurator #:alexandria)
