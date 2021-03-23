@@ -47,6 +47,31 @@ signal an error, or fall back to another connection type.
 Notes on particular connection types
 ------------------------------------
 
+``:SUDO``
+~~~~~~~~~
+
+Passing the ``:AS`` option to this connection means that Consfigurator will
+assume a password is required for all commands, and not passing ``:AS`` means
+that Consfigurator will assume a password is not required for any commands.
+Consfigurator sends your sudo password on stdin, so if the assumption that a
+password is required is violated, your sudo password will end up in the stdin
+to whatever command is being run using sudo.  There is no facility for
+directly passing in a passphrase; you must use ``:AS`` to obtain passwords
+from sources of prerequisite data.
+
+If any connection types which start up remote Lisp images occur before a
+``:SUDO`` entry in your connection chain, ``ESTABLISH-CONNECTION`` will need
+to inform the newly-started remote Lisp image of any sudo passwords needed for
+establishing the remaining hops.  Depending on how the connection type feeds
+instructions to the remote Lisp image, this may involve writing your sudo
+password to a file under ``~/.cache`` on the machine which runs the remote
+Lisp image.  At least ``:SBCL`` avoids this by sending your password in on
+stdin.  Even with ``:SBCL``, if the Lisp image dumps a copy of itself to disk,
+e.g. for the purposes of cronjobs, then your sudo password will be contained
+in that saved image.  Typically a ``:SUDO`` connection hop is used before hops
+which start up remote Lisp images, so these issues will not arise for most
+users.
+
 ``:CHROOT.FORK``
 ~~~~~~~~~~~~~~~~
 
