@@ -163,6 +163,7 @@
            #:data-string
            #:file-data
            #:data-file
+	   #:data-source-providing-p
            #:missing-data-source
 
            #:try-register-data-source

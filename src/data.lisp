@@ -184,6 +184,14 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
                (lambda (x y)
                  (version> (car x) (car y)))))))
 
+(defun data-source-providing-p (iden1 iden2)
+  "Is there a data source which can provide the item of prerequisite data
+identified by IDEN1 and IDEN2?
+
+This function is for implementation of REGISTER-DATA-SOURCE to check for
+clashes.  It should not be called by properties."
+  (if (query-data-sources iden1 iden2) t nil))
+
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
 ;; Lisp images
 (defun upload-all-prerequisite-data (&optional (host *host*))
