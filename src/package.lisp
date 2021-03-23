@@ -304,3 +304,6 @@
 (defpackage :consfigurator.data.pgp
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:list-data #:get-data #:set-data #:set-data-from-file))
+
+(defpackage :consfigurator.data.git-snapshot
+  (:use #:cl #:consfigurator #:alexandria))

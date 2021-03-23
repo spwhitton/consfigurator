@@ -28,7 +28,10 @@ other purposes.
   ``SYSTEM``
 
 - ``("--user-passwd--HOSTNAME" . USER)`` means the data is the password for
-  user ``USER`` on ``HOSTNAME``.
+  user ``USER`` on ``HOSTNAME``
+
+- ``("--git-snapshot" . NAME)`` means the data is a snapshot of a git repo
+  identified by ``NAME``; see ``DATA.GIT-SNAPSHOT``.
 
 (Proposed convention: Except for the first item above, these reserved names
 should start with ``--`` and use ``--`` to separate parameter values within
