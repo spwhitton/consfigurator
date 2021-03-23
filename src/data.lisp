@@ -33,7 +33,7 @@
     :initform nil)
    (data-mime
     :initarg :mime
-    :reader data-mime
+    :accessor data-mime
     :initform nil
     :documentation "The MIME type of the data, if known."))
   (:documentation
