@@ -344,6 +344,24 @@ process, where each entry is of the form
                                                (pathname-directory subdir))
                                               (pathname-name file)))))))
 
+(defun get-highest-local-cached-prerequisite-data (iden1 iden2)
+  "Get the highest version of prerequisite data identified by IDEN1 and IDEN2
+available in the local cache.
+
+This is exported for use by prerequisite data sources which work by generating
+new files and need somewhere to store them.  It should not be used by
+properties, or data sources which return objects referencing existing files."
+  (when-let ((triple (car (remove-if-not
+			   (lambda (c)
+			     (and (string= (car c) iden1)
+				  (string= (cadr c) iden2)))
+			   (sort-prerequisite-data-cache
+			    (get-local-cached-prerequisite-data))))))
+    (make-instance 'file-data :file (apply #'local-data-pathname triple)
+			      :iden1 (car triple)
+			      :iden2 (cadr triple)
+			      :version (caddr triple))))
+
 (defun get-remote-data-cache-dir ()
   (ensure-directory-pathname
    (car

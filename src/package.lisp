@@ -171,6 +171,7 @@
 	   #:data-source-providing-p
            #:missing-data-source
 	   #:local-data-pathname
+	   #:get-highest-local-cached-prerequisite-data
 
            #:try-register-data-source
            #:register-data-source
