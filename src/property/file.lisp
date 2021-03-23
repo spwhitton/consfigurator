@@ -40,7 +40,7 @@ CONTENT can be a list of lines or a single string."
 (defprop contains-lines :posix (path lines)
   "Ensure there is a file at PATH containing each of LINES once."
   (:apply
-   (let ((new-lines (copy-list lines))
+   (let ((new-lines (copy-list (ensure-cons lines)))
          (existing-lines (lines (readfile path))))
      (dolist (existing-line existing-lines)
        (deletef new-lines existing-line :test #'string=))
