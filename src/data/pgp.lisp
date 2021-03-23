@@ -57,9 +57,8 @@
         (escape-sh-command (list "gpg" "--decrypt" (unix-namestring location)))
         :output :string))
     (subprocess-error (error)
-      (error 'missing-data-source
-             :text (format nil "While attempt to decrypt, gpg exited with ~A"
-                           (uiop:subprocess-error-code error))))))
+      (missing-data-source "While attempt to decrypt, gpg exited with ~A"
+			   (uiop:subprocess-error-code error)))))
 
 (defun put-store (location data)
   (run-program (list "gpg" "--encrypt")

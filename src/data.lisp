@@ -89,11 +89,7 @@ Signals a condition MISSING-DATA-SOURCE when unable to access the data source
 all new Lisp images started up by Consfigurator, since prerequisite data
 sources are not expected to be available outside of the root Lisp."))
 
-(define-condition missing-data-source (error)
-  ((text :initarg :text :reader missing-data-source-text))
-  (:report (lambda (condition stream)
-             (format stream "Missing data source: ~A"
-                     (missing-data-source-text condition)))))
+(define-simple-error missing-data-source)
 
 (defvar *data-sources* nil "Known sources of prerequisite data.")
 
