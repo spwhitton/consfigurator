@@ -18,14 +18,14 @@
 (in-package :consfigurator.property.user)
 (named-readtables:in-readtable :consfigurator)
 
-(defprop has-account :posix (user-name)
-  "Ensure there is an account for USER-NAME."
-  (:desc #?"Account for ${user-name}")
+(defprop has-account :posix (username)
+  "Ensure there is an account for USERNAME."
+  (:desc #?"Account for ${username}")
   (:check
-   (user-exists user-name))
+   (user-exists username))
   (:apply
    (assert-euid-root)
-   (run "useradd" "-m" user-name)))
+   (run "useradd" "-m" username)))
 
-(defun user-exists (user-name)
-  (zerop (run :for-exit "getent" "passwd" user-name)))
+(defun user-exists (username)
+  (zerop (run :for-exit "getent" "passwd" username)))
