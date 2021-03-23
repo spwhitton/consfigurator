@@ -266,9 +266,10 @@ properties, or data sources which return objects referencing existing files.
 Note that since prerequisite data sources are queried only in the root Lisp,
 but items of prerequisite data are never uploaded to the root Lisp, there is
 no risk of clashes between fresly generated files and cached copies of files."
-  (ensure-directories-exist
-   (apply #'data-pathname (get-local-data-cache-dir)
-	  (delete-if #'null (list iden1 iden2 version)))))
+  (let ((pn (apply #'data-pathname (get-local-data-cache-dir)
+		   (delete-if #'null (list iden1 iden2 version)))))
+    (ensure-directories-exist
+     (if version pn (ensure-directory-pathname pn)))))
 
 (defun remote-data-pathname (&rest args)
   (apply #'data-pathname (get-remote-data-cache-dir) args))
