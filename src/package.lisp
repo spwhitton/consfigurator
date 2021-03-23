@@ -277,8 +277,7 @@
 
 (defpackage :consfigurator.property.user
   (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file  #:consfigurator.property.file)
-		    (#:os    #:consfigurator.property.os))
+  (:local-nicknames (#:file  #:consfigurator.property.file))
   (:export #:has-account
 	   #:has-login-shell))
 
