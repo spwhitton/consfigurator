@@ -260,8 +260,19 @@ clashes.  It should not be called by properties."
                                   (mapcar (lambda (s) (strcat s "/")) rest)
                                   :from-end t :initial-value root))))
 
-(defun local-data-pathname (&rest args)
-  (apply #'data-pathname (get-local-data-cache-dir) args))
+(defun local-data-pathname (&optional iden1 iden2 version)
+  "Get a pathname where an item of prerequisite data may be cached, ensuring
+that parent directories exist.
+This is exported for use by prerequisite data sources which work by generating
+new files and need somewhere to store them.  It should not be used by
+properties, or data sources which return objects referencing existing files.
+
+Note that since prerequisite data sources are queried only in the root Lisp,
+but items of prerequisite data are never uploaded to the root Lisp, there is
+no risk of clashes between fresly generated files and cached copies of files."
+  (ensure-directories-exist
+   (apply #'data-pathname (get-local-data-cache-dir)
+	  (delete-if #'null (list iden1 iden2 version)))))
 
 (defun remote-data-pathname (&rest args)
   (apply #'data-pathname (get-remote-data-cache-dir) args))

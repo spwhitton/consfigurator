@@ -170,6 +170,7 @@
            #:data-file
 	   #:data-source-providing-p
            #:missing-data-source
+	   #:local-data-pathname
 
            #:try-register-data-source
            #:register-data-source
