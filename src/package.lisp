@@ -23,7 +23,9 @@
                           #:subdirectories
                           #:directory-files
                           #:file-exists-p
-                          #:with-current-directory)
+			  #:directory-exists-p
+                          #:with-current-directory
+			  #:delete-directory-tree)
   (:export ;; re-export from UIOP
            #:strcat
            #:string-prefix-p
@@ -44,7 +46,9 @@
            #:subdirectories
            #:directory-files
            #:file-exists-p
+	   #:directory-exists-p
            #:with-current-directory
+	   #:delete-directory-tree
 
            ;; util.lisp
            #:lines
@@ -53,6 +57,7 @@
            #:symbol-named
            #:memstring=
            #:plist-to-cmd-args
+	   #:with-local-temporary-directory
 
            #:*consfigurator-debug-level*
            #:with-indented-inform

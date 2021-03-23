@@ -129,6 +129,15 @@ supported."
   (doplist (k v plist args)
            (push (strcat "--" (string-downcase (symbol-name k)) "=" v) args)))
 
+(defmacro with-local-temporary-directory ((dir) &body forms)
+  "Execute FORMS with a local temporary directory's pathname in DIR.
+Currently assumes GNU mktemp(1)."
+  `(let ((,dir (ensure-directory-pathname
+		(stripln
+		 (run-program "umask 077; mktemp -d" :output :string)))))
+     (unwind-protect (progn ,@forms)
+       (delete-directory-tree ,dir :validate t))))
+
 
 ;;;; Progress & debug printing
 
