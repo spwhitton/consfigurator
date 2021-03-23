@@ -116,7 +116,9 @@ supported."
        (error ',name :format-control message :format-arguments args))))
 
 (defmacro form-beginning-with (sym form)
-  `(and (listp ,form) (eq ',sym (car ,form))))
+  `(and (listp ,form)
+	(symbolp (car ,form))
+	(string= (symbol-name (car ,form)) ,(symbol-name sym))))
 
 (defun strip-declarations (forms)
   (loop while (form-beginning-with declare (car forms))
