@@ -130,3 +130,8 @@ ON-CHANGE in order."
                          (dolist (propapp (reverse propapps))
                            (propappunapply propapp))))
             :args (cdr propapp)))
+
+(defmacro as (user &body properties)
+  "Apply PROPERTIES as USER by reconnecting to the host with the :AS connection
+type."
+  `(deploys-these. `((:as :to ,,user)) :parent ,@properties))

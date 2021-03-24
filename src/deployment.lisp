@@ -188,17 +188,30 @@ Also useful to set up VMs, chroots, disk images etc. on localhost."
 (defprop deploys-these :posix (connections host &optional properties)
   "Like DEPLOYS, except apply to HOST each of the properties specified by
 PROPERTIES, and not the host's usual properties, unless they also appear in
-PROPERTIES, like DEPLOY-THESE."
+PROPERTIES, like DEPLOY-THESE.
+
+As a special case, if HOST is :PARENT, use the host to which this property is
+being applied.  This is useful to apply properties to the host with a
+different connection type; for example, by switching to another user account
+with the :AS connection type.  Note that any new hostattrs set by PROPERTIES
+will not affect the rest of the deployment, except requests for items of
+prerequisite data to be supplied."
   (:preprocess
    (list (preprocess-connections connections)
-         (preprocess-host
-          (%replace-propspec-into-host (shallow-copy-host host) properties))))
+         (list :host host)
+         properties))
   (:hostattrs
-   (declare (ignore connections properties))
-   (%propagate-hostattrs host))
+   (declare (ignore connections))
+   (setf (getf host :host)
+         (preprocess-host
+          (if (eql :parent (getf host :host))
+              (make-host :hostattrs (copy-list (hostattrs *host*))
+                         :propspec properties)
+              (shallow-copy-host (getf host :host)))))
+   (%propagate-hostattrs (getf host :host)))
   (:apply
    (declare (ignore properties))
-   (%consfigure connections host)))
+   (%consfigure connections (getf host :host))))
 
 (defun preprocess-connections (connections)
   (loop for connection in (ensure-cons connections)

@@ -56,6 +56,10 @@ Try it out / quick start
 
 	  (apt:service-installed-running "apache2")
 
+	  ;; Apply some properties as a non-root user.
+	  (as "spwhitton"
+	    (gnupg:public-key-imported "8DC2 487E 51AB DD90 B5C4  753F 0F56 D055 3B6D 411B"))
+
 	  (file:has-content "/etc/foo"
 	    #?{Here is my file content.
 	You can use ${my-substitution} thanks to CL-INTERPOL.

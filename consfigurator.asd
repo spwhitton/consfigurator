@@ -40,6 +40,7 @@
                (:file "src/connection/chroot/fork")
                (:file "src/connection/chroot/shell")
 	       (:file "src/connection/setuid")
+	       (:file "src/connection/as")
                (:file "src/data/asdf")
                (:file "src/data/pgp")
 	       (:file "src/data/git-snapshot")

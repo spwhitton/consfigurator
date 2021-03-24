@@ -137,6 +137,7 @@
            #:silent-seqprops
            #:unapply
            #:on-change
+	   #:as
 
            ;; host.lisp
            #:host
@@ -281,6 +282,12 @@
   (:use #:cl #:consfigurator)
   (:export #:with-fork-connection
 	   #:can-probably-fork))
+
+(defpackage :consfigurator.connection.as
+  (:use #:cl
+	#:consfigurator
+	#:consfigurator.connection.fork
+	#:cffi))
 
 (defpackage :consfigurator.connection.ssh
   (:use #:cl
