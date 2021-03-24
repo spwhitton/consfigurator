@@ -298,6 +298,9 @@
   (:export #:os-bootstrapped
            #:os-bootstrapped.))
 
+(defpackage :consfigurator.property.gnupg
+  (:use #:cl #:consfigurator))
+
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))
 
