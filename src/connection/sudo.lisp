@@ -59,7 +59,8 @@
     :initarg :password)))
 
 (defmethod get-sudo-password ((connection sudo-connection))
-  (passphrase (slot-value connection 'password)))
+  (let ((value (slot-value connection 'password)))
+    (and value (passphrase value))))
 
 (defmethod connection-shell-wrap ((connection sudo-connection) cmd)
   ;; wrap in sh -c so that it is more likely we are either asked for a
