@@ -307,3 +307,6 @@
 
 (defpackage :consfigurator.data.git-snapshot
   (:use #:cl #:consfigurator #:alexandria))
+
+(defpackage :consfigurator.data.gpgpubkeys
+  (:use #:cl #:consfigurator))

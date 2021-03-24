@@ -40,4 +40,5 @@
                (:file "src/connection/chroot/shell")
                (:file "src/data/asdf")
                (:file "src/data/pgp")
-	       (:file "src/data/git-snapshot")))
+	       (:file "src/data/git-snapshot")
+	       (:file "src/data/gpgpubkeys")))

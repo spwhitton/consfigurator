@@ -31,7 +31,10 @@ other purposes.
   user ``USER`` on ``HOSTNAME``
 
 - ``("--git-snapshot" . NAME)`` means the data is a snapshot of a git repo
-  identified by ``NAME``; see ``DATA.GIT-SNAPSHOT``.
+  identified by ``NAME``; see ``DATA.GIT-SNAPSHOT``
+
+- ``("--pgp-pubkey" . FINGERPRINT)`` means the/a OpenPGP public key with
+  fingerprint FINGERPRINT.
 
 (Proposed convention: Except for the first item above, these reserved names
 should start with ``--`` and use ``--`` to separate parameter values within
