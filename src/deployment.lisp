@@ -62,8 +62,7 @@ DEFDEPLOY-THESE, etc., rather than calling this function directly.  However,
 code which programmatically constructs deployments will need to call this."
   (%consfigure (preprocess-connections connections)
                (if additional-properties
-                   (%union-propspec-into-host (shallow-copy-host host)
-                                              additional-properties)
+                   (union-propspec-into-host host additional-properties)
                    host)))
 
 (defun deploy-these* (connections host properties)
@@ -75,8 +74,7 @@ by PROPERTIES can override the host's usual static informational attributes,
 in the same way that later entries in the list of properties specified in
 DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
   (%consfigure (preprocess-connections connections)
-               (%replace-propspec-into-host
-                (shallow-copy-host host) properties)))
+               (replace-propspec-into-host host properties)))
 
 (defun continue-deploy* (remaining-connections)
   "Complete the work of an enclosing call to DEPLOY* or DEPLOY-THESE*.
@@ -173,8 +171,7 @@ Also useful to set up VMs, chroots, disk images etc. on localhost."
    (list (preprocess-connections connections)
          (preprocess-host
           (if additional-properties
-              (%union-propspec-into-host (shallow-copy-host host)
-                                         additional-properties)
+              (union-propspec-into-host host additional-properties)
               host))))
   (:hostattrs
    (declare (ignore connections additional-properties))
@@ -189,8 +186,7 @@ PROPERTIES, and not the host's usual properties, unless they also appear in
 PROPERTIES, like DEPLOY-THESE."
   (:preprocess
    (list (preprocess-connections connections)
-         (preprocess-host
-          (%replace-propspec-into-host (shallow-copy-host host) properties))))
+         (preprocess-host (replace-propspec-into-host host properties))))
   (:hostattrs
    (declare (ignore connections properties))
    (%propagate-hostattrs host))

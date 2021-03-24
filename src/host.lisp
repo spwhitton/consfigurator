@@ -94,23 +94,20 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
                           :propspec ,(slot-value host 'propspec)))
   host)
 
-;; return values of the following two functions share structure, and thus are
-;; not safe to use except on host objects that were just made, or that are
-;; going straight into %CONSFIGURE
-
-(defmethod %union-propspec-into-host
+(defmethod union-propspec-into-host
     ((host unpreprocessed-host) (propspec propspec))
   (make-instance 'unpreprocessed-host
-                 :hostattrs (hostattrs host)
+                 :hostattrs (copy-list (hostattrs host))
                  :propspec (append-propspecs (host-propspec host) propspec)))
 
-(defmethod %replace-propspec-into-host
+(defmethod replace-propspec-into-host
     ((host unpreprocessed-host) (propspec unpreprocessed-propspec))
   ;; we have to preprocess HOST as functions that call us want the return
   ;; value to have all the hostattrs it would have were PROPSPEC not to be
   ;; substituted in
   (make-instance 'unpreprocessed-host
-                 :hostattrs (hostattrs (preprocess-host host))
+                 :hostattrs (hostattrs
+                             (preprocess-host (shallow-copy-host host)))
                  :propspec propspec))
 
 (defmacro defhost (hostname (&key deploy) &body properties)
