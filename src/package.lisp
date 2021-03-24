@@ -225,6 +225,14 @@
         #:consfigurator
         #:consfigurator.connection.shell-wrap))
 
+(defpackage :consfigurator.connection.setuid
+  (:use #:cl
+	#:consfigurator
+	#:consfigurator.connection.fork
+	#-(or sbcl) #:cffi)
+  (:local-nicknames (#:re   #:cl-ppcre)
+		    (#:user #:consfigurator.property.user)))
+
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)
   (:export #:single))
