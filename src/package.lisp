@@ -294,7 +294,8 @@
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:file  #:consfigurator.property.file))
   (:export #:has-account
-	   #:has-login-shell))
+	   #:has-login-shell
+	   #:passwd-entry))
 
 (defpackage :consfigurator.property.chroot
   (:use #:cl #:consfigurator #:alexandria)
