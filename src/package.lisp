@@ -277,7 +277,8 @@
 
 (defpackage :consfigurator.connection.fork
   (:use #:cl #:consfigurator)
-  (:export #:with-fork-connection))
+  (:export #:with-fork-connection
+	   #:can-probably-fork))
 
 (defpackage :consfigurator.connection.ssh
   (:use #:cl
@@ -296,7 +297,10 @@
   (:export #:local-connection))
 
 (defpackage :consfigurator.connection.chroot
-  (:use #:cl #:consfigurator #:cffi))
+  (:use #:cl
+	#:consfigurator
+	#:consfigurator.connection.fork
+	#:cffi))
 
 (defpackage :consfigurator.connection.chroot.fork
   (:use #:cl

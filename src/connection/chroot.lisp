@@ -23,16 +23,6 @@
 (defun can-chroot ()
   (zerop (foreign-funcall "geteuid" :int)))
 
-(defun can-probably-fork ()
-  "Return nil if we can detect other running threads, and the Lisp
-implementation is known not to support forking when there are other threads.
-A return value other than nil indicates only that we couldn't detect
-circumstances in which it is known that we cannot fork, not that we are sure
-we can fork -- a thread might be only partly initialised at the time we check,
-for example, such that we don't see it."
-  (and
-   #+sbcl (> 2 (length (sb-thread:list-all-threads)))))
-
 (defmethod establish-connection ((type (eql :chroot)) remaining &key into)
   (establish-connection (if (and (lisp-connection-p)
                                  (can-chroot)
