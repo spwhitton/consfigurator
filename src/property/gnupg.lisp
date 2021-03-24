@@ -22,6 +22,8 @@
   "Import the PGP public key identified by FINGERPRINT to gpg's default
 keyring."
   (:desc #?"PGP public key ${fingerprint} imported")
+  (:preprocess
+   (list (remove #\Space fingerprint)))
   (:hostattrs
    (require-data "--pgp-pubkey" fingerprint))
   (:check
