@@ -66,7 +66,7 @@ code which programmatically constructs deployments will need to call this."
                                               additional-properties)
                    host)))
 
-(defun deploy-these* (connections host &optional properties)
+(defun deploy-these* (connections host properties)
   "Like DEPLOY*, but replace the properties of HOST with PROPERTIES.
 
 HOST has all its usual static informational attributes, as set by its usual
@@ -75,10 +75,8 @@ by PROPERTIES can override the host's usual static informational attributes,
 in the same way that later entries in the list of properties specified in
 DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
   (%consfigure (preprocess-connections connections)
-               (if properties
-                   (%replace-propspec-into-host (shallow-copy-host host)
-                                                properties)
-                   host)))
+               (%replace-propspec-into-host
+                (shallow-copy-host host) properties)))
 
 (defun continue-deploy* (remaining-connections)
   "Complete the work of an enclosing call to DEPLOY* or DEPLOY-THESE*.
@@ -185,7 +183,7 @@ Also useful to set up VMs, chroots, disk images etc. on localhost."
    (declare (ignore additional-properties))
    (%consfigure connections host)))
 
-(defprop deploys-these :posix (connections host &optional properties)
+(defprop deploys-these :posix (connections host properties)
   "Like DEPLOYS, except apply to HOST each of the properties specified by
 PROPERTIES, and not the host's usual properties, unless they also appear in
 PROPERTIES, like DEPLOY-THESE."
