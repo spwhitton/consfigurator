@@ -37,9 +37,12 @@
    (file:contains-lines "/etc/shells" shell)
    (mrun "chsh" "--shell" shell username)))
 
-(defun passwd-entry (n username)
-  (nth n (split-string (stripln (run "getent" "passwd" username))
-		       :separator ":")))
+(defun passwd-entry (n username-or-uid)
+  (let ((u (etypecase username-or-uid
+	     (string username-or-uid)
+	     (number (write-to-string username-or-uid)))))
+    (nth n (split-string (stripln (mrun "getent" "passwd" u))
+			 :separator ":"))))
 
 (defun user-exists (username)
   (zerop (run :for-exit "getent" "passwd" username)))
