@@ -187,52 +187,6 @@
            #:get-data-protected-string
            #:continue-deploy*-program))
 
-(defpackage :consfigurator.connection.shell-wrap
-  (:use #:cl #:consfigurator)
-  (:export #:shell-wrap-connection #:connection-shell-wrap))
-
-(defpackage :consfigurator.connection.fork
-  (:use #:cl #:consfigurator)
-  (:export #:with-fork-connection))
-
-(defpackage :consfigurator.connection.ssh
-  (:use #:cl
-        #:consfigurator
-        #:alexandria
-        #:consfigurator.connection.shell-wrap))
-
-(defpackage :consfigurator.connection.sudo
-  (:use #:cl
-        #:consfigurator
-        #:alexandria
-        #:consfigurator.connection.shell-wrap))
-
-(defpackage :consfigurator.connection.local
-  (:use #:cl #:consfigurator #:alexandria)
-  (:export #:local-connection))
-
-(defpackage :consfigurator.connection.chroot
-  (:use #:cl #:consfigurator #:cffi))
-
-(defpackage :consfigurator.connection.chroot.fork
-  (:use #:cl
-	#:consfigurator
-	#:consfigurator.connection.fork
-	#-(or sbcl) #:cffi))
-
-(defpackage :consfigurator.connection.chroot.shell
-  (:use #:cl
-        #:consfigurator
-        #:consfigurator.connection.shell-wrap))
-
-(defpackage :consfigurator.connection.setuid
-  (:use #:cl
-	#:consfigurator
-	#:consfigurator.connection.fork
-	#-(or sbcl) #:cffi)
-  (:local-nicknames (#:re   #:cl-ppcre)
-		    (#:user #:consfigurator.property.user)))
-
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)
   (:export #:single))
@@ -316,6 +270,52 @@
 
 (defpackage :consfigurator.property.gnupg
   (:use #:cl #:consfigurator))
+
+(defpackage :consfigurator.connection.shell-wrap
+  (:use #:cl #:consfigurator)
+  (:export #:shell-wrap-connection #:connection-shell-wrap))
+
+(defpackage :consfigurator.connection.fork
+  (:use #:cl #:consfigurator)
+  (:export #:with-fork-connection))
+
+(defpackage :consfigurator.connection.ssh
+  (:use #:cl
+        #:consfigurator
+        #:alexandria
+        #:consfigurator.connection.shell-wrap))
+
+(defpackage :consfigurator.connection.sudo
+  (:use #:cl
+        #:consfigurator
+        #:alexandria
+        #:consfigurator.connection.shell-wrap))
+
+(defpackage :consfigurator.connection.local
+  (:use #:cl #:consfigurator #:alexandria)
+  (:export #:local-connection))
+
+(defpackage :consfigurator.connection.chroot
+  (:use #:cl #:consfigurator #:cffi))
+
+(defpackage :consfigurator.connection.chroot.fork
+  (:use #:cl
+	#:consfigurator
+	#:consfigurator.connection.fork
+	#-(or sbcl) #:cffi))
+
+(defpackage :consfigurator.connection.chroot.shell
+  (:use #:cl
+        #:consfigurator
+        #:consfigurator.connection.shell-wrap))
+
+(defpackage :consfigurator.connection.setuid
+  (:use #:cl
+	#:consfigurator
+	#:consfigurator.connection.fork
+	#-(or sbcl) #:cffi)
+  (:local-nicknames (#:re   #:cl-ppcre)
+		    (#:user #:consfigurator.property.user)))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:consfigurator))
