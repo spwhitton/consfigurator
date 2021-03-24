@@ -191,6 +191,10 @@
   (:use #:cl #:consfigurator)
   (:export #:shell-wrap-connection #:connection-shell-wrap))
 
+(defpackage :consfigurator.connection.fork
+  (:use #:cl #:consfigurator)
+  (:export #:with-fork-connection))
+
 (defpackage :consfigurator.connection.ssh
   (:use #:cl
         #:consfigurator
@@ -211,7 +215,10 @@
   (:use #:cl #:consfigurator #:cffi))
 
 (defpackage :consfigurator.connection.chroot.fork
-  (:use #:cl #:consfigurator #-(or sbcl) #:cffi))
+  (:use #:cl
+	#:consfigurator
+	#:consfigurator.connection.fork
+	#-(or sbcl) #:cffi))
 
 (defpackage :consfigurator.connection.chroot.shell
   (:use #:cl
