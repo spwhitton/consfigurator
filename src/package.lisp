@@ -128,6 +128,8 @@
            #:propspec-props
            #:make-propspec
            #:append-propspecs
+
+	   ;; combinator.lisp
            #:define-function-property-combinator
            #:seqprops
            #:eseqprops
