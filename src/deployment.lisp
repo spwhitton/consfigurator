@@ -21,7 +21,7 @@
 ;;;; Deployments
 
 (defun %consfigure (connections host)
-  "Configurator's primary loop, recursively binding *CONNECTION* and *HOST*.
+  "Consfigurator's primary loop, recursively binding *CONNECTION* and *HOST*.
 
 Assumes arguments to connections in CONNECTIONS have been both normalised and
 preprocessed."
