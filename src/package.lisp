@@ -274,7 +274,8 @@
            #:os-bootstrapped.))
 
 (defpackage :consfigurator.property.gnupg
-  (:use #:cl #:consfigurator))
+  (:use #:cl #:consfigurator)
+  (:export #:public-key-imported))
 
 (defpackage :consfigurator.property.git
   (:use #:cl #:consfigurator)
