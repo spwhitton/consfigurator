@@ -10,6 +10,17 @@ special meaning in unevaluated property application specifications.
 Properties occupy the function cells of symbols, so do not try to define an
 ordinary function with the same name as a property.
 
+Working directories
+-------------------
+
+Except where specified otherwise in property docstrings, relative paths are
+relative to the remote home directory.  ``:LISP`` properties may assume they
+will be executed in the remote home directory, and ``:POSIX`` properties may
+assume that commands will be executed in the remote home directory, and that
+relative paths passed to ``READFILE`` and ``WRITEFILE`` are relative to the
+remote home directory.  Use ``WITH-REMOTE-CURRENT-DIRECTORY`` to change the
+remote working directory in a way which ensures it will get changed back.
+
 Property subroutines
 --------------------
 
