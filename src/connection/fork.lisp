@@ -76,6 +76,8 @@ for example, such that we don't see it."
                 ;; child's REPL or whatever else
                 (continue-deploy* ,remaining)
                 (uiop:quit 0))
+            ;; TODO With this approach we don't get the backtrace leading up
+            ;; to the serious condition.
             (serious-condition (c)
               (format *error-output* "Fork connection child failed: ~A~%" c)
               (uiop:quit 2))))
