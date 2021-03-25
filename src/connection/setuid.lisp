@@ -37,4 +37,6 @@
         (error "setgid(2) failed; are you root?"))
       (unless (zerop (setuid uid))
         (error "setuid(2) failed; are you root?"))
-      (uiop:chdir (user:passwd-entry 5 uid)))))
+      (let ((home (user:passwd-entry 5 uid)))
+        (setf (getenv "HOME") home)
+        (uiop:chdir home)))))
