@@ -66,6 +66,10 @@ For an example of usage, see the :SUDO connection type."))
     :initform nil
     :documentation
     "The remote user's home directory.")
+   (current-directory
+    :initform nil
+    :documentation
+    "The current working directory for RUN, MRUN, READFILE and WRITEFILE.")
    (remote-uid
     :initform nil
     :documentation
@@ -228,23 +232,26 @@ which will be cleaned up when BODY is finished."
                    :stderr "(merged with stdout)"
                    :exit-code exit))))))
 
-(defvar *remote-current-directory* nil
-  "Current working directory for RUN, MRUN, READFILE and WRITEFILE.
-Bound only by WITH-REMOTE-CURRENT-DIRECTORY.")
-
 (defmacro with-remote-current-directory ((dir) &body forms)
   "Execute FORMS with the current working directory DIR.
 This affects the working directory for commands run using RUN and MRUN, and
 the resolution of relative pathnames passed as the first argument of READFILE
 and WRITEFILE.  For Lisp-type connections, it additionally temporarily sets
 the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
-  `(let ((*remote-current-directory* (ensure-directory-pathname ,dir)))
-     (if (lisp-connection-p)
-         (with-current-directory (*remote-current-directory*) ,@forms)
-         ,@forms)))
+  (with-gensyms (previous new)
+    `(let ((,previous (slot-value *connection* 'current-directory))
+           (,new (ensure-pathname ,dir
+                                  :defaults (pwd)
+                                  :ensure-absolute t :ensure-directory t)))
+       (setf (slot-value *connection* 'current-directory) ,new)
+       (unwind-protect
+            (if (lisp-connection-p)
+                (with-current-directory (,new) ,@forms)
+                ,@forms)
+         (setf (slot-value *connection* 'current-directory) ,previous)))))
 
 (defun pwd ()
-  (or *remote-current-directory*
+  (or (slot-value *connection* 'current-directory)
       (slot-value *connection* 'remote-home)
       (setf (slot-value *connection* 'remote-home)
             (let ((home
