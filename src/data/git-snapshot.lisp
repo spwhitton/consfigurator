@@ -62,7 +62,7 @@ copy of the working tree over there."
                         (mapc #'delete-file
                               (directory-files
                                (pathname-directory-pathname path))))
-                       (make-snapshot repo depth branch path)
+                       (make-snapshot name repo depth branch path)
                        (setq cached-commit tip
                              cached (make-instance 'file-data
                                                    :file path
@@ -72,10 +72,9 @@ copy of the working tree over there."
                                                    :version version)))))))
       (cons #'check #'extract))))
 
-(defun make-snapshot (repo depth branch output)
+(defun make-snapshot (name repo depth branch output)
   (with-local-temporary-directory (dir)
-    (let* ((shortname (lastcar (pathname-directory repo)))
-           (loc (ensure-directory-pathname (merge-pathnames shortname dir))))
+    (let ((loc (ensure-directory-pathname (merge-pathnames name dir))))
       (run-program `("git" "clone"
                            "--no-hardlinks"
                            ,@(and depth `("--depth" ,(write-to-string depth)))
@@ -88,7 +87,8 @@ copy of the working tree over there."
       (delete-directory-tree (merge-pathnames ".git/refs/remotes/local/" loc)
                              :validate t :if-does-not-exist :ignore)
       (with-current-directory (dir)
-        (run-program `("tar" "cfz" ,(namestring output) ,shortname))))))
+        (run-program
+         `("tar" "cfz" ,(namestring output) ,(namestring name)))))))
 
 (defun get-branch-tip (repo branch)
   (with-current-directory (repo)
