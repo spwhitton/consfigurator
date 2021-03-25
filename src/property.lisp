@@ -281,9 +281,7 @@ subroutine programmatically.  Use this only when you know that the :HOSTATTRS
 subroutine does not push any new hostattrs."
   (unless (and (listp form) (isprop (car form)))
     (simple-program-error "~A is not a programmatic call to a property." form))
-  `(handler-bind ((programmatic-apply-hostattrs
-                    (lambda (w)
-                      (invoke-restart (find-restart 'muffle-warning w)))))
+  `(handler-bind ((programmatic-apply-hostattrs #'muffle-warning))
      ,form))
 
 ;; supported ways to write properties are DEFPROP, DEFPROPSPEC and DEFPROPLIST
