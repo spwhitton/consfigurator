@@ -91,6 +91,8 @@
            #:run-failed
            #:runlines
            #:test
+           #:remote-exists-p
+           #:delete-remote-tree
            #:readfile
            #:writefile
 
@@ -273,6 +275,11 @@
 
 (defpackage :consfigurator.property.gnupg
   (:use #:cl #:consfigurator))
+
+(defpackage :consfigurator.property.git
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:file      #:consfigurator.property.file))
+  (:export #:snapshot-extracted))
 
 (defpackage :consfigurator.connection.shell-wrap
   (:use #:cl #:consfigurator)

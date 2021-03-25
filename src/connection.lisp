@@ -327,6 +327,17 @@ start with RUN."
 (defun test (&rest args)
   (zerop (apply #'mrun :for-exit "test" args)))
 
+(defun delete-remote-tree (&rest paths)
+  "Recursively delete each of PATHS."
+  (mrun "rm" "-rf" paths))
+
+(defun remote-exists-p (&rest paths)
+  "Does each of PATHS exists?
+PATH may be any kind of file, including directories."
+  (test (loop for path on paths
+              nconc (list "-e" (car path))
+              when (cdr path) collect "-a")))
+
 (defun readfile (&rest args)
   (apply #'connection-readfile *connection* args))
 
