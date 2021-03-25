@@ -39,8 +39,9 @@ available version of the snapshot is present on the remote system."
    (declare (ignore replace))
    (delete-remote-tree dest)
    (file:directory-exists directory)
-   (mrun :input (get-data-stream "--git-snapshot" snapshot-name)
-         #?"cd '${directory}'; tar xfz -"))
+   (with-remote-current-directory (directory)
+     (mrun :input (get-data-stream "--git-snapshot" snapshot-name)
+           "tar" "xfz" "-")))
   (:unapply
    (declare (ignore replace))
    (delete-remote-tree dest)))
