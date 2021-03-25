@@ -19,6 +19,7 @@
                           #:pathname-directory-pathname
                           #:with-temporary-file
                           #:ensure-directory-pathname
+                          #:ensure-pathname
                           #:getenv
                           #:subdirectories
                           #:directory-files
@@ -42,6 +43,7 @@
            #:pathname-directory-pathname
            #:with-temporary-file
            #:ensure-directory-pathname
+           #:ensure-pathname
            #:getenv
            #:subdirectories
            #:directory-files
@@ -88,6 +90,7 @@
            #:run
            #:mrun
            #:with-remote-temporary-file
+           #:with-remote-current-directory
            #:run-failed
            #:runlines
            #:test

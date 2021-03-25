@@ -62,6 +62,10 @@ For an example of usage, see the :SUDO connection type."))
     :initform nil
     :documentation
     "Items of prerequisite data known to be cached on the remote side.")
+   (remote-home
+    :initform nil
+    :documentation
+    "The remote user's home directory.")
    (remote-uid
     :initform nil
     :documentation
@@ -224,6 +228,30 @@ which will be cleaned up when BODY is finished."
                    :stderr "(merged with stdout)"
                    :exit-code exit))))))
 
+(defvar *remote-current-directory* nil
+  "Current working directory for RUN, MRUN, READFILE and WRITEFILE.
+Bound only by WITH-REMOTE-CURRENT-DIRECTORY.")
+
+(defmacro with-remote-current-directory ((dir) &body forms)
+  "Execute FORMS with the current working directory DIR.
+This affects the working directory for commands run using RUN and MRUN, and
+the resolution of relative pathnames passed as the first argument of READFILE
+and WRITEFILE.  For Lisp-type connections, it additionally temporarily sets
+the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
+  `(let ((*remote-current-directory* (ensure-directory-pathname ,dir)))
+     (if (lisp-connection-p)
+         (with-current-directory (*remote-current-directory*) ,@forms)
+         ,@forms)))
+
+(defun pwd ()
+  (or *remote-current-directory*
+      (slot-value *connection* 'remote-home)
+      (setf (slot-value *connection* 'remote-home)
+            (let ((home (stripln (mrun "echo $HOME"))))
+              (if (string-equal "" home)
+                  (error "Failed to determine remote home directory.")
+                  (ensure-directory-pathname home))))))
+
 (defmacro %process-run-args (&body forms)
   `(let (cmd input may-fail for-exit env inform)
     (loop for arg = (pop args)
@@ -252,6 +280,8 @@ which will be cleaned up when BODY is finished."
                (setq cmd (format nil "env ~{~A~^ ~} ~A"
                                  (mapcar #'escape-sh-token accum)
                                  cmd))))
+     (setq cmd (format nil "cd ~A; ~A"
+                       (escape-sh-token (unix-namestring (pwd))) cmd))
      ,@forms))
 
 (defun run (&rest args)
@@ -338,27 +368,35 @@ PATH may be any kind of file, including directories."
               nconc (list "-e" (car path))
               when (cdr path) collect "-a")))
 
-(defun readfile (&rest args)
-  (apply #'connection-readfile *connection* args))
+(defun readfile (path)
+  (connection-readfile
+   *connection*
+   (unix-namestring
+    (ensure-pathname path
+                     :namestring :unix
+                     :defaults (pwd)
+                     :ensure-absolute t))))
 
 (defun writefile (path content
                   &key (mode #o644 mode-supplied-p)
-                  &aux (namestring (etypecase path
-                                     (pathname (unix-namestring path))
-                                     (string path))))
+                  &aux (pathname (ensure-pathname path
+                                                  :namestring :unix
+                                                  :defaults (pwd)
+                                                  :ensure-absolute t))
+                    (namestring (unix-namestring pathname)))
   ;; If (lisp-connection-p), the file already exists, and it's not owned by
   ;; us, we could (have a keyword argument to) bypass CONNECTION-WRITEFILE and
   ;; just WRITE-STRING to the file.  That way we don't replace the file with
   ;; one owned by us, which we might not be able to chown back as non-root.
   ;;
   ;; The following, simpler behaviour should fit most sysadmin needs.
-  (if (test "-f" path)
+  (if (test "-f" pathname)
       ;; seems there is nothing like stat(1) in POSIX, and note that
       ;; --reference for chmod(1) and chown(1) is not POSIX
       (re:register-groups-bind
           (((lambda (s) (delete #\- s)) umode gmode omode) uid gid)
           (#?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
-           (mrun "ls" "-nd" path) :sharedp t)
+           (mrun "ls" "-nd" pathname) :sharedp t)
         (connection-writefile *connection*
                               namestring
                               content
@@ -368,5 +406,5 @@ PATH may be any kind of file, including directories."
             ;; assume that if we can write it we can chmod it
             (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${namestring}"))
           ;; we may not be able to chown; that's okay
-          (mrun :may-fail #?"chown ${uid}:${gid} ${path}")))
+          (mrun :may-fail #?"chown ${uid}:${gid} ${namestring}")))
       (connection-writefile *connection* namestring content mode)))
