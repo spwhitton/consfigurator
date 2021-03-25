@@ -79,6 +79,10 @@ apply the elements of REQUIREMENTS in reverse order."
 ;; should not be returned by property subroutines, per the spec
 (defun apply-and-print (propapps &optional unapply)
   (dolist (pa (if unapply (reverse propapps) propapps))
+    ;; TODO Nested combinators can mean that we establish this restart more
+    ;; than once, and they all appear in the debugger without any way to
+    ;; distinguish them.  Perhaps we can use the :TEST argument to
+    ;; RESTART-CASE such that only the innermost(?) skip option appears.
     (let* ((result (restart-case
                        (with-indented-inform
                          (if unapply (propappunapply pa) (propappapply pa)))
