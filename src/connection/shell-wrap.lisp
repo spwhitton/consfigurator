@@ -50,6 +50,6 @@
     (multiple-value-bind (out exit)
         (connection-run
          conn
-         #?"mv ${(escape-sh-token temp)} ${(escape-sh-token path)}"
+         #?"mv ${(escape-sh-token temp)} ${(escape-sh-token (unix-namestring path))}"
          nil)
       (unless (zerop exit) (error "Failed to write ~A: ~A" path out)))))
