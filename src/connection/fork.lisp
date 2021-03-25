@@ -58,30 +58,28 @@ for example, such that we don't see it."
          (-1
           (error "fork(2) failed"))
          (0
-          (handler-case
-              (progn
-                ;; TODO either (reset-data-sources), or bind a restart to
-                ;; convert data source errors into failed-change (or ignore
-                ;; them?  or what?), as they may or may not be available
-                ;; inside the chroot, depending on whether the data source
-                ;; code needs to read files outside of the chroot or already
-                ;; has the data cached, a socket open etc.
-                (mapc #'clear-input
-                      (list *standard-input* *debug-io* *terminal-io*))
-                (reset-remote-home)
-                ,@forms
-                ;; it would be nice to reenter Consfigurator's primary loop by
-                ;; just calling (return-from establish-connection
-                ;; (establish-connection :local)) here, but we need to kill
-                ;; off the child afterwards, rather than returning to the
-                ;; child's REPL or whatever else
-                (continue-deploy* ,remaining)
-                (uiop:quit 0))
-            ;; TODO With this approach we don't get the backtrace leading up
-            ;; to the serious condition.
-            (serious-condition (c)
-              (format *error-output* "Fork connection child failed: ~A~%" c)
-              (uiop:quit 2))))
+          (handler-bind ((serious-condition
+                           (lambda (c)
+                             (trivial-backtrace:print-backtrace
+                              c :output *error-output*)
+                             (uiop:quit 2))))
+            ;; TODO either (reset-data-sources), or bind a restart to
+            ;; convert data source errors into failed-change (or ignore
+            ;; them?  or what?), as they may or may not be available
+            ;; inside the chroot, depending on whether the data source
+            ;; code needs to read files outside of the chroot or already
+            ;; has the data cached, a socket open etc.
+            (mapc #'clear-input
+                  (list *standard-input* *debug-io* *terminal-io*))
+            (reset-remote-home)
+            ,@forms
+            ;; it would be nice to reenter Consfigurator's primary loop by
+            ;; just calling (return-from establish-connection
+            ;; (establish-connection :local)) here, but we need to kill
+            ;; off the child afterwards, rather than returning to the
+            ;; child's REPL or whatever else
+            (continue-deploy* ,remaining)
+            (uiop:quit 0)))
          (t
           (multiple-value-bind (_ status) (waitpid child 0)
             (declare (ignore _))

@@ -1,6 +1,7 @@
 consfigurator (0.4.0-1) UNRELEASED; urgency=medium
 
-  * Add deps and build-deps on cl-heredoc and cl-named-readtables.
+  * Add deps and build-deps on cl-heredoc, cl-named-readtables,
+    cl-trivial-backtrace.
 
  -- Sean Whitton <spwhitton@spwhitton.name>  Sat, 20 Mar 2021 12:31:53 -0700
 

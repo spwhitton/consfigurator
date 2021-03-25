@@ -12,6 +12,7 @@
                #:cl-interpol
                #:named-readtables
                #:cffi
+               #:trivial-backtrace
                #:trivial-macroexpand-all)
   :components ((:file "src/package")
                (:file "src/reader")
