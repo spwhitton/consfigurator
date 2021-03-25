@@ -41,6 +41,7 @@ for example, such that we don't see it."
   (and
    #+sbcl (> 2 (length (sb-thread:list-all-threads)))))
 
+;; TODO there is unwanted variable capture going on here
 (defmacro with-fork-connection ((remaining) &body forms)
   `(progn
      (unless (lisp-connection-p)
