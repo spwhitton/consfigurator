@@ -247,7 +247,8 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
   (or *remote-current-directory*
       (slot-value *connection* 'remote-home)
       (setf (slot-value *connection* 'remote-home)
-            (let ((home (stripln (mrun "echo $HOME"))))
+            (let ((home (stripln
+                         (connection-run *connection* "echo $HOME" nil))))
               (if (string-equal "" home)
                   (error "Failed to determine remote home directory.")
                   (ensure-directory-pathname home))))))
