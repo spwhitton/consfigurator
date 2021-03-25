@@ -67,6 +67,7 @@ for example, such that we don't see it."
                 ;; has the data cached, a socket open etc.
                 (mapc #'clear-input
                       (list *standard-input* *debug-io* *terminal-io*))
+                (reset-remote-home)
                 ,@forms
                 ;; it would be nice to reenter Consfigurator's primary loop by
                 ;; just calling (return-from establish-connection

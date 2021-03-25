@@ -81,6 +81,7 @@
            #:lisp-connection
            #:posix-connection
            #:lisp-connection-p
+           #:reset-remote-home
            #:connection-run
            #:connection-readfile
            #:connection-writefile
