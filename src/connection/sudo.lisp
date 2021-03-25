@@ -66,8 +66,7 @@
   ;; wrap in sh -c so that it is more likely we are either asked for a
   ;; password for all our commands or not asked for one for any
   (format nil "sudo -HkS --prompt=\"\" --user=~A sh -c ~A"
-          (slot-value connection 'user)
-          (escape-sh-token (strcat "cd \"$HOME\"; " cmd))))
+	  (slot-value connection 'user) (escape-sh-token cmd)))
 
 (defmethod connection-run ((c sudo-connection) cmd (input null))
   (call-next-method c cmd (get-sudo-password c)))
