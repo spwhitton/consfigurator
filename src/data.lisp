@@ -411,11 +411,6 @@ of the current connection, where each entry is of the form
                     "-type" "f" "-printf" "%P\\n")
             (and (zerop exit) (lines out)))))
 
-;; TODO unclear whether the need for this is a bug in trivial-macroexpand-all
-(define-constant +continue-deploy*-program-implementation-specific+
-  "#+sbcl (require \"sb-cltl2\")"
-  :test #'equal)
-
 
 ;;;; Passphrases
 
@@ -445,6 +440,11 @@ chance of those passwords showing up in the clear in the Lisp debugger."
 
 
 ;;;; Programs for remote Lisp images
+
+;; TODO unclear whether the need for this is a bug in trivial-macroexpand-all
+(define-constant +continue-deploy*-program-implementation-specific+
+  "#+sbcl (require \"sb-cltl2\")"
+  :test #'equal)
 
 (defun continue-deploy*-program (remaining-connections)
   "Return a program to complete the work of an enclosing call to DEPLOY*.
