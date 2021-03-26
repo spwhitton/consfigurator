@@ -190,7 +190,7 @@ clashes.  It should not be called by properties."
 
 ;; called by implementations of ESTABLISH-CONNECTION which start up remote
 ;; Lisp images
-(defun upload-all-prerequisite-data (&optional (host *host*))
+(defun upload-all-prerequisite-data ()
   (macrolet ((highest-version-in-cache (cache)
                `(third (car (remove-if-not (lambda (c)
                                              (and (string= (first c) iden1)
@@ -203,7 +203,7 @@ clashes.  It should not be called by properties."
                                       (get-local-cached-prerequisite-data))
           with sorted-remote-cache = (sort-prerequisite-data-cache
                                       (get-remote-cached-prerequisite-data))
-          for (iden1 . iden2) in (getf (slot-value host 'hostattrs) :data)
+          for (iden1 . iden2) in (get-hostattrs :data)
 
           for highest-local-cached-version  = (highest-version-in-cache
                                                sorted-local-cache)
