@@ -120,7 +120,7 @@ This function is typically called at the REPL."
   "Return the content of an item of prerequisite data as a string.
 
 This function is called by property :APPLY and :UNAPPLY subroutines."
-  (%get-data-string (%get-data iden1 iden2)))
+  (%get-data-string (funcall (%get-data iden1 iden2))))
 
 (defun get-data-stream (iden1 iden2)
   "Return a stream which will produce the content of an item of prerequisite
@@ -129,30 +129,71 @@ prerequisite data was provided by the prerequisite data source as a string, it
 will be encoded in UTF-8.
 
 This function is called by property :APPLY and :UNAPPLY subroutines."
-  (%get-data-stream (%get-data iden1 iden2)))
+  (%get-data-stream (funcall (%get-data iden1 iden2))))
 
 (defmacro with-data-stream ((s iden1 iden2) &body body)
   `(with-open-stream (,s (get-data-stream ,iden1 ,iden2))
      ,@body))
 
+(define-condition missing-data (error)
+  ((iden1 :initarg :iden1 :reader missing-iden1)
+   (iden2 :initarg :iden2 :reader missing-iden2))
+  (:report (lambda (condition stream)
+             (format stream "Could not provide prerequisite data ~S | ~S"
+                     (missing-iden1 condition) (missing-iden2 condition)))))
+
+(defvar *string-data* (make-hash-table :test #'equal)
+  "Items of STRING-DATA obtained from data sources by this Lisp image.")
+
 (defun %get-data (iden1 iden2)
-  (if-let ((source-thunk (cdr (query-data-sources iden1 iden2))))
-    (funcall source-thunk)
-    ;; else, look in local cache -- note that this won't exist in the root
-    ;; Lisp, but only if we're a Lisp started up by a connection
-    (if-let ((local-cached
-              (car (remove-if-not (lambda (c)
-                                    (and (string= (first c) iden1)
-                                         (string= (second c) iden2)))
-                                  (sort-prerequisite-data-cache
-                                   (get-local-cached-prerequisite-data))))))
-      (let ((file (apply #'local-data-pathname local-cached)))
-        (make-instance 'file-data
-                       :iden1 iden1
-                       :iden2 iden2
-                       :file file
-                       :mime (try-get-file-mime-type file)))
-      (error "Could not provide prerequisite data ~S | ~S" iden1 iden2))))
+  (let* ((idenpair (cons iden1 iden2))
+         (from-source (query-data-sources iden1 iden2))
+         (from-source-version (and from-source (car from-source)))
+         (in-memory (gethash idenpair *string-data*))
+         (in-memory-version (and in-memory (data-version in-memory)))
+         (local-cached
+           (car (remove-if-not (lambda (c)
+                                 (and (string= (first c) iden1)
+                                      (string= (second c) iden2)))
+                               (sort-prerequisite-data-cache
+                                (get-local-cached-prerequisite-data)))))
+         (local-cached-version (caddr local-cached)))
+    (cond
+      ((and in-memory
+            (or (not from-source) (version>= in-memory-version
+                                             from-source-version))
+            (or (not local-cached) (version>= in-memory-version
+                                              local-cached-version)))
+       (values (lambda () in-memory) in-memory-version))
+      ((and from-source
+            (or (not in-memory) (version>= from-source-version
+                                           in-memory-version))
+            (or (not local-cached) (version>= from-source-version
+                                              local-cached-version)))
+       (values
+        (lambda ()
+          (let ((from-source-data (funcall (cdr from-source))))
+            (when (subtypep (type-of from-source-data) 'string-data)
+              (setf (gethash idenpair *string-data*) from-source-data))
+            from-source-data))
+        from-source-version))
+      ((and local-cached
+            (or (not from-source) (version>= local-cached-version
+                                             from-source-version))
+            (or (not in-memory) (version>= local-cached-version
+                                           in-memory-version)))
+       (values
+        (lambda ()
+          (let ((file (apply #'local-data-pathname local-cached)))
+            (make-instance 'file-data
+                           :iden1 iden1
+                           :iden2 iden2
+                           :version local-cached-version
+                           :file file
+                           :mime (try-get-file-mime-type file))))
+        local-cached-version))
+      (t
+       (error 'missing-data :iden1 iden1 :iden2 iden2)))))
 
 (defmethod %get-data-stream ((data string-data))
   (babel-streams:make-in-memory-input-stream
@@ -234,56 +275,48 @@ This is not allowed for security reasons."))
     (push (list iden1 iden2 (remote-data-pathname iden1 iden2 data-version))
           (slot-value connection 'cached-data))))
 
-;; called by implementations of ESTABLISH-CONNECTION which call
-;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM
-(defun upload-all-prerequisite-data (&optional (connection *connection*))
-  (macrolet ((highest-version-in-cache (cache)
-               `(third (car (remove-if-not (lambda (c)
-                                             (and (string= (first c) iden1)
-                                                  (string= (second c) iden2)))
-                                           ,cache)))))
-    (loop with *data-sources* = (cons (register-data-source :asdf)
-                                      *data-sources*)
+(defmethod connection-clear-data-cache ((connection connection) iden1 iden2)
+  (let* ((*connection* connection)
+         (dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))
+    (mrun "rm" "-rf" dir)))
 
-          with sorted-local-cache  = (sort-prerequisite-data-cache
-                                      (get-local-cached-prerequisite-data))
-          with sorted-remote-cache = (sort-prerequisite-data-cache
-                                      (get-remote-cached-prerequisite-data))
-          for (iden1 . iden2) in (get-hostattrs :data)
+(defun upload-all-prerequisite-data
+    (&key (upload-string-data t) (connection *connection*))
+  "Upload all prerequisite data required by the current deployment to the remote
+cache of the current connection hop, or to the remote cache of CONNECTION.
 
-          for highest-local-cached-version  = (highest-version-in-cache
-                                               sorted-local-cache)
-          for highest-remote-cached-version = (highest-version-in-cache
-                                               sorted-remote-cache)
-          for (highest-source-version . highest-source)
-            = (query-data-sources iden1 iden2)
+If UPLOAD-STRING-DATA is false, don't upload items of string data, but
+retrieve them from data sources and keep in memory.  This is for connection
+types which will do something like fork after calling this function.
 
-          if (and highest-source-version
-                  (or (not highest-remote-cached-version)
-                      (version< highest-remote-cached-version
-                                highest-source-version)))
-            do (connection-clear-data-cache iden1 iden2)
-               (connection-upload connection (funcall highest-source))
-          else if (and highest-local-cached-version
-                       (or (not highest-remote-cached-version)
-                           (version< highest-remote-cached-version
-                                     highest-local-cached-version)))
-                 do (let ((file (local-data-pathname
-                                 iden1
-                                 iden2
-                                 highest-local-cached-version)))
-                      (connection-clear-data-cache iden1 iden2)
-                      (connection-upload
-                       connection
-                       (make-instance 'file-data
-                                      :iden1 iden1
-                                      :iden2 iden2
-                                      :version highest-local-cached-version
-                                      :file file
-                                      :mime (try-get-file-mime-type file))))
-          else unless highest-remote-cached-version
-                 do (error "Could not provide prerequisite data ~S | ~S"
-                           iden1 iden2))))
+This is called by implementations of ESTABLISH-CONNECTION which call
+CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
+  ;; Retrieving & keeping in memory refers to how %GET-DATA stores items of
+  ;; string data in *STRING-DATA*.
+  (loop with *data-sources* = (cons (register-data-source :asdf)
+                                    *data-sources*)
+
+        for (iden1 . iden2) in (get-hostattrs :data)
+        for highest-remote-version
+          = (caddar (remove-if-not (lambda (c)
+                                     (and (string= (first c) iden1)
+                                          (string= (second c) iden2)))
+                                   (sort-prerequisite-data-cache
+                                    (get-remote-cached-prerequisite-data))))
+        for (thunk highest-local-version)
+          = (restart-case (multiple-value-list (%get-data iden1 iden2))
+              (missing-data () nil))
+
+        if (and highest-local-version
+                (or (not highest-remote-version)
+                    (version> highest-local-version highest-remote-version)))
+          do (let ((data (funcall thunk)))
+               (when (or upload-string-data
+                         (not (subtypep (type-of data) 'string-data)))
+                 (connection-clear-data-cache connection iden1 iden2)
+                 (connection-upload connection data)))
+        else unless highest-remote-version
+               do (error 'missing-data :iden1 iden1 :iden2 iden2)))
 
 (defun try-get-file-mime-type (file)
   (handler-case (stripln (run-program
@@ -320,12 +353,6 @@ no risk of clashes between fresly generated files and cached copies of files."
 
 (defun remote-data-pathname (&rest args)
   (apply #'data-pathname (get-remote-data-cache-dir) args))
-
-(defun connection-clear-data-cache (iden1 iden2)
-  (let ((dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))
-    (mrun (strcat "rm -f "
-                  (unix-namestring (pathname-directory-pathname dir))
-                  "/*"))))
 
 (defun get-local-data-cache-dir ()
   (ensure-directory-pathname
