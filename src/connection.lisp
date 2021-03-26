@@ -254,7 +254,7 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
        (unwind-protect
             (if (lisp-connection-p)
                 (with-current-directory (,new) ,@forms)
-                ,@forms)
+                (progn ,@forms))
          (setf (slot-value *connection* 'current-directory) ,previous)))))
 
 (defun pwd ()
