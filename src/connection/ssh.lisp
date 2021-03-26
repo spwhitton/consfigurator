@@ -46,7 +46,3 @@
   (format nil "ssh ~A ~A"
           (ssh-host connection)
           (escape-sh-token (format nil "sh -c ~A" (escape-sh-token cmd)))))
-
-;; rsync it straight to to its destination so rsync can do incremental updates
-(defmethod connection-upload ((c ssh-connection) from to)
-  (mrun "rsync" "-Pavc" from (format nil "~A:~A" (ssh-host c) to)))

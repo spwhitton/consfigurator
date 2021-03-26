@@ -147,15 +147,6 @@ if they need to handle streams and strings differently."))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
-(defgeneric connection-upload (connection from to)
-  (:documentation "Subroutine to upload files to the host.
-
-Only used for uploading prerequisite data, only across the first hop of a
-connection, and only to caches.  The point of this function is to allow
-specifying a more efficient alternative to CONNECTION-WRITEFILE when data is
-in a file on disc rather than in memory, and we are uploading directly from
-the root Lisp's machine.  For example, using rsync(1) over SSH."))
-
 (defgeneric connection-teardown (connection)
   (:documentation "Subroutine to disconnect from the host."))
 

@@ -24,6 +24,14 @@ Connections
   then we can have more specific connection types which take other arguments
   and construct the full command.
 
+- It might be possible to write an implementation of CONNECTION-UPLOAD for
+  SSH-CONNECTION which can optimise a common case.  If it can see that it is
+  the only item in the connection chain, and there is an old version of an
+  item of prerequisite data to upload already on the remote side, it can move
+  that old version to a temporary name, rsync the new version directly to the
+  temporary name so that rsync can do an incremental update, and then rename
+  the file to the new version.
+
 Data sources
 ------------
 

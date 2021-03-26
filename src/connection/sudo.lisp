@@ -87,6 +87,3 @@
                             :element-type (stream-element-type input)))
                        input)
                       input)))
-
-(defmethod connection-upload ((c sudo-connection) from to)
-  (connection-run c #?"cp ${from} ${to}" nil))

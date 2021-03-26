@@ -188,9 +188,55 @@ This function is for implementation of REGISTER-DATA-SOURCE to check for
 clashes.  It should not be called by properties."
   (if (query-data-sources iden1 iden2) t nil))
 
-;; called by implementations of ESTABLISH-CONNECTION which start up remote
-;; Lisp images
-(defun upload-all-prerequisite-data ()
+(defgeneric connection-upload (connection data)
+  (:documentation
+   "Subroutine to upload an item of prerequisite data to the remote cache.
+The default implementation will work for any connection which implements
+CONNECTION-WRITEFILE and CONNECTION-RUN, but connection types which work by
+calling CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM will need their own
+implementation."))
+
+(defmethod connection-upload :around ((connection connection) (data data))
+  (when (subtypep (class-of connection)
+                  'consfigurator.connection.local:local-connection)
+    (error
+     "Attempt to upload data to the root Lisp or reupload to remote Lisp.
+This is not allowed for security reasons."))
+  (with-slots (iden1 iden2 data-version) data
+    (let* ((*connection* connection)
+           (dest (remote-data-pathname iden1 iden2)))
+      (mrun "mkdir" "-p" dest)
+      (with-remote-current-directory (dest)
+        (informat 1 "~&Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
+        (call-next-method)
+        (inform 1 "done." :fresh-line nil)))))
+
+(defmethod connection-upload ((conn connection) (data string-data))
+  (writefile (string->filename (data-version data)) (data-string data)))
+
+(defmethod connection-upload ((conn connection) (data file-data))
+  (let ((source (unix-namestring (data-file data)))
+        (dest (string->filename (data-version data))))
+    (flet ((upload (from to)
+             (with-open-file (stream from :element-type '(unsigned-byte 8))
+               (writefile to stream))))
+      (if (string-prefix-p "text/" (data-mime data))
+          (let ((dest (strcat dest ".gz")))
+            (with-temporary-file (:pathname tmp)
+              (run-program
+               (strcat "gzip -c " (escape-sh-token source)) :output tmp)
+              (upload tmp dest)
+              (mrun "gunzip" dest)))
+          (upload source dest)))))
+
+(defmethod connection-upload :after ((connection connection) (data data))
+  (with-slots (iden1 iden2 data-version) data
+    (push (list iden1 iden2 (remote-data-pathname iden1 iden2 data-version))
+          (slot-value connection 'cached-data))))
+
+;; called by implementations of ESTABLISH-CONNECTION which call
+;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM
+(defun upload-all-prerequisite-data (&optional (connection *connection*))
   (macrolet ((highest-version-in-cache (cache)
                `(third (car (remove-if-not (lambda (c)
                                              (and (string= (first c) iden1)
@@ -217,7 +263,7 @@ clashes.  It should not be called by properties."
                       (version< highest-remote-cached-version
                                 highest-source-version)))
             do (connection-clear-data-cache iden1 iden2)
-               (connection-upload-data (funcall highest-source))
+               (connection-upload connection (funcall highest-source))
           else if (and highest-local-cached-version
                        (or (not highest-remote-cached-version)
                            (version< highest-remote-cached-version
@@ -227,7 +273,8 @@ clashes.  It should not be called by properties."
                                  iden2
                                  highest-local-cached-version)))
                       (connection-clear-data-cache iden1 iden2)
-                      (connection-upload-data
+                      (connection-upload
+                       connection
                        (make-instance 'file-data
                                       :iden1 iden1
                                       :iden2 iden2
@@ -273,49 +320,6 @@ no risk of clashes between fresly generated files and cached copies of files."
 
 (defun remote-data-pathname (&rest args)
   (apply #'data-pathname (get-remote-data-cache-dir) args))
-
-(defun connection-try-upload (from to)
-  "Wrapper around CONNECTION-UPLOAD to ensure it gets used only when
-appropriate.  Falls back to CONNECTION-WRITEFILE."
-  (if (and (subtypep (type-of (slot-value *connection* 'parent))
-                     'consfigurator.connection.local:local-connection)
-           (find-method #'connection-upload
-                        '()
-                        (mapcar #'class-of (list *connection* t t))
-                        nil))
-      (connection-upload *connection* from to)
-      (with-open-file (s from :element-type '(unsigned-byte 8))
-        (connection-writefile *connection* to s #o077))))
-
-(defmethod connection-upload-data :around ((data data))
-  (when (subtypep (class-of *connection*)
-                  'consfigurator.connection.local:local-connection)
-    (error "Attempt to upload data to the root Lisp; this is not allowed"))
-  (with-slots (iden1 iden2 data-version) data
-    (let ((*dest* (remote-data-pathname iden1 iden2 data-version)))
-      (declare (special *dest*))
-      (mrun "mkdir" "-p" (pathname-directory-pathname *dest*))
-      (informat 1 "~&Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
-      (call-next-method)
-      (push (list iden1 iden2 *dest*) (slot-value *connection* 'cached-data))
-      (inform 1 "done." :fresh-line nil))))
-
-(defmethod connection-upload-data ((data file-data))
-  (declare (special *dest*))
-  (let ((source (unix-namestring (data-file data))))
-    (if (string-prefix-p "text/" (data-mime data))
-        (let ((dest (strcat (unix-namestring *dest*) ".gz")))
-          (with-temporary-file (:pathname tmp)
-            (run-program (strcat "gzip --rsyncable -c "
-                                 (escape-sh-token source))
-                         :output tmp)
-            (connection-try-upload tmp (unix-namestring dest))
-            (mrun "gunzip" "--keep" dest)))
-        (connection-try-upload source *dest*))))
-
-(defmethod connection-upload-data ((data string-data))
-  (declare (special *dest*))
-  (connection-writefile *connection* *dest* (data-string data) #o077))
 
 (defun connection-clear-data-cache (iden1 iden2)
   (let ((dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))

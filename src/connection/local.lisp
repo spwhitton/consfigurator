@@ -66,6 +66,3 @@ root Lisp is running on, as the root Lisp's uid."))
                                       :element-type type)
            (copy-stream-to-stream content stream :element-type type)))))
     (run-program `("mv" ,temp ,path))))
-
-(defmethod connection-upload ((connection local-connection) from to)
-  (copy-file from to))

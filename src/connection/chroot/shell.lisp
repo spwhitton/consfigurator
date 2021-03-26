@@ -31,7 +31,3 @@
   (format nil "chroot ~A sh -c ~A"
           (escape-sh-token (slot-value connection 'root))
           (escape-sh-token cmd)))
-
-(defmethod connection-upload ((connection shell-chroot-connection) from to)
-  (mrun "cp" from (merge-pathnames to (ensure-directory-pathname
-                                       (slot-value connection 'root)))))
