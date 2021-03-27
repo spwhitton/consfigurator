@@ -320,7 +320,8 @@ CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
                                      (and (string= (first c) iden1)
                                           (string= (second c) iden2)))
                                    (sort-prerequisite-data-cache
-                                    (get-remote-cached-prerequisite-data))))
+                                    (get-remote-cached-prerequisite-data
+                                     connection))))
         for (thunk highest-local-version)
           = (restart-case (multiple-value-list (%get-data iden1 iden2))
               (missing-data () nil))
@@ -377,12 +378,16 @@ no risk of clashes between fresly generated files and cached copies of files."
    (strcat (or (getenv "XDG_CACHE_HOME") (strcat (getenv "HOME") "/.cache"))
            "/consfigurator/data")))
 
-(defun get-local-cached-prerequisite-data ()
-  "Return a list of items of prerequisite data in the cache local to this Lisp
-process, where each entry is of the form
+(defun get-local-cached-prerequisite-data
+    (&optional (where (get-local-data-cache-dir)))
+  "Scan a local cache of prerequisite data at WHERE, and return a list of
+items of prerequisite data where each entry is of the form
 
-    '(iden1 iden2 version)."
-  (loop for dir in (subdirectories (get-local-data-cache-dir))
+    '(iden1 iden2 version).
+
+This is exported for use by implementations of CONNECTION-UPLOAD, which should
+always supply a value for WHERE."
+  (loop for dir in (subdirectories where)
         nconc (loop for subdir in (subdirectories dir)
                     nconc (loop for file in (directory-files subdir)
                                 collect
@@ -417,17 +422,21 @@ properties, or data sources which return objects referencing existing files."
     (lines
      (mrun "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
 
-(defun get-remote-cached-prerequisite-data ()
-  "Return a list of items of prerequisite data in the cache on the remote side
-of the current connection, where each entry is of the form
+(defgeneric get-remote-cached-prerequisite-data (connection)
+  (:documentation
+   "Return a list of items of prerequisite data in the cache on the remote side
+of CONNECTION, where each entry is of the form
 
-    '(iden1 iden2 version)."
-  (mapcar (lambda (line)
-            (mapcar #'filename->string (split-string line :separator "/")))
-          (multiple-value-bind (out exit)
-              (mrun :may-fail "find" (get-remote-data-cache-dir)
-                    "-type" "f" "-printf" "%P\\n")
-            (and (zerop exit) (lines out)))))
+    '(iden1 iden2 version)."))
+
+(defmethod get-remote-cached-prerequisite-data ((connection connection))
+  (let ((*connection* connection))
+    (mapcar (lambda (line)
+              (mapcar #'filename->string (split-string line :separator "/")))
+            (multiple-value-bind (out exit)
+                (mrun :may-fail "find" (get-remote-data-cache-dir)
+                      "-type" "f" "-printf" "%P\\n")
+              (and (zerop exit) (lines out))))))
 
 
 ;;;; Passphrases
