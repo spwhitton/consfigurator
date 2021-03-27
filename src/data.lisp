@@ -486,8 +486,7 @@ Preprocessing must occur in the root Lisp."))
                             (find-package "CONSFIGURATOR"))))
 	   (proclamations `((proclaim '(special *consfigurator-debug-level*))))
            (load-forms
-             (loop for system
-                     in (slot-value (slot-value *host* 'propspec) 'systems)
+             (loop for system in (propspec-systems (host-propspec *host*))
                    collect `(load
                              ,(caddar
                                (remove-if-not
@@ -550,5 +549,5 @@ a PRINT-OBJECT method for your class."
 are uploaded to the remote cache of the currently established connection.
 
 Called by connections which start up remote Lisp images."
-  (dolist (system (slot-value (slot-value *host* 'propspec) 'systems))
+  (dolist (system (propspec-systems (host-propspec *host*)))
     (push-hostattrs :data (cons "--lisp-system" (normalise-system system)))))
