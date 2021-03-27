@@ -142,6 +142,11 @@ one solution is to convert your property to a :LISP property."
      (unwind-protect (progn ,@forms)
        (delete-directory-tree ,dir :validate t))))
 
+(defun pathname-file (pathname)
+  "Like PATHNAME-NAME but include any file extension."
+  (namestring
+   (enough-pathname pathname (pathname-directory-pathname pathname))))
+
 
 ;;;; Progress & debug printing
 

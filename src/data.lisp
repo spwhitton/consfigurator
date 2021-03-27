@@ -251,7 +251,7 @@ This is not allowed for security reasons."))
       (let* ((*connection* connection)
              (dest (remote-data-pathname iden1 iden2 data-version))
              (destdir (pathname-directory-pathname dest))
-             (destfile (pathname-name dest)))
+             (destfile (pathname-file dest)))
         (mrun "mkdir" "-p" destdir)
         (with-remote-current-directory (destdir)
           (etypecase data
@@ -373,7 +373,7 @@ process, where each entry is of the form
                                                (pathname-directory dir))
                                               (lastcar
                                                (pathname-directory subdir))
-                                              (pathname-name file)))))))
+                                              (pathname-file file)))))))
 
 (defun get-highest-local-cached-prerequisite-data (iden1 iden2)
   "Get the highest version of prerequisite data identified by IDEN1 and IDEN2

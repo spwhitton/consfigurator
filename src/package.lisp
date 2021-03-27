@@ -20,6 +20,7 @@
                           #:with-temporary-file
                           #:ensure-directory-pathname
                           #:ensure-pathname
+                          #:enough-pathname
                           #:getenv
                           #:subdirectories
                           #:directory-files
@@ -44,6 +45,7 @@
            #:with-temporary-file
            #:ensure-directory-pathname
            #:ensure-pathname
+           #:enough-pathname
            #:getenv
            #:subdirectories
            #:directory-files
