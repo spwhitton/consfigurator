@@ -28,17 +28,39 @@
   #+sbcl      (sb-posix:setgid gid)
   #-(or sbcl) (foreign-funcall "setgid" :unsigned-int uid :int))
 
+(defclass setuid-connection (rehome-connection fork-connection)
+  ((uid :type :integer :initarg :uid)
+   (gid :type :integer :initarg :gid)
+   (home :type :string :initarg :home)))
+
 (defmethod establish-connection ((type (eql :setuid)) remaining &key to)
   (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
     (error "~&SETUIDing requires a Lisp image running as root"))
   (informat 1 "~&SETUIDing to ~A" to)
   (re:register-groups-bind ((#'parse-integer uid gid))
       (#?/uid=([0-9]+).+gid=([0-9]+)/ (mrun "id" to))
-    (let ((home (user:passwd-entry 5 uid)))
-      (with-fork-connection (remaining)
-        (unless (zerop (setgid gid))
-          (error "setgid(2) failed; are you root?"))
-        (unless (zerop (setuid uid))
-          (error "setuid(2) failed; are you root?"))
-        (setf (getenv "HOME") home)
-        (uiop:chdir home)))))
+    (let ((home (user:passwd-entry 5 uid))
+          (datadir
+            (ensure-directory-pathname
+             (stripln
+              (mrun
+               "su" to "-c"
+               "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
+      (continue-connection
+       (make-instance
+        'setuid-connection :uid uid :gid gid :datadir datadir :home home)
+       remaining))))
+
+(defmethod post-fork ((connection setuid-connection))
+  ;; TODO Set up the new environment more systematically.  Perhaps look at how
+  ;; runuser(1) uses PAM to do this.
+  (with-slots (uid gid home datadir) connection
+    (run-program (list "chown" "-R"
+                       (format nil "~A:~A" uid gid)
+                       (unix-namestring datadir)))
+    (unless (zerop (setgid gid))
+      (error "setgid(2) failed!"))
+    (unless (zerop (setuid uid))
+      (error "setuid(2) failed!"))
+    (setf (getenv "HOME") home)
+    (uiop:chdir home)))

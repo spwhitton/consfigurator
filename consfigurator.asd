@@ -36,6 +36,7 @@
                (:file "src/property/gnupg")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
+               (:file "src/connection/rehome")
                (:file "src/connection/ssh")
                (:file "src/connection/sudo")
                (:file "src/connection/su")

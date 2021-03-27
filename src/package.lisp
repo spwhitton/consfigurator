@@ -301,8 +301,14 @@
 
 (defpackage :consfigurator.connection.fork
   (:use #:cl #:consfigurator)
-  (:export #:with-fork-connection
+  (:export #:fork-connection
+           #:post-fork
 	   #:can-probably-fork))
+
+(defpackage :consfigurator.connection.rehome
+  (:use #:cl #:consfigurator #:consfigurator.connection.fork)
+  (:export #:rehome-connection
+           #:datadir))
 
 (defpackage :consfigurator.connection.as
   (:use #:cl
@@ -341,6 +347,7 @@
   (:use #:cl
 	#:consfigurator
 	#:consfigurator.connection.fork
+        #:consfigurator.connection.rehome
 	#:cffi))
 
 (defpackage :consfigurator.connection.chroot.shell
@@ -352,6 +359,7 @@
   (:use #:cl
 	#:consfigurator
 	#:consfigurator.connection.fork
+        #:consfigurator.connection.rehome
 	#:cffi)
   (:local-nicknames (#:re   #:cl-ppcre)
 		    (#:user #:consfigurator.property.user)))

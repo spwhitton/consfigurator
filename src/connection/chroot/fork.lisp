@@ -24,13 +24,28 @@
   #+sbcl      (sb-posix:chroot path)
   #-(or sbcl) (foreign-funcall "chroot" :string path :int))
 
+(defclass chroot.fork-connection (rehome-connection fork-connection)
+  ((into :type :string :initarg :into)))
+
 (defmethod establish-connection ((type (eql :chroot.fork)) remaining &key into)
   (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
     (error "~&Forking into a chroot requires a Lisp image running as root"))
   (informat 1 "~&Forking into chroot at ~A" into)
-  (with-fork-connection (remaining)
-      (unless (zerop (chroot into))
-	(error "chroot(2) failed; are you root?"))
-    ;; chdir, else our current working directory is a pointer to something
-    ;; outside the chroot
-    (uiop:chdir "/")))
+  (let* ((datadir-inside
+           (stripln
+            (mrun
+             "chroot" into
+             "echo" "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))
+         (datadir (ensure-pathname
+                   (subseq datadir-inside 1)
+                   :defaults into :ensure-absolute t :ensure-directory t)))
+    (continue-connection
+     (make-instance 'chroot.fork-connection :into into :datadir datadir)
+     remaining)))
+
+(defmethod post-fork ((connection chroot.fork-connection))
+  (unless (zerop (chroot (slot-value connection 'into)))
+    (error "chroot(2) failed!"))
+  ;; chdir, else our current working directory is a pointer to something
+  ;; outside the chroot
+  (uiop:chdir "/"))
