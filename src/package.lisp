@@ -180,7 +180,9 @@
            #:data-file
 	   #:data-source-providing-p
            #:missing-data-source
+           #:data-pathname
 	   #:local-data-pathname
+           #:remote-data-pathname
            #:get-remote-cached-prerequisite-data
            #:get-local-cached-prerequisite-data
 	   #:get-highest-local-cached-prerequisite-data
