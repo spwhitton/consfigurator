@@ -352,7 +352,7 @@
   (:use #:cl
 	#:consfigurator
 	#:consfigurator.connection.fork
-	#-(or sbcl) #:cffi)
+	#:cffi)
   (:local-nicknames (#:re   #:cl-ppcre)
 		    (#:user #:consfigurator.property.user)))
 

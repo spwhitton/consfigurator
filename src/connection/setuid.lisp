@@ -29,6 +29,8 @@
   #-(or sbcl) (foreign-funcall "setgid" :unsigned-int uid :int))
 
 (defmethod establish-connection ((type (eql :setuid)) remaining &key to)
+  (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
+    (error "~&SETUIDing requires a Lisp image running as root"))
   (informat 1 "~&SETUIDing to ~A" to)
   (re:register-groups-bind ((#'parse-integer uid gid))
       (#?/uid=([0-9]+).+gid=([0-9]+)/ (mrun "id" to))
