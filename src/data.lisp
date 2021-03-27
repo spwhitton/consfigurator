@@ -287,6 +287,12 @@ This is not allowed for security reasons."))
     (push (list iden1 iden2 (remote-data-pathname iden1 iden2 data-version))
           (slot-value connection 'cached-data))))
 
+(defgeneric connection-clear-data-cache (connection iden1 iden2)
+  (:documentation
+   "Delete all versions of the data identified by IDEN1 and IDEN2 from the remote
+cache of CONNECTION.  Called by UPLOAD-ALL-PREREQUISITE-DATA before uploading
+new versions of data, to avoid them piling up."))
+
 (defmethod connection-clear-data-cache ((connection connection) iden1 iden2)
   (let* ((*connection* connection)
          (dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))
