@@ -78,10 +78,12 @@
 
            ;; connection.lisp
            #:establish-connection
+           #:continue-connection
            #:preprocess-connection-args
            #:connection
            #:lisp-connection
            #:posix-connection
+           #:connection-parent
            #:lisp-connection-p
            #:reset-remote-home
            #:connection-run

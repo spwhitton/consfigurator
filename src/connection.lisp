@@ -42,6 +42,11 @@ either CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM and returns nil.
 Any implementation which calls CONTINUE-DEPLOY*-PROGRAM will need to call
 UPLOAD-ALL-PREREQUISITE-DATA."))
 
+(defgeneric continue-connection (connection remaining)
+  (:documentation
+   "Called by implementations of ESTABLISH-CONNECTION which return nil.
+Calls CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."))
+
 (defgeneric preprocess-connection-args (type &key)
   (:documentation
    "Hook to allow connection types to do work in the root Lisp before
@@ -56,6 +61,7 @@ For an example of usage, see the :SUDO connection type."))
 (defclass connection ()
   ((parent
     :initform *connection*
+    :reader connection-parent
     :documentation
     "The value of *CONNECTION* at the time this connection was established.")
    (cached-data
