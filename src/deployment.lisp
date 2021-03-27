@@ -200,19 +200,32 @@ Mainly useful for using a connection type like :AS to apply properties as a
 different user."
   (:preprocess
    (list (preprocess-connections connections)
-         (preprocess-propspec properties)))
+         (list :host nil :propspec properties)))
   (:hostattrs
    (declare (ignore connections))
-   (dolist (system (propspec-systems properties))
-     (pushnew system (slot-value (host-propspec *host*) 'systems)))
-   (propappattrs (eval-propspec properties)))
+   ;; Any hostattr set by PROPERTIES needs propagating upwards to *HOST*, but
+   ;; the :DATA hostattrs set by PROPERTIES should be the only data that gets
+   ;; propagated when establishing CONNECTIONS.  This ensures that for a
+   ;; connection type like :SETUID, we don't copy all the prerequisite data
+   ;; root has for the whole host into a user's homedir.
+   ;;
+   ;; To achieve this we reset the entry for :DATA, run the hostattrs
+   ;; subroutines via PREPROCESS-HOST, and then manually propagate any new
+   ;; hostattrs upwards.
+   (let ((host (make-host :hostattrs (copy-list (hostattrs *host*))
+                          :propspec (getf properties :propspec))))
+     (setf (getf (slot-value host 'hostattrs) :data) nil)
+     (setq host (preprocess-host host))
+     (doplist (k v (hostattrs host))
+              (loop with root = (getf (hostattrs *host*) k)
+                    for cell on v until (eq cell root)
+                    collect (car cell) into accum
+                    finally (apply #'push-hostattrs k (nreverse accum))))
+     (dolist (system (propspec-systems (host-propspec host)))
+       (pushnew system (slot-value (host-propspec *host*) 'systems)))
+     (setf (getf properties :host) host)))
   (:apply
-   ;; we don't COPY-LIST *HOST*'s hostattrs here only because we know
-   ;; %CONSFIGURE is about to do just that
-   (%consfigure connections
-                (make-instance
-                 'preprocessed-host
-                 :hostattrs (hostattrs *host*) :propspec properties))))
+   (%consfigure connections (getf properties :host))))
 
 (defun preprocess-connections (connections)
   (loop for connection in (ensure-cons connections)
