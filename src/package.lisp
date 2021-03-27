@@ -85,7 +85,6 @@
            #:connection-run
            #:connection-readfile
            #:connection-writefile
-           #:connection-upload
            #:connection-teardown
 
            #:run
@@ -189,6 +188,8 @@
            #:get-data-stream
            #:with-data-stream
            #:get-data-string
+           #:connection-upload
+           #:connection-clear-data-cache
            #:upload-all-prerequisite-data
            #:request-lisp-systems
            #:passphrase
