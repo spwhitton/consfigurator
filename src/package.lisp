@@ -341,7 +341,7 @@
   (:use #:cl
 	#:consfigurator
 	#:consfigurator.connection.fork
-	#-(or sbcl) #:cffi))
+	#:cffi))
 
 (defpackage :consfigurator.connection.chroot.shell
   (:use #:cl

@@ -25,6 +25,8 @@
   #-(or sbcl) (foreign-funcall "chroot" :string path :int))
 
 (defmethod establish-connection ((type (eql :chroot.fork)) remaining &key into)
+  (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
+    (error "~&Forking into a chroot requires a Lisp image running as root"))
   (informat 1 "~&Forking into chroot at ~A" into)
   (with-fork-connection (remaining)
       (unless (zerop (chroot into))
