@@ -96,24 +96,28 @@ sources are not expected to be available outside of the root Lisp."))
 (defvar *data-source-registrations* nil
   "Successful attempts to register data sources, which need not be repeated.")
 
+(defvar *no-data-sources* nil
+  "If t, silently fail to register any data sources.")
+
 (defun try-register-data-source (&rest args)
   "Register sources of prerequisite data.
 This function is typically called in consfigs.  Any relative pathnames in ARGS
 will be resolved as paths under the home directory of the user Lisp is running
 as, before being passed to implementations of REGISTER-DATA-SOURCE."
-  (let ((home (user-homedir-pathname)))
-    (setq args
-          (loop
-            for arg in args
-            if (pathnamep arg)
-              collect (ensure-pathname arg :defaults home :ensure-absolute t)
-            else collect arg)))
-  (when-let ((pair (and (not (find args *data-source-registrations*
-                                   :test #'equal))
-                        (restart-case (apply #'register-data-source args)
-                          (skip-data-source () nil)))))
-    (push pair *data-sources*)
-    (push args *data-source-registrations*)))
+  (unless *no-data-sources*
+    (let ((home (user-homedir-pathname)))
+      (setq args
+            (loop
+              for arg in args
+              if (pathnamep arg)
+                collect (ensure-pathname arg :defaults home :ensure-absolute t)
+              else collect arg)))
+    (when-let ((pair (and (not (find args *data-source-registrations*
+                                     :test #'equal))
+                          (restart-case (apply #'register-data-source args)
+                            (skip-data-source () nil)))))
+      (push pair *data-sources*)
+      (push args *data-source-registrations*))))
 
 (defun skip-data-source (c)
   (declare (ignore c))
@@ -498,23 +502,28 @@ achieved by sending the return value of this function into a REPL's stdin."
 
 Preprocessing must occur in the root Lisp."))
   (flet ((wrap (forms)
-           `(handler-bind
-                (;; we can skip missing data sources because these are not
-                 ;; expected to be available outside of the root Lisp
-                 (missing-data-source
-                   (lambda (c)
-                     (declare (ignore c))
-                     (invoke-restart 'skip-data-source))))
-              (let ((*consfigurator-debug-level* ,*consfigurator-debug-level*))
-                ,@forms))))
+           ;; We used to bind a handler here to invoke SKIP-DATA-SOURCES upon
+           ;; MISSING-DATA-SOURCE, which means that remote Lisp images were
+           ;; allowed to try querying data sources.  Now we just bind
+           ;; *NO-DATA-SOURCES* to t here.  While some data sources make sense
+           ;; in remote Lisp images, others might make arbitrary network
+           ;; connections or read out of other users' homedirs (e.g. if you
+           ;; are using (:SUDO :SBCL), the remote Lisp might try to read your
+           ;; ~/.gnupg, or on another host, someone else's ~/.gnupg who has
+           ;; the same username as you), which are usually undesirable.  So at
+           ;; least until some cool use case comes along, just require all
+           ;; data source queries to occur in the root Lisp.
+           `(let ((*no-data-sources* t)
+                  (*consfigurator-debug-level* ,*consfigurator-debug-level*))
+              ,@forms)))
     (let* ((intern-forms
-             (loop for name in '("MISSING-DATA-SOURCE"
-                                 "SKIP-DATA-SOURCE"
+             (loop for name in '("*NO-DATA-SOURCES*"
                                  "*CONSFIGURATOR-DEBUG-LEVEL*")
                    collect
                    `(export (intern ,name (find-package "CONSFIGURATOR"))
                             (find-package "CONSFIGURATOR"))))
-	   (proclamations `((proclaim '(special *consfigurator-debug-level*))))
+	   (proclamations `((proclaim '(special *no-data-sources*))
+                            (proclaim '(special *consfigurator-debug-level*))))
            (load-forms
              (loop for system in (propspec-systems (host-propspec *host*))
                    collect `(load
@@ -532,7 +541,7 @@ Preprocessing must occur in the root Lisp."))
                     (use-package :cl (make-package "CL-HEREDOC-SYSTEM"))
                     ,@intern-forms
 		    ,@proclamations
-                    (define-condition missing-data-source (error) ())
+                    ;; (define-condition missing-data-source (error) ())
                     (require "asdf")
 		    ;; Hide the LOAD output unless loading failed, because
 		    ;; there will be a lot of spurious warnings due to not
