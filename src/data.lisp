@@ -237,38 +237,38 @@ CONNECTION-WRITEFILE and CONNECTION-RUN, but connection types which work by
 calling CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM will need their own
 implementation."))
 
-(defmethod connection-upload :around ((connection connection) (data data))
+(defmethod connection-upload ((connection connection) (data data))
   (when (subtypep (class-of connection)
                   'consfigurator.connection.local:local-connection)
     (error
      "Attempt to upload data to the root Lisp or reupload to remote Lisp.
 This is not allowed for security reasons."))
-  (with-slots (iden1 iden2 data-version) data
-    (let* ((*connection* connection)
-           (dest (remote-data-pathname iden1 iden2)))
-      (mrun "mkdir" "-p" dest)
-      (with-remote-current-directory (dest)
-        (informat 1 "~&Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
-        (call-next-method)
-        (inform 1 "done." :fresh-line nil)))))
-
-(defmethod connection-upload ((conn connection) (data string-data))
-  (writefile (string->filename (data-version data)) (data-string data)))
-
-(defmethod connection-upload ((conn connection) (data file-data))
-  (let ((source (unix-namestring (data-file data)))
-        (dest (string->filename (data-version data))))
-    (flet ((upload (from to)
-             (with-open-file (stream from :element-type '(unsigned-byte 8))
-               (writefile to stream))))
-      (if (string-prefix-p "text/" (data-mime data))
-          (let ((dest (strcat dest ".gz")))
-            (with-temporary-file (:pathname tmp)
-              (run-program
-               (strcat "gzip -c " (escape-sh-token source)) :output tmp)
-              (upload tmp dest)
-              (mrun "gunzip" dest)))
-          (upload source dest)))))
+  (flet ((upload (from to)
+           (with-open-file (stream from :element-type '(unsigned-byte 8))
+             (writefile to stream))))
+    (with-slots (iden1 iden2 data-version) data
+      (informat 1 "~&Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
+      (let* ((*connection* connection)
+             (dest (remote-data-pathname iden1 iden2 data-version))
+             (destdir (pathname-directory-pathname dest))
+             (destfile (pathname-name dest)))
+        (mrun "mkdir" "-p" destdir)
+        (with-remote-current-directory (destdir)
+          (etypecase data
+            (string-data
+             (writefile destfile (data-string data)))
+            (file-data
+             (let ((source (unix-namestring (data-file data))))
+               (if (string-prefix-p "text/" (data-mime data))
+                   (let ((destfile (strcat destfile ".gz")))
+                     (with-temporary-file (:pathname tmp)
+                       (run-program
+                        (strcat "gzip -c " (escape-sh-token source))
+                        :output tmp)
+                       (upload tmp destfile)
+                       (mrun "gunzip" destfile)))
+                   (upload source destfile)))))))))
+  (inform 1 "done." :fresh-line nil))
 
 (defmethod connection-upload :after ((connection connection) (data data))
   (with-slots (iden1 iden2 data-version) data
