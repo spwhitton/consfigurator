@@ -373,10 +373,33 @@ no risk of clashes between fresly generated files and cached copies of files."
 (defun remote-data-pathname (&rest args)
   (apply #'data-pathname (get-remote-data-cache-dir) args))
 
-(defun get-local-data-cache-dir ()
+
+;;;; Remote caches
+
+(defgeneric get-remote-cached-prerequisite-data (connection)
+  (:documentation
+   "Return a list of items of prerequisite data in the cache on the remote side
+of CONNECTION, where each entry is of the form
+
+    '(iden1 iden2 version)."))
+
+(defmethod get-remote-cached-prerequisite-data ((connection connection))
+  (let ((*connection* connection))
+    (mapcar (lambda (line)
+              (mapcar #'filename->string (split-string line :separator "/")))
+            (multiple-value-bind (out exit)
+                (mrun :may-fail "find" (get-remote-data-cache-dir)
+                      "-type" "f" "-printf" "%P\\n")
+              (and (zerop exit) (lines out))))))
+
+(defun get-remote-data-cache-dir ()
   (ensure-directory-pathname
-   (strcat (or (getenv "XDG_CACHE_HOME") (strcat (getenv "HOME") "/.cache"))
-           "/consfigurator/data")))
+   (car
+    (lines
+     (mrun "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
+
+
+;;;; Local caches
 
 (defun get-local-cached-prerequisite-data
     (&optional (where (get-local-data-cache-dir)))
@@ -416,27 +439,10 @@ properties, or data sources which return objects referencing existing files."
 			      :iden2 (cadr triple)
 			      :version (caddr triple))))
 
-(defun get-remote-data-cache-dir ()
+(defun get-local-data-cache-dir ()
   (ensure-directory-pathname
-   (car
-    (lines
-     (mrun "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
-
-(defgeneric get-remote-cached-prerequisite-data (connection)
-  (:documentation
-   "Return a list of items of prerequisite data in the cache on the remote side
-of CONNECTION, where each entry is of the form
-
-    '(iden1 iden2 version)."))
-
-(defmethod get-remote-cached-prerequisite-data ((connection connection))
-  (let ((*connection* connection))
-    (mapcar (lambda (line)
-              (mapcar #'filename->string (split-string line :separator "/")))
-            (multiple-value-bind (out exit)
-                (mrun :may-fail "find" (get-remote-data-cache-dir)
-                      "-type" "f" "-printf" "%P\\n")
-              (and (zerop exit) (lines out))))))
+   (strcat (or (getenv "XDG_CACHE_HOME") (strcat (getenv "HOME") "/.cache"))
+           "/consfigurator/data")))
 
 
 ;;;; Passphrases
