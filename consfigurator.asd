@@ -38,6 +38,7 @@
 	       (:file "src/connection/fork")
                (:file "src/connection/ssh")
                (:file "src/connection/sudo")
+               (:file "src/connection/su")
                (:file "src/connection/sbcl")
                (:file "src/connection/chroot")
                (:file "src/connection/chroot/fork")

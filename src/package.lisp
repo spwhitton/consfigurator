@@ -322,6 +322,11 @@
         #:alexandria
         #:consfigurator.connection.shell-wrap))
 
+(defpackage :consfigurator.connection.su
+  (:use #:cl
+        #:consfigurator
+        #:consfigurator.connection.shell-wrap))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))

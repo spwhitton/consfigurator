@@ -24,13 +24,14 @@
   (zerop (foreign-funcall "geteuid" :int)))
 
 (defmethod establish-connection ((type (eql :as)) remaining &key to)
-  "Establish a :SETUID or :SUDO connection to another user account, depending
-on whether it is possible to establish a :SETUID connection.
+  "Establish a :SETUID or :SU connection to another user account, depending on
+whether it is possible to establish a :SETUID connection.
 
-This connection type does not support sudo with a password -- it is designed
-to be used as root."
-  (if (and (lisp-connection-p)
-           (can-setuid)
-           (can-probably-fork))
-      (establish-connection :setuid remaining :to to)
-      (establish-connection :sudo remaining :user to)))
+Note that both these connection types require root."
+  ;; An alternative to :SU would be :SUDO or runuser(1), but :SU is more
+  ;; portable.
+  (establish-connection (if (and (lisp-connection-p)
+                                 (can-setuid)
+                                 (can-probably-fork))
+                            :setuid :su)
+                        remaining :to to))
