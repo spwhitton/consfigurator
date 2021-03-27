@@ -164,12 +164,14 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
                                              from-source-version))
             (or (not local-cached) (version>= in-memory-version
                                               local-cached-version)))
+       (informat 3 "~&Obtaining ~S | ~S from in-memory cache" iden1 iden2)
        (values (lambda () in-memory) in-memory-version))
       ((and from-source
             (or (not in-memory) (version>= from-source-version
                                            in-memory-version))
             (or (not local-cached) (version>= from-source-version
                                               local-cached-version)))
+       (informat 3 "~&Obtaining ~S | ~S from a data source" iden1 iden2)
        (values
         (lambda ()
           (let ((from-source-data (funcall (cdr from-source))))
@@ -182,6 +184,7 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
                                              from-source-version))
             (or (not in-memory) (version>= local-cached-version
                                            in-memory-version)))
+       (informat 3 "~&Obtaining ~S | ~S from local cache" iden1 iden2)
        (values
         (lambda ()
           (let ((file (apply #'local-data-pathname local-cached)))
