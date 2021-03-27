@@ -254,11 +254,6 @@ calling CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM will need their own
 implementation."))
 
 (defmethod connection-upload ((connection connection) (data data))
-  (when (subtypep (class-of connection)
-                  'consfigurator.connection.local:local-connection)
-    (error
-     "Attempt to upload data to the root Lisp or reupload to remote Lisp.
-This is not allowed for security reasons."))
   (flet ((upload (from to)
            (with-open-file (stream from :element-type '(unsigned-byte 8))
              (writefile to stream))))

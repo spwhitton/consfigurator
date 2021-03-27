@@ -25,6 +25,12 @@
       (debianlike (apt:installed "sbcl"))))
 
 (defmethod establish-connection ((type (eql :sbcl)) remaining &key)
+  (when (lisp-connection-p)
+    (warn
+     "Looks like you might be starting a fresh Lisp image directly from the root
+Lisp. This can mean that prerequisite data gets extracted from encrypted
+stores and stored unencrypted under ~~/.cache, and as such is not
+recommended."))
   (ignoring-hostattrs (sbcl-available))
   (request-lisp-systems)
   (upload-all-prerequisite-data)
