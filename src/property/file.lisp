@@ -59,6 +59,7 @@ CONTENT can be a list of lines or a single string."
   (:desc (if (cdr paths)
              #?"@{paths} do not exist"
              #?"${(car paths)} does not exist"))
+  (:check (remote-exists-p paths))
   (:apply (mrun "rm" "-f" paths)))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
