@@ -33,6 +33,8 @@ point in doing that here because WRITEFILE is synchronous."
   "Ensure there is a file at PATH whose content is CONTENT.
 CONTENT can be a list of lines or a single string."
   (declare (indent 1))
+  (:desc (declare (ignore content))
+         #?"${path} has defined content")
   (:apply (writefile path (etypecase content
                             (cons (unlines content))
                             (string (format nil "~A~&" content))))))
