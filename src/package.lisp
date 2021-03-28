@@ -130,6 +130,8 @@
            #:assert-euid-root
            #:assert-connection-supports
            #:call-with-os
+           #:with-change-if-changes-file
+           #:with-change-if-changes-file-content
 
            ;; propspec.lisp
            #:in-consfig

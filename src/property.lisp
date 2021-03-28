@@ -468,3 +468,35 @@ apply or unapply properties.")
   (unless (or (eq type :posix) (lisp-connection-p))
     (failed-change
      "Cannot apply :LISP properties using a POSIX-type connection")))
+
+(defun cksum (file)
+  (ignore-errors (parse-integer (car (split-string (mrun "cksum" file))))))
+
+;; this is a safe parse of ls(1) output given its POSIX specification
+(defun ls-cksum (file)
+  (let ((ls (ignore-errors
+             (split-string (mrun :env '(:LOCALE "C") "ls" "-dlL" file))))
+        (cksum (cksum file)))
+    (when (and ls cksum)
+      (list* (car ls) cksum (subseq ls 2 8)))))
+
+(defmacro with-change-if-changes-file ((file) &body forms)
+  "Execute FORMS and yield :NO-CHANGE if FILE does not change.
+Since stat(1) is not POSIX, this is implemented by calling `ls -dlL' and
+cksum(1), and seeing if any of the information reported there, except for the
+number of links, has changed.  Thus, you should not use this macro to detect
+changes in properties which will change the file but not the output of `ls
+-dlL' and cksum(1)."
+  (with-gensyms (before)
+    `(let* ((,before (ls-cksum ,file))
+            (result (progn ,@forms)))
+       (if (and ,before (equal ,before (ls-cksum ,file)))
+           :no-change result))))
+
+(defmacro with-change-if-changes-file-content ((file) &body forms)
+  "Execute FORMS and yield :NO-CHANGE if FILE has the same content afterwards."
+  (with-gensyms (before)
+    `(let* ((,before (cksum ,file))
+            (result (progn ,@forms)))
+       (if (and ,before (eql ,before (cksum ,file)))
+           :no-change result))))

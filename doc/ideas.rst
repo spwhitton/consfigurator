@@ -49,11 +49,6 @@ Core
   calling its :HOSTATTRS subroutine too -- could we figure out catching and
   ignoring the condition when its :HOSTATTRS subroutine did get run?
 
-- Macro for use in DEFPROP which works like Propellor's changesFile.  Will
-  probably output ``(:check ...)`` expression and then substitute user's code
-  into a ``(:apply ...)`` expression.  Use this or variants thereof in most of
-  the entries in ``PROPERTY.FILE``.
-
 - HOSTDEPLOY and HOSTDEPLOY-THESE functions which are like DEPLOY and
   DEPLOY-THESE but take the CONNECTION argument from the :DEPLOY argument to
   DEFHOST.
