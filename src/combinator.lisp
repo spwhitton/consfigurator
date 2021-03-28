@@ -78,21 +78,24 @@ apply the elements of REQUIREMENTS in reverse order."
 ;; note that the :FAILED-CHANGE value is only used within this function and
 ;; should not be returned by property subroutines, per the spec
 (defun apply-and-print (propapps &optional unapply)
-  (dolist (pa (if unapply (reverse propapps) propapps))
-    ;; TODO Nested combinators can mean that we establish this restart more
-    ;; than once, and they all appear in the debugger without any way to
-    ;; distinguish them.  Perhaps we can use the :TEST argument to
-    ;; RESTART-CASE such that only the innermost(?) skip option appears.
-    (let* ((result (restart-case
-                       (with-indented-inform
-                         (if unapply (propappunapply pa) (propappapply pa)))
-                     (skip-property () :failed-change)))
-           (status (case result
-                     (:no-change     "ok")
-                     (:failed-change "failed")
-                     (t              "done"))))
-      (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
-                (get-hostname) (propappdesc pa) status))))
+  (let ((ret :no-change))
+    (dolist (pa (if unapply (reverse propapps) propapps) ret)
+      ;; TODO Nested combinators can mean that we establish this restart more
+      ;; than once, and they all appear in the debugger without any way to
+      ;; distinguish them.  Perhaps we can use the :TEST argument to
+      ;; RESTART-CASE such that only the innermost(?) skip option appears.
+      (let* ((result (restart-case
+                         (with-indented-inform
+                           (if unapply (propappunapply pa) (propappapply pa)))
+                       (skip-property () :failed-change)))
+             (status (case result
+                       (:no-change     "ok")
+                       (:failed-change "failed")
+                       (t              "done"))))
+        (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
+                  (get-hostname) (propappdesc pa) status)
+        (unless (or (not ret) (eq result :no-change))
+          (setq ret nil))))))
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
