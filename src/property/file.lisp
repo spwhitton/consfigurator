@@ -35,24 +35,27 @@ CONTENT can be a list of lines or a single string."
   (declare (indent 1))
   (:desc (declare (ignore content))
          #?"${path} has defined content")
-  (:apply (writefile path (etypecase content
-                            (cons (unlines content))
-                            (string (format nil "~A~&" content))))))
+  (:apply (with-change-if-changes-file-content (path)
+            (writefile path (etypecase content
+                              (cons (unlines content))
+                              (string (format nil "~A~&" content)))))))
 
 (defprop contains-lines :posix (path lines)
   "Ensure there is a file at PATH containing each of LINES once."
   (:apply
-   (let ((new-lines (copy-list (ensure-cons lines)))
-         (existing-lines (lines (readfile path))))
-     (dolist (existing-line existing-lines)
-       (deletef new-lines existing-line :test #'string=))
-     (writefile path (unlines (nconc existing-lines new-lines))))))
+   (with-change-if-changes-file-content (path)
+     (let ((new-lines (copy-list (ensure-cons lines)))
+           (existing-lines (lines (readfile path))))
+       (dolist (existing-line existing-lines)
+         (deletef new-lines existing-line :test #'string=))
+       (writefile path (unlines (nconc existing-lines new-lines)))))))
 
 (defprop has-mode :posix (path mode)
   "Ensure that a file has a particular numeric mode."
   (:desc (format nil "~A has mode ~O" path mode))
   (:apply
-   (mrun (format nil "chmod ~O ~A" mode path))))
+   (with-change-if-changes-file (path)
+     (mrun (format nil "chmod ~O ~A" mode path)))))
 
 (defprop does-not-exist :posix (&rest paths)
   "Ensure that files do not exist."
@@ -67,7 +70,8 @@ CONTENT can be a list of lines or a single string."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (writefile destination (get-data-stream iden1 iden2))))
+   (with-change-if-changes-file-content (destination)
+     (writefile destination (get-data-stream iden1 iden2)))))
 
 (defprop host-data-uploaded :posix (destination)
   (:hostattrs
@@ -80,7 +84,8 @@ CONTENT can be a list of lines or a single string."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (writefile destination (get-data-stream iden1 iden2) :mode #o600)))
+   (with-change-if-changes-file-content (destination)
+     (writefile destination (get-data-stream iden1 iden2) :mode #o600))))
 
 (defprop host-secret-uploaded :posix (destination)
   (:hostattrs
