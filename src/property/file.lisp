@@ -101,4 +101,6 @@ Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
   "Ensure that a directory and its parents exists."
   (:desc (strcat dir " exists"))
   (:apply
-   (mrun "mkdir" "-p" dir)))
+   (mrun "mkdir" "-p" dir)
+   ;; assume it was already there
+   :no-change))
