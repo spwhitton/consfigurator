@@ -26,8 +26,9 @@ keyring."
    (list (remove #\Space fingerprint)))
   (:hostattrs
    (require-data "--pgp-pubkey" fingerprint))
-  (:check
-   (zerop (mrun :for-exit "gpg" "--list-public-keys" fingerprint)))
   (:apply
-   (mrun
-    :input (get-data-stream "--pgp-pubkey" fingerprint) "gpg" "--import")))
+   ;; always do an import, in case we have a newer version of the key than
+   ;; last time
+   (with-change-if-changes-file (".gnupg/pubring.kbx")
+     (mrun
+      :input (get-data-stream "--pgp-pubkey" fingerprint) "gpg" "--import"))))
