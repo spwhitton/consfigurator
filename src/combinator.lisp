@@ -136,5 +136,13 @@ ON-CHANGE in order."
             :args (cdr propapp)))
 
 (defmacro as (user &body properties)
-  "Apply PROPERTIES as USER by reconnecting with the :AS connection type."
-  `(reconnects. `((:as :to ,,user)) ,@properties))
+  "Apply PROPERTIES as USER by reconnecting with the :AS connection type.
+Note that the :AS connection type requires root, so as a special case, this
+macro just expands to ESEQPROPS if USER is the literal string \"root\"
+(without evaluation).  This makes it possible to use this macro to annotate
+applications of properties which are normally applied by non-root, to make it
+explicit that in this case they're being applied as root, e.g. that they will
+affect /root and not /home."
+  (if (and (stringp user) (string= user "root"))
+      `(eseqprops ,@properties)
+      `(reconnects. `((:as :to ,,user)) ,@properties)))
