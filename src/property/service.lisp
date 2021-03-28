@@ -56,7 +56,9 @@ properties."
   (:desc #?"Attempt to start ${service} has been made")
   (:apply
    (unless (get-hostattrs-car :no-services)
-     (run :may-fail "service" service "start"))))
+     (run :may-fail "service" service "start"))
+   ;; assume it was already running
+   :no-change))
 
 (define-function-property-combinator without-starting-services (&rest propapps)
   "Apply PROPAPPS with SERVICE:NO-SERVICES temporarily in effect."
