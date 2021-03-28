@@ -61,7 +61,7 @@ type for testing.  Another respect in which this is useful is that interactive
 debugging is not possible with connection types which start up remote Lisp
 images.
 
-We also have a few nice macros defined, though nothing too clever yet.
+We have a few nice macros defined, too.
 
 Installation and usage
 ======================
