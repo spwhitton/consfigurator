@@ -102,6 +102,7 @@
            #:delete-remote-tree
            #:readfile
            #:writefile
+           #:with-local-connection
 
            ;; property.lisp
            #:propattrs

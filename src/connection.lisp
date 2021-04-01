@@ -420,3 +420,11 @@ PATH may be any kind of file, including directories."
           ;; we may not be able to chown; that's okay
           (mrun :may-fail #?"chown ${uid}:${gid} ${namestring}")))
       (connection-writefile *connection* namestring content mode)))
+
+(defmacro with-local-connection (&body forms)
+  "Execute FORMS as though a :LOCAL connection had been established.
+This is for testing purposes at the REPL and in Consfigurator's test suite.
+FORMS is typically the programmatic application of one or more properties."
+  `(let ((*host* (make-host :propspec (make-propspec :systems nil)))
+         (*connection* (establish-connection :local nil)))
+     ,@forms))
