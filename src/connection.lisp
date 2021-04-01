@@ -408,7 +408,7 @@ PATH may be any kind of file, including directories."
       (re:register-groups-bind
           (((lambda (s) (delete #\- s)) umode gmode omode) uid gid)
           (#?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
-           (mrun "ls" "-nd" pathname) :sharedp t)
+           (run "ls" "-nd" pathname) :sharedp t)
         (connection-writefile *connection*
                               namestring
                               content
