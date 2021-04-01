@@ -223,9 +223,9 @@
            #:host-data-uploaded
            #:secret-uploaded
            #:host-secret-uploaded
-           #:contains-equals-conf
-           #:contains-space-conf
-           #:contains-shell-conf
+           #:contains-conf-equals
+           #:contains-conf-space
+           #:contains-conf-shell
            #:contains-ini-settings
            #:regex-replaced-lines
            #:directory-exists))

@@ -28,4 +28,4 @@
   "Set key--value pairs in /etc/ssh/sshd_config."
   (:desc (format nil "sshd configured ~{~A ~A~^, ~}" pairs))
   (:apply
-   (apply #'file:contains-space-conf "/home/spwhitton/tmp/config" pairs)))
+   (apply #'file:contains-conf-space "/home/spwhitton/tmp/config" pairs)))
