@@ -29,6 +29,12 @@
   ;; (values PID EXIT-STATUS), as SB-POSIX:WAITPID does
   #+sbcl (sb-posix:waitpid pid options))
 
+(defun wifexited (status)
+  #+sbcl (sb-posix:wifexited status))
+
+(defun wexitstatus (status)
+  #+sbcl (sb-posix:wexitstatus status))
+
 (defun can-probably-fork ()
   "Return nil if we can detect other running threads, and the Lisp
 implementation is known not to support forking when there are other threads.
@@ -78,15 +84,20 @@ for example, such that we don't see it."
          ;; (establish-connection :local)) here, but we need to kill
          ;; off the child afterwards, rather than returning to the
          ;; child's REPL or whatever else.
-         (continue-deploy* remaining)
-         (uiop:quit 0)))
+         (uiop:quit
+          (if (eql :no-change (continue-deploy* remaining))
+              0
+              1))))
       (t
-       (multiple-value-bind (_ status) (waitpid child 0)
-         (declare (ignore _))
-         (unless (zerop status)
-           ;; TODO instead of parsing the status ourselves here, maybe we
-           ;; can call the various C macros for parsing the status in wait(2)
-           (error
-            "Fork connection child failed, status #x~(~4,'0X~)" status)))
-       ;; return nil to %CONSFIGURE
-       nil))))
+       (multiple-value-bind (pid status) (waitpid child 0)
+         (declare (ignore pid))
+         (let ((exited (wifexited status)))
+           (unless exited
+             (error
+              "Fork connection child did not exit normally, status #x~(~4,'0X~)"
+              status))
+           (let ((exit-status (wexitstatus status)))
+             (unless (< exit-status 2)
+               (error
+                "Fork connection child failed, exit code ~D" exit-status))
+             (values nil (if (zerop status) :no-change nil)))))))))

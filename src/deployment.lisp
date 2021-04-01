@@ -33,13 +33,16 @@ preprocessed."
        (connect (connections)
          (destructuring-bind ((type . args) . remaining) connections
            ;; implementations of ESTABLISH-CONNECTION which call
-           ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us
-           (when-let ((*connection*
-                       (apply #'establish-connection type remaining args)))
-             (if remaining
-                 (connect remaining)
-                 (apply-*host*-propspec))
-             (connection-teardown *connection*)))))
+           ;; CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM return nil to us,
+           ;; and possibly :NO-CHANGE as a second value
+           (multiple-value-bind (*connection* return)
+               (apply #'establish-connection type remaining args)
+             (if *connection*
+                 (prog1 (if remaining
+                            (connect remaining)
+                            (apply-*host*-propspec))
+                   (connection-teardown *connection*))
+                 return)))))
     (let ((*host* (preprocess-host host)))
       (cond
         ((and connections (or *connection* (eq :local (caar connections))))
