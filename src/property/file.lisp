@@ -23,7 +23,7 @@
 
 For efficiency, a :LISP property might want to use streams, but there's no
 point in doing that here because WRITEFILE is synchronous."
-  (let* ((orig-lines (lines (readfile file)))
+  (let* ((orig-lines (and (remote-exists-p file) (lines (readfile file))))
          (new-lines (funcall function orig-lines)))
     (if (equal orig-lines new-lines)
         :no-change
