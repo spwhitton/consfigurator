@@ -17,8 +17,6 @@
 
 (in-package :consfigurator.connection.chroot.fork)
 (named-readtables:in-readtable :consfigurator)
-#+sbcl (eval-when (:compile-toplevel :load-toplevel :execute)
-         (require "sb-posix"))
 
 (defun chroot (path)
   #+sbcl      (sb-posix:chroot path)

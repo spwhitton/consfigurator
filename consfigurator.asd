@@ -12,6 +12,7 @@
                #:cl-interpol
                #:named-readtables
                #:cffi
+               #+sbcl #:sb-posix
                #:trivial-backtrace
                #:trivial-macroexpand-all)
   :components ((:file "src/package")

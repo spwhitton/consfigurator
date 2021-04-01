@@ -473,10 +473,9 @@ chance of those passwords showing up in the clear in the Lisp debugger."
 
 ;;;; Programs for remote Lisp images
 
-;; TODO unclear whether the need for this is a bug in trivial-macroexpand-all
-(define-constant +continue-deploy*-program-implementation-specific+
-  "#+sbcl (require \"sb-cltl2\")"
-  :test #'equal)
+;; TODO unclear whether the need for sb-cltl2 require is a bug in trivial-macroexpand-all
+(defparameter continue-deploy*-program-implementation-specific
+  "#+sbcl (require \"sb-posix\") #+sbcl (require \"sb-cltl2\")")
 
 (defun continue-deploy*-program (remaining-connections)
   "Return a program to complete the work of an enclosing call to DEPLOY*.
@@ -561,7 +560,7 @@ Preprocessing must occur in the root Lisp."))
               ;; those packages
               (values
                (format nil "~A~%~{~A~^~%~}"
-                       +continue-deploy*-program-implementation-specific+
+                       continue-deploy*-program-implementation-specific
                        (mapcar #'prin1-to-string forms))
                forms)))
         (print-not-readable (c)

@@ -17,8 +17,6 @@
 
 (in-package :consfigurator.connection.setuid)
 (named-readtables:in-readtable :consfigurator)
-#+sbcl (eval-when (:compile-toplevel :load-toplevel :execute)
-         (require "sb-posix"))
 
 (defun setuid (uid)
   #+sbcl      (sb-posix:setuid uid)

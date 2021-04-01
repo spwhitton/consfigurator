@@ -17,8 +17,6 @@
 
 (in-package :consfigurator.connection.fork)
 (named-readtables:in-readtable :consfigurator)
-#+sbcl (eval-when (:compile-toplevel :load-toplevel :execute)
-         (require "sb-posix"))
 
 ;; Use only implementation-specific fork and waitpid calls to avoid thread
 ;; woes.  Things like chroot(2) and setuid(2), however, should be okay.
