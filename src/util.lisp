@@ -150,7 +150,7 @@ one solution is to convert your property to a :LISP property."
 
 ;;;; Progress & debug printing
 
-(defvar *consfigurator-debug-level* nil
+(defvar *consfigurator-debug-level* 0
   "Integer.  Higher values mean be more verbose during deploys.")
 
 (defvar *inform-prefix* ";; ")
