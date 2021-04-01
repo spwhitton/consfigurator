@@ -1,4 +1,4 @@
-(asdf:defsystem :consfigurator
+(defsystem "consfigurator"
   :description "Lisp declarative configuration management system"
   :version "0.3.1"
   :author "Sean Whitton <spwhitton@spwhitton.name>"
