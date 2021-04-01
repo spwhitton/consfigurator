@@ -402,7 +402,7 @@ PATH may be any kind of file, including directories."
   ;; one owned by us, which we might not be able to chown back as non-root.
   ;;
   ;; The following, simpler behaviour should fit most sysadmin needs.
-  (if (test "-f" pathname)
+  (if (remote-exists-p pathname)
       ;; seems there is nothing like stat(1) in POSIX, and note that
       ;; --reference for chmod(1) and chown(1) is not POSIX
       (re:register-groups-bind
