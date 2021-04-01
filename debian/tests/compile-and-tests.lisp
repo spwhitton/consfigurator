@@ -11,3 +11,5 @@
 ;; whether any tests failed
 (unless (consfigurator/tests::do-tests)
   (uiop:quit 2))
+
+(fresh-line)
