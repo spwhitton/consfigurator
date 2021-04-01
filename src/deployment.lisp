@@ -167,6 +167,8 @@ ADDITIONAL-PROPERTIES also applied to HOST, like DEPLOY.
 
 Useful to have one host act a controller, applying properties to other hosts.
 Also useful to set up VMs, chroots, disk images etc. on localhost."
+  (:desc (declare (ignore connections host additional-properties))
+         "Subdeployment")
   (:preprocess
    (list (preprocess-connections connections)
          (preprocess-host
@@ -184,6 +186,7 @@ Also useful to set up VMs, chroots, disk images etc. on localhost."
   "Like DEPLOYS, except apply to HOST each of the properties specified by
 PROPERTIES, and not the host's usual properties, unless they also appear in
 PROPERTIES, like DEPLOY-THESE."
+  (:desc (declare (ignore connections host properties)) "Subdeployment")
   (:preprocess
    (list (preprocess-connections connections)
          (preprocess-host (replace-propspec-into-host host properties))))
@@ -198,6 +201,7 @@ PROPERTIES, like DEPLOY-THESE."
   "Connect back to the same host with CONNECTIONS and apply PROPERTIES.
 Mainly useful for using a connection type like :AS to apply properties as a
 different user."
+  (:desc (declare (ignore connections properties)) "Reconnection")
   (:preprocess
    (list (preprocess-connections connections)
          (list :host nil :propspec properties)))
