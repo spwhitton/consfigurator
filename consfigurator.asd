@@ -51,4 +51,18 @@
                (:file "src/data/asdf")
                (:file "src/data/pgp")
 	       (:file "src/data/git-snapshot")
-	       (:file "src/data/gpgpubkeys")))
+	       (:file "src/data/gpgpubkeys"))
+  :in-order-to ((test-op (test-op "consfigurator/tests"))))
+
+(defsystem "consfigurator/tests"
+  :description
+  "Tests for Consfigurator, Lisp declarative configuration management system"
+  :version "0.3.1"
+  :author "Sean Whitton <spwhitton@spwhitton.name>"
+  :licence "GPL-3+"
+  :serial t
+  :depends-on (#:consfigurator
+               #+sbcl #:sb-rt #-sbcl #:rt)
+  :components ((:file "tests/package")
+               (:file "tests/property/file"))
+  :perform (test-op (o c) (symbol-call :consfigurator/tests '#:do-tests)))
