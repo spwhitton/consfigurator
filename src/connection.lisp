@@ -405,20 +405,25 @@ PATH may be any kind of file, including directories."
   (if (remote-exists-p pathname)
       ;; seems there is nothing like stat(1) in POSIX, and note that
       ;; --reference for chmod(1) and chown(1) is not POSIX
-      (re:register-groups-bind
-          (((lambda (s) (delete #\- s)) umode gmode omode) uid gid)
-          (#?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
-           (run "ls" "-nd" pathname) :sharedp t)
-        (connection-writefile *connection*
-                              namestring
-                              content
-                              mode)
-        (let ((namestring (escape-sh-token namestring)))
-          (unless mode-supplied-p
-            ;; assume that if we can write it we can chmod it
-            (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${namestring}"))
-          ;; we may not be able to chown; that's okay
-          (mrun :may-fail #?"chown ${uid}:${gid} ${namestring}")))
+      (flet ((dehyphen (s) (delete #\- s)))
+        (multiple-value-bind (match groups)
+            (re:scan-to-strings #?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
+                                (run "ls" "-nd" pathname))
+          (unless match
+            (error
+             "WRITEFILE could not determine ownership and mode of ~A" pathname))
+          (let ((umode (dehyphen (elt groups 0)))
+                (gmode (dehyphen (elt groups 1)))
+                (omode (dehyphen (elt groups 2)))
+                (uid (elt groups 3))
+                (gid (elt groups 4)))
+            (connection-writefile *connection* namestring content mode)
+            (let ((namestring (escape-sh-token namestring)))
+              (unless mode-supplied-p
+                ;; assume that if we can write it we can chmod it
+                (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${namestring}"))
+              ;; we may not be able to chown; that's okay
+              (mrun :may-fail #?"chown ${uid}:${gid} ${namestring}")))))
       (connection-writefile *connection* namestring content mode)))
 
 (defmacro with-local-connection (&body forms)
