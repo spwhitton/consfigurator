@@ -1,4 +1,4 @@
-Test-Command: sbcl --script debian/tests/compile.lisp
+Test-Command: sbcl --script debian/tests/compile-and-tests.lisp
 Depends:
  sbcl,
  @,
