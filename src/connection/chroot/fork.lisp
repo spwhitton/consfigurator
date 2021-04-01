@@ -29,14 +29,15 @@
   (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
     (error "~&Forking into a chroot requires a Lisp image running as root"))
   (informat 1 "~&Forking into chroot at ~A" into)
-  (let* ((datadir-inside
+  (let* ((into* (ensure-pathname into))
+         (datadir-inside
            (stripln
             (mrun
              "chroot" into
              "echo" "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))
          (datadir (ensure-pathname
                    (subseq datadir-inside 1)
-                   :defaults into :ensure-absolute t :ensure-directory t)))
+                   :defaults into* :ensure-absolute t :ensure-directory t)))
     (continue-connection
      (make-instance 'chroot.fork-connection :into into :datadir datadir)
      remaining)))
