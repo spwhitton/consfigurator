@@ -54,6 +54,12 @@ Try it out / quick start
 	  (apt:uses-local-cacher) ; sets up apt-cacher-ng
 	  (apt:standard-sources.list)
 
+	  ;; Set key--value pairs in INI-style files.  Consfigurator will
+	  ;; uncomment existing lines in preference to adding new ones, for
+	  ;; readability.
+	  (file:contains-ini-settings "/etc/systemd/logind.conf"
+	                              '("Login" "KillUserProcesses" "no"))
+
 	  (apt:service-installed-running "apache2")
 
 	  ;; Apply some properties as a non-root user.
