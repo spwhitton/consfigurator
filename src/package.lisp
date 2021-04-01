@@ -222,7 +222,8 @@
            #:host-data-uploaded
            #:secret-uploaded
            #:host-secret-uploaded
-           #:contains-conf-pairs
+           #:contains-equals-conf
+           #:contains-space-conf
            #:contains-shell-conf
            #:contains-ini-settings
            #:regex-replaced-lines

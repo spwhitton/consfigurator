@@ -241,7 +241,7 @@ Other arguments:
                      finally (return (nconc new-lines accum)))))
            args))))
 
-(defprop contains-conf-pairs :posix (file &rest pairs)
+(defprop contains-space-conf :posix (file &rest pairs)
   "Where FILE is a config file in which keys and values are separated by spaces
 and there are no sections, and PAIRS is a list of even length of alternating
 keys and values, set each of these keys and values in FILE.
@@ -253,6 +253,19 @@ uncommented and used to set the value, if it exists."
   (:apply (simple-conf-update file pairs
                               :parse-kv #?/^(\S+) (.+)/
                               :new-kv (lambda (k v) #?"${k} ${v}"))))
+
+(defprop contains-equals-conf :posix (file &rest pairs)
+  "Where FILE is a config file in which keys and values are separated by \" = \"
+and there are no sections, and PAIRS is a list of even length of alternating
+keys and values, set each of these keys and values in FILE.
+
+If there are any other lines which set values for the same keys, they will be
+commented out; the first commented or uncommented line for each key will be
+uncommented and used to set the value, if it exists."
+  (:desc (format nil "~A has ~{~A = ~A~^, ~}" file pairs))
+  (:apply (simple-conf-update file pairs
+                              :parse-kv #?/^(\S+) = (.+)/
+                              :new-kv (lambda (k v) #?"${k} = ${v}"))))
 
 (defprop contains-shell-conf :posix (file &rest pairs)
   "Where FILE is a shell config file, like those in /etc/default, and PAIRS is a
