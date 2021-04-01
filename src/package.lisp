@@ -300,6 +300,15 @@
   (:local-nicknames (#:file      #:consfigurator.property.file))
   (:export #:snapshot-extracted))
 
+(defpackage :consfigurator.property.sshd
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:re        #:cl-ppcre)
+                    (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
+                    (#:apt       #:consfigurator.property.apt))
+  (:export #:installed
+           #:config-set))
+
 (defpackage :consfigurator.connection.shell-wrap
   (:use #:cl #:consfigurator)
   (:export #:shell-wrap-connection #:connection-shell-wrap))
