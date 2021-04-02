@@ -86,11 +86,13 @@ For an example of usage, see the :SUDO connection type."))
     "The name of the remote user.")))
 
 (defun reset-remote-home ()
-  "Clear the cache of the remote user's home directory.
+  "Clear the cache of the remote user's home directory, uid and name.
 Used by implementations of ESTABLISH-CONNECTION which will invalidate the
-cached value, such as a connection which forks and then SETUIDs to another
+cached values, such as a connection which forks and then SETUIDs to another
 user.  Should not be called by properties."
-  (setf (slot-value *connection* 'remote-home) nil))
+  (setf (slot-value *connection* 'remote-home) nil
+        (slot-value *connection* 'remote-uid) nil
+        (slot-value *connection* 'remote-user) nil))
 
 (defclass lisp-connection (connection) ())
 
