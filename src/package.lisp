@@ -217,6 +217,7 @@
   (:local-nicknames (#:re #:cl-ppcre))
   (:export #:has-content
            #:contains-lines
+           #:lacks-lines
            #:has-mode
            #:does-not-exist
            #:data-uploaded

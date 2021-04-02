@@ -51,6 +51,13 @@ CONTENT can be a list of lines or a single string."
          (deletef new-lines existing-line :test #'string=))
        (writefile path (unlines (nconc existing-lines new-lines)))))))
 
+(defprop lacks-lines :posix (path &rest lines)
+  "If there is a file at PATH, ensure it does not contain any of LINES."
+  (:apply
+   (map-file-lines
+    path
+    (curry #'remove-if (lambda (l) (member l lines :test #'string=))))))
+
 (defprop has-mode :posix (path mode)
   "Ensure that a file has a particular numeric mode."
   (:desc (format nil "~A has mode ~O" path mode))
