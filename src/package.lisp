@@ -215,7 +215,8 @@
 (defpackage :consfigurator.property.file
   (:use #:cl #:consfigurator #:alexandria)
   (:local-nicknames (#:re #:cl-ppcre))
-  (:export #:has-content
+  (:export #:map-file-lines
+           #:has-content
            #:contains-lines
            #:lacks-lines
            #:has-mode
