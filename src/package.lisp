@@ -129,6 +129,7 @@
            #:require-data
            #:failed-change
            #:assert-euid-root
+           #:get-user
            #:assert-connection-supports
            #:call-with-os
            #:with-change-if-changes-file

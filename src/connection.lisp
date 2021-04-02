@@ -79,7 +79,11 @@ For an example of usage, see the :SUDO connection type."))
    (remote-uid
     :initform nil
     :documentation
-    "Effective user-id of the remote (deploying) user")))
+    "Effective user-id of the remote (deploying) user")
+   (remote-user
+    :initform nil
+    :documentation
+    "The name of the remote user.")))
 
 (defun reset-remote-home ()
   "Clear the cache of the remote user's home directory.
