@@ -45,7 +45,8 @@ CONTENT can be a list of lines or a single string."
   (:apply
    (with-change-if-changes-file-content (path)
      (let ((new-lines (copy-list (ensure-cons lines)))
-           (existing-lines (lines (readfile path))))
+           (existing-lines (and (remote-exists-p path)
+                                (lines (readfile path)))))
        (dolist (existing-line existing-lines)
          (deletef new-lines existing-line :test #'string=))
        (writefile path (unlines (nconc existing-lines new-lines)))))))
