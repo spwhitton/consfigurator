@@ -294,6 +294,8 @@ subroutine does not push any new hostattrs."
   (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
         do (if-let ((slot (getf slots kw)))
              (setf (getf slots kw)
+                   ;; TODO wrap a BLOCK around ,@slot with the property name,
+                   ;; so we can return from it
                    `(lambda ,lambda ,@slot)))))
 
 (define-property-defining-macro defpropspec (type lambda slots forms)
