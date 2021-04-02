@@ -311,7 +311,7 @@
                     (#:file      #:consfigurator.property.file)
                     (#:apt       #:consfigurator.property.apt))
   (:export #:installed
-           #:config-set))
+           #:configured))
 
 (defpackage :consfigurator.connection.shell-wrap
   (:use #:cl #:consfigurator)
