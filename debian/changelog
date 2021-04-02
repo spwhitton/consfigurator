@@ -1,3 +1,9 @@
+consfigurator (0.5.0-1) experimental; urgency=medium
+
+  * New upstream release.
+
+ -- Sean Whitton <spwhitton@spwhitton.name>  Thu, 01 Apr 2021 23:45:51 -0700
+
 consfigurator (0.4.1-1) experimental; urgency=medium
 
   * New upstream release.
