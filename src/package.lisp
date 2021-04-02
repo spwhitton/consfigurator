@@ -312,7 +312,8 @@
                     (#:file      #:consfigurator.property.file)
                     (#:apt       #:consfigurator.property.apt))
   (:export #:installed
-           #:configured))
+           #:configured
+           #:no-passwords))
 
 (defpackage :consfigurator.connection.shell-wrap
   (:use #:cl #:consfigurator)

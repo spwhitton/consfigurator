@@ -29,3 +29,16 @@
   (:desc (format nil "sshd configured ~{~A ~A~^, ~}" pairs))
   (:apply
    (apply #'file:contains-conf-space "/etc/ssh/sshd_config" pairs)))
+
+(defprop no-passwords :posix ()
+  "Configure SSH to disallow password logins.
+To prevent lockouts, also enables logging in as root with an SSH key, and
+refuses to proceed if root has no authorized_keys."
+  (:desc "SSH passwords disabled")
+  (:apply
+   (assert-euid-root)
+   (unless (and (remote-exists-p ".ssh/authorized_keys")
+                (plusp (length (readfile ".ssh/authorized_keys"))))
+     (failed-change "root has no authorized_keys"))
+   (configured "PermitRootLogin" "without-password"
+               "PasswordAuthentication" "no")))
