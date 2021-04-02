@@ -127,15 +127,17 @@ ON-CHANGE in order."
             :hostattrs (lambda (&rest args)
                          (apply #'propattrs (car propapp) args))
             :apply (lambda (&rest args)
-                     (unless (eq (propappapply (cons (car propapp) args))
-                                 :no-change)
-                       (dolist (propapp propapps)
-                         (propappapply propapp))))
+                     (if (eql :no-change
+                              (propappapply (cons (car propapp) args)))
+                         :no-change
+                         (dolist (propapp propapps)
+                           (propappapply propapp))))
             :unapply (lambda (&rest args)
-                       (unless (eq (propappunapply (cons (car propapp) args))
-                                   :no-change)
-                         (dolist (propapp (reverse propapps))
-                           (propappunapply propapp))))
+                       (if (eql :no-change
+                                (propappunapply (cons (car propapp) args)))
+                           :no-change
+                           (dolist (propapp (reverse propapps))
+                             (propappunapply propapp))))
             :args (cdr propapp)))
 
 (defmacro as (user &body properties)
