@@ -35,6 +35,7 @@
                (:file "src/property/user")
                (:file "src/property/git")
                (:file "src/property/gnupg")
+               (:file "src/property/ssh")
                (:file "src/property/sshd")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")

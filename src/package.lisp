@@ -305,6 +305,11 @@
   (:local-nicknames (#:file      #:consfigurator.property.file))
   (:export #:snapshot-extracted))
 
+(defpackage :consfigurator.property.ssh
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:file      #:consfigurator.property.file))
+  (:export #:authorized-keys))
+
 (defpackage :consfigurator.property.sshd
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:re        #:cl-ppcre)
