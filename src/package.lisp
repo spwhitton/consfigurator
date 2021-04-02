@@ -143,6 +143,7 @@
            #:append-propspecs
 
 	   ;; combinator.lisp
+           #:noop
            #:define-function-property-combinator
            #:define-choosing-property-combinator
            #:seqprops
@@ -236,7 +237,7 @@
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
-  (:shadow #:etypecase)
+  (:shadow #:typecase #:etypecase)
   (:export #:unixlike
            #:linux
            #:linux-architecture
@@ -247,6 +248,8 @@
            #:debian-unstable
            #:debian-suite
            #:debian-architecture
+           #:typecase
+           #:host-typecase
            #:etypecase
            #:host-etypecase
            #:required

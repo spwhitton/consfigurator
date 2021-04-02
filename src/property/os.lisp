@@ -83,28 +83,50 @@
 
 ;;;; Property combinators
 
+(defun typecase-type (cases)
+  (collapse-types (loop for propapp in (cdr cases) by #'cddr
+                        collect (propapptype propapp))))
+
+(defun typecase-host (host)
+  (class-of (if host
+                (car (getf (hostattrs host) :os))
+                (get-hostattrs-car :os))))
+
+(defun typecase-choose (host cases)
+  (loop with os = (typecase-host host)
+        for (type propapp) on cases by #'cddr
+        when (subtypep os type) return propapp))
+
+(define-choosing-property-combinator os-typecase* (host &rest cases)
+  :type (typecase-type cases)
+  :choose (or (typecase-choose host cases) '(noop)))
+
 (define-choosing-property-combinator os-etypecase* (host &rest cases)
-  :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
-                              collect (propapptype propapp)))
-  :choose (or (loop with os = (class-of (if host
-                                            (car (getf (hostattrs host) :os))
-                                            (get-hostattrs-car :os)))
-                    for (type propapp) on cases by #'cddr
-                    when (subtypep os type) return propapp)
-              (inapplicable-property
-               "Host's OS ~S fell through OS:ETYPECASE."
-               (class-of (get-hostattrs-car :os)))))
+  :type (typecase-type cases)
+  :choose
+  (or (typecase-choose host cases)
+      (inapplicable-property
+       "Host's OS ~S fell through OS:ETYPECASE." (typecase-host host))))
 
-(defmacro etypecase (&body cases)
-  `(host-etypecase nil ,@cases))
-
-(defmacro host-etypecase (host &body cases)
-  `(os-etypecase*
+(defmacro host-typecase* (macro host &body cases)
+  `(,macro
     ,host
     ,@(loop for case in cases
             collect `',(intern (symbol-name (car case))
                                (find-package :consfigurator.property.os))
             collect (cadr case))))
+
+(defmacro typecase (&body cases)
+  `(host-typecase* os-typecase* nil ,@cases))
+
+(defmacro etypecase (&body cases)
+  `(host-typecase* os-etypecase* nil ,@cases))
+
+(defmacro host-typecase (host &body cases)
+  `(host-typecase* os-typecase* ,host ,@cases))
+
+(defmacro host-etypecase (host &body cases)
+  `(host-typecase* os-etypecase* ,host ,@cases))
 
 
 ;;;; Utilities

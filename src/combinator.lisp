@@ -20,6 +20,11 @@
 
 ;;;; Property combinators
 
+(defprop noop :posix (&rest args)
+  "A property which accepts any number of arguments and does nothing."
+  (:desc (declare (ignore args)) "No-op property")
+  (:hostattrs (declare (ignore args))))
+
 (defmacro define-function-property-combinator (name args &body body)
   (multiple-value-bind (forms declarations docstring)
       (parse-body body :documentation t)
