@@ -452,7 +452,7 @@ apply or unapply properties.")
 
 (defun assert-euid-root ()
   "Assert that the remote user has uid 0 (root)"
-  (if-let (uid (slot-value *connection* 'remote-uid))
+  (if-let ((uid (slot-value *connection* 'remote-uid)))
     (unless (zerop uid)
       (failed-change "Property requires root to apply"))
     (multiple-value-bind (out err exit)
