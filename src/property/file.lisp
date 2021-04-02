@@ -40,7 +40,7 @@ CONTENT can be a list of lines or a single string."
                               (cons (unlines content))
                               (string (format nil "~A~&" content)))))))
 
-(defprop contains-lines :posix (path lines)
+(defprop contains-lines :posix (path &rest lines)
   "Ensure there is a file at PATH containing each of LINES once."
   (:apply
    (with-change-if-changes-file-content (path)
