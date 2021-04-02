@@ -33,6 +33,24 @@
                   (return-from ,name (list* psym args)))))
          ,@forms))))
 
+(defmacro define-choosing-property-combinator
+    (name lambda-list &key type choose)
+  `(define-function-property-combinator ,name ,lambda-list
+     (flet ((choose-propapp () ,choose))
+       (:retprop :type ,type
+                 :desc (lambda (&rest args)
+                         (declare (ignore args))
+                         (propappdesc (choose-propapp)))
+                 :hostattrs (lambda (&rest args)
+                              (declare (ignore args))
+                              (propappattrs (choose-propapp)))
+                 :apply (lambda (&rest args)
+                          (declare (ignore args))
+                          (propappapply (choose-propapp)))
+                 :unapply (lambda (&rest args)
+                            (declare (ignore args))
+                            (propappunapply (choose-propapp)))))))
+
 (defmacro with-skip-failed-changes (&body forms)
   `(handler-bind ((failed-change
                     (lambda (c)

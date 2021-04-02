@@ -83,30 +83,17 @@
 
 ;;;; Property combinators
 
-(define-function-property-combinator os-etypecase* (host &rest cases)
-  (flet ((choose-propapp ()
-           (or (loop with os = (class-of (if host
-                                             (car (getf (hostattrs host) :os))
-                                             (get-hostattrs-car :os)))
-                     for (type propapp) on cases by #'cddr
-                     when (subtypep os type) return propapp)
-               (inapplicable-property
-                "Host's OS ~S fell through OS:ETYPECASE."
-                (class-of (get-hostattrs-car :os))))))
-    (:retprop :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
-                                          collect (propapptype propapp)))
-              :desc (lambda (&rest args)
-                      (declare (ignore args))
-                      (propappdesc (choose-propapp)))
-              :hostattrs (lambda (&rest args)
-                           (declare (ignore args))
-                           (propappattrs (choose-propapp)))
-              :apply (lambda (&rest args)
-                       (declare (ignore args))
-                       (propappapply (choose-propapp)))
-              :unapply (lambda (&rest args)
-                         (declare (ignore args))
-                         (propappunapply (choose-propapp))))))
+(define-choosing-property-combinator os-etypecase* (host &rest cases)
+  :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
+                              collect (propapptype propapp)))
+  :choose (or (loop with os = (class-of (if host
+                                            (car (getf (hostattrs host) :os))
+                                            (get-hostattrs-car :os)))
+                    for (type propapp) on cases by #'cddr
+                    when (subtypep os type) return propapp)
+              (inapplicable-property
+               "Host's OS ~S fell through OS:ETYPECASE."
+               (class-of (get-hostattrs-car :os)))))
 
 (defmacro etypecase (&body cases)
   `(host-etypecase nil ,@cases))

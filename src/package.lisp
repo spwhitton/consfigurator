@@ -144,6 +144,7 @@
 
 	   ;; combinator.lisp
            #:define-function-property-combinator
+           #:define-choosing-property-combinator
            #:seqprops
            #:eseqprops
            #:with-requirements
