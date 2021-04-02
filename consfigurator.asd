@@ -37,6 +37,7 @@
                (:file "src/property/gnupg")
                (:file "src/property/ssh")
                (:file "src/property/sshd")
+               (:file "src/property/locale")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
                (:file "src/connection/rehome")

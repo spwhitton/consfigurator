@@ -320,6 +320,16 @@
            #:configured
            #:no-passwords))
 
+(defpackage :consfigurator.property.locale
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:re        #:cl-ppcre)
+                    (#:os        #:consfigurator.property.os)
+                    (#:apt       #:consfigurator.property.apt)
+                    (#:cmd       #:consfigurator.property.cmd)
+                    (#:file      #:consfigurator.property.file))
+  (:export #:available
+           #:selected-for))
+
 (defpackage :consfigurator.connection.shell-wrap
   (:use #:cl #:consfigurator)
   (:export #:shell-wrap-connection #:connection-shell-wrap))
