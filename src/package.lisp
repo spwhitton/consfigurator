@@ -235,7 +235,7 @@
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
-  (:shadow #:typecase)
+  (:shadow #:etypecase)
   (:export #:unixlike
            #:linux
            #:linux-architecture
@@ -246,8 +246,8 @@
            #:debian-unstable
            #:debian-suite
            #:debian-architecture
-           #:typecase
-           #:host-typecase
+           #:etypecase
+           #:host-etypecase
            #:required
            #:supports-arch-p))
 

@@ -45,8 +45,8 @@ configuration instead of editing /usr/sbin/policy-rc.d, this limitation should
 not affect you."
   (:desc #?"Starting services disabled")
   (%no-services)
-  (os:typecase
-    (debianlike (%policy-rc.d))))
+  (os:etypecase
+      (debianlike (%policy-rc.d))))
 
 (defprop running :posix (service)
   "Attempt to start service using service(1).

@@ -83,7 +83,7 @@
 
 ;;;; Property combinators
 
-(define-function-property-combinator os-typecase* (host &rest cases)
+(define-function-property-combinator os-etypecase* (host &rest cases)
   (flet ((choose-propapp ()
            (or (loop with os = (class-of (if host
                                              (car (getf (hostattrs host) :os))
@@ -91,7 +91,7 @@
                      for (type propapp) on cases by #'cddr
                      when (subtypep os type) return propapp)
                (inapplicable-property
-                "Host's OS ~S fell through OS:TYPECASE."
+                "Host's OS ~S fell through OS:ETYPECASE."
                 (class-of (get-hostattrs-car :os))))))
     (:retprop :type (collapse-types (loop for propapp in (cdr cases) by #'cddr
                                           collect (propapptype propapp)))
@@ -108,11 +108,11 @@
                          (declare (ignore args))
                          (propappunapply (choose-propapp))))))
 
-(defmacro typecase (&body cases)
-  `(host-typecase nil ,@cases))
+(defmacro etypecase (&body cases)
+  `(host-etypecase nil ,@cases))
 
-(defmacro host-typecase (host &body cases)
-  `(os-typecase*
+(defmacro host-etypecase (host &body cases)
+  `(os-etypecase*
     ,host
     ,@(loop for case in cases
             collect `',(intern (symbol-name (car case))

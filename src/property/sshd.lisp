@@ -21,7 +21,7 @@
 (defproplist installed :posix ()
   "Install an OpenSSH server."
   (:desc "OpenSSH server installed")
-  (os:typecase
+  (os:etypecase
       (debianlike (apt:installed "openssh-server"))))
 
 (defprop configured :posix (&rest pairs)

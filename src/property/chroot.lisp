@@ -44,9 +44,9 @@
 
 (defpropspec %os-bootstrapper-installed :posix (host)
   (:desc (declare (ignore host)) "OS bootstrapper installed")
-  `(os:host-typecase ,host
+  `(os:host-etypecase ,host
      (debian
-      (os:typecase
+      (os:etypecase
         (debianlike (apt:installed "debootstrap"))))))
 
 (defpropspec %os-bootstrapped :posix (options root host)
@@ -55,7 +55,7 @@
   ;; for sending to remote Lisp images
   (:desc (declare (ignore options root host)) "OS bootstrapped")
   (let ((host host))
-    `(os:host-typecase ,host
+    `(os:host-etypecase ,host
        (debian (%debootstrapped ,root ,host ,@options)))))
 
 (defproplist os-bootstrapped :lisp

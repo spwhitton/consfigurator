@@ -21,7 +21,7 @@
 (defproplist sbcl-available :posix ()
   (:check
    (zerop (mrun :for-exit "command" "-v" "sbcl")))
-  (os:typecase
+  (os:etypecase
       (debianlike (apt:installed "sbcl"))))
 
 (defmethod establish-connection ((type (eql :sbcl)) remaining &key)
