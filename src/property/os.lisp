@@ -36,7 +36,7 @@
           :initform (error "Must provide suite"))))
 
 (defmethod print-object ((os debian) stream)
-  (format stream "#.~S" `(make-instance 'debian
+  (format stream "#.~S" `(make-instance ',(type-of os)
                                         :arch ,(linux-architecture os)
                                         :suite ,(debian-suite os)))
   os)
