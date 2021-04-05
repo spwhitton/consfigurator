@@ -157,30 +157,36 @@ see MAP-PROPSPEC-PROPAPPS for how they are used.")
 
 (defun store-indentation-info-for-emacs (sym args &optional info)
   (unless (string-prefix-p "%" (symbol-name sym))
-   (let* ((package-short-name
-            (lastcar (split-string (package-name *package*) :separator ".")))
-          (short-name
-            (if (string= package-short-name "CONSFIGURATOR")
-                (symbol-name sym)
-                (strcat package-short-name ":" (symbol-name sym))))
-          (dotted-name (strcat short-name "."))
-          indent)
-     (cond
-       (info
-	(push (cons short-name info) indent)
-	(push (cons dotted-name info) indent))
-       ((not (find '&key args))
-	(let ((n (1- (loop with n = 0
-                           for arg in args
-                           if (member arg '(&rest &body &aux))
-                             return (1+ n)
-                           unless (eq arg '&optional)
-                             do (incf n)
-                           finally (return n)))))
-          (when (plusp n)
-            (push (cons dotted-name n) indent)))))
-     (when indent
-       (setf (get sym 'indent) indent)))))
+    (let* ((package-short-name
+             (lastcar (split-string (package-name *package*) :separator ".")))
+           (short-name
+             (if (string= package-short-name "CONSFIGURATOR")
+                 (symbol-name sym)
+                 (strcat package-short-name ":" (symbol-name sym))))
+           (dotted-name (strcat short-name "."))
+           (dotted-exported
+             (eql :external (nth-value
+                             1
+                             (find-symbol (strcat (symbol-name sym) ".")
+                                          (symbol-package sym)))))
+           indent)
+      (cond
+        (info
+	 (push (cons short-name info) indent)
+         (when dotted-exported
+	   (push (cons dotted-name info) indent)))
+        ((and dotted-exported (not (find '&key args)))
+	 (let ((n (1- (loop with n = 0
+                            for arg in args
+                            if (member arg '(&rest &body &aux))
+                              return (1+ n)
+                            unless (eq arg '&optional)
+                              do (incf n)
+                            finally (return n)))))
+           (when (plusp n)
+             (push (cons dotted-name n) indent)))))
+      (when indent
+        (setf (get sym 'indent) indent)))))
 
 (defmacro define-dotted-property-macro (name args &aux (whole (gensym)))
   "Affix a period to the end of NAME and define a macro expanding into a
