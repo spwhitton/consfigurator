@@ -212,11 +212,13 @@ dotted name alongside NAME."
                                      :propspec (props eseqprops ,@,rest)))))
              (first
               `((declare (ignore ,@(cdr (ordinary-ll-variable-names
-                                         (ordinary-ll-without-&aux args)))))
+                                         (ordinary-ll-without-&aux args)
+                                         :include-supplied-p t))))
                 (list* ',name ,first (cddr ,whole))))
              (t
               `((declare (ignore ,@(ordinary-ll-variable-names
-                                    (ordinary-ll-without-&aux args))))
+                                    (ordinary-ll-without-&aux args)
+                                    :include-supplied-p t)))
                 (cons ',name (cdr ,whole)))))))))
 
 (defmacro define-property-defining-macro

@@ -65,12 +65,14 @@ supported."
           else collect arg into accum
         finally (return accum)))
 
-(defun ordinary-ll-variable-names (ll)
+(defun ordinary-ll-variable-names (ll &key include-supplied-p)
   (loop for arg in ll
         for arg* = (ensure-car arg)
         do (assert-ordinary-ll-member arg)
         unless (char= #\& (char (symbol-name arg*) 0))
-          collect arg*))
+          collect arg*
+          and when (and include-supplied-p (listp arg) (caddr arg))
+                collect (caddr arg)))
 
 (defmacro defun-with-args (name argsym lambda-list &body forms &aux remaining)
   (multiple-value-bind (required optional rest kwargs aokeys)
