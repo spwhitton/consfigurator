@@ -42,22 +42,24 @@
 (defprop installed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are installed."
   (:desc #?"apt installed @{packages}")
+  (:preprocess (flatten packages))
   (:hostattrs
    (declare (ignore packages))
    (os:required 'os:debianlike))
   (:check
-   (apply #'all-installed-p packages))
+   (all-installed-p packages))
   (:apply
    (with-maybe-update (apt-get :inform "-y" "install" packages))))
 
 (defprop removed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are removed."
   (:desc #?"apt removed @{packages}")
+  (:preprocess (flatten packages))
   (:hostattrs
    (declare (ignore packages))
    (os:required 'os:debianlike))
   (:check
-   (apply #'none-installed-p packages))
+   (none-installed-p packages))
   (:apply
    (apt-get :inform "-y" "remove" packages)))
 
@@ -199,13 +201,14 @@ only upgrade Debian stable."
 
 (defun all-installed-p (&rest packages)
   (loop with n = 0
-        for line in (apt-cache-policy packages)
+        with packages* = (flatten packages)
+        for line in (apt-cache-policy packages*)
         when (re:scan apt-cache-policy-installed line)
           do (incf n)
-        finally (return (= n (length packages)))))
+        finally (return (= n (length packages*)))))
 
 (defun none-installed-p (&rest packages)
-  (loop for line in (apt-cache-policy packages)
+  (loop for line in (apt-cache-policy (flatten packages))
         never (re:scan apt-cache-policy-installed line)))
 
 
