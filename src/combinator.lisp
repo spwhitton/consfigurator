@@ -171,7 +171,8 @@ ON-CHANGE in order."
                                   (mapcar #'propapptype propapps))
             :desc (get (car propapp) 'desc)
             :hostattrs (lambda (&rest args)
-                         (apply #'propattrs (car propapp) args))
+                         (apply #'propattrs (car propapp) args)
+                         (mapc #'propappattrs propapps))
             :apply (lambda (&rest args)
                      (if (eql :no-change
                               (propappapply (cons (car propapp) args)))
