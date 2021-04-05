@@ -202,7 +202,8 @@ PROPERTIES, like DEPLOY-THESE."
   "Connect back to the same host with CONNECTIONS and apply PROPERTIES.
 Mainly useful for using a connection type like :AS to apply properties as a
 different user."
-  (:desc (declare (ignore connections properties)) "Reconnection")
+  (:desc (declare (ignore properties))
+         (format nil "~S reconnection" connections))
   (:preprocess
    (list (preprocess-connections connections)
          (list :host nil :propspec properties)))
