@@ -29,6 +29,10 @@
 
 (define-constant +sections+ '("main" "contrib" "non-free") :test #'equal)
 
+(define-constant +noninteractive-env+ '(:DEBIAN_FRONTEND "noninteractive"
+                                        :APT_LISTCHANGES_FRONTEND "none")
+  :test #'equal)
+
 
 ;;;; Properties
 
@@ -139,7 +143,4 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
 ;;;; Utilities
 
 (defun apt-get (&rest args)
-  (apply #'run
-         :env '(:DEBIAN_FRONTEND "noninteractive"
-                :APT_LISTCHANGES_FRONTEND "none")
-         "apt-get" args))
+  (apply #'run :env +noninteractive-env+ "apt-get" args))
