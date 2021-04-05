@@ -114,7 +114,8 @@
     ,@(loop for case in cases
             collect `',(intern (symbol-name (car case))
                                (find-package :consfigurator.property.os))
-            collect (cadr case))))
+            collect (let ((forms (cdr case)))
+                      (if (cdr forms) `(eseqprops ,@forms) (car forms))))))
 
 (defmacro typecase (&body cases)
   `(host-typecase* os-typecase* nil ,@cases))
