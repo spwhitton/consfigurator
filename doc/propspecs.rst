@@ -26,12 +26,13 @@ Definitions
 
 An *atomic property application* ("propapp") is a list satisfying the lambda
 list ``(PROPERTY &rest ARGS)`` where ``PROPERTY`` is a symbol naming a
-property and ``ARGS`` satisfies that property's lambda list.  A *property
-combinator* is a function which takes at least one propapp as one of its
-arguments and returns a single propapp, or a macro which takes at least
-propapp as one of its arguments and returns an expression which yields a
-single propapp (in the return values of property combinators, often
-``PROPERTY`` will be a gensym).  A *property application specification* is
+property and ``ARGS`` satisfies that property's lambda list, or the empty
+list, which means a no-op property.  A *property combinator* is a function
+which takes at least one propapp as one of its arguments and returns a single
+propapp, or a macro which takes at least propapp as one of its arguments and
+returns an expression which yields a single propapp (in the return values of
+property combinators, often ``PROPERTY`` will be a gensym).  A *property
+application specification* is
 
 i. a readably printable Lisp expression, **P**, known as a *property
    application specification expression*, which contains

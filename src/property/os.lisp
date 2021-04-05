@@ -99,7 +99,7 @@
 
 (define-choosing-property-combinator os-typecase* (host &rest cases)
   :type (typecase-type cases)
-  :choose (or (typecase-choose host cases) '(noop)))
+  :choose (typecase-choose host cases))
 
 (define-choosing-property-combinator os-etypecase* (host &rest cases)
   :type (typecase-type cases)

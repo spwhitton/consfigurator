@@ -59,7 +59,9 @@
   (get prop 'preprocess (lambda (&rest args) args)))
 
 (defun propapptype (propapp)
-  (get (car propapp) 'ptype))
+  (if propapp
+      (get (car propapp) 'ptype)
+      :posix))
 
 (defun collapse-types (&rest lists)
   (if (member :posix (flatten lists)) :posix :lisp))
@@ -68,7 +70,8 @@
   (apply (get prop 'desc #'noop) args))
 
 (defun propappdesc (propapp)
-  (apply #'propdesc propapp))
+  (when propapp
+    (apply #'propdesc propapp)))
 
 (defun proplambda (prop)
   (get prop 'plambda))
@@ -77,13 +80,14 @@
   (apply (get prop 'hostattrs #'noop) args))
 
 (defun propappattrs (propapp)
-  (apply #'propattrs propapp))
+  (when propapp
+    (apply #'propattrs propapp)))
 
 (defun propcheck (prop &rest args)
   (apply (get prop 'check #'noop) args))
 
 (defun propappcheck (propapp)
-  (apply #'propcheck propapp))
+  (if propapp (apply #'propcheck propapp) t))
 
 (defmacro with-some-errors-are-failed-change (&body forms)
   `(handler-case (progn ,@forms)
@@ -98,7 +102,9 @@
           (apply (get prop 'papply (constantly :no-change)) args)))))
 
 (defun propappapply (propapp)
-  (apply #'propapply propapp))
+  (if propapp
+      (apply #'propapply propapp)
+      :no-change))
 
 (defun propunapply (prop &rest args)
   (with-some-errors-are-failed-change
@@ -108,7 +114,9 @@
           (apply (get prop 'unapply (constantly :no-change)) args)))))
 
 (defun propappunapply (propapp)
-  (apply #'propappunapply propapp))
+  (if propapp
+      (apply #'propappunapply propapp)
+      :no-change))
 
 (defvar *known-properties* nil
   "All properties whose definitions have been loaded.")

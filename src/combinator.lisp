@@ -20,11 +20,6 @@
 
 ;;;; Property combinators
 
-(defprop noop :posix (&rest args)
-  "A property which accepts any number of arguments and does nothing."
-  (:desc (declare (ignore args)) "No-op property")
-  (:hostattrs (declare (ignore args))))
-
 (defmacro define-function-property-combinator (name args &body body)
   (multiple-value-bind (forms declarations docstring)
       (parse-body body :documentation t)
@@ -107,8 +102,12 @@ apply the elements of REQUIREMENTS in reverse order."
 ;; should not be returned by property subroutines, per the spec
 (defun apply-and-print (propapps &optional unapply)
   (flet ((paa (pa) (if unapply (propappunapply pa) (propappapply pa))))
-    (let ((ret :no-change))
-      (dolist (pa (if unapply (reverse propapps) propapps) ret)
+    (let ((ret :no-change)
+          ;; Remove any null propapps because we don't want to print anything
+          ;; for those, and applying them will do nothing.
+          (propapps
+            (remove-if #'null (if unapply (reverse propapps) propapps))))
+      (dolist (pa propapps ret)
         (let* ((announce (not (get (get (car pa) 'combinator)
                                    'inline-combinator)))
                ;; TODO Nested combinators can mean that we establish this

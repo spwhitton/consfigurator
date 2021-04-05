@@ -143,7 +143,6 @@
            #:append-propspecs
 
 	   ;; combinator.lisp
-           #:noop
            #:define-function-property-combinator
            #:define-choosing-property-combinator
            #:seqprops
