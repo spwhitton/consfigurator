@@ -22,7 +22,7 @@
   (:check
    (zerop (mrun :for-exit "command" "-v" "sbcl")))
   (os:etypecase
-      (debianlike (apt:installed "sbcl"))))
+    (debianlike (apt:installed "sbcl"))))
 
 (defmethod establish-connection ((type (eql :sbcl)) remaining &key)
   (when (lisp-connection-p)
