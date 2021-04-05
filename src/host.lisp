@@ -28,7 +28,13 @@
    (propspec
     :initarg :propspec
     :reader host-propspec
-    :documentation "Propspec of the properties to be applied to the host."))
+    :documentation "Propspec of the properties to be applied to the host.")
+   (default-deployment
+    :initform nil
+    :initarg :deploy
+    :reader host-deployment
+    :documentation
+    "Connection chain representing the usual way this host is deployed."))
   (:documentation "Abstract superclass for hosts.  Do not instantiate."))
 
 (defclass preprocessed-host (host)
@@ -75,9 +81,9 @@ values higher up the call stack."))
     (propappattrs (eval-propspec (host-propspec *host*)))
     *host*))
 
-(defun make-host (&key hostattrs (propspec (make-propspec)))
+(defun make-host (&key hostattrs (propspec (make-propspec)) deploy)
   (make-instance 'unpreprocessed-host
-                 :hostattrs hostattrs :propspec propspec))
+                 :hostattrs hostattrs :propspec propspec :deploy deploy))
 
 (defun make-child-host (&key hostattrs propspec)
   "Make a host object to represent a chroot, container or the like.
@@ -91,7 +97,8 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
   (format stream "#.~S" `(make-instance
                           ',(type-of host)
                           :hostattrs ',(slot-value host 'hostattrs)
-                          :propspec ,(slot-value host 'propspec)))
+                          :propspec ,(slot-value host 'propspec)
+                          :deploy ',(slot-value host 'default-deployment)))
   host)
 
 (defmethod union-propspec-into-host
@@ -148,7 +155,8 @@ entries."
        (defparameter ,hostname-sym
          (make-host :hostattrs ',attrs
                     :propspec (make-propspec
-                               :propspec (props seqprops ,@properties)))
+                               :propspec (props seqprops ,@properties))
+                    :deploy ',deploy)
          ,(car (getf attrs :desc)))
        ,@(and deploy
               `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))

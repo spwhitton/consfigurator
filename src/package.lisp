@@ -174,6 +174,10 @@
            #:deploys-these.
            #:deploy-these*
            #:deploys-these
+           #:hostdeploy
+           #:hostdeploy*
+           #:hostdeploy-these
+           #:hostdeploy-these*
            #:continue-deploy*
 
            ;; data.lisp

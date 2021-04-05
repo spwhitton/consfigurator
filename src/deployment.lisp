@@ -161,6 +161,36 @@ You can then eval (NAME) to execute this deployment."
   `(defun ,name ()
      (deploy-these ,connections ,host ,@properties)))
 
+(defun hostdeploy* (host &optional additional-properties)
+  "Like DEPLOY*, but use the host's default deployment."
+  (deploy* (or (host-deployment host)
+               (simple-program-error "Host has no default deployment"))
+           host
+           additional-properties))
+
+(defun hostdeploy-these* (host properties)
+  "Like DEPLOY-THESE*, but use the host's default deployment."
+  (deploy-these* (or (host-deployment host)
+                     (simple-program-error "Host has no default deployment"))
+                 host
+                 properties))
+
+(defmacro hostdeploy (host &body additional-properties)
+  "Like DEPLOY, but use the host's default deployment."
+  (once-only (host)
+    `(hostdeploy* ,host
+                  (let ((*host* (shallow-copy-host ,host)))
+                    (make-propspec
+                     :propspec (props eseqprops ,@additional-properties))))))
+
+(defmacro hostdeploy-these (host &body properties)
+  "Like DEPLOY-THESE, but use the host's default deployment."
+  (once-only (host)
+    `(hostdeploy-these* ,host
+                        (let ((*host* (shallow-copy-host ,host)))
+                          (make-propspec
+                           :propspec (props eseqprops ,@properties))))))
+
 (defprop deploys :posix (connections host &optional additional-properties)
   "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
 except possibly with the property application specification

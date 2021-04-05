@@ -49,10 +49,6 @@ Core
   calling its :HOSTATTRS subroutine too -- could we figure out catching and
   ignoring the condition when its :HOSTATTRS subroutine did get run?
 
-- HOSTDEPLOY and HOSTDEPLOY-THESE functions which are like DEPLOY and
-  DEPLOY-THESE but take the CONNECTION argument from the :DEPLOY argument to
-  DEFHOST.
-
 - A CONCURRENTLY combinator for property application specifications, which
   means to apply each of the enclosed properties in parallel.  Particularly
   useful surrounding a set of DEPLOYS applications, to concurrently deploy a
