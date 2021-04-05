@@ -178,8 +178,10 @@ see MAP-PROPSPEC-PROPAPPS for how they are used.")
         ((and dotted-exported (not (find '&key args)))
 	 (let ((n (1- (loop with n = 0
                             for arg in args
-                            if (member arg '(&rest &body &aux))
+                            if (member arg '(&rest &body))
                               return (1+ n)
+                            if (eql arg '&aux)
+                              return n
                             unless (eq arg '&optional)
                               do (incf n)
                             finally (return n)))))
