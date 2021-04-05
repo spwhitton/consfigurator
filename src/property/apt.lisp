@@ -145,7 +145,8 @@ only upgrade Debian stable."
 
 (defproplist uses-parent-mirror :posix ()
   (:desc #?"Uses parent's apt mirror")
-  (mirror (get-parent-hostattrs-car :apt.mirror)))
+  (mirror (or (get-parent-hostattrs-car :apt.mirror)
+              (failed-change "Parent has no apt mirror"))))
 
 (defprop proxy :posix (uri)
   (:desc #?"${uri} apt proxy selected")
@@ -157,7 +158,8 @@ only upgrade Debian stable."
 
 (defproplist uses-parent-proxy :posix ()
   (:desc #?"Uses parent's apt proxy")
-  (proxy (get-parent-hostattrs-car :apt.proxy)))
+  (proxy (or (get-parent-hostattrs-car :apt.proxy)
+             (failed-change "Parent has no apt proxy"))))
 
 (defproplist uses-local-cacher :posix ()
   (:desc "apt uses local apt cacher")
