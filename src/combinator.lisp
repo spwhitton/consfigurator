@@ -34,27 +34,32 @@
        (flet ((:retprop (&rest all &key args &allow-other-keys)
                 (let ((psym (gensym ,(symbol-name name)))
                       (setprop-args (remove-from-plist all :args)))
+                  (unless (getf setprop-args :desc)
+                    (setf (get ',name 'inline-combinator) t))
+                  (setf (get psym 'combinator) ',name)
                   (apply #'setprop psym setprop-args)
                   (return-from ,name (list* psym args)))))
          ,@forms))))
 
 (defmacro define-choosing-property-combinator
     (name lambda-list &key type choose)
-  `(define-function-property-combinator ,name ,lambda-list
-     (flet ((choose-propapp () ,choose))
-       (:retprop :type ,type
-                 :desc (lambda (&rest args)
-                         (declare (ignore args))
-                         (propappdesc (choose-propapp)))
-                 :hostattrs (lambda (&rest args)
-                              (declare (ignore args))
-                              (propappattrs (choose-propapp)))
-                 :apply (lambda (&rest args)
-                          (declare (ignore args))
-                          (propappapply (choose-propapp)))
-                 :unapply (lambda (&rest args)
+  `(progn
+     (define-function-property-combinator ,name ,lambda-list
+       (flet ((choose-propapp () ,choose))
+         (:retprop :type ,type
+                   :desc (lambda (&rest args)
+                           (declare (ignore args))
+                           (propappdesc (choose-propapp)))
+                   :hostattrs (lambda (&rest args)
+                                (declare (ignore args))
+                                (propappattrs (choose-propapp)))
+                   :apply (lambda (&rest args)
                             (declare (ignore args))
-                            (propappunapply (choose-propapp)))))))
+                            (propappapply (choose-propapp)))
+                   :unapply (lambda (&rest args)
+                              (declare (ignore args))
+                              (propappunapply (choose-propapp))))))
+     (setf (get ',name 'inline-combinator) t)))
 
 (defmacro with-skip-failed-changes (&body forms)
   `(handler-bind ((failed-change
@@ -101,24 +106,30 @@ apply the elements of REQUIREMENTS in reverse order."
 ;; note that the :FAILED-CHANGE value is only used within this function and
 ;; should not be returned by property subroutines, per the spec
 (defun apply-and-print (propapps &optional unapply)
-  (let ((ret :no-change))
-    (dolist (pa (if unapply (reverse propapps) propapps) ret)
-      ;; TODO Nested combinators can mean that we establish this restart more
-      ;; than once, and they all appear in the debugger without any way to
-      ;; distinguish them.  Perhaps we can use the :TEST argument to
-      ;; RESTART-CASE such that only the innermost(?) skip option appears.
-      (let* ((result (restart-case
-                         (with-indented-inform
-                           (if unapply (propappunapply pa) (propappapply pa)))
-                       (skip-property () :failed-change)))
-             (status (case result
-                       (:no-change     "ok")
-                       (:failed-change "failed")
-                       (t              "done"))))
-        (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
-                  (get-hostname) (propappdesc pa) status)
-        (unless (or (not ret) (eq result :no-change))
-          (setq ret nil))))))
+  (flet ((paa (pa) (if unapply (propappunapply pa) (propappapply pa))))
+    (let ((ret :no-change))
+      (dolist (pa (if unapply (reverse propapps) propapps) ret)
+        (let* ((announce (not (get (get (car pa) 'combinator)
+                                   'inline-combinator)))
+               ;; TODO Nested combinators can mean that we establish this
+               ;; restart more than once, and they all appear in the debugger
+               ;; without any way to distinguish them.  Perhaps we can use the
+               ;; :TEST argument to RESTART-CASE such that only the
+               ;; innermost(?) skip option appears.
+               (result (restart-case
+                           (if announce
+                               (with-indented-inform (paa pa))
+                               (paa pa))
+                         (skip-property () :failed-change)))
+               (status (case result
+                         (:no-change     "ok")
+                         (:failed-change "failed")
+                         (t              "done"))))
+          (when announce
+            (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
+                      (get-hostname) (propappdesc pa) status))
+          (unless (or (not ret) (eq result :no-change))
+            (setq ret nil)))))))
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
