@@ -29,7 +29,12 @@ defpackage, where the :consfigurator package is used unqualified,
 and packages providing properties have local nicknames
 corresponding to the final dot-delimited component of their names."
   (interactive)
-  @putforms@)
+  ;; Properties
+  @putforms@
+
+  ;; Other operators
+  (put 'os:typecase 'common-lisp-indent-function '(&rest (&whole 2 &rest 1)))
+  (put 'os:etypecase 'common-lisp-indent-function '(&rest (&whole 2 &rest 1))))
 
 (provide 'consfigurator)
 
