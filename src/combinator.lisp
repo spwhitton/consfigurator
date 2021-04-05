@@ -101,34 +101,46 @@ apply the elements of REQUIREMENTS in reverse order."
 ;; note that the :FAILED-CHANGE value is only used within this function and
 ;; should not be returned by property subroutines, per the spec
 (defun apply-and-print (propapps &optional unapply)
-  (flet ((paa (pa) (if unapply (propappunapply pa) (propappapply pa))))
+  (labels ((propapp-apply (propapp)
+             (if unapply (propappunapply propapp) (propappapply propapp)))
+           (announce-propapp-apply (propapp)
+             (let ((buffer (make-array '(0)
+				       :element-type 'base-char
+				       :fill-pointer 0 :adjustable t)))
+               (values (with-output-to-string (*standard-output* buffer)
+                         (with-indented-inform
+                           (propapp-apply propapp)))
+                       buffer))))
     (let ((ret :no-change)
           ;; Remove any null propapps because we don't want to print anything
           ;; for those, and applying them will do nothing.
           (propapps
             (remove-if #'null (if unapply (reverse propapps) propapps))))
-      (dolist (pa propapps ret)
-        (let* ((announce (not (get (get (car pa) 'combinator)
-                                   'inline-combinator)))
-               ;; TODO Nested combinators can mean that we establish this
-               ;; restart more than once, and they all appear in the debugger
-               ;; without any way to distinguish them.  Perhaps we can use the
-               ;; :TEST argument to RESTART-CASE such that only the
-               ;; innermost(?) skip option appears.
-               (result (restart-case
-                           (if announce
-                               (with-indented-inform (paa pa))
-                               (paa pa))
-                         (skip-property () :failed-change)))
-               (status (case result
-                         (:no-change     "ok")
-                         (:failed-change "failed")
-                         (t              "done"))))
-          (when announce
-            (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
-                      (get-hostname) (propappdesc pa) status))
-          (unless (or (not ret) (eq result :no-change))
-            (setq ret nil)))))))
+      (dolist (propapp propapps ret)
+        (let ((announce (not (get (get (car propapp) 'combinator)
+                                  'inline-combinator))))
+          (multiple-value-bind (result output)
+              ;; TODO Nested combinators can mean that we establish this
+              ;; restart more than once, and they all appear in the debugger
+              ;; without any way to distinguish them.  Perhaps we can use the
+              ;; :TEST argument to RESTART-CASE such that only the
+              ;; innermost(?) skip option appears.
+              (restart-case (if announce
+                                (announce-propapp-apply propapp)
+                                (propapp-apply propapp))
+                (skip-property () :failed-change))
+            (when (and output (not (eql result :no-change)))
+              (fresh-line)
+              (princ output))
+            (when announce
+              (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
+                        (get-hostname) (propappdesc propapp)
+                        (case result
+                          (:no-change     "ok")
+                          (:failed-change "failed")
+                          (t              "done"))))
+            (unless (or (not ret) (eql result :no-change))
+              (setq ret nil))))))))
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
