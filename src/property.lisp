@@ -146,7 +146,7 @@ see MAP-PROPSPEC-PROPAPPS for how they are used.")
                for (prop . indent)
                  in (nreverse (mappend (lambda (s) (get s 'indent))
                                        *known-properties*))
-               do (format s "  (put '~A 'common-lisp-indent-function '~A)~%"
+               do (format s "  (put '~(~A~) 'common-lisp-indent-function '~A)~%"
                           prop indent))))))
     (with-open-file (in from)
       (with-open-file (out to :direction :output :if-exists :supersede)
@@ -160,10 +160,9 @@ see MAP-PROPSPEC-PROPAPPS for how they are used.")
    (let* ((package-short-name
             (lastcar (split-string (package-name *package*) :separator ".")))
           (short-name
-            (string-downcase
-             (if (string= package-short-name "CONSFIGURATOR")
-                 (symbol-name sym)
-                 (strcat package-short-name ":" (symbol-name sym)))))
+            (if (string= package-short-name "CONSFIGURATOR")
+                (symbol-name sym)
+                (strcat package-short-name ":" (symbol-name sym))))
           (dotted-name (strcat short-name "."))
           indent)
      (cond
