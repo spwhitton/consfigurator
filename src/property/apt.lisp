@@ -24,8 +24,11 @@
 (defmacro with-maybe-update (form)
   `(handler-case ,form
      (run-failed ()
-       (apt-get :inform "update")
+       (updated)
        ,form)))
+
+(defmacro with-changes-dpkg-status (&rest forms)
+  `(with-change-if-changes-file-content ("/var/lib/dpkg/status") ,@forms))
 
 (define-constant +sections+ '("main" "contrib" "non-free") :test #'equal)
 
@@ -58,6 +61,21 @@
   (:apply
    (apt-get :inform "-y" "remove" packages)))
 
+(defprop reconfigured :posix (package &rest triples)
+  "Where each of TRIPLES is a list of three strings, a debconf template, type
+and value, debconf reconfigure PACKAGE with those new debconf values.
+Typically used with the ON-CHANGE combinator."
+  (:desc (declare (ignore triples)) #?"${package} reconfigured")
+  (:hostattrs
+   (declare (ignore package triples))
+   (os:required 'os:debianlike))
+  (:apply
+   (assert-euid-root)
+   (run
+    :input (loop for triple in triples collect #?"${package} @{triple}")
+    "debconf-set-selections")
+   (run :env +noninteractive-env+ "dpkg-reconfigure" "-fnone" package)))
+
 (defproplist service-installed-running :posix (package)
   "Where PACKAGE installs a service named PACKAGE, ensure it is installed and
 running.
@@ -66,6 +84,57 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
   (:desc #?"${package} installed and running")
   (installed package)
   (service:running package))
+
+(defprop all-configured :posix ()
+  "Ensure that there are no packages for which installation is unfinished."
+  (:desc "dpkg --configure --pending")
+  (:hostattrs (os:required 'os:debianlike))
+  (:apply
+   (with-changes-dpkg-status
+     (run :env +noninteractive-env+ "dpkg" "--configure" "--pending"))))
+
+(defproplist updated :posix ()
+  "Ensure the apt indexes are up-to-date."
+  (:desc "apt-get update")
+  (all-configured)
+  (os:etypecase
+    (debian-stable
+     (cmd:single :env +noninteractive-env+ :inform "apt-get" "update"))
+    (debian
+     (cmd:single :env +noninteractive-env+ :inform
+                 "apt-get" "update" "--allow-releaseinfo-change"))))
+
+(defprop periodic-updates :posix ()
+  "Enable periodically updating the apt indexes and downloading new versions of
+packages.  Does not do any automatic upgrades."
+  (:desc "apt periodic updates")
+  (:hostattrs (os:required 'os:debianlike))
+  (:apply
+   (file:has-content "/etc/apt/apt.conf.d/02periodic"
+#>EOF>APT::Periodic::Enable "1";
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::Verbose "1";
+EOF))
+  (:unapply
+   (file:does-not-exist "/etc/apt/apt.conf.d/02periodic")))
+
+(defproplist unattended-upgrades :posix ()
+  "Enable unattended upgrades.
+
+Note that in its default configuration on Debian, unattended-upgrades will
+only upgrade Debian stable."
+  (:desc "Unattended upgrades enabled")
+  (on-change (installed "unattended-upgrades")
+    (reconfigured
+     "unattended-upgrades"
+     '("unattended-upgrades/enable_auto_updates" "boolean" "true")))
+  (service:running "cron")
+  (desc "unattended-upgrades will mail root"
+        (file:contains-lines "/etc/apt/apt.conf.d/50unattended-upgrades"
+                             "Unattended-Upgrade::Mail \"root\";"))
+  ;; work around Debian bug #812380
+  (file:does-not-exist "/etc/apt/apt.conf.d/50unattended-upgrades.ucf-dist"))
 
 (defprop mirror :posix (uri)
   (:desc #?"${uri} apt mirror selected")
