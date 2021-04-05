@@ -29,16 +29,20 @@ point in doing that here because WRITEFILE is synchronous."
         :no-change
         (writefile file (unlines new-lines)))))
 
-(defprop has-content :posix (path content)
+(defprop has-content :posix (path content &key (mode nil mode-supplied-p))
   "Ensure there is a file at PATH whose content is CONTENT.
 CONTENT can be a list of lines or a single string."
   (declare (indent 1))
-  (:desc (declare (ignore content))
+  (:desc (declare (ignore content mode mode-supplied-p))
          #?"${path} has defined content")
   (:apply (with-change-if-changes-file-content (path)
-            (writefile path (etypecase content
-                              (cons (unlines content))
-                              (string (format nil "~A~&" content)))))))
+            (let ((args (list path
+                              (etypecase content
+                                (cons (unlines content))
+                                (string (format nil "~A~&" content))))))
+              (when mode-supplied-p
+                (nconcf args (list :mode mode)))
+              (apply #'writefile args)))))
 
 (defprop contains-lines :posix (path &rest lines)
   "Ensure there is a file at PATH containing each of LINES once."
