@@ -43,7 +43,7 @@
    (declare (ignore packages))
    (os:required 'os:debianlike))
   (:check
-   (all-installed-p packages))
+   (apply #'all-installed-p packages))
   (:apply
    (with-maybe-update (apt-get :inform "-y" "install" packages))))
 
@@ -54,7 +54,7 @@
    (declare (ignore packages))
    (os:required 'os:debianlike))
   (:check
-   (none-installed-p packages))
+   (apply #'none-installed-p packages))
   (:apply
    (apt-get :inform "-y" "remove" packages)))
 
@@ -128,14 +128,14 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
 (define-constant apt-cache-policy-installed #?/^\s+Installed:\s+(?!\(none\))/
   :test #'string=)
 
-(defun all-installed-p (packages)
+(defun all-installed-p (&rest packages)
   (loop with n = 0
         for line in (apt-cache-policy packages)
         when (re:scan apt-cache-policy-installed line)
           do (incf n)
         finally (return (= n (length packages)))))
 
-(defun none-installed-p (packages)
+(defun none-installed-p (&rest packages)
   (loop for line in (apt-cache-policy packages)
         never (re:scan apt-cache-policy-installed line)))
 

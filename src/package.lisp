@@ -277,7 +277,9 @@
            #:proxy
            #:uses-parent-proxy
            #:uses-local-cacher
-           #:standard-sources.list))
+           #:standard-sources.list
+           #:all-installed-p
+           #:none-installed-p))
 
 (defpackage :consfigurator.connection.sbcl
   (:use #:cl #:consfigurator)
