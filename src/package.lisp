@@ -151,6 +151,7 @@
            #:with-requirements
            #:silent-seqprops
            #:unapply
+           #:desc
            #:on-change
 	   #:as
 

@@ -149,6 +149,19 @@ apply the elements of REQUIREMENTS in reverse order."
               :unapply (get psym 'papply)
               :args args)))
 
+(define-function-property-combinator desc (desc propapp)
+  (:retprop :type (propapptype propapp)
+            :desc (lambda () desc)
+            :hostattrs (lambda (&rest args)
+                         (declare (ignore args))
+                         (propappattrs propapp))
+            :apply (lambda (&rest args)
+                     (declare (ignore args))
+                     (propappapply propapp))
+            :unapply (lambda (&rest args)
+                       (declare (ignore args))
+                       (propappunapply propapp))))
+
 (defmacro on-change (propapp &body on-change)
   "If applying PROPAPP makes a change, also apply each of of the propapps
 ON-CHANGE in order."
