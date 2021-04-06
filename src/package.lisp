@@ -309,7 +309,8 @@
                     (#:apt       #:consfigurator.property.apt)
                     (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file))
-  (:export #:os-bootstrapped
+  (:export #:make-child-host-for-chroot-deploy
+           #:os-bootstrapped
            #:os-bootstrapped.))
 
 (defpackage :consfigurator.property.gnupg
