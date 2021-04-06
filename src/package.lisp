@@ -21,6 +21,7 @@
                           #:ensure-directory-pathname
                           #:ensure-pathname
                           #:enough-pathname
+                          #:subpathp
                           #:getenv
                           #:subdirectories
                           #:directory-files
@@ -46,6 +47,7 @@
            #:ensure-directory-pathname
            #:ensure-pathname
            #:enough-pathname
+           #:subpathp
            #:getenv
            #:subdirectories
            #:directory-files
@@ -258,6 +260,13 @@
            #:host-etypecase
            #:required
            #:supports-arch-p))
+
+(defpackage :consfigurator.property.mount
+  (:use #:cl #:alexandria #:consfigurator)
+  (:local-nicknames (#:os    #:consfigurator.property.os)
+                    (#:cmd   #:consfigurator.property.cmd))
+  (:export #:unmounted-below
+           #:unmounted-below-and-removed))
 
 (defpackage :consfigurator.property.service
   (:use #:cl #:alexandria #:consfigurator)
