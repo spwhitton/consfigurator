@@ -48,7 +48,7 @@
 (defmethod connection-clear-data-cache
     ((connection rehome-connection) iden1 iden2)
   (with-slots (datadir) connection
-    (mrun "rm" "-rf" (data-pathname (datadir connection) iden1 iden2))))
+    (delete-remote-trees (data-pathname (datadir connection) iden1 iden2))))
 
 (defmethod get-remote-cached-prerequisite-data
     ((connection rehome-connection))

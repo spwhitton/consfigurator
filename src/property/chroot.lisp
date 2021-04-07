@@ -25,7 +25,7 @@
    ;; check whether a previous debootstrap failed partway through
    (if (test "-d" (merge-pathnames "debootstrap/"
                                    (ensure-directory-pathname root)))
-       (progn (mrun "rm" "-rf" root) nil)
+       (progn (delete-remote-trees root) nil)
        (test "-d" root)))
   (:apply
    (let* ((os (car (getf (hostattrs host) :os)))

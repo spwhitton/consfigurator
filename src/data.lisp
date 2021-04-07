@@ -295,7 +295,7 @@ new versions of data, to avoid them piling up."))
 (defmethod connection-clear-data-cache ((connection connection) iden1 iden2)
   (let* ((*connection* connection)
          (dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))
-    (mrun "rm" "-rf" dir)))
+    (delete-remote-trees dir)))
 
 (defun upload-all-prerequisite-data
     (&key (upload-string-data t) (connection *connection*))

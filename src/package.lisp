@@ -101,7 +101,7 @@
            #:runlines
            #:test
            #:remote-exists-p
-           #:delete-remote-tree
+           #:delete-remote-trees
            #:readfile
            #:writefile
            #:with-local-connection

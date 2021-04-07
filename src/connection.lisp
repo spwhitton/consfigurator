@@ -375,7 +375,7 @@ start with RUN."
 (defun test (&rest args)
   (zerop (apply #'mrun :for-exit "test" args)))
 
-(defun delete-remote-tree (&rest paths)
+(defun delete-remote-trees (&rest paths)
   "Recursively delete each of PATHS."
   (mrun "rm" "-rf" paths))
 
