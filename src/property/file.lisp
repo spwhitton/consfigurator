@@ -122,6 +122,39 @@ Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
    ;; assume it was already there
    :no-change))
 
+;; readlink(1) is not POSIX
+(defun remote-link-target (symlink)
+  (loop with s = (stripln (run :env '(:LOCALE "POSIX") "ls" "-ld" symlink))
+        with found = 0
+        for i from 0 below (length s)
+        when (char= (elt s i) #\Space)
+          do (incf found)
+        when (>= found 9)
+          return (subseq s (+ (length symlink) i 5))))
+
+(defprop symlinked :posix (&key from to)
+  "Ensure FROM is a symlink to TO.  Symbolic links are overwritten; it is an
+error if FROM is another kind of file, except when unapplying."
+  (:desc #?"Symlinked ${from} -> ${to}")
+  (:apply
+   (unless (and from to)
+     (simple-program-error
+      "FILE:SYMLINKED: need both :FROM and :TO arguments."))
+   (when (pathnamep to)
+     (setq to (unix-namestring to)))
+   (let* ((link (test "-L" from))
+          (exists (remote-exists-p from)))
+     (when (and exists (not link))
+       (failed-change "~A exists but is not a symbolic link." from))
+     (if (and link (string= (remote-link-target from) to))
+         :no-change
+         (mrun "ln" "-sf" to from))))
+  (:unapply
+   (declare (ignore to))
+   (if (test "-L" from)
+       (mrun "rm" from)
+       :no-change)))
+
 
 ;;;; Config files
 
