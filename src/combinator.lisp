@@ -117,7 +117,7 @@ apply the elements of REQUIREMENTS in reverse order."
           (propapps
             (remove-if #'null (if unapply (reverse propapps) propapps))))
       (dolist (propapp propapps ret)
-        (let ((announce (or (> 1 *consfigurator-debug-level*)
+        (let ((announce (or (> *consfigurator-debug-level* 1)
                             (not (get (get (car propapp) 'combinator)
                                    'inline-combinator)))))
           (multiple-value-bind (result output)
@@ -130,7 +130,7 @@ apply the elements of REQUIREMENTS in reverse order."
                                 (announce-propapp-apply propapp)
                                 (propapp-apply propapp))
                 (skip-property () :failed-change))
-            (when (and output (or (> 1 *consfigurator-debug-level*)
+            (when (and output (or (> *consfigurator-debug-level* 1)
                                   (not (eql result :no-change))))
               (fresh-line)
               (princ output))
