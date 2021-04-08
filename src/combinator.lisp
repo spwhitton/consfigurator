@@ -117,8 +117,9 @@ apply the elements of REQUIREMENTS in reverse order."
           (propapps
             (remove-if #'null (if unapply (reverse propapps) propapps))))
       (dolist (propapp propapps ret)
-        (let ((announce (not (get (get (car propapp) 'combinator)
-                                  'inline-combinator))))
+        (let ((announce (or (> 1 *consfigurator-debug-level*)
+                            (not (get (get (car propapp) 'combinator)
+                                   'inline-combinator)))))
           (multiple-value-bind (result output)
               ;; TODO Nested combinators can mean that we establish this
               ;; restart more than once, and they all appear in the debugger
@@ -129,7 +130,8 @@ apply the elements of REQUIREMENTS in reverse order."
                                 (announce-propapp-apply propapp)
                                 (propapp-apply propapp))
                 (skip-property () :failed-change))
-            (when (and output (not (eql result :no-change)))
+            (when (and output (or (> 1 *consfigurator-debug-level*)
+                                  (not (eql result :no-change))))
               (fresh-line)
               (princ output))
             (when announce
