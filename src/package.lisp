@@ -323,6 +323,17 @@
            #:os-bootstrapped
            #:os-bootstrapped.))
 
+(defpackage :consfigurator.property.live-build
+  (:use #:cl #:alexandria #:consfigurator)
+  (:local-nicknames (#:apt       #:consfigurator.property.apt)
+                    (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
+                    (#:mount     #:consfigurator.property.mount)
+                    (#:chroot    #:consfigurator.property.chroot))
+  (:export #:installed
+           #:image-built
+           #:image-built.))
+
 (defpackage :consfigurator.property.gnupg
   (:use #:cl #:consfigurator)
   (:export #:public-key-imported))
