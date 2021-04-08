@@ -113,7 +113,7 @@ and might undo some of their effects.  For example, to configure
                           (file:has-content ,auto/config
                             ,(auto/config config) :mode #o755)
                         (file:does-not-exist ,@clean)
-                        (%lbconfig ,config ,dir))
+                        (%lbconfig ,dir))
                     (%lbbootstrap t ,dir))
                   (%lbbootstrap nil ,dir)
                   (deploys ((:chroot :into ,chroot)) ,host))
