@@ -302,7 +302,7 @@
            #:none-installed-p))
 
 (defpackage :consfigurator.connection.sbcl
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os  #:consfigurator.property.os)
                     (#:apt #:consfigurator.property.apt)))
 

@@ -43,12 +43,13 @@ recommended."))
              "sbcl" "--noinform" "--noprint"
              "--disable-debugger"
              "--no-sysinit" "--no-user-init")
-      (inform t "done." :fresh-line nil)
+      (inform t (if (zerop exit) "done." "failed.") :fresh-line nil)
+      (when-let ((lines (lines out)))
+        (inform t "  Output was:" :fresh-line nil)
+        (with-indented-inform (inform t lines)))
       (unless (zerop exit)
         ;; print FORMS not PROGRAM because latter might contain sudo passwords
         (failed-change
 	 "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~A"
-         err forms))
-      (inform t "  Output was:" :fresh-line nil)
-      (with-indented-inform (inform t (lines out)))))
+         err forms))))
   nil)
