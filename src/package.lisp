@@ -136,6 +136,7 @@
            #:call-with-os
            #:with-change-if-changes-file
            #:with-change-if-changes-file-content
+           #:with-change-if-changes-file-content-or-mode
 
            ;; propspec.lisp
            #:in-consfig

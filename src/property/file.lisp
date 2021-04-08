@@ -35,7 +35,7 @@ CONTENT can be a list of lines or a single string."
   (declare (indent 1))
   (:desc (declare (ignore content mode mode-supplied-p))
          #?"${path} has defined content")
-  (:apply (with-change-if-changes-file-content (path)
+  (:apply (with-change-if-changes-file-content-or-mode (path)
             (let ((args (list path
                               (etypecase content
                                 (cons (unlines content))

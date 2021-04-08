@@ -527,3 +527,15 @@ changes in properties which will change the file but not the output of `ls
             (result (progn ,@forms)))
        (if (and ,before (eql ,before (cksum ,file)))
            :no-change result))))
+
+(defmacro with-change-if-changes-file-content-or-mode ((file) &body forms)
+  "Execute FORMS and yield :NO-CHANGE if FILE has the same content and mode
+afterwards."
+  (with-gensyms (before)
+    `(let* ((,before (ls-cksum ,file))
+            (result (progn ,@forms)))
+       (let ((after (ls-cksum ,file)))
+         (if (and ,before
+                  (string= (car ,before) (car after) :start1 1 :start2 1)
+                  (eql (cadr ,before) (cadr after)))
+             :no-change result)))))
