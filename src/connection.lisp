@@ -291,13 +291,20 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
           finally (nreversef cmd))
     (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
     (loop while env
-          collect (format nil "~A=~A" (symbol-name (pop env)) (pop env))
+          collect (format nil "~A=~A"
+                          (symbol-name (pop env)) (escape-sh-token (pop env)))
             into accum
           finally
              (when accum
-               (setq cmd (format nil "env ~{~A~^ ~} ~A"
-                                 (mapcar #'escape-sh-token accum)
-                                 cmd))))
+               ;; We take this approach of exporting individual variables
+               ;; rather than just prepending `FOO=bar BAR=baz` so that if CMD
+               ;; contains $FOO it will get expanded.  We used to use env(1)
+               ;; but that means CMD cannot contain shell builtins which do
+               ;; not have an equivalent on PATH, such as 'cd'.  This approach
+               ;; does mean that implementations of CONNECTION-RUN will need
+               ;; to start a fresh 'sh -c' for each command run, but that's
+               ;; desirable to ensure any variables set by CMD are reset.
+               (setq cmd (format nil "~{export ~A;~^ ~} ~A" accum cmd))))
      (setq cmd (format nil "cd ~A; ~A"
                        (escape-sh-token (unix-namestring (pwd))) cmd))
      ,@forms))
