@@ -155,6 +155,19 @@ error if FROM is another kind of file, except when unapplying."
        (mrun "rm" from)
        :no-change)))
 
+(defprop is-copy-of :posix (dest source)
+  "Ensure that DEST is a copy of SOURCE.  SOURCE may be a regular file or a
+symbolic link, in which case the target of the link will be copied."
+  (:desc #?"${dest} is copy of ${source}")
+  (:check
+   (and (test "-f" dest)
+        (zerop (mrun :for-exit "cmp" "-s" dest source))))
+  (:apply
+   (with-remote-temporary-file
+       (temp :directory (pathname-directory-pathname dest))
+     (mrun "cp" "-L" "--preserve=all" source temp)
+     (mrun "mv" temp dest))))
+
 
 ;;;; Config files
 

@@ -241,7 +241,8 @@
            #:contains-ini-settings
            #:regex-replaced-lines
            #:directory-exists
-           #:symlinked))
+           #:symlinked
+           #:is-copy-of))
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
