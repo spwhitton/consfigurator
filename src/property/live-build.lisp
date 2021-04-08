@@ -82,7 +82,7 @@ is a list of arguments to pass to lb_config(1), not including the '-a' and
 '-d' options, which Consfigurator will supply based on PROPERTIES.
 
 This property runs the lb_config(1), lb_bootstrap(1), lb_chroot(1) and
-lb_binary(1) commands to build or rebuild the image.  Rebuilding only occurs
+lb_binary(1) commands to build or rebuild the image.  Rebuilding occurs only
 when changes to CONFIG or PROPERTIES mean that the image is potentially
 out-of-date; e.g. if you just add some new items to PROPERTIES then in most
 cases only lb_chroot(1) and lb_binary(1) will be re-run.
