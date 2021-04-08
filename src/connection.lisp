@@ -272,39 +272,39 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
 
 (defmacro %process-run-args (&body forms)
   `(let (cmd input may-fail for-exit env inform)
-    (loop for arg = (pop args)
-          do (case arg
-               (:for-exit  (setq may-fail t for-exit t))
-               (:may-fail  (setq may-fail t))
-               (:inform    (setq inform t))
-               (:input (setq input (pop args)))
-               (:env (setq env (pop args)))
-               (t (mapc (lambda (e)
-                          (push (typecase e
-                                  (pathname
-                                   (unix-namestring e))
-                                  (t
-                                   e))
-                                cmd))
-                        (ensure-list arg))))
-          while args
-          finally (nreversef cmd))
-    (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
-    (loop while env
-          collect (format nil "~A=~A"
-                          (symbol-name (pop env)) (escape-sh-token (pop env)))
-            into accum
-          finally
-             (when accum
-               ;; We take this approach of exporting individual variables
-               ;; rather than just prepending `FOO=bar BAR=baz` so that if CMD
-               ;; contains $FOO it will get expanded.  We used to use env(1)
-               ;; but that means CMD cannot contain shell builtins which do
-               ;; not have an equivalent on PATH, such as 'cd'.  This approach
-               ;; does mean that implementations of CONNECTION-RUN will need
-               ;; to start a fresh 'sh -c' for each command run, but that's
-               ;; desirable to ensure any variables set by CMD are reset.
-               (setq cmd (format nil "~{export ~A;~^ ~} ~A" accum cmd))))
+     (loop for arg = (pop args)
+           do (case arg
+                (:for-exit  (setq may-fail t for-exit t))
+                (:may-fail  (setq may-fail t))
+                (:inform    (setq inform t))
+                (:input (setq input (pop args)))
+                (:env (setq env (pop args)))
+                (t (mapc (lambda (e)
+                           (push (typecase e
+                                   (pathname
+                                    (unix-namestring e))
+                                   (t
+                                    e))
+                                 cmd))
+                         (ensure-list arg))))
+           while args
+           finally (nreversef cmd))
+     (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
+     (loop while env
+           collect (format nil "~A=~A"
+                           (symbol-name (pop env)) (escape-sh-token (pop env)))
+             into accum
+           finally
+              (when accum
+                ;; We take this approach of exporting individual variables
+                ;; rather than just prepending `FOO=bar BAR=baz` so that if CMD
+                ;; contains $FOO it will get expanded.  We used to use env(1)
+                ;; but that means CMD cannot contain shell builtins which do
+                ;; not have an equivalent on PATH, such as 'cd'.  This approach
+                ;; does mean that implementations of CONNECTION-RUN will need
+                ;; to start a fresh 'sh -c' for each command run, but that's
+                ;; desirable to ensure any variables set by CMD are reset.
+                (setq cmd (format nil "~{export ~A;~^ ~} ~A" accum cmd))))
      (setq cmd (format nil "cd ~A; ~A"
                        (escape-sh-token (unix-namestring (pwd))) cmd))
      ,@forms))
