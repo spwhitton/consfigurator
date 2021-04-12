@@ -243,6 +243,7 @@ unmounted, since the actual mount point is not stored.")
     "The value of the --type parameter to cryptsetup luksFormat.
 Note that GRUB2 older than 2.06 cannot open the default LUKS2 format, so
 specify \"luks1\" if this is needed.")))
+;; TODO ^ is it the default?
 
 (defmethod open-volume-contents ((volume luks-container) (file pathname))
   ;; cryptsetup luksOpen FILE <generated from FILE>
