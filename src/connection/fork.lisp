@@ -57,6 +57,7 @@ for example, such that we don't see it."
   #-(or sbcl) (error "Don't know how to safely fork() in this Lisp")
   (upload-all-prerequisite-data
    :connection connection :upload-string-data nil)
+  ;; TODO bind mounts
   (mapc #'force-output
         (list *standard-output* *error-output* *debug-io* *terminal-io*))
   (let ((child (fork)))
