@@ -86,6 +86,10 @@ accommodate its contents, whichever is larger."))
     (max volume-minimum-size
          (volume-contents-minimum-size volume))))
 
+(defclass top-level-volume (volume) ()
+  (:documentation
+   "A volume which never appears as the VOLUME-CONTENTS of another volume."))
+
 (defgeneric open-volume-contents (volume file)
   (:documentation "Renders contents of VOLUME directly accessible.
 FILE is something in the filesystem which serves as a means of accessing
@@ -126,12 +130,6 @@ its partitions on a block device.  Returns VOLUME."))
   (:documentation
    "A VOLUME object which has been made directly accessible as a block device."))
 
-(defclass physical-disk (opened-volume) ()
-  (:documentation
-   "A physical disk drive attached to the machine, which always has a
-corresponding block device in /dev available to access it.  Should be used for
-whole disks, not partitions (e.g. /dev/sda, not /dev/sda1)."))
-
 (defmethod volume-contents ((volume opened-volume))
   "The contents of an opened volume is the contents of the volume opened."
   (volume-contents (opened-volume volume)))
@@ -141,6 +139,15 @@ whole disks, not partitions (e.g. /dev/sda, not /dev/sda1)."))
 
 (defmethod close-volume-contents ((volume opened-volume) (file null))
   (close-volume-contents (opened-volume volume) (device-file volume)))
+
+(defclass physical-disk (top-level-volume opened-volume) ()
+  (:documentation
+   "A physical disk drive attached to the machine, which always has a
+corresponding block device in /dev available to access it.  Should be used for
+whole disks, not partitions (e.g. /dev/sda, not /dev/sda1)."))
+
+(defmethod opened-volume ((volume physical-disk))
+  volume)
 
 
 ;;;; Raw disk images
@@ -185,7 +192,7 @@ directly writing out with dd(1)."))
 
 ;;;; LVM
 
-(defclass lvm-volume-group (volume)
+(defclass lvm-volume-group (top-level-volume)
   ((volume-label
     :documentation "The name of the VG, often starting with \"vg_\".")
    ;; (volume-depth
