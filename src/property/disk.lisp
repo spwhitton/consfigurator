@@ -67,7 +67,7 @@ An operation which mounts a filesystem, or similar, does not yield access to
 any further volumes, and so should return the empty list."))
 
 (defmethod open-volume-contents ((volume volume) file)
-  "Default implementation: do nothing."
+  "Default implementation: do nothing and yield no newly accessible volumes."
   nil)
 
 (defgeneric close-volume-contents (volume file)
