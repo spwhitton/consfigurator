@@ -34,7 +34,10 @@ other purposes.
   identified by ``NAME``; see ``DATA.GIT-SNAPSHOT``
 
 - ``("--pgp-pubkey" . FINGERPRINT)`` means the/a OpenPGP public key with
-  fingerprint FINGERPRINT.
+  fingerprint FINGERPRINT
+
+- ``("--luks-passphrase--HOSTNAME" . VOLUME-LABEL)`` means the LUKS passphrase
+  for volume with label VOLUME-LABEL on HOSTNAME.
 
 (Proposed convention: Except for the first item above, these reserved names
 should start with ``--`` and use ``--`` to separate parameter values within

@@ -264,6 +264,9 @@
            #:required
            #:supports-arch-p))
 
+(defpackage :consfigurator.property.disk
+  (:use #:cl #:consfigurator))
+
 (defpackage :consfigurator.property.mount
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os    #:consfigurator.property.os)
