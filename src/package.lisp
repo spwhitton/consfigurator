@@ -265,7 +265,24 @@
            #:supports-arch-p))
 
 (defpackage :consfigurator.property.disk
-  (:use #:cl #:consfigurator))
+  (:use #:cl #:consfigurator)
+  (:export #:volume
+           #:volume-label
+           #:volume-contents
+           #:volume-size
+
+           #:physical-disk
+           #:partitioned-volume
+           #:partition
+           #:lvm-volume-group
+           #:lvm-logical-volume
+           #:lvm-physical-volume
+           #:ext4-filesystem
+           #:fat32-filesystem
+           #:luks-container
+           #:linux-swap
+
+           #:has-volumes))
 
 (defpackage :consfigurator.property.mount
   (:use #:cl #:alexandria #:consfigurator)
