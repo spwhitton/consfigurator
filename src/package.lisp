@@ -265,7 +265,7 @@
            #:supports-arch-p))
 
 (defpackage :consfigurator.property.disk
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:export #:volume
            #:volume-label
            #:volume-contents

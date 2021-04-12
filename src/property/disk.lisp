@@ -57,6 +57,35 @@ plus any metadata (e.g. partition tables), this value will be ignored.")
   (:documentation
    "Something which contains filesystems and/or other volumes."))
 
+(defgeneric volume-contents-minimum-size (volume)
+  (:documentation
+   "Calculate the minimum size required to accomodate the contents of this volume."))
+
+(defmethod volume-contents-minimum-size ((volume volume))
+  (if (slot-boundp volume 'volume-contents)
+      (reduce #'+ (mapcar #'volume-minimum-size
+                          (ensure-cons (volume-contents volume))))
+      0))
+
+(defgeneric volume-minimum-size (volume)
+  (:documentation
+   "Return the VOLUME-SIZE of the volume or the minimum size required to
+accommodate its contents, whichever is larger."))
+
+(defmethod volume-minimum-size ((volume volume))
+  (let ((volume-minimum-size
+          (cond ((not (slot-boundp volume 'volume-size))
+                 0)
+                ((eql (volume-size volume) :remaining)
+                 1)
+                ((numberp (volume-size volume))
+                 (volume-size volume))
+                (t
+                 (simple-program-error "Invalid volume size ~A"
+                                       (volume-size volume))))))
+    (max volume-minimum-size
+         (volume-contents-minimum-size volume))))
+
 (defgeneric open-volume-contents (volume file)
   (:documentation "Renders contents of VOLUME directly accessible.
 FILE is something in the filesystem which serves as a means of accessing
