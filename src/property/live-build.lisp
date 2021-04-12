@@ -107,16 +107,15 @@ and might undo some of their effects.  For example, to configure
     `(eseqprops
       (installed)
       (file:directory-exists ,(merge-pathnames "auto/" dir))
-      (on-change (eseqprops
-                  (on-change
-                      (on-change
-                          (file:has-content ,auto/config
-                            ,(auto/config config) :mode #o755)
-                        (file:does-not-exist ,@clean)
-                        (%lbconfig ,dir))
-                    (%lbbootstrap t ,dir))
-                  (%lbbootstrap nil ,dir)
-                  (deploys ((:chroot :into ,chroot)) ,host))
+      (on-change
+          (eseqprops
+           (on-change
+               (file:has-content ,auto/config ,(auto/config config) :mode #o755)
+             (file:does-not-exist ,@clean)
+             (%lbconfig ,dir)
+             (%lbbootstrap t ,dir))
+           (%lbbootstrap nil ,dir)
+           (deploys ((:chroot :into ,chroot)) ,host))
         ;; We could run lb_chroot before DEPLOYS, but lb_binary resets things
         ;; like /etc/apt/sources.list too, so doing that wouldn't avoid the
         ;; problem that sometimes CONFIG must be used when you'd normally use
