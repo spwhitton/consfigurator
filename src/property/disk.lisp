@@ -376,8 +376,7 @@ specify \"luks1\" if this is needed.")))
 ;;;; Properties
 
 (defprop has-volumes :posix (&rest volumes)
-  "Specify the non-removable volumes normally accessible to the kernel on this
-host."
+  "Specify non-removable volumes normally accessible to the kernel on this host."
   (:desc (declare (ignore volumes))
          "Has specified volumes.")
   (:hostattrs
