@@ -200,13 +200,62 @@ directly writing out with dd(1)."))
     :documentation "A list of partitions."))
   (:documentation "A device with a GPT partition table and partitions."))
 
-(defclass partition (volume) ()
+(defclass partition (volume)
+  ((partition-typecode
+    :initform #x8300
+    :initarg :partition-typecode
+    :accessor partition-typecode
+    :documentation
+    "The type code for the partition; see the --typecode option to sgdisk(1).
+Either a two-byte hexadecimal number, or a string specifying the GUID.
+
+On GNU/Linux systems, you typically only need to set this to a non-default
+value in the case of EFI system partitions, in which case use #xEF00."))
   (:documentation "A GPT partition."))
 
-(defmethod open-volume-contents ((volume partitioned-volume) (file null))
-  ;; open with kpartx, make an instance of OPENED-VOLUME for *each partition*
-  ;; (not for VOLUME) with the relevant loop device as its DEVICE-FILE slot
-  )
+(defmethod volume-contents-minimum-size ((volume partitioned-volume))
+  "Add one mebibyte for the GPT metadata."
+  (1+ (call-next-method)))
+
+(defmethod open-volume-contents ((volume partitioned-volume) (file pathname))
+  (let ((loopdevs (mapcar
+                   (lambda (line)
+                     (destructuring-bind (add map loopdev &rest ignore)
+                         (split-string line)
+                       (declare (ignore ignore))
+                       (unless (and (string= add "add") (string= map "map"))
+                         (failed-change
+                          "Unexpected kpartx output ~A" line))
+                       (ensure-pathname (strcat "/dev/mapper/" loopdev))))
+                   (runlines "kpartx" "-avs" file))))
+    (unless (= (length loopdevs) (length (volume-contents volume)))
+      (mrun "kpartx" "-d" file)
+      (failed-change
+       "kpartx(1) returned ~A loop devices, but volume has ~A partitions."
+       (length loopdevs) (length (volume-contents volume))))
+    (loop for loopdev in loopdevs and partition in (volume-contents volume)
+          collect (make-instance 'opened-volume
+                                 :opened-volume partition
+                                 :device-file loopdev))))
+
+(defmethod close-volume-contents ((volume partitioned-volume) (file pathname))
+  (mrun "kpartx" "-d" file))
+
+(defmethod create-volume ((volume partitioned-volume) (file pathname))
+  (mrun :inform "sgdisk" "--zap-all" file)
+  (mrun :inform "sgdisk"
+        (loop for partition in (volume-contents volume)
+              for code = (partition-typecode partition)
+              collect (strcat "--new=0:0:"
+                              (if (eql (volume-size partition) :remaining)
+                                  "0"
+                                  (format nil "~DM"
+                                          (volume-minimum-size partition))))
+              collect (strcat "--typecode=0:"
+                              (etypecase code
+                                (string code)
+                                (integer (format nil "~X" code)))))
+        file))
 
 
 ;;;; LVM
