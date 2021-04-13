@@ -159,11 +159,14 @@ whole disks, not partitions (e.g. /dev/sda, not /dev/sda1)."))
    "A raw disk image, customarily given an extension of .img, suitable for
 directly writing out with dd(1)."))
 
-;; kpartx(1) can operate directly upon raw disk images, so we could examine
-;; the type of (volume-contents volume) and if we find it's
-;; PARTITIONED-VOLUME, we could invoke kpartx directly and skip mounting the
-;; whole of the raw disk image.  But for simplicity and composability, leave
-;; that to the implementation of OPEN-VOLUME-CONTENTS for PARTITIONED-VOLUME.
+;; kpartx(1) can operate directly upon raw disk images, and will also make the
+;; whole disk image accessible as a loop device, so we could examine the type
+;; of (volume-contents volume), and if we find it's PARTITIONED-VOLUME, we
+;; could call (open-volume-contents (volume-contents volume) file) and cons an
+;; instance of OPENED-VOLUME for the whole disk onto the front of it (from
+;; partitions at /dev/mapper/loopNpM we can infer that /dev/loopN is the whole
+;; disk).  But for simplicity and composability, just make the whole disk
+;; image accessible at this step of the recursion.
 (defmethod open-volume-contents ((volume raw-disk-image) (file pathname))
   (list (make-instance 'opened-volume
                        :opened-volume volume
