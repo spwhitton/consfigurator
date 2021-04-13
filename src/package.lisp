@@ -64,6 +64,7 @@
            #:memstring=
            #:plist-to-cmd-args
 	   #:with-local-temporary-directory
+           #:pathname-file
 
            #:*consfigurator-debug-level*
            #:with-indented-inform
