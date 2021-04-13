@@ -345,7 +345,7 @@ case return only the exit code."
       (multiple-value-bind (err exit)
           (connection-run *connection* cmd input)
         (let ((out (readfile stdout)))
-          (when inform (informat 1 "~&~{    ~A~%~}" (lines out)))
+          (when inform (informat 1 "~&    % ~A~%~{    ~A~%~}" cmd (lines out)))
           (if (or may-fail (= exit 0))
               (if for-exit exit (values out err exit))
               (error 'run-failed
@@ -367,7 +367,7 @@ start with RUN."
     (informat 3 "~&MRUN ~A" cmd)
     (multiple-value-bind (out exit)
         (connection-run *connection* cmd input)
-      (when inform (informat 1 "~&~{    ~A~%~}" (lines out)))
+      (when inform (informat 1 "~&    % ~A~%~{    ~A~%~}" cmd (lines out)))
       (if (or may-fail (= exit 0))
           (if for-exit exit (values out exit))
           (error 'run-failed
