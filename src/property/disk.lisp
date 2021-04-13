@@ -63,6 +63,10 @@ plus any metadata (e.g. partition tables), this value will be ignored.")
 
 (defgeneric volume-contents-minimum-size (volume)
   (:documentation
+   "Return the minimum size required to accommodate the VOLUME-CONTENTS of VOLUME."))
+
+(defgeneric volume-contents-minimum-size (volume)
+  (:documentation
    "Calculate the minimum size required to accomodate the contents of this volume."))
 
 (defmethod volume-contents-minimum-size ((volume volume))
