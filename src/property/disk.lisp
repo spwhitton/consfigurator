@@ -166,12 +166,14 @@ directly writing out with dd(1)."))
 ;; whole of the raw disk image.  But for simplicity and composability, leave
 ;; that to the implementation of OPEN-VOLUME-CONTENTS for PARTITIONED-VOLUME.
 (defmethod open-volume-contents ((volume raw-disk-image) (file pathname))
-  (let ((loopdev (stripln (run-program `("losetup" "--show" "-f" ,file)
-                                       :output :string))))
-    (make-instance 'opened-volume :opened-volume volume :device-file loopdev)))
+  (list (make-instance 'opened-volume
+                       :opened-volume volume
+                       :device-file
+                       (ensure-pathname
+                        (stripln (run "losetup" "--show" "-f" file))))))
 
 (defmethod close-volume-contents ((volume raw-disk-image) (file pathname))
-  (run-program `("losetup" "-d" ,file)))
+  (mrun "losetup" "-d" file))
 
 
 ;;;; Partitioned block devices and their partitions
@@ -208,8 +210,8 @@ directly writing out with dd(1)."))
 DISK:HAS-VOLUMES, rather than as the VOLUME-CONTENTS of another volume."))
 
 (defmethod open-volume-contents ((volume lvm-volume-group) (file null))
-  (run-program '("vgscan"))
-  (run-program `("vgchange" "-ay" ,(volume-label volume)))
+  (mrun "vgscan")
+  (mrun "vgchange" "-ay" (volume-label volume))
   ;; return a list of OPENED-VOLUME for each logical volume
   )
 
@@ -248,26 +250,24 @@ unmounted, since the actual mount point is not stored.")
    "A block device containing a filesystem, which can be mounted."))
 
 (defmethod open-volume-contents ((volume filesystem) (file pathname))
-  (run-program `("mount" ,file ,(strcat *mount-below* (mount-point volume))))
+  (mrun "mount" file (strcat *mount-below* (mount-point volume)))
   nil)
 
 (defmethod close-volume-contents ((volume filesystem) (file pathname))
-  (run-program `("umount" ,file)))
+  (mrun "umount" file))
 
 (defclass ext4-filesystem (filesystem) ())
 
 (defmethod create-volume ((volume ext4-filesystem) (file pathname))
-  (run-program `("mkfs.ext4" ,(unix-namestring file)
-                             ,@(and (volume-label volume)
-                                    `("-L" ,(volume-label volume))))))
+  (mrun "mkfs.ext4" file (and (volume-label volume)
+                              `("-L" ,(volume-label volume)))))
 
 (defclass fat32-filesystem (filesystem) ())
 
 (defmethod create-volume ((volume fat32-filesystem) (file pathname))
-  (run-program `("mkdosfs" "-F" "32"
-                           ,@(and (volume-label volume)
-                                  `("-n" ,(volume-label volume)))
-                           ,(unix-namestring file))))
+  (mrun "mkdosfs" "-F" "32" (and (volume-label volume)
+                                 `("-n" ,(volume-label volume)))
+        file))
 
 
 ;;;; Other volumes which can be made accessible as block devices
@@ -297,7 +297,7 @@ specify \"luks1\" if this is needed.")))
 (defclass linux-swap (volume) ())
 
 (defmethod create-volume ((volume linux-swap) (file pathname))
-  (run-program `("mkswap" ,(unix-namestring file))))
+  (mrun "mkswap" file))
 
 
 ;;;; Properties
