@@ -13,6 +13,7 @@
                #:named-readtables
                #:cffi
                #+sbcl #:sb-posix
+               #:closer-mop
                #:trivial-backtrace
                #:trivial-macroexpand-all)
   :components ((:file "src/package")

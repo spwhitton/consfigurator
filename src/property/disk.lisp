@@ -54,10 +54,7 @@ The special value :REMAINING means all remaining free space in the volume
 containing this one.
 
 If a larger size is required to accommodate the VOLUME-CONTENTS of the volume
-plus any metadata (e.g. partition tables), this value will be ignored.")
-   (volume-uuid
-    :initarg :volume-uuid
-    :accessor volume-uuid))
+plus any metadata (e.g. partition tables), this value will be ignored."))
   (:documentation
    "Something which contains filesystems and/or other volumes."))
 
@@ -98,55 +95,84 @@ accommodate its contents, whichever is larger."))
   (:documentation
    "A volume which never appears as the VOLUME-CONTENTS of another volume."))
 
-(defgeneric open-volume-contents (volume file)
-  (:documentation "Renders contents of VOLUME directly accessible.
-FILE is something in the filesystem which serves as a means of accessing
-VOLUME, for types of VOLUME where that makes sense, and nil otherwise.
-Returns a possibly-empty list of fresh OPENED-VOLUME values.
-
-An operation which mounts a filesystem, or similar, does not yield access to
-any further volumes, and so should return the empty list."))
-
-(defmethod open-volume-contents ((volume volume) file)
-  "Default implementation: do nothing and yield no newly accessible volumes."
-  nil)
-
-(defgeneric close-volume-contents (volume file)
-  (:documentation
-   "Inverse of OPEN-VOLUME-CONTENTS: `kpartx -d`, `cryptsetup luksClose`, etc.
-Return values, if any, should be ignored."))
-
 (defgeneric create-volume (volume file)
   (:documentation
-   "Create VOLUME on or at FILE, for example creating a GPT partition table and
-its partitions on a block device.  Returns VOLUME."))
+   "Create VOLUME.  FILE is a pathname at or on which to create VOLUME, for types
+of VOLUME where that makes sense, and explicitly nil otherwise.
+Return values, if any, should be ignored."))
 
 
 ;;;; Opened volumes
 
-(defclass opened-volume ()
-  ((opened-volume
-    :type volume
-    :initarg :opened-volume
-    :reader opened-volume
-    :documentation "The VOLUME object that was opened.")
-   (device-file
+(defclass opened-volume (volume)
+  ((device-file
     :type pathname
     :initarg :device-file
     :accessor device-file
-    :documentation "File under /dev giving access to the opened volume."))
+    :documentation "File under /dev giving access to the opened volume.")
+   (volume-uuid
+    :initarg :volume-uuid
+    :accessor volume-uuid
+    :documentation
+    "A UUID for the volume, quoted and prefixed with the tag name, suitable for
+insertion into files like /etc/crypttab and /etc/fstab.  E.g.
+
+    PARTUUID=\"25164b50-4fbb-4ca0-ab01-a30a838bdf3b\""))
   (:documentation
    "A VOLUME object which has been made directly accessible as a block device."))
 
-(defmethod volume-contents ((volume opened-volume))
-  "The contents of an opened volume is the contents of the volume opened."
-  (volume-contents (opened-volume volume)))
+(defgeneric make-opened-volume (volume device-file)
+  (:documentation
+   "Where there is a class which is a subclass of both the class of VOLUME and
+OPENED-VOLUME, make a fresh instance of that class copying all slots from
+VOLUME, and setting the DEVICE-FILE slot to DEVICE-FILE."))
 
-(defmethod open-volume-contents ((volume opened-volume) (file null))
-  (open-volume-contents (opened-volume volume) (device-file volume)))
+(defmacro defclass-opened-volume
+    (name (subclass-of-volume &rest other-superclasses))
+  "Define a subclass of SUBCLASS-OF-VOLUME and OPENED-VOLUME called NAME, and an
+appropriate implementation of MAKE-OPENED-VOLUME for NAME.
+SUBCLASS-OF-VOLUME should be a symbol naming a subclass of VOLUME."
+  `(progn
+     (defclass ,name (,subclass-of-volume ,@other-superclasses opened-volume) ()
+       (:documentation
+        ,(format
+          nil
+          "Instance of ~A which has been made directly accessible as a block device."
+          name)))
+     (defmethod make-opened-volume
+         ((volume ,subclass-of-volume) (device-file pathname))
+       ,(format nil "Make instance of ~A from instance of ~A."
+                name subclass-of-volume)
+       (let ((old-class (find-class ',subclass-of-volume)))
+         (closer-mop:ensure-finalized old-class)
+         (let ((new (allocate-instance (find-class ',name))))
+           (dolist (slot-name (mapcar #'closer-mop:slot-definition-name
+                                      (closer-mop:class-slots old-class)))
+             (when (slot-boundp volume slot-name)
+               (setf (slot-value new slot-name)
+                     (slot-value volume slot-name))))
+           (setf (slot-value new 'device-file) device-file)
+           (reinitialize-instance new))))))
 
-(defmethod close-volume-contents ((volume opened-volume) (file null))
-  (close-volume-contents (opened-volume volume) (device-file volume)))
+(defgeneric open-volume (volume file)
+  (:documentation "Renders contents of VOLUME directly accessible.
+FILE is something in the filesystem which serves as a means of accessing
+VOLUME, for types of VOLUME where that makes sense, and explicitly nil
+otherwise.
+
+Returns as a first value a fresh instance of OPENED-VOLUME corresponding to
+VOLUME.  In this case, it is legitimate to subsequently call OPEN-VOLUME on
+the VOLUME-CONTENTS of VOLUME.
+
+If opening this kind of volume results in opening its VOLUME-CONTENTS too,
+also return as a second value a list of fresh OPENED-VOLUME values
+corresponding to the VOLUME-CONTENTS of VOLUME.  In this case, the caller
+should not attempt to call OPEN-VOLUME on the VOLUME-CONTENTS of VOLUME."))
+
+(defgeneric close-volume (volume)
+  (:documentation
+   "Inverse of OPEN-VOLUME: `kpartx -d`, `cryptsetup luksClose`, etc.
+Return values, if any, should be ignored."))
 
 (defclass physical-disk (top-level-volume opened-volume) ()
   (:documentation
@@ -154,8 +180,6 @@ its partitions on a block device.  Returns VOLUME."))
 corresponding block device in /dev available to access it.  Should be used for
 whole disks, not partitions (e.g. /dev/sda, not /dev/sda1)."))
 
-(defmethod opened-volume ((volume physical-disk))
-  volume)
 
 ;;;; Disk images
 
@@ -172,6 +196,8 @@ whole disks, not partitions (e.g. /dev/sda, not /dev/sda1)."))
    "A raw disk image, customarily given an extension of .img, suitable for
 directly writing out with dd(1)."))
 
+(defclass-opened-volume opened-raw-disk-image (raw-disk-image))
+
 ;; kpartx(1) can operate directly upon raw disk images, and will also make the
 ;; whole disk image accessible as a loop device, so we could examine the type
 ;; of (volume-contents volume), and if we find it's PARTITIONED-VOLUME, we
@@ -180,27 +206,27 @@ directly writing out with dd(1)."))
 ;; partitions at /dev/mapper/loopNpM we can infer that /dev/loopN is the whole
 ;; disk).  But for simplicity and composability, just make the whole disk
 ;; image accessible at this step of the recursion.
-(defmethod open-volume-contents ((volume raw-disk-image) (file pathname))
-  (list (make-instance 'opened-volume
-                       :opened-volume volume
-                       :device-file
-                       (ensure-pathname
-                        (stripln (run "losetup" "--show" "-f" file))))))
+(defmethod open-volume ((volume raw-disk-image) (file null))
+  (make-opened-volume
+   volume
+   (ensure-pathname
+    (stripln (run "losetup" "--show" "-f" (image-file volume))))))
 
-(defmethod close-volume-contents ((volume raw-disk-image) (file pathname))
-  (mrun "losetup" "-d" file))
+(defmethod close-volume ((volume opened-raw-disk-image))
+  (mrun "losetup" "-d" (device-file volume)))
 
-(defmethod create-volume ((volume raw-disk-image) (file pathname))
+(defmethod create-volume ((volume raw-disk-image) (file null))
   "Ensure that a raw disk image exists.  Will overwrite only regular files."
-  (when (test "-L" file "-o" "-e" file "-a" "!" "-f" file)
-    (failed-change "~A already exists and is not a regular file." file))
-  ;; Here, following Propellor, we want to ensure that the disk image size is
-  ;; a multiple of 4096 bytes, so that the size is aligned to the common
-  ;; sector sizes of both 512 and 4096.  But since we currently only support
-  ;; volume sizes in whole mebibytes, we know it's already aligned.
-  (file:does-not-exist file)
-  (mrun
-   "fallocate" "-l" (format nil "~DM" (volume-minimum-size volume)) file))
+  (let ((file (image-file volume)))
+    (when (test "-L" file "-o" "-e" file "-a" "!" "-f" file)
+      (failed-change "~A already exists and is not a regular file." file))
+    ;; Here, following Propellor, we want to ensure that the disk image size
+    ;; is a multiple of 4096 bytes, so that the size is aligned to the common
+    ;; sector sizes of both 512 and 4096.  But since we currently only support
+    ;; volume sizes in whole mebibytes, we know it's already aligned.
+    (file:does-not-exist file)
+    (mrun
+     "fallocate" "-l" (format nil "~DM" (volume-minimum-size volume)) file)))
 
 
 ;;;; Partitioned block devices and their partitions
@@ -212,6 +238,8 @@ directly writing out with dd(1)."))
     :type cons
     :documentation "A list of partitions."))
   (:documentation "A device with a GPT partition table and partitions."))
+
+(defclass-opened-volume opened-partitioned-volume (partitioned-volume))
 
 (defclass partition (volume)
   ((partition-typecode
@@ -226,11 +254,13 @@ On GNU/Linux systems, you typically only need to set this to a non-default
 value in the case of EFI system partitions, in which case use #xEF00."))
   (:documentation "A GPT partition."))
 
+(defclass-opened-volume opened-partition (partition))
+
 (defmethod volume-contents-minimum-size ((volume partitioned-volume))
   "Add one mebibyte for the GPT metadata."
   (1+ (call-next-method)))
 
-(defmethod open-volume-contents ((volume partitioned-volume) (file pathname))
+(defmethod open-volume ((volume partitioned-volume) (file pathname))
   (let ((loopdevs (mapcar
                    (lambda (line)
                      (destructuring-bind (add map loopdev &rest ignore)
@@ -246,13 +276,13 @@ value in the case of EFI system partitions, in which case use #xEF00."))
       (failed-change
        "kpartx(1) returned ~A loop devices, but volume has ~A partitions."
        (length loopdevs) (length (volume-contents volume))))
-    (loop for loopdev in loopdevs and partition in (volume-contents volume)
-          collect (make-instance 'opened-volume
-                                 :opened-volume partition
-                                 :device-file loopdev))))
+    (values
+     (make-opened-volume volume file)
+     (loop for partition in (volume-contents volume) and loopdev in loopdevs
+           collect (make-opened-volume partition loopdev)))))
 
-(defmethod close-volume-contents ((volume partitioned-volume) (file pathname))
-  (mrun "kpartx" "-d" file))
+(defmethod close-volume ((volume opened-partitioned-volume))
+  (mrun "kpartx" "-d" (device-file volume)))
 
 (defmethod create-volume ((volume partitioned-volume) (file pathname))
   (mrun :inform "sgdisk" "--zap-all" file)
@@ -285,10 +315,10 @@ value in the case of EFI system partitions, in which case use #xEF00."))
    "An LVM volume group.  Typically specified as a top level volume in
 DISK:HAS-VOLUMES, rather than as the VOLUME-CONTENTS of another volume."))
 
-(defmethod open-volume-contents ((volume lvm-volume-group) (file null))
+(defmethod open-volume ((volume lvm-volume-group) (file null))
   (mrun "vgscan")
   (mrun "vgchange" "-ay" (volume-label volume))
-  ;; return a list of OPENED-VOLUME for each logical volume
+  ;; return (as a second value) a list of OPENED-VOLUME for each logical volume
   )
 
 (defclass lvm-logical-volume (volume)
@@ -322,14 +352,19 @@ unmounted, since the actual mount point is not stored.")
   (:documentation
    "A block device containing a filesystem, which can be mounted."))
 
-(defmethod open-volume-contents ((volume filesystem) (file pathname))
-  (mrun "mount" file (strcat *mount-below* (mount-point volume)))
-  nil)
+(defclass-opened-volume mounted-filesystem (filesystem))
 
-(defmethod close-volume-contents ((volume filesystem) (file pathname))
-  (mrun "umount" file))
+(defmethod open-volume ((volume filesystem) (file pathname))
+  (mrun "mount" file (strcat *mount-below* (mount-point volume)))
+  (make-opened-volume volume file))
+
+(defmethod close-volume ((volume mounted-filesystem))
+  (mrun "umount" (device-file volume)))
 
 (defclass ext4-filesystem (filesystem) ())
+
+(defclass-opened-volume
+    mounted-ext4-filesystem (ext4-filesystem mounted-filesystem))
 
 (defmethod create-volume ((volume ext4-filesystem) (file pathname))
   (mrun :inform
@@ -337,6 +372,9 @@ unmounted, since the actual mount point is not stored.")
                               `("-L" ,(volume-label volume)))))
 
 (defclass fat32-filesystem (filesystem) ())
+
+(defclass-opened-volume
+    mounted-fat32-filesystem (fat32-filesystem mounted-filesystem))
 
 (defmethod create-volume ((volume fat32-filesystem) (file pathname))
   (mrun :inform
@@ -359,7 +397,7 @@ Note that GRUB2 older than 2.06 cannot open the default LUKS2 format, so
 specify \"luks1\" if this is needed.")))
 ;; TODO ^ is it the default?
 
-(defmethod open-volume-contents ((volume luks-container) (file pathname))
+(defmethod open-volume ((volume luks-container) (file pathname))
   ;; cryptsetup luksOpen FILE <generated from FILE>
   ;; pass --label when luks2  (is '--type luks' 1 or 2?)
   )
