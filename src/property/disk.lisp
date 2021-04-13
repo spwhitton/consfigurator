@@ -332,13 +332,15 @@ unmounted, since the actual mount point is not stored.")
 (defclass ext4-filesystem (filesystem) ())
 
 (defmethod create-volume ((volume ext4-filesystem) (file pathname))
-  (mrun "mkfs.ext4" file (and (volume-label volume)
+  (mrun :inform
+        "mkfs.ext4" file (and (slot-boundp volume 'volume-label)
                               `("-L" ,(volume-label volume)))))
 
 (defclass fat32-filesystem (filesystem) ())
 
 (defmethod create-volume ((volume fat32-filesystem) (file pathname))
-  (mrun "mkdosfs" "-F" "32" (and (volume-label volume)
+  (mrun :inform
+        "mkdosfs" "-F" "32" (and (slot-boundp volume 'volume-label)
                                  `("-n" ,(volume-label volume)))
         file))
 
