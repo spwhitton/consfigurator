@@ -18,6 +18,9 @@
 (in-package :consfigurator.property.disk)
 (named-readtables:in-readtable :consfigurator)
 
+;;; All Linux-specific for now, so properties using these data types and
+;;; functions should declare a hostattrs requirement (os:required 'os:linux).
+
 ;;;; Volumes
 
 (defclass volume ()
@@ -305,4 +308,5 @@ host."
   (:desc (declare (ignore volumes))
          "Has specified volumes.")
   (:hostattrs
+   (os:required 'os:linux)
    (apply #'push-hostattrs :volumes volumes)))
