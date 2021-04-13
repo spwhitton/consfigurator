@@ -25,12 +25,14 @@
 
 (defclass volume ()
   ((volume-label
+    :type string
     :initarg :volume-label
     :accessor volume-label
     :documentation "The name or label of the volume.
 Can only be recorded in or on the volume itself for certain subclasses.  For
 example, mostly meaningless for a Linux swap partition.")
    (volume-contents
+    :type volume
     :initarg :volume-contents
     :accessor volume-contents)
 ;;    (volume-depth
@@ -290,10 +292,7 @@ DISK:HAS-VOLUMES, rather than as the VOLUME-CONTENTS of another volume."))
     :documentation "The name of the LV, often starting with \"lv_\".")))
 
 (defclass lvm-physical-volume (volume)
-  ((volume-contents
-    :type null
-    :initform nil)
-   (volume-group
+  ((volume-group
     :type string
     :initarg :volume-group
     :accessor volume-group
