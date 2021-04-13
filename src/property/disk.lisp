@@ -45,12 +45,11 @@ example, mostly meaningless for a Linux swap partition.")
 ;; For example, an LVM volume group needs a VOLUME-DEPTH strictly greater than
 ;; the VOLUME-DEPTH of all its physical volumes.")
    (volume-size
-    :type number
     :initarg :volume-size
     :accessor volume-size
-    :documentation "The size of the volume, in mebibytes (MiB).
-The special value T means all remaining free space in the volume containing
-this one.
+    :documentation "The size of the volume, in whole mebibytes (MiB).
+The special value :REMAINING means all remaining free space in the volume
+containing this one.
 
 If a larger size is required to accommodate the VOLUME-CONTENTS of the volume
 plus any metadata (e.g. partition tables), this value will be ignored.")
