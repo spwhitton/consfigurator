@@ -267,7 +267,8 @@
 
 (defpackage :consfigurator.property.disk
   (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:os    #:consfigurator.property.os))
+  (:local-nicknames (#:file    #:consfigurator.property.file)
+                    (#:os      #:consfigurator.property.os))
   (:export #:volume
            #:volume-label
            #:volume-contents
