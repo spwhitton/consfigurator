@@ -150,11 +150,18 @@ whole disks, not partitions (e.g. /dev/sda, not /dev/sda1)."))
 
 (defmethod opened-volume ((volume physical-disk))
   volume)
+
+;;;; Disk images
+
+(defclass disk-image (volume)
+  ((image-file
+    :initarg :image-file
+    :accessor image-file)))
 
 
 ;;;; Raw disk images
 
-(defclass raw-disk-image (volume) ()
+(defclass raw-disk-image (disk-image) ()
   (:documentation
    "A raw disk image, customarily given an extension of .img, suitable for
 directly writing out with dd(1)."))

@@ -275,6 +275,7 @@
            #:volume-size
 
            #:physical-disk
+           #:disk-image
            #:partitioned-volume
            #:partition
            #:lvm-volume-group
