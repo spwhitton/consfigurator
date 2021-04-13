@@ -249,7 +249,7 @@ value in the case of EFI system partitions, in which case use #xEF00."))
               collect (strcat "--new=0:0:"
                               (if (eql (volume-size partition) :remaining)
                                   "0"
-                                  (format nil "~DM"
+                                  (format nil "+~DM"
                                           (volume-minimum-size partition))))
               collect (strcat "--typecode=0:"
                               (etypecase code
