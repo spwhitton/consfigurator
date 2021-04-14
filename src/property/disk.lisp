@@ -423,36 +423,38 @@ specify \"luks1\" if this is needed.")))
 
 ;;;; Recursive operations
 
-(defmacro with-open-volumes ((volumes &key mount-below) &body forms)
+(defmacro with-open-volumes
+    ((volumes &key (mount-below nil mount-below-supplied-p)) &body forms)
   "Where each of VOLUMES is a VOLUME which may be opened by calling OPEN-VOLUME
 with NIL as the second argument, recursively open each of VOLUMES and any
 contents thereof, execute forms, and close all volumes that were opened.
 MOUNT-BELOW specifies the pathname to be prefixed to mount points when opening
 FILESYSTEM volumes."
   (with-gensyms (opened-volumes)
-    (flet ((mount-below (form)
-             (if mount-below
-                 `(let ((*mount-below* ,mount-below)) ,form)
-                 form)))
-      `(let (,opened-volumes)
-         (unwind-protect
-              (progn
-                (labels
-                    ((open-volume-and-contents (volume file)
-                       (multiple-value-bind (opened opened-contents)
-                           ,(mount-below '(open-volume volume file))
-                         (setq ,opened-volumes
-                               (append opened-contents
-                                       (cons opened ,opened-volumes)))
-                         (dolist (opened-volume
-                                  (or opened-contents (list opened)))
-                           (when (slot-boundp opened-volume 'volume-contents)
-                             (open-volume-and-contents
-                              (volume-contents opened-volume)
-                              (device-file opened-volume)))))))
-                  (mapc (rcurry #'open-volume-and-contents nil) ,volumes))
-                ,@forms)
-           ,(mount-below `(mapc #'close-volume ,opened-volumes)))))))
+    (once-only (mount-below)
+      (flet ((mount-below (form)
+               (if mount-below-supplied-p
+                   `(let ((*mount-below* ,mount-below)) ,form)
+                   form)))
+        `(let (,opened-volumes)
+           (unwind-protect
+                (progn
+                  (labels
+                      ((open-volume-and-contents (volume file)
+                         (multiple-value-bind (opened opened-contents)
+                             ,(mount-below '(open-volume volume file))
+                           (setq ,opened-volumes
+                                 (append opened-contents
+                                         (cons opened ,opened-volumes)))
+                           (dolist (opened-volume
+                                    (or opened-contents (list opened)))
+                             (when (slot-boundp opened-volume 'volume-contents)
+                               (open-volume-and-contents
+                                (volume-contents opened-volume)
+                                (device-file opened-volume)))))))
+                    (mapc (rcurry #'open-volume-and-contents nil) ,volumes))
+                  ,@forms)
+             ,(mount-below `(mapc #'close-volume ,opened-volumes))))))))
 
 (defmethod create-volume-and-contents ((volume volume) file)
   "Recursively create VOLUME and its contents, on or at FILE.
