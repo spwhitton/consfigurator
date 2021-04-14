@@ -342,7 +342,7 @@ We do not specify what logical volumes it contains."))
 
 ;;;; Filesystems
 
-(defparameter *mount-below* ""
+(defparameter *mount-below* #P""
   "Prefix for all filesystem mount points.  Bound by functions to request that
 filesystems be mounted relative to a different filesystem root, e.g. under a
 chroot.  The dynamic binding should last until after the filesystems are
@@ -359,7 +359,11 @@ unmounted, since the actual mount point is not stored.")
 (defclass-opened-volume mounted-filesystem (filesystem))
 
 (defmethod open-volume ((volume filesystem) (file pathname))
-  (mrun "mount" file (strcat *mount-below* (mount-point volume)))
+  (let ((mount-point
+          (merge-pathnames (enough-pathname (mount-point volume) #P"/")
+                           (ensure-directory-pathname *mount-below*))))
+    (file:directory-exists mount-point)
+    (mrun "mount" file mount-point))
   (make-opened-volume volume file))
 
 (defmethod close-volume ((volume mounted-filesystem))
