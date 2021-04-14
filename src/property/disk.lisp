@@ -423,14 +423,23 @@ specify \"luks1\" if this is needed.")))
 
 ;;;; Recursive operations
 
-(defmacro with-open-volumes
-    ((volumes &key (mount-below nil mount-below-supplied-p)) &body forms)
+(defmacro with-open-volumes ((volumes
+                              &key
+                                (mount-below nil mount-below-supplied-p)
+                                opened-volumes)
+                             &body forms)
   "Where each of VOLUMES is a VOLUME which may be opened by calling OPEN-VOLUME
 with NIL as the second argument, recursively open each of VOLUMES and any
 contents thereof, execute forms, and close all volumes that were opened.
+
 MOUNT-BELOW specifies the pathname to be prefixed to mount points when opening
-FILESYSTEM volumes."
-  (with-gensyms (opened-volumes)
+FILESYSTEM volumes.  OPENED-VOLUMES specifies a symbol to which a list of all
+volumes which were opened will be bound, which can be used to do things like
+populate /etc/fstab and /etc/crypttab.  Do not modify the list bound to
+OPENED-VOLUMES."
+  (let ((opened-volumes (or opened-volumes (gensym "OPENED-VOLUMES")))
+        (opened (gensym "OPENED"))
+        (opened-contents (gensym "OPENED-CONTENTS")))
     (once-only (mount-below)
       (flet ((mount-below (form)
                (if mount-below-supplied-p
@@ -441,13 +450,13 @@ FILESYSTEM volumes."
                 (progn
                   (labels
                       ((open-volume-and-contents (volume file)
-                         (multiple-value-bind (opened opened-contents)
+                         (multiple-value-bind (,opened ,opened-contents)
                              ,(mount-below '(open-volume volume file))
                            (setq ,opened-volumes
-                                 (append opened-contents
-                                         (cons opened ,opened-volumes)))
+                                 (append ,opened-contents
+                                         (cons ,opened ,opened-volumes)))
                            (dolist (opened-volume
-                                    (or opened-contents (list opened)))
+                                    (or ,opened-contents (list ,opened)))
                              (when (slot-boundp opened-volume 'volume-contents)
                                (open-volume-and-contents
                                 (volume-contents opened-volume)
