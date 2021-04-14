@@ -121,6 +121,9 @@ insertion into files like /etc/crypttab and /etc/fstab.  E.g.
   (:documentation
    "A VOLUME object which has been made directly accessible as a block device."))
 
+(defmethod open-volume ((volume opened-volume) file)
+  volume)
+
 (defgeneric make-opened-volume (volume device-file)
   (:documentation
    "Where there is a class which is a subclass of both the class of VOLUME and
