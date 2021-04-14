@@ -174,6 +174,10 @@ should not attempt to call OPEN-VOLUME on the VOLUME-CONTENTS of VOLUME."))
    "Inverse of OPEN-VOLUME: `kpartx -d`, `cryptsetup luksClose`, etc.
 Return values, if any, should be ignored."))
 
+(defmethod close-volume ((volume volume))
+  "Default implementation: assume there is nothing to close."
+  (values))
+
 (defclass physical-disk (top-level-volume opened-volume) ()
   (:documentation
    "A physical disk drive attached to the machine, which always has a
@@ -411,6 +415,61 @@ specify \"luks1\" if this is needed.")))
 
 (defmethod create-volume ((volume linux-swap) (file pathname))
   (mrun "mkswap" file))
+
+
+;;;; Recursive operations
+
+(defmacro with-open-volumes ((volumes &key mount-below) &body forms)
+  "Where each of VOLUMES is a VOLUME which may be opened by calling OPEN-VOLUME
+with NIL as the second argument, recursively open each of VOLUMES and any
+contents thereof, execute forms, and close all volumes that were opened.
+MOUNT-BELOW specifies the pathname to be prefixed to mount points when opening
+FILESYSTEM volumes."
+  (with-gensyms (opened-volumes)
+    (flet ((mount-below (form)
+             (if mount-below
+                 `(let ((*mount-below* ,mount-below)) ,form)
+                 form)))
+      `(let (,opened-volumes)
+         (unwind-protect
+              (progn
+                (labels
+                    ((open-volume-and-contents (volume file)
+                       (multiple-value-bind (opened opened-contents)
+                           ,(mount-below '(open-volume volume file))
+                         (setq ,opened-volumes
+                               (append opened-contents
+                                       (cons opened ,opened-volumes)))
+                         (dolist (opened-volume
+                                  (or opened-contents (list opened)))
+                           (when (slot-boundp opened-volume 'volume-contents)
+                             (open-volume-and-contents
+                              (volume-contents opened-volume)
+                              (device-file opened-volume)))))))
+                  (mapc (rcurry #'open-volume-and-contents nil) ,volumes))
+                ,@forms)
+           ,(mount-below `(mapc #'close-volume ,opened-volumes)))))))
+
+(defmethod create-volume-and-contents ((volume volume) file)
+  "Recursively create VOLUME and its contents, on or at FILE.
+**THIS FUNCTION UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA**"
+  (let (opened-volumes)
+    (labels
+        ((create (volume file)
+           (create-volume volume file)
+           (when (slot-boundp volume 'volume-contents)
+             (multiple-value-bind (opened opened-contents)
+                 (open-volume volume file)
+               (setq opened-volumes
+                     (append opened-contents (cons opened opened-volumes)))
+               (if opened-contents
+                   (dolist (opened-volume opened-contents)
+                     (when (slot-boundp opened-volume 'volume-contents)
+                       (create (volume-contents opened-volume)
+                               (device-file opened-volume))))
+                   (create (volume-contents opened) (device-file opened)))))))
+      (unwind-protect (create volume file)
+        (mapc #'close-volume opened-volumes)))))
 
 
 ;;;; Properties
