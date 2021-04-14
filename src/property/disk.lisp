@@ -458,7 +458,7 @@ FILESYSTEM volumes."
 
 (defmethod create-volume-and-contents ((volume volume) file)
   "Recursively create VOLUME and its contents, on or at FILE.
-**THIS FUNCTION UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA**"
+**THIS METHOD UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA**"
   (let (opened-volumes)
     (labels
         ((create (volume file)
