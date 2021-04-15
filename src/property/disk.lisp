@@ -206,13 +206,14 @@ directly writing out with dd(1)."))
 (defclass-opened-volume opened-raw-disk-image (raw-disk-image))
 
 ;; kpartx(1) can operate directly upon raw disk images, and will also make the
-;; whole disk image accessible as a loop device, so we could examine the type
-;; of (volume-contents volume), and if we find it's PARTITIONED-VOLUME, we
-;; could call (open-volume-contents (volume-contents volume) file) and cons an
-;; instance of OPENED-VOLUME for the whole disk onto the front of it (from
-;; partitions at /dev/mapper/loopNpM we can infer that /dev/loopN is the whole
-;; disk).  But for simplicity and composability, just make the whole disk
-;; image accessible at this step of the recursion.
+;; whole disk image accessible as a loop device whose name we can infer from
+;; the kpartx(1) output (from partitions at /dev/mapper/loopNpM we can infer
+;; that /dev/loopN is the whole disk).  So we could examine the type of
+;; (volume-contents volume), and if we find it's PARTITIONED-VOLUME, we could
+;; skip executing losetup(1), and just call (open-volume (volume-contents
+;; volume) file) and convert the return values into something appropriate for
+;; us to return.  But for simplicity and composability, just make the whole
+;; disk image accessible at this step of the recursion.
 (defmethod open-volume ((volume raw-disk-image) (file null))
   (make-opened-volume
    volume
