@@ -69,13 +69,20 @@ services."
                :propspec `(service:without-starting-services
                               ,(propspec-props propspec))))))
 
-(defproplist os-bootstrapped :lisp
-    (options root properties
-             &aux (host (make-child-host-for-chroot-deploy properties)))
+(defproplist os-bootstrapped-for :lisp (options root host)
+  "Bootstrap an OS for HOST into ROOT and apply the properties of HOST.
+OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
+  (:desc
+   (declare (ignore options))
+   #?"Built chroot for ${(car (getf (hostattrs host) :hostname))} @ ${root}")
+  (%os-bootstrapper-installed host)
+  (%os-bootstrapped options root host)
+  (deploys `((:chroot :into ,root)) host))
+
+(defproplist os-bootstrapped :lisp (options root properties)
   "Bootstrap an OS into ROOT and apply PROPERTIES.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc (declare (ignore options properties))
          #?"Built chroot @ ${root}")
-  (%os-bootstrapper-installed host)
-  (%os-bootstrapped options root host)
-  (deploys `((:chroot :into ,root)) host))
+  (os-bootstrapped-for
+   options root (make-child-host-for-chroot-deploy properties)))

@@ -346,6 +346,7 @@
                     (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file))
   (:export #:make-child-host-for-chroot-deploy
+           #:os-bootstrapped-for
            #:os-bootstrapped
            #:os-bootstrapped.))
 
