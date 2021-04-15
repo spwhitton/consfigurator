@@ -426,6 +426,60 @@ specify \"luks1\" if this is needed.")))
 
 ;;;; Recursive operations
 
+(defmacro with-mount-below (form)
+  "Avoid establishing any binding for *MOUNT-BELOW* when the caller did not
+explicitly request one."
+  `(if mount-below-supplied-p
+       (let ((*mount-below* mount-below)) ,form)
+       ,form))
+
+(defun open-volumes-and-contents
+    (volumes &key (mount-below nil mount-below-supplied-p))
+  "Where each of VOLUMES is a VOLUME which may be opened by calling OPEN-VOLUME
+with NIL as the second argument, recursively open each of VOLUMES and any
+contents thereof, and return a list of the volumes that were opened, in the
+order in which they should be closed.  MOUNT-BELOW specifies a pathname to
+prefix to mount points when opening FILESYSTEM volumes.
+
+Calling this function can be useful for testing at the REPL, but code should
+normally use WITH-OPEN-VOLUMES.
+
+If an error is signalled while the attempt to open volumes is in progress, a
+single attempt will be made to close all volumes opened up to that point."
+  (let (opened-volumes filesystems)
+    (handler-case
+        (labels
+            ((open-volume-and-contents (volume file)
+               ;; Postpone filesystems until the end so that we can sort
+               ;; them before mounting, to avoid unintended shadowing.
+               (if (subtypep (type-of volume) 'filesystem)
+                   (push (list volume file) filesystems)
+                   (multiple-value-bind (opened opened-contents)
+                       (open-volume volume file)
+                     (setq opened-volumes
+                           (append opened-contents
+                                   (cons opened opened-volumes)))
+                     (dolist (opened-volume (or opened-contents `(,opened)))
+                       (when (slot-boundp opened-volume 'volume-contents)
+                         (open-volume-and-contents
+                          (volume-contents opened-volume)
+                          (device-file opened-volume))))))))
+          (mapc (rcurry #'open-volume-and-contents nil) volumes)
+          ;; Note that filesystems never have any VOLUME-CONTENTS to open.
+          (with-mount-below
+              (dolist (filesystem
+                       (nreverse
+                        (sort filesystems #'subpathp
+                              :key (compose #'ensure-directory-pathname
+                                            #'mount-point
+                                            #'car))))
+                (push (apply #'open-volume filesystem) opened-volumes)))
+          opened-volumes)
+      (serious-condition (condition)
+        (unwind-protect
+             (with-mount-below (mapc #'close-volume opened-volumes))
+          (error condition))))))
+
 (defmacro with-open-volumes ((volumes
                               &key
                                 (mount-below nil mount-below-supplied-p)
@@ -435,38 +489,18 @@ specify \"luks1\" if this is needed.")))
 with NIL as the second argument, recursively open each of VOLUMES and any
 contents thereof, execute forms, and close all volumes that were opened.
 
-MOUNT-BELOW specifies the pathname to be prefixed to mount points when opening
+MOUNT-BELOW specifies a pathname to prefix to mount points when opening
 FILESYSTEM volumes.  OPENED-VOLUMES specifies a symbol to which a list of all
-volumes which were opened will be bound, which can be used to do things like
-populate /etc/fstab and /etc/crypttab.  Do not modify the list bound to
-OPENED-VOLUMES."
-  (let ((opened-volumes (or opened-volumes (gensym "OPENED-VOLUMES")))
-        (opened (gensym "OPENED"))
-        (opened-contents (gensym "OPENED-CONTENTS")))
-    (once-only (mount-below)
-      (flet ((mount-below (form)
-               (if mount-below-supplied-p
-                   `(let ((*mount-below* ,mount-below)) ,form)
-                   form)))
-        `(let (,opened-volumes)
-           (unwind-protect
-                (progn
-                  (labels
-                      ((open-volume-and-contents (volume file)
-                         (multiple-value-bind (,opened ,opened-contents)
-                             ,(mount-below '(open-volume volume file))
-                           (setq ,opened-volumes
-                                 (append ,opened-contents
-                                         (cons ,opened ,opened-volumes)))
-                           (dolist (opened-volume
-                                    (or ,opened-contents (list ,opened)))
-                             (when (slot-boundp opened-volume 'volume-contents)
-                               (open-volume-and-contents
-                                (volume-contents opened-volume)
-                                (device-file opened-volume)))))))
-                    (mapc (rcurry #'open-volume-and-contents nil) ,volumes))
-                  ,@forms)
-             ,(mount-below `(mapc #'close-volume ,opened-volumes))))))))
+volumes that were opened will be bound, which can be used to do things like
+populate /etc/fstab and /etc/crypttab.  Do not modify this list."
+  (once-only (mount-below)
+    (let ((opened-volumes (or opened-volumes (gensym))))
+      `(let ((,opened-volumes (open-volumes-and-contents
+                               ,volumes
+                               ,@(and mount-below-supplied-p
+                                      `(:mount-below ,mount-below)))))
+         (unwind-protect (progn ,@forms)
+           ,(with-mount-below `(mapc #'close-volume ,opened-volumes)))))))
 
 (defmethod create-volume-and-contents ((volume volume) file)
   "Recursively create VOLUME and its contents, on or at FILE.
