@@ -446,3 +446,11 @@ FORMS is typically the programmatic application of one or more properties."
   `(let ((*host* (make-host :propspec (make-propspec :systems nil)))
          (*connection* (establish-connection :local nil)))
      ,@forms))
+
+(defmacro with-local-passwordless-sudo-connection (&body forms)
+  "Execute FORMS as though a passwordless :SUDO connection to localhost had been
+established.  Occasionally useful for testing purposes at the REPL."
+  `(with-local-connection
+     (let ((*connection* (establish-connection :sudo nil
+                                               :user "root" :password nil)))
+       ,@forms)))

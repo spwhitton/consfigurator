@@ -111,6 +111,7 @@
            #:readfile
            #:writefile
            #:with-local-connection
+           #:with-local-passwordless-sudo-connection
 
            ;; property.lisp
            #:propattrs
