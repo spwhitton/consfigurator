@@ -92,7 +92,7 @@ arguments to properties in propapps, but that should not be needed."
          (if (atom tree)
              (if-let ((propapp (gethash tree *replaced-propapps*)))
                (funcall function propapp)
-               (if reconstruct `',tree tree))
+               (if (and reconstruct (symbolp tree)) `',tree tree))
              (let ((walked (mapcar #'walk tree)))
                (if reconstruct (cons 'list walked) walked)))))
     ;; First we need to find all the propapps, after macro expansion.
