@@ -35,7 +35,7 @@ properties whose definitions have not been loaded.
 Ensure that all functions, properties and property combinators used in a
 propspec are defined before that propspec is processed by Consfigurator.
 
-~A"
+~S"
       (broken-propspec condition)))))
 
 (defvar *replaced-propapps* nil
