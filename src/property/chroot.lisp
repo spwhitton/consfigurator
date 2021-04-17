@@ -69,7 +69,8 @@ services."
                :propspec `(service:without-starting-services
                               ,(propspec-props propspec))))))
 
-(defproplist os-bootstrapped-for :lisp (options root host)
+(defproplist os-bootstrapped-for :lisp
+    (options root host &aux (host (preprocess-host host)))
   "Bootstrap an OS for HOST into ROOT and apply the properties of HOST.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc
