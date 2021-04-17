@@ -208,22 +208,9 @@ systems."
                      :systems systems :propspec propspec)
       (make-instance 'unpreprocessed-propspec :propspec propspec)))
 
-(defmethod print-object ((propspec unpreprocessed-propspec) stream)
-  (format stream "#.~S" `(make-instance
-                          'unpreprocessed-propspec
-                          :systems ',(slot-value propspec 'systems)
-                          :propspec
-                          ',(slot-value propspec 'propspec-expression)))
-  propspec)
+(define-print-object-for-structlike preprocessed-propspec)
 
-(defmethod print-object ((propspec preprocessed-propspec) stream)
-  (format stream "#.~S" `(make-instance
-                          'preprocessed-propspec
-                          :systems ',(slot-value propspec 'systems)
-                          :propspec
-                          ',(slot-value propspec
-                                        'preprocessed-propspec-expression)))
-  propspec)
+(define-print-object-for-structlike unpreprocessed-propspec)
 
 ;; this could be defined for preprocessed propspecs easily enough but we
 ;; shouldn't need to append those

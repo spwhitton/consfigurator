@@ -103,13 +103,7 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
    :propspec propspec
    :hostattrs (list* :parent-hostattrs (hostattrs *host*) hostattrs)))
 
-(defmethod print-object ((host host) stream)
-  (format stream "#.~S" `(make-instance
-                          ',(type-of host)
-                          :hostattrs ',(slot-value host 'hostattrs)
-                          :propspec ,(slot-value host 'propspec)
-                          :deploy ',(slot-value host 'default-deployment)))
-  host)
+(define-print-object-for-structlike host)
 
 (defmethod union-propspec-into-host
     ((host unpreprocessed-host) (propspec propspec))

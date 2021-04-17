@@ -149,6 +149,31 @@ one solution is to convert your property to a :LISP property."
   (namestring
    (enough-pathname pathname (pathname-directory-pathname pathname))))
 
+(defmacro quote-nonselfeval (x)
+  (once-only (x)
+    `(if (member (type-of ,x) '(cons symbol))
+         `',,x ,x)))
+
+(defmacro define-print-object-for-structlike (class)
+  "Define an implementation of PRINT-OBJECT for objects which are simple
+one-dimensional collections of values."
+  `(defmethod print-object ((object ,class) stream)
+     (if *print-readably*
+         (format
+          stream "#.~S"
+          `(make-instance
+            ',(type-of object)
+            ;; Call CLASS-OF so that subclasses of CLASS are handled too.
+            ,@(loop for slot in (closer-mop:class-slots (class-of object))
+                    for initargs = (closer-mop:slot-definition-initargs slot)
+                    and slot-name = (closer-mop:slot-definition-name slot)
+                    when (slot-boundp object slot-name)
+                      collect (car initargs)
+                      and collect (quote-nonselfeval
+                                   (slot-value object slot-name)))))
+         (call-next-method))
+     object))
+
 
 ;;;; Progress & debug printing
 

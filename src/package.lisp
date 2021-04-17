@@ -65,6 +65,8 @@
            #:plist-to-cmd-args
 	   #:with-local-temporary-directory
            #:pathname-file
+           #:quote-nonselfeval
+           #:define-print-object-for-structlike
 
            #:*consfigurator-debug-level*
            #:with-indented-inform

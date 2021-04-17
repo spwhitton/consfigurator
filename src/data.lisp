@@ -569,7 +569,8 @@ rework your deployment so that it does not end up in the propspec or
 hostattrs; see \"Pitfalls\" in the Consfigurator user manual.
 
 If ~:*~A is a simple object then you may be able to resolve this by defining
-a PRINT-OBJECT method for your class."
+a PRINT-OBJECT method for your class, possibly using
+CONSFIGURATOR:DEFINE-PRINT-OBJECT-FOR-STRUCTLIKE."
                  (print-not-readable-object c)))))))
 
 (defun request-lisp-systems ()

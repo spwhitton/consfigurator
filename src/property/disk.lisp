@@ -58,6 +58,8 @@ plus any metadata (e.g. partition tables), this value will be ignored."))
   (:documentation
    "Something which contains filesystems and/or other volumes."))
 
+(define-print-object-for-structlike volume)
+
 (defgeneric volume-contents-minimum-size (volume)
   (:documentation
    "Return the minimum size required to accommodate the VOLUME-CONTENTS of VOLUME."))
