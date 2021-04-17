@@ -79,6 +79,9 @@
            #:string->filename
            #:filename->string
 
+           #:unwind-protect-in-parent
+           #:cancel-unwind-protect-in-parent-cleanup
+
            ;; connection.lisp
            #:establish-connection
            #:continue-connection
@@ -166,6 +169,7 @@
            #:hostattrs
            #:preprocess-host
            #:with-preserve-hostattrs
+           #:with-replace-hostattrs
 
            ;; deployment.lisp
            #:defdeploy

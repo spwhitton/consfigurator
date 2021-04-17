@@ -264,3 +264,30 @@ previous output."
              (t
               (push c result)))
         finally (return (coerce (nreverse result) 'string))))
+
+
+;;;; Forking utilities
+
+(define-condition in-child-process () ())
+
+(defmacro unwind-protect-in-parent (protected &body cleanup)
+  "Like UNWIND-PROTECT, but with a mechanism to cancel the execution of CLEANUP
+in child processes resulting from calls to fork(2) during the execution of
+PROTECTED.  This means that CLEANUP won't get executed on both sides of the
+fork, but only in the parent.
+
+For this to work, after fork(2), the child process must call
+CANCEL-UNWIND-PROTECT-IN-PARENT-CLEANUP, which will affect all enclosing uses
+of this macro."
+  (with-gensyms (cancelled)
+    `(let (,cancelled)
+       (unwind-protect
+            (handler-bind ((in-child-process
+                             (lambda (c) (setq ,cancelled t) (signal c))))
+              ,protected)
+         (unless ,cancelled ,@cleanup)))))
+
+(defun cancel-unwind-protect-in-parent-cleanup ()
+  "Cancel the CLEANUP forms in all enclosing uses of UNWIND-PROTECT-IN-PARENT.
+Should be called soon after fork(2) in child processes."
+  (signal 'in-child-process))

@@ -62,6 +62,16 @@ properties."
   `(let ((*host* (shallow-copy-host *host*)))
      ,@forms))
 
+(defmacro with-replace-hostattrs ((&rest hostattrs) &body forms)
+  "Remove all hostattrs for each hostattr type in HOSTATTRS, execute forms,
+then restore previous hostattrs, including throwing away any newly added
+hostattrs.  Useful in property combinators which create context by replacing
+hostattrs.  Shouldn't be used in properties."
+  `(with-preserve-hostattrs
+     ,@(loop for type in hostattrs
+             collect `(setf (getf (slot-value *host* 'hostattrs) ,type) nil))
+     ,@forms))
+
 (defgeneric preprocess-host (host)
   (:documentation
    "Convert a host into a fresh preprocessed host if necessary, and

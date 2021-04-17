@@ -73,6 +73,7 @@ for example, such that we don't see it."
                           (uiop:quit 2))))
          (mapc #'clear-input
                (list *standard-input* *debug-io* *terminal-io*))
+         (cancel-unwind-protect-in-parent-cleanup)
          ;; While some kinds of data source will still work given certain
          ;; subtypes of FORK-CONNECTION (e.g. if they've already cached the
          ;; data in memory, or if it's also accessible to whomever we will

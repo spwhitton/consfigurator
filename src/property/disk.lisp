@@ -503,6 +503,42 @@ populate /etc/fstab and /etc/crypttab.  Do not modify this list."
          (unwind-protect (progn ,@forms)
            ,(with-mount-below `(mapc #'close-volume ,opened-volumes)))))))
 
+(defmacro with-these-open-volumes
+    ((volumes &key (mount-below nil mount-below-supplied-p)) &body propapps)
+  "Macro property combinator.  Where each of VOLUMES is a VOLUME which may be
+opened by calling OPEN-VOLUME with NIL as the second argument, recursively
+open each of VOLUMES and any contents thereof, apply PROPAPPS, and close all
+volumes that were opened.
+
+MOUNT-BELOW specifies a pathname to prefix to mount points when opening
+FILESYSTEM volumes.  During the application of PROPAPPS, all :OPENED-VOLUMES
+hostattrs are replaced with a list of the volumes that were opened; this list
+must not be modified."
+  `(with-these-open-volumes*
+     ,volumes
+     ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))
+     ,@(and mount-below-supplied-p `(:mount-below ,mount-below))))
+
+(define-function-property-combinator with-these-open-volumes*
+    (volumes propapp &key (mount-below nil mount-below-supplied-p))
+  (:retprop
+   :type (propapptype propapp)
+   :hostattrs (get (car propapp) 'hostattrs)
+   :apply
+   (lambda (&rest ignore)
+     (declare (ignore ignore))
+     (let ((opened-volumes
+             (apply #'open-volumes-and-contents
+                    `(,volumes ,@(and mount-below-supplied-p
+                                      `(:mount-below ,mount-below))))))
+       (unwind-protect-in-parent
+           (with-replace-hostattrs (:opened-volumes)
+             (apply #'push-hostattrs
+                    :opened-volumes opened-volumes)
+             (propappapply propapp))
+         (with-mount-below (mapc #'close-volume opened-volumes)))))
+   :args (cdr propapp)))
+
 (defmethod create-volume-and-contents ((volume volume) file)
   "Recursively create VOLUME and its contents, on or at FILE.
 **THIS METHOD UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA**"
