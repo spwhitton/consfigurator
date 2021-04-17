@@ -436,14 +436,14 @@ Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."
   "Push new static informational attributes VS of type KEY.
 
 Called by property :HOSTATTRS subroutines."
-  (dolist (v vs)
-    (push v (getf (slot-value *host* 'hostattrs) k))))
+  (setf (getf (slot-value *host* 'hostattrs) k)
+        (append vs (get-hostattrs k))))
 
 (defun pushnew-hostattrs (k &rest vs)
   "Push new static informational attributes VS of type KEY.
 
 Called by property :HOSTATTRS subroutines."
-  (dolist (v vs)
+  (dolist (v (reverse vs))
     (pushnew v (getf (slot-value *host* 'hostattrs) k))))
 
 (defun require-data (iden1 iden2)
