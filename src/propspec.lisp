@@ -23,7 +23,8 @@
 (define-condition ambiguous-propspec (undefined-function) ())
 
 (define-condition invalid-or-ambiguous-propspec (error)
-  ((broken-propspec :initarg :propspec :reader broken-propspec))
+  ((original-error  :initarg :error    :reader original-error)
+   (broken-propspec :initarg :propspec :reader broken-propspec))
   (:report
    (lambda (condition stream)
      (format
@@ -35,8 +36,10 @@ properties whose definitions have not been loaded.
 Ensure that all functions, properties and property combinators used in a
 propspec are defined before that propspec is processed by Consfigurator.
 
-~S"
-      (broken-propspec condition)))))
+~S" (broken-propspec condition))
+     (when (slot-boundp condition 'original-error)
+       (format stream "~&~%The error from the code walker was:~%~%~A"
+               (original-error condition))))))
 
 (defvar *replaced-propapps* nil
   "Internal dynamic variable used in MAP-PROPSPEC-PROPAPPS.")
@@ -107,8 +110,9 @@ arguments to properties in propapps, but that should not be needed."
     (let ((expanded
             (handler-case
                 (macrolet-and-expand *known-property-macrolets* propspec)
-              (error ()
-                (error 'invalid-or-ambiguous-propspec :propspec propspec)))))
+              (error (condition)
+                (error 'invalid-or-ambiguous-propspec :error condition
+                                                      :propspec propspec)))))
       ;; Now we use a dummy macro expansion pass to find any symbols without
       ;; function or property definitions occurring in function call
       ;; positions.  These could potentially be properties whose definitions
