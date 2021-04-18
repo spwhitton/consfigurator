@@ -60,6 +60,18 @@ plus any metadata (e.g. partition tables), this value will be ignored."))
 
 (define-print-object-for-structlike volume)
 
+(defmethod subvolumes-of-type ((type symbol) (volume volume))
+  "Recursively examine VOLUME and its VOLUME-CONTENTS and return a list of all
+volumes encountered whose type is a subtype of TYPE."
+  (labels ((walk (volume)
+             (let ((contents
+                     (and (slot-boundp volume 'volume-contents)
+                          (mapcan #'walk
+                                  (ensure-cons (volume-contents volume))))))
+               (if (subtypep (type-of volume) type)
+                   (cons volume contents) contents))))
+    (walk volume)))
+
 (defgeneric volume-contents-minimum-size (volume)
   (:documentation
    "Return the minimum size required to accommodate the VOLUME-CONTENTS of VOLUME."))
@@ -358,7 +370,12 @@ unmounted, since the actual mount point is not stored.")
   ((mount-point
     :type pathname
     :initarg :mount-point
-    :accessor mount-point))
+    :accessor mount-point)
+   (mount-options
+    :type list
+    :initform nil
+    :initarg :mount-options
+    :accessor mount-options))
   (:documentation
    "A block device containing a filesystem, which can be mounted."))
 

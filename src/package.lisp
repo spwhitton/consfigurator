@@ -272,29 +272,6 @@
            #:required
            #:supports-arch-p))
 
-(defpackage :consfigurator.property.disk
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:file    #:consfigurator.property.file)
-                    (#:os      #:consfigurator.property.os))
-  (:export #:volume
-           #:volume-label
-           #:volume-contents
-           #:volume-size
-
-           #:physical-disk
-           #:disk-image
-           #:partitioned-volume
-           #:partition
-           #:lvm-volume-group
-           #:lvm-logical-volume
-           #:lvm-physical-volume
-           #:ext4-filesystem
-           #:fat32-filesystem
-           #:luks-container
-           #:linux-swap
-
-           #:has-volumes))
-
 (defpackage :consfigurator.property.mount
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os    #:consfigurator.property.os)
@@ -367,6 +344,45 @@
   (:export #:installed
            #:image-built
            #:image-built.))
+
+(defpackage :consfigurator.property.disk
+  (:use #:cl #:alexandria #:consfigurator)
+  (:local-nicknames (#:file    #:consfigurator.property.file)
+                    (#:os      #:consfigurator.property.os))
+  (:export #:volume
+           #:volume-label
+           #:volume-contents
+           #:volume-size
+           #:subvolumes-of-type
+
+           #:physical-disk
+           #:disk-image
+           #:image-file
+           #:raw-disk-image
+           #:opened-raw-disk-image
+           #:partitioned-volume
+           #:opened-partitioned-volume
+           #:partition
+           #:opened-partition
+
+           #:lvm-volume-group
+           #:lvm-logical-volume
+           #:lvm-physical-volume
+
+           #:filesystem
+           #:mount-point
+           #:mount-options
+           #:mounted-filesystem
+           #:ext4-filesystem
+           #:mounted-ext4-filesystem
+           #:fat32-filesystem
+           #:mounted-fat32-filesystem
+
+           #:luks-container
+           #:opened-luks-container
+           #:linux-swap
+
+           #:has-volumes))
 
 (defpackage :consfigurator.property.gnupg
   (:use #:cl #:consfigurator)
