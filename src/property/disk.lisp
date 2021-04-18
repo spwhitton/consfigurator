@@ -123,15 +123,7 @@ Return values, if any, should be ignored."))
     :type pathname
     :initarg :device-file
     :accessor device-file
-    :documentation "File under /dev giving access to the opened volume.")
-   (volume-uuid
-    :initarg :volume-uuid
-    :accessor volume-uuid
-    :documentation
-    "A UUID for the volume, quoted and prefixed with the tag name, suitable for
-insertion into files like /etc/crypttab and /etc/fstab.  E.g.
-
-    PARTUUID=\"25164b50-4fbb-4ca0-ab01-a30a838bdf3b\""))
+    :documentation "File under /dev giving access to the opened volume."))
   (:documentation
    "A VOLUME object which has been made directly accessible as a block device."))
 
