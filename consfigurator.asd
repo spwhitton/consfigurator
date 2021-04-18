@@ -36,6 +36,7 @@
                (:file "src/property/chroot")
                (:file "src/property/live-build")
                (:file "src/property/disk")
+               (:file "src/property/fstab")
                (:file "src/property/user")
                (:file "src/property/git")
                (:file "src/property/gnupg")

@@ -384,6 +384,14 @@
 
            #:has-volumes))
 
+(defpackage :consfigurator.property.fstab
+  (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
+  (:local-nicknames (#:os    #:consfigurator.property.os)
+                    (#:file  #:consfigurator.property.file))
+  (:export #:volume->entry
+           #:entry-for-mountpoint
+           #:entries-for-volumes))
+
 (defpackage :consfigurator.property.gnupg
   (:use #:cl #:consfigurator)
   (:export #:public-key-imported))
