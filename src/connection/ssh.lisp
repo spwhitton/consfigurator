@@ -24,8 +24,9 @@
                                    user)
   (declare (ignore remaining))
   (informat 1 "~&Establishing SSH connection to ~A" hop)
-  (mrun "ssh" "-fN" hop)
-  (make-instance 'ssh-connection :hostname hop :user user))
+  (let ((connection (make-instance 'ssh-connection :hostname hop :user user)))
+    (mrun "ssh" (ssh-host connection) ":")
+    connection))
 
 (defclass ssh-connection (shell-wrap-connection)
   ((hostname
