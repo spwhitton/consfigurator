@@ -76,10 +76,6 @@ volumes encountered whose type is a subtype of TYPE."
   (:documentation
    "Return the minimum size required to accommodate the VOLUME-CONTENTS of VOLUME."))
 
-(defgeneric volume-contents-minimum-size (volume)
-  (:documentation
-   "Calculate the minimum size required to accomodate the contents of this volume."))
-
 (defmethod volume-contents-minimum-size ((volume volume))
   (if (slot-boundp volume 'volume-contents)
       (reduce #'+ (mapcar #'volume-minimum-size
