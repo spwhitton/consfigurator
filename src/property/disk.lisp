@@ -565,8 +565,7 @@ must not be modified."
                                       `(:mount-below ,mount-below))))))
        (unwind-protect-in-parent
            (with-replace-hostattrs (:opened-volumes)
-             (apply #'push-hostattrs
-                    :opened-volumes opened-volumes)
+             (apply #'push-hostattrs :opened-volumes opened-volumes)
              (propappapply propapp))
          (with-mount-below (mapc #'close-volume opened-volumes)))))
    :args (cdr propapp)))
