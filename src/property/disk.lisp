@@ -60,6 +60,31 @@ plus any metadata (e.g. partition tables), this value will be ignored."))
 
 (define-print-object-for-structlike volume)
 
+(defgeneric copy-volume-and-contents
+    (volume &rest initialisations &key &allow-other-keys)
+  (:documentation
+   "Make a fresh copy of VOLUME, shallowly, except for the VOLUME-CONTENTS of
+volume, which is recursively copied.  Keyword arguments may be used to
+subsequently replace the copied values of some slots."))
+
+(defmethod copy-volume-and-contents
+    ((volume volume) &rest initialisations &key &allow-other-keys)
+  (let* ((class (class-of volume))
+         (copy (allocate-instance class))
+         (contents-bound-p (slot-boundp volume 'volume-contents))
+         (contents (and contents-bound-p (volume-contents volume))))
+    (dolist (slot-name (delete 'volume-contents
+                               (mapcar #'closer-mop:slot-definition-name
+                                       (closer-mop:class-slots class))))
+      (when (slot-boundp volume slot-name)
+        (setf (slot-value copy slot-name) (slot-value volume slot-name))))
+    (when contents-bound-p
+      (setf (volume-contents copy)
+            (if (listp contents)
+                (mapcar #'copy-volume-and-contents contents)
+                (copy-volume-and-contents contents))))
+    (apply #'reinitialize-instance copy initialisations)))
+
 (defmethod subvolumes-of-type ((type symbol) (volume volume))
   "Recursively examine VOLUME and its VOLUME-CONTENTS and return a list of all
 volumes encountered whose type is a subtype of TYPE."
