@@ -25,16 +25,12 @@
 
 (defclass volume ()
   ((volume-label
-    :type string
-    :initarg :volume-label
-    :accessor volume-label
+    :type string :initarg :volume-label :accessor volume-label
     :documentation "The name or label of the volume.
 Can only be recorded in or on the volume itself for certain subclasses.  For
 example, mostly meaningless for a Linux swap partition.")
    (volume-contents
-    :type volume
-    :initarg :volume-contents
-    :accessor volume-contents)
+    :type volume :initarg :volume-contents :accessor volume-contents)
 ;;    (volume-depth
 ;;     :initarg :volume-depth
 ;;     :accessor volume-depth
@@ -47,8 +43,7 @@ example, mostly meaningless for a Linux swap partition.")
 ;; For example, an LVM volume group needs a VOLUME-DEPTH strictly greater than
 ;; the VOLUME-DEPTH of all its physical volumes.")
    (volume-size
-    :initarg :volume-size
-    :accessor volume-size
+    :initarg :volume-size :accessor volume-size
     :documentation "The size of the volume, in whole mebibytes (MiB).
 The special value :REMAINING means all remaining free space in the volume
 containing this one.
@@ -65,66 +60,64 @@ plus any metadata (e.g. partition tables), this value will be ignored."))
   (:documentation
    "Make a fresh copy of VOLUME, shallowly, except for the VOLUME-CONTENTS of
 volume, which is recursively copied.  Keyword arguments may be used to
-subsequently replace the copied values of some slots."))
+subsequently replace the copied values of some slots.")
+  (:method ((volume volume) &rest initialisations &key &allow-other-keys)
+    (let* ((class (class-of volume))
+           (copy (allocate-instance class))
+           (contents-bound-p (slot-boundp volume 'volume-contents))
+           (contents (and contents-bound-p (volume-contents volume))))
+      (dolist (slot-name (delete 'volume-contents
+                                 (mapcar #'closer-mop:slot-definition-name
+                                         (closer-mop:class-slots class))))
+        (when (slot-boundp volume slot-name)
+          (setf (slot-value copy slot-name) (slot-value volume slot-name))))
+      (when contents-bound-p
+        (setf (volume-contents copy)
+              (if (listp contents)
+                  (mapcar #'copy-volume-and-contents contents)
+                  (copy-volume-and-contents contents))))
+      (apply #'reinitialize-instance copy initialisations))))
 
-(defmethod copy-volume-and-contents
-    ((volume volume) &rest initialisations &key &allow-other-keys)
-  (let* ((class (class-of volume))
-         (copy (allocate-instance class))
-         (contents-bound-p (slot-boundp volume 'volume-contents))
-         (contents (and contents-bound-p (volume-contents volume))))
-    (dolist (slot-name (delete 'volume-contents
-                               (mapcar #'closer-mop:slot-definition-name
-                                       (closer-mop:class-slots class))))
-      (when (slot-boundp volume slot-name)
-        (setf (slot-value copy slot-name) (slot-value volume slot-name))))
-    (when contents-bound-p
-      (setf (volume-contents copy)
-            (if (listp contents)
-                (mapcar #'copy-volume-and-contents contents)
-                (copy-volume-and-contents contents))))
-    (apply #'reinitialize-instance copy initialisations)))
-
-(defmethod subvolumes-of-type ((type symbol) (volume volume))
-  "Recursively examine VOLUME and its VOLUME-CONTENTS and return a list of all
-volumes encountered whose type is a subtype of TYPE."
-  (labels ((walk (volume)
-             (let ((contents
-                     (and (slot-boundp volume 'volume-contents)
-                          (mapcan #'walk
-                                  (ensure-cons (volume-contents volume))))))
-               (if (subtypep (type-of volume) type)
-                   (cons volume contents) contents))))
-    (walk volume)))
+(defgeneric subvolumes-of-type (type volume)
+  (:documentation
+   "Recursively examine VOLUME and its VOLUME-CONTENTS and return a list of all
+volumes encountered whose type is a subtype of TYPE.")
+  (:method ((type symbol) (volume volume))
+    (labels ((walk (volume)
+               (let ((contents
+                       (and (slot-boundp volume 'volume-contents)
+                            (mapcan #'walk
+                                    (ensure-cons (volume-contents volume))))))
+                 (if (subtypep (type-of volume) type)
+                     (cons volume contents) contents))))
+      (walk volume))))
 
 (defgeneric volume-contents-minimum-size (volume)
   (:documentation
-   "Return the minimum size required to accommodate the VOLUME-CONTENTS of VOLUME."))
-
-(defmethod volume-contents-minimum-size ((volume volume))
-  (if (slot-boundp volume 'volume-contents)
-      (reduce #'+ (mapcar #'volume-minimum-size
-                          (ensure-cons (volume-contents volume))))
-      0))
+   "Return the minimum size required to accommodate the VOLUME-CONTENTS of VOLUME.")
+  (:method ((volume volume))
+    (if (slot-boundp volume 'volume-contents)
+        (reduce #'+ (mapcar #'volume-minimum-size
+                            (ensure-cons (volume-contents volume))))
+        0)))
 
 (defgeneric volume-minimum-size (volume)
   (:documentation
    "Return the VOLUME-SIZE of the volume or the minimum size required to
-accommodate its contents, whichever is larger."))
-
-(defmethod volume-minimum-size ((volume volume))
-  (let ((volume-minimum-size
-          (cond ((not (slot-boundp volume 'volume-size))
-                 0)
-                ((eql (volume-size volume) :remaining)
-                 1)
-                ((numberp (volume-size volume))
-                 (volume-size volume))
-                (t
-                 (simple-program-error "Invalid volume size ~A"
-                                       (volume-size volume))))))
-    (max volume-minimum-size
-         (volume-contents-minimum-size volume))))
+accommodate its contents, whichever is larger.")
+  (:method ((volume volume))
+    (let ((volume-minimum-size
+            (cond ((not (slot-boundp volume 'volume-size))
+                   0)
+                  ((eql (volume-size volume) :remaining)
+                   1)
+                  ((numberp (volume-size volume))
+                   (volume-size volume))
+                  (t
+                   (simple-program-error "Invalid volume size ~A"
+                                         (volume-size volume))))))
+      (max volume-minimum-size
+           (volume-contents-minimum-size volume)))))
 
 (defclass top-level-volume (volume) ()
   (:documentation
@@ -218,9 +211,7 @@ whole disks, not partitions (e.g. /dev/sda, not /dev/sda1)."))
 ;;;; Disk images
 
 (defclass disk-image (volume)
-  ((image-file
-    :initarg :image-file
-    :accessor image-file)))
+  ((image-file :initarg :image-file :accessor image-file)))
 
 
 ;;;; Raw disk images
@@ -278,9 +269,7 @@ directly writing out with dd(1)."))
 
 (defclass partition (volume)
   ((partition-typecode
-    :initform #x8300
-    :initarg :partition-typecode
-    :accessor partition-typecode
+    :initform #x8300 :initarg :partition-typecode :accessor partition-typecode
     :documentation
     "The type code for the partition; see the --typecode option to sgdisk(1).
 Either a two-byte hexadecimal number, or a string specifying the GUID.
@@ -380,15 +369,9 @@ chroot.  The dynamic binding should last until after the filesystems are
 unmounted, since the actual mount point is not stored.")
 
 (defclass filesystem (volume)
-  ((mount-point
-    :type pathname
-    :initarg :mount-point
-    :accessor mount-point)
+  ((mount-point :type pathname :initarg :mount-point :accessor mount-point)
    (mount-options
-    :type list
-    :initform nil
-    :initarg :mount-options
-    :accessor mount-options))
+    :type list :initform nil :initarg :mount-options :accessor mount-options))
   (:documentation
    "A block device containing a filesystem, which can be mounted."))
 
@@ -431,10 +414,7 @@ unmounted, since the actual mount point is not stored.")
 
 (defclass luks-container (volume)
   ((luks-type
-    :type string
-    :initform "luks"
-    :initarg :luks-type
-    :accessor luks-type
+    :type string :initform "luks" :initarg :luks-type :accessor luks-type
     :documentation
     "The value of the --type parameter to cryptsetup luksFormat.
 Note that GRUB2 older than 2.06 cannot open the default LUKS2 format, so
@@ -570,26 +550,27 @@ must not be modified."
          (with-mount-below (mapc #'close-volume opened-volumes)))))
    :args (cdr propapp)))
 
-(defmethod create-volume-and-contents ((volume volume) file)
-  "Recursively create VOLUME and its contents, on or at FILE.
-**THIS METHOD UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA**"
-  (let (opened-volumes)
-    (labels
-        ((create (volume file)
-           (create-volume volume file)
-           (when (slot-boundp volume 'volume-contents)
-             (multiple-value-bind (opened opened-contents)
-                 (open-volume volume file)
-               (setq opened-volumes
-                     (append opened-contents (cons opened opened-volumes)))
-               (if opened-contents
-                   (dolist (opened-volume opened-contents)
-                     (when (slot-boundp opened-volume 'volume-contents)
-                       (create (volume-contents opened-volume)
-                               (device-file opened-volume))))
-                   (create (volume-contents opened) (device-file opened)))))))
-      (unwind-protect (create volume file)
-        (mapc #'close-volume opened-volumes)))))
+(defgeneric create-volume-and-contents (volume file)
+  (:documentation "Recursively create VOLUME and its contents, on or at FILE.
+**THIS METHOD UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA**")
+  (:method ((volume volume) file)
+    (let (opened-volumes)
+      (labels
+          ((create (volume file)
+             (create-volume volume file)
+             (when (slot-boundp volume 'volume-contents)
+               (multiple-value-bind (opened opened-contents)
+                   (open-volume volume file)
+                 (setq opened-volumes
+                       (append opened-contents (cons opened opened-volumes)))
+                 (if opened-contents
+                     (dolist (opened-volume opened-contents)
+                       (when (slot-boundp opened-volume 'volume-contents)
+                         (create (volume-contents opened-volume)
+                                 (device-file opened-volume))))
+                     (create (volume-contents opened) (device-file opened)))))))
+        (unwind-protect (create volume file)
+          (mapc #'close-volume opened-volumes))))))
 
 
 ;;;; Properties
