@@ -309,6 +309,7 @@
            #:uses-parent-proxy
            #:uses-local-cacher
            #:standard-sources.list
+           #:cache-cleaned
            #:all-installed-p
            #:none-installed-p))
 

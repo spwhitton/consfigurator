@@ -192,6 +192,12 @@ only upgrade Debian stable."
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
             (nconc archive security))))
 
+(defprop cache-cleaned :posix ()
+  "Empty apt's cache to recover disk space."
+  (:desc "apt cache cleaned")
+  (:hostattrs (os:required 'os:debianlike))
+  (:apply (apt-get "clean") :no-change))
+
 
 ;;;; Reports on installation status
 
