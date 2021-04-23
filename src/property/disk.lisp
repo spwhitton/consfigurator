@@ -378,9 +378,7 @@ unmounted, since the actual mount point is not stored.")
 (defclass-opened-volume mounted-filesystem (filesystem))
 
 (defmethod open-volume ((volume filesystem) (file pathname))
-  (let ((mount-point
-          (merge-pathnames (enough-pathname (mount-point volume) #P"/")
-                           (ensure-directory-pathname *mount-below*))))
+  (let ((mount-point (chroot-pathname (mount-point volume) *mount-below*)))
     (file:directory-exists mount-point)
     (mrun "mount" file mount-point))
   (make-opened-volume volume file))

@@ -174,6 +174,10 @@ one-dimensional collections of values."
          (call-next-method))
      object))
 
+(defun chroot-pathname (pathname chroot)
+  (merge-pathnames (enough-pathname pathname #P"/")
+                   (ensure-directory-pathname chroot)))
+
 
 ;;;; Progress & debug printing
 

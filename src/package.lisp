@@ -67,6 +67,7 @@
            #:pathname-file
            #:quote-nonselfeval
            #:define-print-object-for-structlike
+           #:chroot-pathname
 
            #:*consfigurator-debug-level*
            #:with-indented-inform
