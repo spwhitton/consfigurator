@@ -101,48 +101,49 @@ apply the elements of REQUIREMENTS in reverse order."
 ;; note that the :FAILED-CHANGE value is only used within this function and
 ;; should not be returned by property subroutines, per the spec
 (defun apply-and-print (propapps &optional unapply)
-  (labels ((propapp-apply (propapp)
-             (if unapply (propappunapply propapp) (propappapply propapp)))
-           (announce-propapp-apply (propapp)
-             (let ((buffer (make-array '(0)
-				       :element-type 'base-char
-				       :fill-pointer 0 :adjustable t)))
-               (values (with-output-to-string (*standard-output* buffer)
-                         (with-indented-inform
-                           (propapp-apply propapp)))
-                       buffer))))
-    (let ((ret :no-change)
-          ;; Remove any null propapps because we don't want to print anything
-          ;; for those, and applying them will do nothing.
-          (propapps
-            (remove-if #'null (if unapply (reverse propapps) propapps))))
-      (dolist (propapp propapps ret)
+  (let ((buffer (make-array '(0) :element-type 'base-char
+			         :fill-pointer 0 :adjustable t))
+        (return-value :no-change)
+        ;; Remove any null propapps because we don't want to print anything
+        ;; for those, and applying them will do nothing.
+        (propapps
+          (remove-if #'null (if unapply (reverse propapps) propapps))))
+    (labels ((propapp-apply (propapp)
+               (if unapply (propappunapply propapp) (propappapply propapp)))
+             (announce-propapp-apply (propapp)
+               (setf (fill-pointer buffer) 0)
+               (with-output-to-string (*standard-output* buffer)
+                 (with-indented-inform
+                   (propapp-apply propapp)))))
+      (dolist (propapp propapps return-value)
         (let ((announce (or (> *consfigurator-debug-level* 1)
                             (not (get (get (car propapp) 'combinator)
-                                   'inline-combinator)))))
-          (multiple-value-bind (result output)
+                                      'inline-combinator))))
+              result)
+          (unwind-protect-in-parent
               ;; TODO Nested combinators can mean that we establish this
               ;; restart more than once, and they all appear in the debugger
               ;; without any way to distinguish them.  Perhaps we can use the
               ;; :TEST argument to RESTART-CASE such that only the
               ;; innermost(?) skip option appears.
-              (restart-case (if announce
-                                (announce-propapp-apply propapp)
-                                (propapp-apply propapp))
-                (skip-property () :failed-change))
-            (when (and output (or (> *consfigurator-debug-level* 1)
-                                  (not (eql result :no-change))))
+              (setq result (restart-case (if announce
+                                             (announce-propapp-apply propapp)
+                                             (propapp-apply propapp))
+                             (skip-property () :failed-change)))
+            (when (and (plusp (length buffer))
+                       (or (> *consfigurator-debug-level* 1)
+                           (not (eql result :no-change))))
               (fresh-line)
-              (princ output))
-            (when announce
-              (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
-                        (get-hostname) (propappdesc propapp)
-                        (case result
-                          (:no-change     "ok")
-                          (:failed-change "failed")
-                          (t              "done"))))
-            (unless (or (not ret) (eql result :no-change))
-              (setq ret nil))))))))
+              (princ buffer)))
+          (when announce
+            (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
+                      (get-hostname) (propappdesc propapp)
+                      (case result
+                        (:no-change     "ok")
+                        (:failed-change "failed")
+                        (t              "done"))))
+          (unless (or (null return-value) (eql result :no-change))
+            (setq return-value nil)))))))
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
