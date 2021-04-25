@@ -332,6 +332,7 @@
                     (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file))
   (:export #:os-bootstrapped-for
+           #:os-bootstrapped-for.
            #:os-bootstrapped
            #:os-bootstrapped.))
 

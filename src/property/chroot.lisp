@@ -59,8 +59,11 @@
        (debian (%debootstrapped ,root ,host ,@options)))))
 
 (defproplist os-bootstrapped-for :lisp
-    (options root host
+    (options root host &optional additional-properties
              &aux
+             (host (if additional-properties
+                       (union-propspec-into-host host additional-properties)
+                       host))
              (child-host
               (make-child-host
                :hostattrs (hostattrs host)
