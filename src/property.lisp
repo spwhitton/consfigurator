@@ -313,7 +313,13 @@ subroutine does not push any new hostattrs."
              (setf (getf slots kw)
                    ;; TODO wrap a BLOCK around ,@slot with the property name,
                    ;; so we can return from it
-                   `(lambda ,lambda ,@slot)))))
+                   `(lambda ,lambda
+                      ,@(and (member kw '(:desc :hostattrs))
+                             `((declare
+                                (ignorable
+                                 ,@(ordinary-ll-variable-names
+                                    (ordinary-ll-without-&aux lambda))))))
+                      ,@slot)))))
 
 (define-property-defining-macro defpropspec (type lambda slots forms)
   "Define a property which constructs, evaluates and applies a propspec.
@@ -357,10 +363,15 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
           (propappunapply (eval-propspec (getf plist :propspec)))))
   (loop while (and (listp (car forms)) (keywordp (caar forms)))
 	do (setf (getf slots (caar forms))
-		   `(lambda (plist)
-		      (destructuring-bind ,(ordinary-ll-without-&aux lambda)
-			  (getf plist :orig-args)
-			,@(cdr (pop forms))))))
+		 `(lambda (plist)
+		    (destructuring-bind ,(ordinary-ll-without-&aux lambda)
+			(getf plist :orig-args)
+                      ,@(and (member (caar forms) '(:desc :hostattrs))
+                             `((declare
+                                (ignorable
+                                 ,@(ordinary-ll-variable-names
+                                    (ordinary-ll-without-&aux lambda))))))
+		      ,@(cdr (pop forms))))))
   (setf (getf slots :hostattrs)
         `(lambda (plist)
            (let ((propspec (preprocess-propspec
