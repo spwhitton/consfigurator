@@ -58,32 +58,29 @@
     `(os:host-etypecase ,host
        (debian (%debootstrapped ,root ,host ,@options)))))
 
-(defun make-child-host-for-chroot-deploy (propspec)
-  "Return a preprocessed child host with properties as specified by PROPSPEC,
-additionally set up such that deploying the host will not start up any
-services."
-  (preprocess-host
-   (make-child-host
-    :propspec (make-propspec
-               :systems (propspec-systems propspec)
-               :propspec `(service:without-starting-services
-                              ,(propspec-props propspec))))))
-
 (defproplist os-bootstrapped-for :lisp
-    (options root host &aux (host (preprocess-host host)))
+    (options root host
+             &aux
+             (child-host
+              (make-child-host
+               :hostattrs (hostattrs host)
+               :propspec (make-propspec
+                          :systems (propspec-systems (host-propspec host))
+                          :propspec `(service:without-starting-services
+                                         ,(propspec-props (host-propspec host))))))
+             (child-host* (preprocess-host child-host)))
   "Bootstrap an OS for HOST into ROOT and apply the properties of HOST.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc
    (declare (ignore options))
    #?"Built chroot for ${(car (getf (hostattrs host) :hostname))} @ ${root}")
-  (%os-bootstrapper-installed host)
-  (%os-bootstrapped options root host)
-  (deploys `((:chroot :into ,root)) host))
+  (%os-bootstrapper-installed child-host*)
+  (%os-bootstrapped options root child-host*)
+  (deploys `((:chroot :into ,root)) child-host))
 
 (defproplist os-bootstrapped :lisp (options root properties)
   "Bootstrap an OS into ROOT and apply PROPERTIES.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc (declare (ignore options properties))
          #?"Built chroot @ ${root}")
-  (os-bootstrapped-for
-   options root (make-child-host-for-chroot-deploy properties)))
+  (os-bootstrapped-for options root (make-host :propspec properties)))

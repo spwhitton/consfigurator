@@ -98,8 +98,8 @@ and might undo some of their effects.  For example, to configure
          (clean (mapcar (rcurry #'merge-pathnames
                                 (merge-pathnames "config/" dir))
                         '("binary" "bootstrap" "chroot" "common" "source")))
-         (host (chroot:make-child-host-for-chroot-deploy properties))
-         (host-os (car (getf (hostattrs host) :os))))
+         (host (make-host :propspec properties))
+         (host-os (car (getf (hostattrs (preprocess-host host)) :os))))
     (when-let ((mirror (get-hostattrs-car :apt.mirror)))
       (setq config (list* "-m" mirror config)))
     (setq config (list* "-a" (os:debian-architecture host-os)

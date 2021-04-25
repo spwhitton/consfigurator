@@ -331,8 +331,7 @@
                     (#:apt       #:consfigurator.property.apt)
                     (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file))
-  (:export #:make-child-host-for-chroot-deploy
-           #:os-bootstrapped-for
+  (:export #:os-bootstrapped-for
            #:os-bootstrapped
            #:os-bootstrapped.))
 
