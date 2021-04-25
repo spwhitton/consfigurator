@@ -568,6 +568,7 @@ must not be modified."
                                  (device-file opened-volume))))
                      (create (volume-contents opened) (device-file opened)))))))
         (unwind-protect (create volume file)
+          (mrun "sync")
           (mapc #'close-volume opened-volumes))))))
 
 
