@@ -170,7 +170,9 @@
            #:defhost
            #:make-host
            #:make-child-host
+           #:union-propspec-into-host
            #:hostattrs
+           #:host-propspec
            #:preprocess-host
            #:with-preserve-hostattrs
            #:with-replace-hostattrs
