@@ -372,7 +372,13 @@ unmounted, since the actual mount point is not stored.")
 (defclass filesystem (volume)
   ((mount-point :type pathname :initarg :mount-point :accessor mount-point)
    (mount-options
-    :type list :initform nil :initarg :mount-options :accessor mount-options))
+    :type list :initform nil :initarg :mount-options :accessor mount-options)
+   (extra-space
+    :type integer :initform 0 :initarg :extra-space :accessor extra-space
+    :documentation
+    "When creating the filesystem to accommodate a directory tree whose size is
+already known, add this many whole mebibytes of extra free space where
+possible.  Ignored if VOLUME-SIZE is also set."))
   (:documentation
    "A block device containing a filesystem, which can be mounted."))
 
@@ -583,3 +589,129 @@ must not be modified."
   (:hostattrs
    (os:required 'os:linux)
    (apply #'push-hostattrs :volumes volumes)))
+
+(defproplist caches-cleaned :posix ()
+  "Clean all caches we know how to clean in preparation for image creation."
+  (:desc "Caches cleaned")
+  (os:typecase
+    (debianlike (apt:cache-cleaned))))
+
+(defprop %raw-image-created :lisp (volumes &key chroot rebuild)
+  (:desc (declare (ignore volumes chroot rebuild))
+         #?"Created raw disk image & other volumes")
+  (:hostattrs
+   (declare (ignore volumes chroot rebuild))
+   ;; We require GNU du(1).
+   (os:required 'os:linux))
+  (:check
+   (declare (ignore chroot))
+   (and
+    (not rebuild)
+    (file-exists-p
+     (image-file
+      (find-if (rcurry #'subtypep 'raw-disk-image) volumes :key #'type-of)))))
+  (:apply
+   (declare (ignore rebuild))
+   (multiple-value-bind (mount-points volumes)
+       ;; Find all mount points, and make modifiable copies of volumes
+       ;; containing filesystems without VOLUME-SIZE, which we'll set.
+       (loop for volume in volumes
+             for filesystems
+               = (delete-if-not (rcurry #'slot-boundp 'mount-point)
+                                (subvolumes-of-type 'filesystem volume))
+             nconc (mapcar #'mount-point filesystems) into mount-points
+             if (loop for filesystem in filesystems
+                        thereis (not (slot-boundp filesystem 'volume-size)))
+               collect (copy-volume-and-contents volume) into volumes
+             else collect volume into volumes
+             finally (return (values mount-points volumes)))
+     ;; Do the VOLUME-SIZE updates.  For now we make the assumption that a
+     ;; copy of the files made by rsync will fit in a disk of 1.1 times the
+     ;; size of however much space the files are taking up on whatever
+     ;; filesystem underlies the chroot.  An alternative would be to find the
+     ;; actual size of each file's data and round it up to the block size of
+     ;; FILESYSTEM, which could be stored in a slot.  Since some filesystems
+     ;; are able to store more than one file per block, we would probably want
+     ;; a method on filesystem types to compute the expected size the file
+     ;; will take up, call that on each file, and sum.
+     (dolist (filesystem
+              (mapcan (curry #'subvolumes-of-type 'filesystem) volumes))
+       (when (and (slot-boundp filesystem 'mount-point)
+                  (not (slot-boundp filesystem 'volume-size)))
+         (let ((dir (mount-point filesystem)))
+           (setf (volume-size filesystem)
+                 (+ (ceiling
+                     (* 1.1
+                        (parse-integer
+                         (car
+                          (split-string
+                           (run "du" "-msx" (chroot-pathname dir chroot)
+                                (loop for mount-point in mount-points
+                                      unless (eql mount-point dir)
+                                        collect (strcat "--exclude="
+                                                        (unix-namestring
+                                                         (chroot-pathname
+                                                          mount-point chroot))
+                                                        "/*"))))))))
+                    (extra-space filesystem))))))
+     ;; Finally, create the volumes.
+     (mapc (rcurry #'create-volume-and-contents nil) volumes))))
+
+(defprop %update-image-from-chroot :posix (chroot opened-image)
+  (:desc #?"Updated ${opened-image} from ${chroot}.")
+  (:apply
+   (assert-euid-root)
+   (mrun "rsync" "-Pav" "--delete"
+         (strcat (unix-namestring chroot) "/")
+         (strcat (unix-namestring opened-image) "/"))))
+
+(defpropspec raw-image-built-for :lisp
+    (options host image-pathname &key rebuild)
+  "Build a raw disk image for HOST at IMAGE-PATHNAME.
+The image corresponds to the first DISK:PHYSICAL-DISK entry in the host's
+volumes, as specified using DISK:HAS-VOLUMES; there must be at least one such
+entry.  Other DISK:PHYSICAL-DISK entries will be ignored, so ensure that none
+of the properties of the host will write to areas of the filesystem where
+filesystems stored on other physical disks would normally be mounted.
+
+OPTIONS will be passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+
+Unless REBUILD, the image will not be repartitioned even if the specification
+of the host's volumes changes, although the contents of the image's
+filesystems will be incrementally updated when other properties change."
+  (:desc (declare (ignore options rebuild))
+         (let ((hostname (car (getf (hostattrs host) :hostname))))
+           #?"Built image for ${hostname} @ ${image-pathname}"))
+  (let* ((chroot (ensure-directory-pathname
+                  (strcat (unix-namestring image-pathname) ".chroot")))
+         (opened (ensure-directory-pathname
+                  (strcat (unix-namestring image-pathname) ".opened")))
+         (volumes
+           (loop
+             with found
+             for volume in (getf (hostattrs (preprocess-host host)) :volumes)
+             for physical-disk-p = (subtypep (type-of volume) 'physical-disk)
+             if (and physical-disk-p (not found)
+                     (slot-boundp volume 'volume-contents))
+               do (setq found t)
+               and collect
+                   (let ((new (make-instance
+                               'raw-disk-image
+                               :image-file image-pathname
+                               :volume-contents (volume-contents volume))))
+                     (when (slot-boundp volume 'volume-size)
+                       (setf (volume-size new) (volume-size volume)))
+                     new)
+             else unless physical-disk-p
+                    collect volume
+             finally
+                (unless found
+                  (inapplicable-property
+                   "Volumes list for host has no DISK:PHYSICAL-DISK with contents.")))))
+    `(on-change (chroot:os-bootstrapped-for ,options ,chroot ,host
+                  ,(make-propspec :systems nil :propspec '(caches-cleaned)))
+       (%raw-image-created ,volumes :chroot ,chroot :rebuild ,rebuild)
+       (with-these-open-volumes (',volumes :mount-below ,opened)
+         ;; TODO update /etc/fstab & /etc/crypttab from the opened volumes
+         ;; TODO install bootloader
+         (%update-image-from-chroot ,chroot ,opened)))))

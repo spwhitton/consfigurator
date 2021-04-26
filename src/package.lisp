@@ -351,8 +351,10 @@
 
 (defpackage :consfigurator.property.disk
   (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:file    #:consfigurator.property.file)
-                    (#:os      #:consfigurator.property.os))
+  (:local-nicknames (#:chroot  #:consfigurator.property.chroot)
+                    (#:file    #:consfigurator.property.file)
+                    (#:os      #:consfigurator.property.os)
+                    (#:apt     #:consfigurator.property.apt))
   (:export #:volume
            #:volume-label
            #:volume-contents
@@ -386,7 +388,9 @@
            #:opened-luks-container
            #:linux-swap
 
-           #:has-volumes))
+           #:has-volumes
+           #:caches-cleaned
+           #:raw-image-built-for))
 
 (defpackage :consfigurator.property.fstab
   (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
