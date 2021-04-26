@@ -546,6 +546,7 @@ must not be modified."
            (with-replace-hostattrs (:opened-volumes)
              (apply #'push-hostattrs :opened-volumes opened-volumes)
              (propappapply propapp))
+         (mrun "sync")
          (with-mount-below (mapc #'close-volume opened-volumes)))))
    :args (cdr propapp)))
 
