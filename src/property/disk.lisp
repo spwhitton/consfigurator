@@ -516,6 +516,7 @@ populate /etc/fstab and /etc/crypttab.  Do not modify this list."
                                ,@(and mount-below-supplied-p
                                       `(:mount-below ,mount-below)))))
          (unwind-protect (progn ,@forms)
+           (mrun "sync")
            (mapc #'close-volume ,opened-volumes))))))
 
 (defmacro with-these-open-volumes
