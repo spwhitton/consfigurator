@@ -61,9 +61,7 @@
 (defproplist os-bootstrapped-for :lisp
     (options root host &optional additional-properties
              &aux
-             (host (if additional-properties
-                       (union-propspec-into-host host additional-properties)
-                       host))
+             (host (union-propspec-into-host host additional-properties))
              (child-host
               (make-child-host
                :hostattrs (hostattrs host)

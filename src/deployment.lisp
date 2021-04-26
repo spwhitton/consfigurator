@@ -64,9 +64,7 @@ DEPLOY, DEPLOY-THESE, and the function definitions established by DEFDEPLOY,
 DEFDEPLOY-THESE, etc., rather than calling this function directly.  However,
 code which programmatically constructs deployments will need to call this."
   (%consfigure (preprocess-connections connections)
-               (if additional-properties
-                   (union-propspec-into-host host additional-properties)
-                   host)))
+               (union-propspec-into-host host additional-properties)))
 
 (defun deploy-these* (connections host properties)
   "Like DEPLOY*, but replace the properties of HOST with PROPERTIES.

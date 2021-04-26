@@ -111,6 +111,10 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
                  :hostattrs (copy-list (hostattrs host))
                  :propspec (append-propspecs (host-propspec host) propspec)))
 
+(defmethod union-propspec-into-host
+    ((host unpreprocessed-host) (propspec null))
+  host)
+
 (defmethod replace-propspec-into-host
     ((host unpreprocessed-host) (propspec unpreprocessed-propspec))
   ;; we have to preprocess HOST as functions that call us want the return
