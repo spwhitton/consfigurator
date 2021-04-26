@@ -275,7 +275,7 @@ directly writing out with dd(1)."))
 Either a two-byte hexadecimal number, or a string specifying the GUID.
 
 On GNU/Linux systems, you typically only need to set this to a non-default
-value in the case of EFI system partitions, in which case use #xEF00."))
+value in the case of EFI system partitions, for which case use #xEF00."))
   (:documentation "A GPT partition."))
 
 (defclass-opened-volume opened-partition (partition))
