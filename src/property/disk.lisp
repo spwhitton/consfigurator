@@ -582,10 +582,17 @@ must not be modified."
 
 ;;;; Properties
 
-(defprop has-volumes :posix (&rest volumes)
-  "Specify non-removable volumes normally accessible to the kernel on this host."
-  (:desc (declare (ignore volumes))
-         "Has specified volumes.")
+(defmacro has-volumes (&rest volume-specifications)
+  "Specify non-removable volumes normally accessible to the kernel on this host.
+
+The order of the list of volumes is significant: it is the order in which
+attempts to open all of the volumes should be made.  So, for example, any LVM
+volume groups should occur later in the list than the partitions containing
+the LVM physical volumes corresponding to those volume groups."
+  `(has-volumes* (volumes ,@volume-specifications)))
+
+(defprop has-volumes* :posix (volumes)
+  (:desc "Has specified volumes.")
   (:hostattrs
    (os:required 'os:linux)
    (apply #'push-hostattrs :volumes volumes)))
@@ -715,3 +722,84 @@ filesystems will be incrementally updated when other properties change."
          ;; TODO update /etc/fstab & /etc/crypttab from the opened volumes
          ;; TODO install bootloader
          (%update-image-from-chroot ,chroot ,opened)))))
+
+
+;;;; Utilities
+
+(defmacro volumes (&body volume-specifications)
+  "Return a list of instances of VOLUME, one for each element of
+VOLUME-SPECIFICATIONS.  Each of VOLUME-SPECIFICATIONS is an (unquoted) list of
+the form (TYPE &REST INITARGS).
+
+TYPE is a symbol naming the volume type to be initialised.  If the symbol does
+not name a subclass of VOLUME, it will be replaced with a symbol of the same
+name in the DISK package; this allows type names to be used unqualified.
+
+INITARGS is an even-length plist, possibly with a final additional element,
+which is either another volume specification or an (unquoted) list of volume
+specifications.  This becomes the VOLUME-CONTENTS of the VOLUME.
+
+The following keys in INITARGS are handled specially:
+
+    - :VOLUME-SIZE -- may be a string like \"100M\", \"2G\", \"1T\" which will
+      be converted into a whole number of mebibytes.  \"M\", \"G\", and \"T\"
+      are currently supported.
+
+Example usage:
+
+  (volumes
+    (physical-disk
+     (partitioned-volume
+      ((partition
+        :partition-typecode #xef00
+        (fat32-filesystem
+         :volume-size \"512M\"
+         :mount-point #P\"/boot/efi\"))
+       (partition
+        (luks-container
+         (lvm-physical-volume
+          :volume-group \"vg_melete\"))))))
+    (lvm-volume-group
+     :volume-label \"vg_melete\"
+     ((lvm-logical-volume
+       :volume-label \"lv_melete_root\"
+       (ext4-filesystem
+        :mount-point #P\"/\")))))"
+  (labels
+      ((parse (spec)
+         (unless (listp spec)
+           (simple-program-error "~A is not a list." spec))
+         (let* ((contentsp (not (evenp (length (cdr spec)))))
+                (initargs
+                  (if contentsp (butlast (cdr spec)) (cdr spec)))
+                (contents (and contentsp (lastcar (cdr spec)))))
+           (when (loop for key on initargs by #'cddr
+                         thereis (and (eql (car key) :volume-size)
+                                      (stringp (cadr key))))
+             (let ((input (getf initargs :volume-size)))
+               (multiple-value-bind (match groups)
+                   (re:scan-to-strings #?/\A([0-9]+)([MGT])?\z/ input)
+                 (unless match
+                   (simple-program-error
+                    "~A is not a valid volume size." input))
+                 (setf (getf initargs :volume-size)
+                       (* (parse-integer (nth 0 groups))
+                          (eswitch ((nth 1 groups) :test #'string=)
+                            ("M" 1)
+                            ("G" 1024)
+                            ("T" 1048576)))))))
+           (when (and contents (not (listp contents)))
+             (simple-program-error "~A is not a list." contents))
+           `(make-instance
+             ',(let ((class (find-class (car spec) nil)))
+                 (if (and class (subtypep (class-name class) 'volume))
+                     (car spec)
+                     (intern (symbol-name (car spec))
+                             (find-package :consfigurator.property.disk))))
+             ,@initargs
+             ,@(and contentsp
+                    `(:volume-contents
+                      ,(if (listp (car contents))
+                           `(list ,@(mapcar #'parse contents))
+                           (parse contents))))))))
+    `(list ,@(mapcar #'parse volume-specifications))))

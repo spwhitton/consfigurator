@@ -351,7 +351,8 @@
 
 (defpackage :consfigurator.property.disk
   (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:chroot  #:consfigurator.property.chroot)
+  (:local-nicknames (#:re      #:cl-ppcre)
+                    (#:chroot  #:consfigurator.property.chroot)
                     (#:file    #:consfigurator.property.file)
                     (#:os      #:consfigurator.property.os)
                     (#:apt     #:consfigurator.property.apt))
@@ -390,7 +391,9 @@
 
            #:has-volumes
            #:caches-cleaned
-           #:raw-image-built-for))
+           #:raw-image-built-for
+
+           #:volumes))
 
 (defpackage :consfigurator.property.fstab
   (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
