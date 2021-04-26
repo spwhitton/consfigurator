@@ -314,7 +314,8 @@ value in the case of EFI system partitions, in which case use #xEF00."))
         (loop for partition in (volume-contents volume)
               for code = (partition-typecode partition)
               collect (strcat "--new=0:0:"
-                              (if (eql (volume-size partition) :remaining)
+                              (if (and (slot-boundp partition 'volume-size)
+                                       (eql (volume-size partition) :remaining))
                                   "0"
                                   (format nil "+~DM"
                                           (volume-minimum-size partition))))
