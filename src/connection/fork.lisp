@@ -58,48 +58,57 @@ for example, such that we don't see it."
   (upload-all-prerequisite-data
    :connection connection :upload-string-data nil)
   ;; TODO bind mounts
-  (mapc #'force-output
-        (list *standard-output* *error-output* *debug-io* *terminal-io*))
-  (let ((child (fork)))
-    (case child
-      ;; note that SB-POSIX:FORK can only return >=0
-      (-1
-       (error "fork(2) failed"))
-      (0
-       (handler-bind ((serious-condition
-                        (lambda (c)
-                          (trivial-backtrace:print-backtrace
-                           c :output *error-output*)
-                          (uiop:quit 2))))
-         (mapc #'clear-input
-               (list *standard-input* *debug-io* *terminal-io*))
-         (cancel-unwind-protect-in-parent-cleanup)
-         ;; While some kinds of data source will still work given certain
-         ;; subtypes of FORK-CONNECTION (e.g. if they've already cached the
-         ;; data in memory, or if it's also accessible to whomever we will
-         ;; SETUID to), others won't, so drop all registrations and rely on
-         ;; the call to UPLOAD-ALL-PREREQUISITE-DATA above.
-         (reset-data-sources)
-         (post-fork connection)
-         ;; It would be nice to reenter Consfigurator's primary loop by
-         ;; just calling (return-from establish-connection
-         ;; (establish-connection :local)) here, but we need to kill
-         ;; off the child afterwards, rather than returning to the
-         ;; child's REPL or whatever else.
-         (uiop:quit
-          (if (eql :no-change (continue-deploy* remaining))
-              0
-              1))))
-      (t
-       (multiple-value-bind (pid status) (waitpid child 0)
-         (declare (ignore pid))
-         (let ((exited (wifexited status)))
-           (unless exited
-             (error
-              "Fork connection child did not exit normally, status #x~(~4,'0X~)"
-              status))
-           (let ((exit-status (wexitstatus status)))
-             (unless (< exit-status 2)
+  (with-remote-temporary-file (output)
+    (mapc #'force-output
+          (list *standard-output* *error-output* *debug-io* *terminal-io*))
+    (let ((child (fork)))
+      (case child
+        ;; note that SB-POSIX:FORK can only return >=0
+        (-1
+         (error "fork(2) failed"))
+        (0
+         (handler-bind ((serious-condition
+                          (lambda (c)
+                            (trivial-backtrace:print-backtrace
+                             c :output *error-output*)
+                            (uiop:quit 2))))
+           ;; Capture child stdout in case *STANDARD-OUTPUT* has been rebound
+           ;; to somewhere else in the parent, e.g. by APPLY-AND-PRINT.  The
+           ;; parent can then send the contents of the file named by OUTPUT to
+           ;; the correct stream.  We don't use pipe(2) because then we'd need
+           ;; implementation-specific code to bind streams to the FDs.
+           (with-open-file (*standard-output*
+                            output :direction :output :if-exists :append)
+             (mapc #'clear-input
+                   (list *standard-input* *debug-io* *terminal-io*))
+             (cancel-unwind-protect-in-parent-cleanup)
+             ;; While some kinds of data source will still work given certain
+             ;; subtypes of FORK-CONNECTION (e.g. if they've already cached
+             ;; the data in memory, or if it's also accessible to whomever we
+             ;; will SETUID to), others won't, so drop all registrations and
+             ;; rely on the call to UPLOAD-ALL-PREREQUISITE-DATA above.
+             (reset-data-sources)
+             (post-fork connection)
+             ;; It would be nice to reenter Consfigurator's primary loop by
+             ;; just calling (return-from establish-connection
+             ;; (establish-connection :local)) here, but we need to kill off
+             ;; the child afterwards, rather than returning to the child's
+             ;; REPL or whatever else.
+             (uiop:quit
+              (if (eql :no-change (continue-deploy* remaining))
+                  0
+                  1)))))
+        (t
+         (multiple-value-bind (pid status) (waitpid child 0)
+           (declare (ignore pid))
+           (princ (readfile output))
+           (let ((exited (wifexited status)))
+             (unless exited
                (error
-                "Fork connection child failed, exit code ~D" exit-status))
-             (values nil (if (zerop status) :no-change nil)))))))))
+                "Fork connection child did not exit normally, status #x~(~4,'0X~)"
+                status))
+             (let ((exit-status (wexitstatus status)))
+               (unless (< exit-status 2)
+                 (error
+                  "Fork connection child failed, exit code ~D" exit-status))
+               (values nil (if (zerop status) :no-change nil))))))))))
