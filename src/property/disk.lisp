@@ -366,8 +366,7 @@ We do not specify what logical volumes it contains."))
 (defparameter *mount-below* #P""
   "Prefix for all filesystem mount points.  Bound by functions to request that
 filesystems be mounted relative to a different filesystem root, e.g. under a
-chroot.  The dynamic binding should last until after the filesystems are
-unmounted, since the actual mount point is not stored.")
+chroot.")
 
 (defclass filesystem (volume)
   ((mount-point :type pathname :initarg :mount-point :accessor mount-point)
@@ -494,8 +493,7 @@ single attempt will be made to close all volumes opened up to that point."
                 (push (apply #'open-volume filesystem) opened-volumes)))
           opened-volumes)
       (serious-condition (condition)
-        (unwind-protect
-             (with-mount-below (mapc #'close-volume opened-volumes))
+        (unwind-protect (mapc #'close-volume opened-volumes)
           (error condition))))))
 
 (defmacro with-open-volumes ((volumes
@@ -518,7 +516,7 @@ populate /etc/fstab and /etc/crypttab.  Do not modify this list."
                                ,@(and mount-below-supplied-p
                                       `(:mount-below ,mount-below)))))
          (unwind-protect (progn ,@forms)
-           ,(with-mount-below `(mapc #'close-volume ,opened-volumes)))))))
+           (mapc #'close-volume ,opened-volumes))))))
 
 (defmacro with-these-open-volumes
     ((volumes &key (mount-below nil mount-below-supplied-p)) &body propapps)
@@ -553,7 +551,7 @@ must not be modified."
              (apply #'push-hostattrs :opened-volumes opened-volumes)
              (propappapply propapp))
          (mrun "sync")
-         (with-mount-below (mapc #'close-volume opened-volumes)))))
+         (mapc #'close-volume opened-volumes))))
    :args (cdr propapp)))
 
 (defgeneric create-volume-and-contents (volume file)
