@@ -167,10 +167,12 @@
 
            ;; host.lisp
            #:host
+           #:unpreprocessed-host
            #:defhost
            #:make-host
            #:make-child-host
            #:union-propspec-into-host
+           #:replace-propspec-into-host
            #:hostattrs
            #:host-propspec
            #:preprocess-host
@@ -333,7 +335,12 @@
                     (#:apt       #:consfigurator.property.apt)
                     (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file))
-  (:export #:os-bootstrapped-for
+  (:shadow #:deploys #:deploys. #:deploys-these #:deploys-these.)
+  (:export #:deploys
+           #:deploys.
+           #:deploys-these
+           #:deploys-these.
+           #:os-bootstrapped-for
            #:os-bootstrapped-for.
            #:os-bootstrapped
            #:os-bootstrapped.))

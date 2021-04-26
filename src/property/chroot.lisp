@@ -58,17 +58,35 @@
     `(os:host-etypecase ,host
        (debian (%debootstrapped ,root ,host ,@options)))))
 
+(defmethod %make-child-host ((host unpreprocessed-host))
+  (let ((propspec (host-propspec host)))
+    (make-child-host :hostattrs (hostattrs host)
+                     :propspec (make-propspec
+                                :systems (propspec-systems propspec)
+                                :propspec `(service:without-starting-services
+                                               ,(propspec-props propspec))))))
+
+(defproplist deploys :lisp (root host &optional additional-properties)
+  "Like DEPLOYS with first argument `((:chroot :into ,root)), but disable
+starting services in the chroot, and set up access to parent hostattrs."
+  (:desc #?"Subdeployment of ${root}")
+  (consfigurator:deploys
+   `((:chroot :into ,root))
+   (%make-child-host (union-propspec-into-host host additional-properties))))
+
+(defproplist deploys-these :lisp (root host properties)
+  "Like DEPLOYS-THESE with first argument `((:chroot :into ,root)), but disable
+starting services in the chroot, and set up access to parent hostattrs."
+  (:desc #?"Subdeployment of ${root}")
+  (consfigurator:deploys
+   `((:chroot :into ,root))
+   (%make-child-host (replace-propspec-into-host host properties))))
+
 (defproplist os-bootstrapped-for :lisp
     (options root host &optional additional-properties
              &aux
-             (host (union-propspec-into-host host additional-properties))
-             (child-host
-              (make-child-host
-               :hostattrs (hostattrs host)
-               :propspec (make-propspec
-                          :systems (propspec-systems (host-propspec host))
-                          :propspec `(service:without-starting-services
-                                         ,(propspec-props (host-propspec host))))))
+             (child-host (%make-child-host
+                          (union-propspec-into-host host additional-properties)))
              (child-host* (preprocess-host child-host)))
   "Bootstrap an OS for HOST into ROOT and apply the properties of HOST.
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
@@ -77,7 +95,7 @@ OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
    #?"Built chroot for ${(car (getf (hostattrs host) :hostname))} @ ${root}")
   (%os-bootstrapper-installed child-host*)
   (%os-bootstrapped options root child-host*)
-  (deploys `((:chroot :into ,root)) child-host))
+  (consfigurator:deploys `((:chroot :into ,root)) child-host))
 
 (defproplist os-bootstrapped :lisp (options root properties)
   "Bootstrap an OS into ROOT and apply PROPERTIES.
