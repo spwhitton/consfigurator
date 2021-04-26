@@ -664,7 +664,7 @@ the LVM physical volumes corresponding to those volume groups."
      (mapc (rcurry #'create-volume-and-contents nil) volumes))))
 
 (defprop %update-image-from-chroot :posix (chroot opened-image)
-  (:desc #?"Updated ${opened-image} from ${chroot}.")
+  (:desc #?"Updated ${opened-image} from ${chroot}")
   (:apply
    (assert-euid-root)
    (mrun "rsync" "-Pav" "--delete"
