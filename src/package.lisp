@@ -113,6 +113,10 @@
            #:with-local-connection
            #:with-local-passwordless-sudo-connection
 
+           #:propagate-connattr
+           #:get-connattr
+           #:with-connattrs
+
            ;; property.lisp
            #:propattrs
            #:propunapply

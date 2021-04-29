@@ -44,6 +44,38 @@ connection really does require more I/O, such as in the case of
 ``:CHROOT.FORK`` connections, code can call ``LISP-CONNECTION-P``, and either
 signal an error, or fall back to another connection type.
 
+Connection attributes ("connattrs")
+-----------------------------------
+
+Information about hosts which cannot be known without looking at the host, or
+for other reasons should not be recorded in consfigs, can be stored as
+connection attributes, associated with the current connection.  Typically
+property combinators set and unset connattrs, and property ``:APPLY`` and
+``:UNAPPLY`` subroutines read them.  They can be used to create context for
+the application of properties.  Connection attributes are stored in a plist.
+Property combinators use the ``WITH-CONNATTRS`` macro to set them, and
+properties use ``GET-CONNATTR`` to read them.
+
+Like hostattrs, connection attributes are identified by keywords for connattrs
+which are expected to be used in many contexts, and by other symbols for
+connattrs which will be used only among a co-operating group of properties and
+property combinators.  However, unlike hostattrs, each connattr need not be a
+list to which new items are pushed.
+
+By default the list of connattrs is reset when establishing a new connection
+within the context of an existing connection.  However, for some connattrs it
+makes sense to propagate them along to the new connection.  For example, a
+list of connected hardware of a particular type might still be useful in the
+context of a connection which chroots, as /dev might still give access to this
+hardware.  Implementations of the ``PROPAGATE-CONNATTR`` generic function can
+be used to enable propagation where it makes sense.  Methods can copy and
+modify connattrs as appropriate; in the chroot example, paths might be updated
+so that they are relative to the new filesystem root.
+
+The propagation of connattrs is currently limited to the establishing of
+connections within the same Lisp image; i.e., connection types which start up
+new Lisp images never propagate any existing connattrs.
+
 Notes on particular connection types
 ------------------------------------
 

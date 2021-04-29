@@ -83,7 +83,10 @@ For an example of usage, see the :SUDO connection type."))
    (remote-user
     :initform nil
     :documentation
-    "The name of the remote user.")))
+    "The name of the remote user.")
+   (connattrs
+    :initform nil
+    :documentation "This connection's connection attributes.")))
 
 (defclass lisp-connection (connection) ())
 
@@ -445,3 +448,38 @@ established.  Occasionally useful for testing purposes at the REPL."
      (let ((*connection* (establish-connection :sudo nil
                                                :user "root" :password nil)))
        ,@forms)))
+
+
+;;;; Connection attributes
+
+(defgeneric propagate-connattr (type connattr connection)
+  (:documentation
+   "Possibly propagate CONNATTR, a connattr identified by TYPE, through to the
+newly-established CONNECTION.  Implementations should specialise on TYPE and
+CONNECTION, not modify any of their arguments, and either return the new
+connattr, or nil if nothing should be propagated.")
+  (:method (type connattr connection)
+    "Default implementation: don't propagate."
+    nil))
+
+(defmethod initialize-instance :after ((connection connection) &key)
+  "Propagate connattrs which should be propagated."
+  (with-slots (parent) connection
+    (when (and parent (slot-boundp parent 'connattrs))
+      (doplist (k v (slot-value parent 'connattrs))
+               (when-let ((new (propagate-connattr k v connection)))
+                 (setf (getf (slot-value connection 'connattrs) k) new))))))
+
+(defun get-connattr (k)
+  "Get the connattr identified by K for the current connection."
+  (getf (slot-value *connection* 'connattrs) k))
+
+(defmacro with-connattrs ((&rest connattrs) &body forms)
+  "Execute FORMS with connattrs replaced as specified by CONNATTRS, a plist."
+  (with-gensyms (old)
+    `(with-slots (connattrs) *connection*
+       (let ((,old connattrs))
+         (setf connattrs (copy-list connattrs))
+         (doplist (k v (list ,@connattrs)) (setf (getf connattrs k) v))
+         (unwind-protect (progn ,@forms)
+           (setf connattrs ,old))))))
