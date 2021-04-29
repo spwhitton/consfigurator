@@ -64,6 +64,12 @@ For an example of usage, see the :SUDO connection type."))
     :reader connection-parent
     :documentation
     "The value of *CONNECTION* at the time this connection was established.")
+   (connattrs
+    :initform nil
+    :documentation "This connection's connection attributes.")
+
+   ;; TODO some or all of these slots should probably become connattrs.  for
+   ;; example, :CHROOT.FORK can have the remote-uid propagate.
    (cached-data
     :initform nil
     :documentation
@@ -83,10 +89,7 @@ For an example of usage, see the :SUDO connection type."))
    (remote-user
     :initform nil
     :documentation
-    "The name of the remote user.")
-   (connattrs
-    :initform nil
-    :documentation "This connection's connection attributes.")))
+    "The name of the remote user.")))
 
 (defclass lisp-connection (connection) ())
 
