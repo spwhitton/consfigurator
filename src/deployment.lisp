@@ -77,12 +77,13 @@ DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
   (%consfigure (preprocess-connections connections)
                (replace-propspec-into-host host properties)))
 
-(defun continue-deploy* (remaining-connections)
+(defun continue-deploy* (connection remaining-connections)
   "Complete the work of an enclosing call to DEPLOY* or DEPLOY-THESE*.
 
 Used by implementations of ESTABLISH-CONNECTION which need to do something
 like fork(2) and then return to Consfigurator's primary loop in the child."
-  (%consfigure remaining-connections *host*))
+  (let ((*connection* connection))
+    (%consfigure remaining-connections *host*)))
 
 ;; in the following two macros, bind *HOST* so that evaluation of the
 ;; unevaluated propspec can retrieve existing hostattrs; shallow copy just in

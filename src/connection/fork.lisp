@@ -45,7 +45,7 @@ for example, such that we don't see it."
   (and
    #+sbcl (> 2 (length (sb-thread:list-all-threads)))))
 
-(defclass fork-connection (lisp-connection) ())
+(defclass fork-connection (local-connection) ())
 
 (defgeneric post-fork (connection)
   (:documentation
@@ -95,7 +95,7 @@ for example, such that we don't see it."
              ;; the child afterwards, rather than returning to the child's
              ;; REPL or whatever else.
              (uiop:quit
-              (if (eql :no-change (continue-deploy* remaining))
+              (if (eql :no-change (continue-deploy* connection remaining))
                   0
                   1)))))
         (t

@@ -94,7 +94,6 @@
            #:posix-connection
            #:connection-parent
            #:lisp-connection-p
-           #:reset-remote-home
            #:connection-run
            #:connection-readfile
            #:connection-writefile
@@ -445,12 +444,16 @@
   (:export #:available
            #:selected-for))
 
+(defpackage :consfigurator.connection.local
+  (:use #:cl #:consfigurator #:alexandria)
+  (:export #:local-connection))
+
 (defpackage :consfigurator.connection.shell-wrap
   (:use #:cl #:consfigurator)
   (:export #:shell-wrap-connection #:connection-shell-wrap))
 
 (defpackage :consfigurator.connection.fork
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:consfigurator #:consfigurator.connection.local)
   (:export #:fork-connection
            #:post-fork
 	   #:can-probably-fork))
@@ -482,10 +485,6 @@
   (:use #:cl
         #:consfigurator
         #:consfigurator.connection.shell-wrap))
-
-(defpackage :consfigurator.connection.local
-  (:use #:cl #:consfigurator #:alexandria)
-  (:export #:local-connection))
 
 (defpackage :consfigurator.connection.chroot
   (:use #:cl

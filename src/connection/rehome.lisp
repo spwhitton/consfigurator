@@ -26,9 +26,6 @@
   (:documentation
    "A connection which works by switching to a new HOME on the same host."))
 
-(defmethod post-fork :before ((connection rehome-connection))
-  (reset-remote-home))
-
 (defmethod connection-upload ((connection rehome-connection) (data file-data))
   (with-slots (iden1 iden2 data-version) data
     (let ((inside (data-pathname
