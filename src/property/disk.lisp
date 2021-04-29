@@ -460,7 +460,7 @@ order in which they should be closed.  MOUNT-BELOW specifies a pathname to
 prefix to mount points when opening FILESYSTEM volumes.
 
 Calling this function can be useful for testing at the REPL, but code should
-normally use WITH-OPEN-VOLUMES.
+normally use WITH-OPEN-VOLUMES or WITH-THESE-OPEN-VOLUMES.
 
 If an error is signalled while the attempt to open volumes is in progress, a
 single attempt will be made to close all volumes opened up to that point."
