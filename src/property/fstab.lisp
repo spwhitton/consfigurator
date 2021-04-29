@@ -78,7 +78,7 @@ if the first field of the existing entry is not \"none\" and the corresponding
 member of ENTRIES is \"none\", use the existing field value.
 
 This makes it easy to update mount options without having to specify the
-partition or filesystem UUID in your Consfig."
+partition or filesystem UUID in your consfig."
   (:desc (format nil "fstab entries for ~{~A~^, ~}"
                  (mapcar #'entry->mountpoint entries)))
   (:apply

@@ -198,11 +198,10 @@ should not attempt to call OPEN-VOLUME on the VOLUME-CONTENTS of VOLUME."))
 (defgeneric close-volume (volume)
   (:documentation
    "Inverse of OPEN-VOLUME: `kpartx -d`, `cryptsetup luksClose`, etc.
-Return values, if any, should be ignored."))
-
-(defmethod close-volume ((volume volume))
-  "Default implementation: assume there is nothing to close."
-  (values))
+Return values, if any, should be ignored.")
+  (:method ((volume volume))
+    "Default implementation: assume there is nothing to close."
+    (values)))
 
 (defclass physical-disk (top-level-volume opened-volume) ()
   (:documentation
@@ -334,8 +333,7 @@ value in the case of EFI system partitions, for which case use #xEF00."))
 (defclass lvm-volume-group (top-level-volume)
   ((volume-label
     :documentation "The name of the VG, often starting with \"vg_\".")
-   ;; (volume-depth
-   ;;  :initform 3)
+   ;; (volume-depth :initform 3)
    (volume-contents
     :type cons
     :documentation "A list of objects of type LVM-LOGICAL-VOLUME."))
@@ -380,7 +378,7 @@ chroot.")
     :documentation
     "When creating the filesystem to accommodate a directory tree whose size is
 already known, add this many whole mebibytes of extra free space where
-possible.  Ignored if VOLUME-SIZE is also set."))
+possible.  Ignored if VOLUME-SIZE is also bound."))
   (:documentation
    "A block device containing a filesystem, which can be mounted."))
 
@@ -560,7 +558,7 @@ must not be modified."
 
 (defgeneric create-volume-and-contents (volume file)
   (:documentation "Recursively create VOLUME and its contents, on or at FILE.
-**THIS METHOD UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA**")
+**THIS METHOD UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA.**")
   (:method ((volume volume) file)
     (let (opened-volumes)
       (labels
@@ -727,7 +725,6 @@ filesystems will be incrementally updated when other properties change."
 
 (defprop host-volumes-created :lisp ()
   "Recursively create the volumes as specified by DISK:HAS-VOLUMES.
-
 **THIS PROPERTY UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA,
   EACH TIME IT IS APPLIED.**
 
