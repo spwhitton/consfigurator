@@ -263,7 +263,7 @@ directly writing out with dd(1)."))
 
 (defclass partitioned-volume (volume)
   ((volume-contents
-    :type cons
+    :type list
     :documentation "A list of partitions."))
   (:documentation "A device with a GPT partition table and partitions."))
 
