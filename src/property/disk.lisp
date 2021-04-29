@@ -144,6 +144,9 @@ Return values, if any, should be ignored."))
 (defmethod open-volume ((volume opened-volume) file)
   volume)
 
+(defmethod create-volume ((volume opened-volume) file)
+  (values))
+
 (defgeneric make-opened-volume (volume device-file)
   (:documentation
    "Where there is a class which is a subclass of both the class of VOLUME and
