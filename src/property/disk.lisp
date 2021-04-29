@@ -529,7 +529,7 @@ volumes that were opened.
 
 MOUNT-BELOW specifies a pathname to prefix to mount points when opening
 FILESYSTEM volumes.  During the application of PROPAPPS, all :OPENED-VOLUMES
-hostattrs are replaced with a list of the volumes that were opened; this list
+connattrs are replaced with a list of the volumes that were opened; this list
 must not be modified."
   `(with-these-open-volumes*
      ,volumes
@@ -544,16 +544,13 @@ must not be modified."
    :apply
    (lambda (&rest ignore)
      (declare (ignore ignore))
-     (let ((opened-volumes
-             (apply #'open-volumes-and-contents
-                    `(,volumes ,@(and mount-below-supplied-p
-                                      `(:mount-below ,mount-below))))))
-       (unwind-protect-in-parent
-           (with-replace-hostattrs (:opened-volumes)
-             (apply #'push-hostattrs :opened-volumes opened-volumes)
-             (propappapply propapp))
+     (with-connattrs (:opened-volumes
+                      (apply #'open-volumes-and-contents
+                             `(,volumes ,@(and mount-below-supplied-p
+                                               `(:mount-below ,mount-below)))))
+       (unwind-protect-in-parent (propappapply propapp)
          (mrun "sync")
-         (mapc #'close-volume opened-volumes))))
+         (mapc #'close-volume (get-connattr :opened-volumes)))))
    :args (cdr propapp)))
 
 (defgeneric create-volume-and-contents (volume file)
