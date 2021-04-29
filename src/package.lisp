@@ -399,6 +399,8 @@
            #:opened-luks-container
            #:linux-swap
 
+           #:with-these-open-volumes
+
            #:has-volumes
            #:caches-cleaned
            #:raw-image-built-for
@@ -447,6 +449,13 @@
                     (#:file      #:consfigurator.property.file))
   (:export #:available
            #:selected-for))
+
+(defpackage :consfigurator.property.installer
+  (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
+  (:local-nicknames (#:file      #:consfigurator.property.file)
+                    (#:chroot    #:consfigurator.property.chroot)
+                    (#:fstab     #:consfigurator.property.fstab))
+  (:export #:chroot-installed-to-volumes))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)

@@ -532,7 +532,7 @@ FILESYSTEM volumes.  During the application of PROPAPPS, all :OPENED-VOLUMES
 connattrs are replaced with a list of the volumes that were opened; this list
 must not be modified."
   `(with-these-open-volumes*
-     ,volumes
+     ',volumes
      ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))
      ,@(and mount-below-supplied-p `(:mount-below ,mount-below))))
 
@@ -661,14 +661,6 @@ the LVM physical volumes corresponding to those volume groups."
      ;; Finally, create the volumes.
      (mapc (rcurry #'create-volume-and-contents nil) volumes))))
 
-(defprop %update-image-from-chroot :posix (chroot opened-image)
-  (:desc #?"Updated ${opened-image} from ${chroot}")
-  (:apply
-   (assert-euid-root)
-   (mrun "rsync" "-Pav" "--delete"
-         (strcat (unix-namestring chroot) "/")
-         (strcat (unix-namestring opened-image) "/"))))
-
 (defpropspec raw-image-built-for :lisp
     (options host image-pathname &key rebuild)
   "Build a raw disk image for HOST at IMAGE-PATHNAME.
@@ -686,39 +678,37 @@ filesystems will be incrementally updated when other properties change."
   (:desc (declare (ignore options rebuild))
          (let ((hostname (car (getf (hostattrs host) :hostname))))
            #?"Built image for ${hostname} @ ${image-pathname}"))
-  (let* ((chroot (ensure-directory-pathname
-                  (strcat (unix-namestring image-pathname) ".chroot")))
-         (opened (ensure-directory-pathname
-                  (strcat (unix-namestring image-pathname) ".opened")))
-         (volumes
-           (loop
-             with found
-             for volume in (getf (hostattrs (preprocess-host host)) :volumes)
-             for physical-disk-p = (subtypep (type-of volume) 'physical-disk)
-             if (and physical-disk-p (not found)
-                     (slot-boundp volume 'volume-contents))
-               do (setq found t)
-               and collect
-                   (let ((new (make-instance
-                               'raw-disk-image
-                               :image-file image-pathname
-                               :volume-contents (volume-contents volume))))
-                     (when (slot-boundp volume 'volume-size)
-                       (setf (volume-size new) (volume-size volume)))
-                     new)
-             else unless physical-disk-p
-                    collect volume
-             finally
-                (unless found
-                  (inapplicable-property
-                   "Volumes list for host has no DISK:PHYSICAL-DISK with contents.")))))
-    `(on-change (chroot:os-bootstrapped-for ,options ,chroot ,host
-                  ,(make-propspec :systems nil :propspec '(caches-cleaned)))
+  (let ((chroot (ensure-directory-pathname
+                 (strcat (unix-namestring image-pathname) ".chroot")))
+        (volumes
+          (loop
+            with found
+            for volume in (getf (hostattrs (preprocess-host host)) :volumes)
+            for physical-disk-p = (subtypep (type-of volume) 'physical-disk)
+            if (and physical-disk-p (not found)
+                    (slot-boundp volume 'volume-contents))
+              do (setq found t)
+              and collect
+                  (let ((new (make-instance
+                              'raw-disk-image
+                              :image-file image-pathname
+                              :volume-contents (volume-contents volume))))
+                    (when (slot-boundp volume 'volume-size)
+                      (setf (volume-size new) (volume-size volume)))
+                    new)
+            else unless physical-disk-p
+                   collect volume
+            finally
+               (unless found
+                 (inapplicable-property
+                  "Volumes list for host has no DISK:PHYSICAL-DISK with contents.")))))
+    `(on-change (chroot:os-bootstrapped-for
+                 ,options ,chroot ,host
+                 ,(make-propspec :systems nil
+                                 :propspec '(caches-cleaned)))
        (%raw-image-created ,volumes :chroot ,chroot :rebuild ,rebuild)
-       (with-these-open-volumes (',volumes :mount-below ,opened)
-         ;; TODO update /etc/fstab & /etc/crypttab from the opened volumes
-         ;; TODO install bootloader
-         (%update-image-from-chroot ,chroot ,opened)))))
+       (consfigurator.property.installer:chroot-installed-to-volumes
+        ,host ,chroot ,volumes))))
 
 (defprop host-volumes-created :lisp ()
   "Recursively create the volumes as specified by DISK:HAS-VOLUMES.
