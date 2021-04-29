@@ -399,6 +399,7 @@
            #:has-volumes
            #:caches-cleaned
            #:raw-image-built-for
+           #:host-volumes-created
 
            #:volumes))
 

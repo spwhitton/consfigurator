@@ -722,6 +722,17 @@ filesystems will be incrementally updated when other properties change."
          ;; TODO install bootloader
          (%update-image-from-chroot ,chroot ,opened)))))
 
+(defprop host-volumes-created :lisp ()
+  "Recursively create the volumes as specified by DISK:HAS-VOLUMES.
+
+**THIS PROPERTY UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA,
+  EACH TIME IT IS APPLIED.**
+
+Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE."
+  (:desc "Host volumes created")
+  (:apply
+   (mapc (rcurry #'create-volume-and-contents nil) (get-hostattrs :volumes))))
+
 
 ;;;; Utilities
 
