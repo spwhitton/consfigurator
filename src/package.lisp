@@ -68,6 +68,7 @@
            #:quote-nonselfeval
            #:define-print-object-for-structlike
            #:chroot-pathname
+           #:in-chroot-pathname
 
            #:*consfigurator-debug-level*
            #:with-indented-inform
@@ -371,6 +372,7 @@
            #:volume-contents
            #:volume-size
            #:subvolumes-of-type
+           #:copy-volume-and-contents
 
            #:physical-disk
            #:disk-image
@@ -506,7 +508,8 @@
 	#:consfigurator.connection.fork
         #:consfigurator.connection.rehome
         #:consfigurator.connection.shell-wrap
-	#:cffi))
+	#:cffi)
+  (:local-nicknames (#:disk      #:consfigurator.property.disk)))
 
 (defpackage :consfigurator.connection.setuid
   (:use #:cl

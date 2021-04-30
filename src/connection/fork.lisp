@@ -111,7 +111,3 @@ for example, such that we don't see it."
                  (error
                   "Fork connection child failed, exit code ~D" exit-status))
                (values nil (if (zerop status) :no-change nil))))))))))
-
-(defmethod propagate-connattr
-    ((type (eql :opened-volumes)) connattr (connection fork-connection))
-  connattr)

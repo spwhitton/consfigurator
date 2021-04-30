@@ -178,6 +178,10 @@ one-dimensional collections of values."
   (merge-pathnames (enough-pathname pathname #P"/")
                    (ensure-directory-pathname chroot)))
 
+(defun in-chroot-pathname (pathname chroot)
+  (ensure-pathname (enough-pathname pathname chroot)
+                   :ensure-absolute t :defaults #P"/"))
+
 
 ;;;; Progress & debug printing
 

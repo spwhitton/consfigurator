@@ -81,6 +81,19 @@ should be the mount point, without the chroot's root prefixed.")
         (chroot-mount connection "-t" "efivarfs" "-o" "nosuid,noexec,nodev"
                       "efivarfs" "/sys/firmware/efi/efivars")))))
 
+(defmethod propagate-connattr
+    ((type (eql :opened-volumes)) connattr (connection chroot-connection))
+  (with-slots (into) connection
+    (loop for volume in connattr
+          when (and (subtypep (type-of volume) 'disk:filesystem)
+                    (slot-boundp volume 'disk:mount-point)
+                    (subpathp (disk:mount-point volume) into))
+            collect (let ((copy (disk:copy-volume-and-contents volume)))
+                      (setf (disk:mount-point copy)
+                            (in-chroot-pathname (disk:mount-point copy) into))
+                      copy)
+          else collect volume)))
+
 
 ;;;; :CHROOT.FORK
 
