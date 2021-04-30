@@ -31,3 +31,58 @@
                             :chroot.shell)
                         remaining
                         :into into))
+
+
+;;;; Chroot connections superclass
+
+(defclass chroot-connection ()
+  ((into :type :string :initarg :into)))
+
+
+;;;; :CHROOT.FORK
+
+(defun chroot (path)
+  #+sbcl      (sb-posix:chroot path)
+  #-(or sbcl) (foreign-funcall "chroot" :string path :int))
+
+(defclass chroot.fork-connection
+    (rehome-connection chroot-connection fork-connection) ())
+
+(defmethod establish-connection ((type (eql :chroot.fork)) remaining &key into)
+  (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
+    (error "~&Forking into a chroot requires a Lisp image running as root"))
+  (informat 1 "~&Forking into chroot at ~A" into)
+  (let* ((into* (ensure-directory-pathname into))
+         (datadir-inside
+           (stripln
+            (mrun
+             "chroot" into
+             "echo" "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))
+         (datadir (ensure-pathname
+                   (subseq datadir-inside 1)
+                   :defaults into* :ensure-absolute t :ensure-directory t)))
+    (continue-connection
+     (make-instance 'chroot.fork-connection :into into :datadir datadir)
+     remaining)))
+
+(defmethod post-fork ((connection chroot.fork-connection))
+  (unless (zerop (chroot (slot-value connection 'into)))
+    (error "chroot(2) failed!"))
+  ;; chdir, else our current working directory is a pointer to something
+  ;; outside the chroot
+  (uiop:chdir "/"))
+
+
+;;;; :CHROOT.SHELL
+
+(defmethod establish-connection ((type (eql :chroot.shell)) remaining &key into)
+  (declare (ignore remaining))
+  (informat 1 "~&Shelling into chroot at ~A" into)
+  (make-instance 'shell-chroot-connection :into into))
+
+(defclass shell-chroot-connection (chroot-connection shell-wrap-connection) ())
+
+(defmethod connection-shell-wrap ((connection shell-chroot-connection) cmd)
+  (format nil "chroot ~A sh -c ~A"
+          (escape-sh-token (unix-namestring (slot-value connection 'into)))
+          (escape-sh-token cmd)))

@@ -503,19 +503,9 @@
   (:use #:cl
 	#:consfigurator
 	#:consfigurator.connection.fork
-	#:cffi))
-
-(defpackage :consfigurator.connection.chroot.fork
-  (:use #:cl
-	#:consfigurator
-	#:consfigurator.connection.fork
         #:consfigurator.connection.rehome
+        #:consfigurator.connection.shell-wrap
 	#:cffi))
-
-(defpackage :consfigurator.connection.chroot.shell
-  (:use #:cl
-        #:consfigurator
-        #:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.connection.setuid
   (:use #:cl

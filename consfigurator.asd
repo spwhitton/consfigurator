@@ -52,8 +52,6 @@
                (:file "src/connection/su")
                (:file "src/connection/sbcl")
                (:file "src/connection/chroot")
-               (:file "src/connection/chroot/fork")
-               (:file "src/connection/chroot/shell")
 	       (:file "src/connection/setuid")
 	       (:file "src/connection/as")
                (:file "src/data/asdf")
