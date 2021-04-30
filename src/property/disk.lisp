@@ -308,7 +308,7 @@ value in the case of EFI system partitions, for which case use #xEF00."))
            collect (make-opened-volume partition loopdev)))))
 
 (defmethod close-volume ((volume opened-partitioned-volume))
-  (mrun "kpartx" "-d" (device-file volume)))
+  (mrun "kpartx" "-dv" (device-file volume)))
 
 (defmethod create-volume ((volume partitioned-volume) (file pathname))
   (mrun :inform "sgdisk" "--zap-all" file)
