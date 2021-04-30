@@ -32,7 +32,7 @@
               (mapcar #'ensure-directory-pathname
                       (runlines "findmnt" "-rn" "--output" "target")))
             (mounts-below (remove-if-not (rcurry #'subpathp dir) all-mounts))
-            (sorted (sort mounts-below (complement #'subpathp))))
+            (sorted (sort mounts-below #'string< :key #'unix-namestring)))
        (loop as next = (pop sorted)
              while next
              do (loop while (subpathp (car sorted) next) do (pop sorted))
