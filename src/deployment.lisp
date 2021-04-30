@@ -38,9 +38,8 @@ preprocessed."
            (multiple-value-bind (*connection* return)
                (apply #'establish-connection type remaining args)
              (if *connection*
-                 (prog1 (if remaining
-                            (connect remaining)
-                            (apply-*host*-propspec))
+                 (unwind-protect-in-parent
+                     (if remaining (connect remaining) (apply-*host*-propspec))
                    (connection-teardown *connection*))
                  return)))))
     (let ((*host* (preprocess-host host)))

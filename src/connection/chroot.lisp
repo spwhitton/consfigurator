@@ -36,7 +36,50 @@
 ;;;; Chroot connections superclass
 
 (defclass chroot-connection ()
-  ((into :type :string :initarg :into)))
+  ((into :type :string :initarg :into)
+   (chroot-mounts :type list :initform nil :accessor chroot-mounts)))
+
+(defgeneric chroot-mount (connection &rest mount-args)
+  (:documentation
+   "Temporarily mount something into the chroot.  The last element of MOUNT-ARGS
+should be the mount point, without the chroot's root prefixed.")
+  (:method ((connection chroot-connection) &rest mount-args)
+    (let ((dest (chroot-pathname (lastcar mount-args)
+                                 (slot-value connection 'into))))
+      ;; We only mount when the target is not already a mount point, so we
+      ;; don't shadow anything that the user has already set up.
+      (when (plusp (mrun :for-exit "mountpoint" "-q" dest))
+        (setq mount-args (copy-list mount-args))
+        (setf (lastcar mount-args) dest)
+        (apply #'mrun "mount" mount-args)
+        (push dest (chroot-mounts connection))))))
+
+(defmethod connection-teardown :before ((connection chroot-connection))
+  (dolist (mount (chroot-mounts connection))
+    (mrun "umount" mount)))
+
+(defparameter *standard-chroot-mounts* '(
+("-t" "proc"     "-o" "nosuid,noexec,nodev"                "proc"   "/proc")
+("-t" "sysfs"    "-o" "nosuid,noexec,nodev,ro"             "sys"    "/sys")
+("-t" "devtmpfs" "-o" "mode=0755,nosuid"                   "udev"   "/dev")
+("-t" "devpts"   "-o" "mode=0620,gid=5,nosuid,noexec"      "devpts" "/dev/pts")
+("-t" "tmpfs"    "-o" "mode=1777,nosuid,nodev"             "shm"    "/dev/shm")
+("-t" "tmpfs"    "-o" "mode=1777,strictatime,nodev,nosuid" "tmp"    "/tmp")
+("--bind"                                                  "/run"   "/run")))
+
+(defmethod initialize-instance :after ((connection chroot-connection) &key)
+  (when (string= "Linux" (stripln (run "uname")))
+    (with-slots (into) connection
+      ;; Ensure the chroot itself is a mountpoint so that findmnt(1) works
+      ;; correctly within the chroot.
+      (unless (zerop (mrun :for-exit "mountpoint" "-q" into))
+        (chroot-mount connection "--bind" into "/"))
+      ;; Now set up the usual bind mounts.  Help here from arch-chroot(8).
+      (dolist (mount *standard-chroot-mounts*)
+        (apply #'chroot-mount connection mount))
+      (when (remote-exists-p "/sys/firmware/efi/efivars")
+        (chroot-mount connection "-t" "efivarfs" "-o" "nosuid,noexec,nodev"
+                      "efivarfs" "/sys/firmware/efi/efivars")))))
 
 
 ;;;; :CHROOT.FORK
@@ -61,9 +104,10 @@
          (datadir (ensure-pathname
                    (subseq datadir-inside 1)
                    :defaults into* :ensure-absolute t :ensure-directory t)))
-    (continue-connection
-     (make-instance 'chroot.fork-connection :into into :datadir datadir)
-     remaining)))
+    (let ((connection (make-instance 'chroot.fork-connection
+                                     :into into :datadir datadir)))
+      (unwind-protect-in-parent (continue-connection connection remaining)
+        (connection-teardown connection)))))
 
 (defmethod post-fork ((connection chroot.fork-connection))
   (unless (zerop (chroot (slot-value connection 'into)))

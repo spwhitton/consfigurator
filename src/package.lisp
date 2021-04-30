@@ -501,6 +501,7 @@
 
 (defpackage :consfigurator.connection.chroot
   (:use #:cl
+        #:alexandria
 	#:consfigurator
 	#:consfigurator.connection.fork
         #:consfigurator.connection.rehome
