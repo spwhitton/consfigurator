@@ -105,7 +105,7 @@ partition or filesystem UUID in your consfig."
 (defprop entries-for-volumes :posix ()
   "Add or update entries in /etc/fstab for the host's volumes, as specified with
 DISK:HAS-VOLUMES."
-  (:desc (strcat "fstab entries for host's volumes"))
+  (:desc "fstab entries for host's volumes")
   (:hostattrs (os:required 'os:linux))
   (:apply (apply #'entries
                  (mapcar #'volume->entry
