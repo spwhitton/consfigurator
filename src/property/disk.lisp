@@ -420,23 +420,37 @@ possible.  Ignored if VOLUME-SIZE is also bound."))
 ;;;; Other volumes which can be made accessible as block devices
 
 (defclass luks-container (volume)
-  ((luks-type
+  ((luks-passphrase-iden1
+    :type string :initform "--luks-passphrase" :initarg :luks-passphrase-iden1)
+   (luks-type
     :type string :initform "luks" :initarg :luks-type :accessor luks-type
     :documentation
     "The value of the --type parameter to cryptsetup luksFormat.
 Note that GRUB2 older than 2.06 cannot open the default LUKS2 format, so
 specify \"luks1\" if this is needed.")))
-;; TODO ^ is it the default?
+
+(defclass-opened-volume opened-luks-container (luks-container))
 
 (defmethod open-volume ((volume luks-container) (file pathname))
-  ;; cryptsetup luksOpen FILE <generated from FILE>
-  ;; pass --label when luks2  (is '--type luks' 1 or 2?)
-  )
+  (with-slots (luks-passphrase-iden1 volume-label) volume
+    (unless (and (stringp volume-label) (plusp (length volume-label)))
+      (failed-change "LUKS volume has invalid VOLUME-LABEL."))
+    (mrun "cryptsetup" "-d" "-" "luksOpen" file volume-label
+          :input (get-data-string luks-passphrase-iden1 volume-label))
+    (make-opened-volume volume
+                        (merge-pathnames volume-label #P"/dev/mapper/"))))
 
 (defmethod create-volume ((volume luks-container) (file pathname))
-  ;; find the passphrase by requesting data
-  ;; ("--luks-passphrase--HOSTNAME" . (volume-label volume))
-  )
+  (with-slots (luks-passphrase-iden1 volume-label luks-type) volume
+    (mrun :inform
+          :input (get-data-string luks-passphrase-iden1 (volume-label volume))
+          "cryptsetup" "--type" luks-type
+          (and (member luks-type '("luks" "luks2") :test #'string=)
+               `("--label" ,volume-label))
+          "luksFormat" file "-")))
+
+(defmethod close-volume ((volume opened-luks-container))
+  (mrun "cryptsetup" "luksClose" (device-file volume)))
 
 (defclass linux-swap (volume) ())
 
