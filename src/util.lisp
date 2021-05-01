@@ -149,6 +149,11 @@ one solution is to convert your property to a :LISP property."
   (namestring
    (enough-pathname pathname (pathname-directory-pathname pathname))))
 
+(defun drop-trailing-slash (namestring)
+  (if (string-suffix-p namestring "/")
+      (subseq namestring 0 (1- (length namestring)))
+      namestring))
+
 (defmacro quote-nonselfeval (x)
   (once-only (x)
     `(if (member (type-of ,x) '(cons symbol))

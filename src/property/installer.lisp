@@ -31,22 +31,27 @@
         (strcat (unix-namestring chroot) "/")
         (strcat (unix-namestring target) "/"))))
 
-(defpropspec chroot-installed-to-volumes :posix (host chroot volumes)
+(defpropspec chroot-installed-to-volumes :lisp (host chroot volumes)
   "Where CHROOT contains the root filesystem of HOST and VOLUMES is a list of
 volumes, recursively open the volumes and rsync in the contents of CHROOT.
 Also update the fstab and crypttab, and try to install a bootloader."
   (:desc #?"${chroot} installed to volumes")
-  (let ((target (ensure-directory-pathname
-                 (strcat (unix-namestring chroot) ".target"))))
+  (let ((target
+          (ensure-directory-pathname
+           (strcat
+            (drop-trailing-slash
+             (unix-namestring (ensure-directory-pathname chroot)))
+            ".target"))))
     `(with-these-open-volumes (,volumes :mount-below ,target)
+       (%update-target-from-chroot ,chroot ,target)
        (chroot:deploys-these
-        ,chroot ,host
+        ,target ,host
         ,(make-propspec
           :systems nil
           :propspec
           '(eseqprops
-            ;; TODO (fstab:entries-for-opened-volumes)
+            (fstab:entries-for-opened-volumes)
             (file:lacks-lines "/etc/fstab" "# UNCONFIGURED FSTAB FOR BASE SYSTEM"))))
        ;; TODO Update /etc/crypttab
        ;; TODO Install bootloader
-       (%update-target-from-chroot ,chroot ,target))))
+       )))

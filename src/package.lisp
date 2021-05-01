@@ -6,6 +6,7 @@
   (:shadowing-import-from #:uiop
                           #:strcat
                           #:string-prefix-p
+                          #:string-suffix-p
                           #:split-string
                           #:last-char
                           #:escape-sh-command
@@ -32,6 +33,7 @@
   (:export ;; re-export from UIOP
            #:strcat
            #:string-prefix-p
+           #:string-suffix-p
            #:split-string
            #:last-char
            #:escape-sh-command
@@ -65,6 +67,7 @@
            #:plist-to-cmd-args
 	   #:with-local-temporary-directory
            #:pathname-file
+           #:drop-trailing-slash
            #:quote-nonselfeval
            #:define-print-object-for-structlike
            #:chroot-pathname
@@ -416,7 +419,8 @@
                     (#:file  #:consfigurator.property.file))
   (:export #:volume->entry
            #:entry-for-mountpoint
-           #:entries-for-volumes))
+           #:entries-for-volumes
+           #:entries-for-opened-volumes))
 
 (defpackage :consfigurator.property.gnupg
   (:use #:cl #:consfigurator)

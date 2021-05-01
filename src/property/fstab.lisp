@@ -111,3 +111,15 @@ DISK:HAS-VOLUMES."
                  (mapcar #'volume->entry
                          (mapcan (curry #'subvolumes-of-type 'filesystem)
                                  (get-hostattrs :volumes))))))
+
+(defprop entries-for-opened-volumes :posix ()
+  "Add or update entries in /etc/fstab for currently open volumes.
+
+This is used when building disk images and installing operating systems."
+  (:desc "fstab entries for opened volumes")
+  (:hostattrs (os:required 'os:linux))
+  (:apply
+   (apply #'entries
+          (mapcar #'volume->entry
+                  (mapcan (curry #'subvolumes-of-type 'mounted-filesystem)
+                          (get-connattr :opened-volumes))))))
