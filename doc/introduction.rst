@@ -4,7 +4,10 @@ Introduction
 Try it out / quick start
 ------------------------
 
-1. Install Consfigurator: :ref:`Installation`.
+1. Install Consfigurator (:ref:`Installation`) and ensure that some
+   implementation of ssh-askpass_ is available.
+
+.. ssh-askpass_: https://manpages.debian.org/buster/ssh-askpass/ssh-askpass.1.en.html
 
 2. Create a new directory ``consfig`` somewhere where ASDF will pick it up,
    such as ``~/common-lisp/consfig``.
@@ -25,12 +28,12 @@ Try it out / quick start
 
         (defpackage :com.example.consfig
           (:use #:cl #:alexandria #:consfigurator)
-          (:local-nicknames (#:os        #:consfigurator.property.os)
-                            (#:apt       #:consfigurator.property.apt)
-                            (#:cmd       #:consfigurator.property.cmd)
-                            (#:file      #:consfigurator.property.file)
-                            (#:chroot    #:consfigurator.property.chroot)
-                            (#:data.pgp  #:consfigurator.data.pgp)))
+          (:local-nicknames (#:os                #:consfigurator.property.os)
+                            (#:apt               #:consfigurator.property.apt)
+                            (#:cmd               #:consfigurator.property.cmd)
+                            (#:file              #:consfigurator.property.file)
+                            (#:chroot            #:consfigurator.property.chroot)
+                            (#:data.ssh-askpass  #:consfigurator.data.ssh-askpass)))
 
 4. Define some hosts and deployments.
 
@@ -40,8 +43,7 @@ Try it out / quick start
         (in-consfig "com.example.consfig")
 	(named-readtables:in-readtable :consfigurator)
 
-	(try-register-data-source
-         :pgp :location #P"/path/to/com.example.consfig.gpg")
+	(try-register-data-source :ssh-askpass :iden1-re "^--user-passwd--" :iden2-re "")
 
 	(defparameter my-substitution "substititions")
 
@@ -91,26 +93,10 @@ Try it out / quick start
     ``:AS`` keyword parameter and its argument.
 
 5. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
-   prompt.  Evaluate ``(asdf:load-system "consfigurator")``.
+   prompt.  Evaluate ``(asdf:load-system "com.example.consfig")``, then
+   ``(in-package :com.example.consfig)`` (or ``C-c ~`` in Emacs).
 
-6. When it's asked to use sudo to become root, Consfigurator will query your
-   registered sources of secrets to try to find the password it will need to
-   give to sudo.  You can easily write code to let Consfigurator query your
-   own sources of secrets, but for the purposes of this guide we'll use the
-   simple, PGP-based secrets source included with Consfigurator.  Unless
-   you've passwordless sudo access set up on athena, evaluate something like
-   this to initialise the store::
-
-     (consfigurator.data.pgp:set-data #P"/path/to/com.example.consfig.gpg"
-                                      "--user-passwd--athena.example.com"
-				      "spwhitton"
-				      "s3cre+")
-
-7. Now you can evaluate ``(asdf:load-system "com.example.consfig")`` followed
-   by ``(in-package :com.example.consfig)`` (or ``C-c ~`` in Emacs).  In the
-   future, now the secrets store exists, you can start with this step.
-
-8. You should now be able to evaluate ``(athena.example.com)`` to deploy
+6. You should now be able to evaluate ``(athena.example.com)`` to deploy
    properties to athena, using the connection chain of SSH, sudo and then
    handing over to a remote Lisp image.
 

@@ -536,3 +536,7 @@
 
 (defpackage :consfigurator.data.gpgpubkeys
   (:use #:cl #:consfigurator))
+
+(defpackage :consfigurator.data.ssh-askpass
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:re   #:cl-ppcre)))

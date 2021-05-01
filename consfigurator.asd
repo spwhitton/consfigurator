@@ -57,7 +57,8 @@
                (:file "src/data/asdf")
                (:file "src/data/pgp")
 	       (:file "src/data/git-snapshot")
-	       (:file "src/data/gpgpubkeys"))
+	       (:file "src/data/gpgpubkeys")
+               (:file "src/data/ssh-askpass"))
   :in-order-to ((test-op (test-op "consfigurator/tests"))))
 
 (defsystem "consfigurator/tests"
