@@ -364,7 +364,7 @@ We do not specify what logical volumes it contains."))
 
 ;;;; Filesystems
 
-(defparameter *mount-below* #P""
+(defparameter *mount-below* #P"/"
   "Prefix for all filesystem mount points.  Bound by functions to request that
 filesystems be mounted relative to a different filesystem root, e.g. under a
 chroot.")
