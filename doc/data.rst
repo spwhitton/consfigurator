@@ -36,8 +36,8 @@ other purposes.
 - ``("--pgp-pubkey" . FINGERPRINT)`` means the/a OpenPGP public key with
   fingerprint FINGERPRINT
 
-- ``("--luks-passphrase--HOSTNAME" . VOLUME-LABEL)`` means the LUKS passphrase
-  for volume with label VOLUME-LABEL on HOSTNAME.
+- ``("--luks-passphrase" . VOLUME-LABEL)`` means a LUKS passphrase for volume
+  with label ``VOLUME-LABEL``.
 
 (Proposed convention: Except for the first item above, these reserved names
 should start with ``--`` and use ``--`` to separate parameter values within
