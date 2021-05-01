@@ -28,12 +28,11 @@ Try it out / quick start
 
         (defpackage :com.example.consfig
           (:use #:cl #:alexandria #:consfigurator)
-          (:local-nicknames (#:os                #:consfigurator.property.os)
-                            (#:apt               #:consfigurator.property.apt)
-                            (#:cmd               #:consfigurator.property.cmd)
-                            (#:file              #:consfigurator.property.file)
-                            (#:chroot            #:consfigurator.property.chroot)
-                            (#:data.ssh-askpass  #:consfigurator.data.ssh-askpass)))
+          (:local-nicknames (#:os            #:consfigurator.property.os)
+                            (#:apt           #:consfigurator.property.apt)
+                            (#:cmd           #:consfigurator.property.cmd)
+                            (#:file          #:consfigurator.property.file)
+                            (#:chroot        #:consfigurator.property.chroot)))
 
 4. Define some hosts and deployments.
 
