@@ -11,5 +11,5 @@ override_dh_auto_build:
 	make -C emacs consfigurator.el
 
 override_dh_auto_clean:
-	find src -name "*.fasl" -delete
+	find src tests -name "*.fasl" -delete
 	make -C doc clean

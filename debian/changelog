@@ -2,6 +2,7 @@ consfigurator (0.6.0-1) UNRELEASED; urgency=medium
 
   * New upstream release.
   * Add dep and build-dep on cl-closer-mop.
+  * d/rules: also clean *.fasl from tests/.
 
  -- Sean Whitton <spwhitton@spwhitton.name>  Tue, 13 Apr 2021 14:52:23 -0700
 
