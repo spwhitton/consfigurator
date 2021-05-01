@@ -538,5 +538,5 @@
   (:use #:cl #:consfigurator))
 
 (defpackage :consfigurator.data.ssh-askpass
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:re   #:cl-ppcre)))

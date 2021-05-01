@@ -26,10 +26,17 @@ using ssh-askpass(1) to prompt the user to input it.  Useful for things like
 sudo passwords."
   (unless (uiop:getenv "DISPLAY")
     (missing-data-source "DISPLAY not set; cannot launch ssh-askpass(1)."))
+  ;; This cache duplicates CONSFIGURATOR::*STRING-DATA*, but if we don't keep
+  ;; our own cache here, then we would always have to return the current time
+  ;; from the first closure, and then we'd prompt the user for input every
+  ;; time, bypassing CONSFIGURATOR::*STRING-DATA*.
   (let ((cache (make-hash-table :test #'equal)))
     (cons
      (lambda (iden1 iden2)
-       (and (re:scan iden1-re iden1) (re:scan iden2-re iden2)))
+       (and (re:scan iden1-re iden1)
+            (re:scan iden2-re iden2)
+            (if-let ((cached (gethash (cons iden1 iden2) cache)))
+              (data-version cached) (get-universal-time))))
      (lambda (iden1 iden2)
        (let ((pair (cons iden1 iden2)))
          (or (gethash pair cache)
