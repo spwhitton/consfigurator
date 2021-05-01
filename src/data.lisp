@@ -99,6 +99,9 @@ sources are not expected to be available outside of the root Lisp."))
 (defvar *no-data-sources* nil
   "If t, silently fail to register any data sources.")
 
+(defvar *string-data* (make-hash-table :test #'equal)
+  "Items of STRING-DATA obtained from data sources by this Lisp image.")
+
 (defun try-register-data-source (&rest args)
   "Register sources of prerequisite data.
 This function is typically called in consfigs.  Any relative pathnames in ARGS
@@ -124,9 +127,11 @@ as, before being passed to implementations of REGISTER-DATA-SOURCE."
   (invoke-restart 'skip-data-source))
 
 (defun reset-data-sources ()
-  "Forget all data sources registered in this Lisp image.
+  "Forget all data sources registered in this Lisp image and items of string
+data obtained from data sources by this Lisp image.
 This function is typically called at the REPL."
-  (setq *data-sources* nil
+  (setq *string-data* (clrhash *string-data*)
+        *data-sources* nil
         *data-source-registrations* nil))
 
 (defun get-data-string (iden1 iden2)
@@ -154,9 +159,6 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
   (:report (lambda (condition stream)
              (format stream "Could not provide prerequisite data ~S | ~S"
                      (missing-iden1 condition) (missing-iden2 condition)))))
-
-(defvar *string-data* (make-hash-table :test #'equal)
-  "Items of STRING-DATA obtained from data sources by this Lisp image.")
 
 (defun %get-data (iden1 iden2)
   (let* ((idenpair (cons iden1 iden2))
