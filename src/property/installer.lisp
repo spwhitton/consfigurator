@@ -22,7 +22,7 @@
   (:desc #?"Updated ${target} from ${chroot}")
   (:apply
    (assert-euid-root)
-   (run "rsync" "-PSav" "--delete"
+   (run "rsync" "-PSavx" "--delete"
         (loop for volume
                 in (mapcan (curry #'subvolumes-of-type 'mounted-filesystem)
                            (get-connattr :opened-volumes))
