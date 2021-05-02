@@ -187,6 +187,14 @@ one-dimensional collections of values."
   (ensure-pathname (enough-pathname pathname chroot)
                    :ensure-absolute t :defaults #P"/"))
 
+(defun escape-sh-token (token &optional s)
+  "Like UIOP:ESCAPE-SH-TOKEN, but also escape the empty string."
+  (if (string= token "") (format s "\"\"") (uiop:escape-sh-token token s)))
+
+(defun escape-sh-command (token &optional s)
+  "Like UIOP:ESCAPE-SH-COMMAND, but also escape the empty string."
+  (uiop:escape-command token s 'escape-sh-token))
+
 
 ;;;; Progress & debug printing
 

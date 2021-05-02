@@ -9,8 +9,6 @@
                           #:string-suffix-p
                           #:split-string
                           #:last-char
-                          #:escape-sh-command
-                          #:escape-sh-token
                           #:run-program
                           #:read-file-string
                           #:copy-stream-to-stream
@@ -36,8 +34,6 @@
            #:string-suffix-p
            #:split-string
            #:last-char
-           #:escape-sh-command
-           #:escape-sh-token
            #:run-program
            #:read-file-string
            #:copy-stream-to-stream
@@ -72,6 +68,8 @@
            #:define-print-object-for-structlike
            #:chroot-pathname
            #:in-chroot-pathname
+           #:escape-sh-token
+           #:escape-sh-command
 
            #:*consfigurator-debug-level*
            #:with-indented-inform
