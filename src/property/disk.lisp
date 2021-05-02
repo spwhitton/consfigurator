@@ -177,7 +177,8 @@ OPENED-VOLUME, make a fresh instance of that class copying all slots from
 VOLUME, and setting the DEVICE-FILE slot to DEVICE-FILE."))
 
 (defmacro defclass-opened-volume
-    (name (subclass-of-volume &rest other-superclasses))
+    (name (subclass-of-volume &rest other-superclasses)
+     &key (device-file-type 'pathname))
   "Define a subclass of SUBCLASS-OF-VOLUME and OPENED-VOLUME called NAME, and an
 appropriate implementation of MAKE-OPENED-VOLUME for NAME.
 SUBCLASS-OF-VOLUME should be a symbol naming a subclass of VOLUME."
@@ -189,7 +190,7 @@ SUBCLASS-OF-VOLUME should be a symbol naming a subclass of VOLUME."
           "Instance of ~A which has been made directly accessible as a block device."
           name)))
      (defmethod make-opened-volume
-         ((volume ,subclass-of-volume) (device-file pathname))
+         ((volume ,subclass-of-volume) (device-file ,device-file-type))
        ,(format nil "Make instance of ~A from instance of ~A."
                 name subclass-of-volume)
        (let ((old-class (find-class ',subclass-of-volume)))
@@ -335,31 +336,88 @@ value in the case of EFI system partitions, for which case use #xEF00."))
     :documentation "The name of the VG, often starting with \"vg_\".")
    ;; (volume-depth :initform 3)
    (volume-contents
-    :type cons
+    :type list
     :documentation "A list of objects of type LVM-LOGICAL-VOLUME."))
   (:documentation
    "An LVM volume group.  Typically specified as a top level volume in
 DISK:HAS-VOLUMES, rather than as the VOLUME-CONTENTS of another volume."))
 
+(defclass-opened-volume activated-lvm-volume-group (lvm-volume-group)
+                        :device-file-type null)
+
+(defun all-vgs ()
+  (mapcar (curry #'string-trim " ")
+          (runlines "vgs" "--no-headings" "-ovg_name")))
+
 (defmethod open-volume ((volume lvm-volume-group) (file null))
-  (mrun "vgscan")
-  (mrun "vgchange" "-ay" (volume-label volume))
-  ;; return (as a second value) a list of OPENED-VOLUME for each logical volume
-  )
+  (with-slots (volume-label volume-contents) volume
+    (mrun "vgscan")
+    (mrun "vgchange" "-ay" volume-label)
+    ;; lvm(8) says not to use the /dev/mapper names, but rather /dev/vg/lv
+    (let ((dir (ensure-directory-pathname
+                (merge-pathnames volume-label #P"/dev/"))))
+      (values
+       (make-opened-volume volume nil)
+       (loop for lv in volume-contents
+             collect (make-opened-volume
+                      lv (merge-pathnames (volume-label lv) dir)))))))
+
+(defmethod close-volume ((volume activated-lvm-volume-group))
+  (with-slots (volume-label) volume
+    (mrun "vgchange" "-an" volume-label)))
+
+(defmethod create-volume ((volume lvm-volume-group) (file null))
+  ;; We expect that the VG was already created when the PVs were created, and
+  ;; this method actually implements creation of the LVs.
+  (with-slots (volume-label volume-contents) volume
+    (unless (member volume-label (all-vgs) :test #'string=)
+      (failed-change "Looks like no PVs for VG ~A?" volume-label))
+    (dolist (lv volume-contents)
+      (mrun :inform "lvcreate"
+            (if (and (slot-boundp lv 'volume-size)
+                     (eql (volume-size lv) :remaining))
+                '("-l" "100%FREE")
+                `("-L" ,(format nil "~DM" (volume-minimum-size lv))))
+            volume-label
+            "-n" (volume-label lv)))))
 
 (defclass lvm-logical-volume (volume)
   ((volume-label
+    :initform (simple-program-error "LVs must have names.")
     :documentation "The name of the LV, often starting with \"lv_\".")))
+
+(defclass-opened-volume activated-lvm-logical-volume (lvm-logical-volume))
 
 (defclass lvm-physical-volume (volume)
   ((volume-group
     :type string
     :initarg :volume-group
+    :initform
+    (simple-program-error "LVM physical volume must have volume group.")
     :accessor volume-group
     :documentation
-    "The name of the LVM volume group to which this volume belongs."))
+    "The name of the LVM volume group to which this volume belongs.")
+   (data-alignment
+    :type string
+    :initarg :data-alignment
+    :accessor data-alignment
+    :documentation "Value for the --dataalignment argument to pvcreate(8)."))
   (:documentation "An LVM physical volume.
 We do not specify what logical volumes it contains."))
+
+(defclass-opened-volume opened-lvm-physical-volume (lvm-physical-volume))
+
+(defmethod open-volume ((volume lvm-physical-volume) (file pathname))
+  (make-opened-volume volume file))
+
+(defmethod create-volume ((volume lvm-physical-volume) (file pathname))
+  (mrun :inform "pvcreate"
+        (and (slot-boundp volume 'data-alignment)
+             `("--dataalignment" ,(data-alignment volume)))
+        file)
+  (if (member (volume-group volume) (all-vgs) :test #'string=)
+      (mrun :inform "vgextend" (volume-group volume) file)
+      (mrun :inform "vgcreate" "--systemid" "" (volume-group volume) file)))
 
 
 ;;;; Filesystems
