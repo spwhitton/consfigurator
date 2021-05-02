@@ -142,8 +142,8 @@ apply the elements of REQUIREMENTS in reverse order."
                         (:no-change     "ok")
                         (:failed-change "failed")
                         (t              "done"))))
-          (unless (or (null return-value) (eql result :no-change))
-            (setq return-value nil)))))))
+          (unless (eql result :no-change)
+            (setq return-value result)))))))
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
