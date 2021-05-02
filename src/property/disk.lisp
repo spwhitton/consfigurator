@@ -890,8 +890,8 @@ Example usage:
                    (simple-program-error
                     "~A is not a valid volume size." input))
                  (setf (getf initargs :volume-size)
-                       (* (parse-integer (nth 0 groups))
-                          (eswitch ((nth 1 groups) :test #'string=)
+                       (* (parse-integer (elt groups 0))
+                          (eswitch ((elt groups 1) :test #'string=)
                             ("M" 1)
                             ("G" 1024)
                             ("T" 1048576)))))))
