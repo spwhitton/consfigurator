@@ -436,22 +436,6 @@ PATH may be any kind of file, including directories."
               (mrun :may-fail #?"chown ${uid}:${gid} ${namestring}")))))
       (connection-writefile *connection* namestring content mode)))
 
-(defmacro with-local-connection (&body forms)
-  "Execute FORMS as though a :LOCAL connection had been established.
-This is for testing purposes at the REPL and in Consfigurator's test suite.
-FORMS is typically the programmatic application of one or more properties."
-  `(let ((*host* (make-host :propspec (make-propspec :systems nil)))
-         (*connection* (establish-connection :local nil)))
-     ,@forms))
-
-(defmacro with-local-passwordless-sudo-connection (&body forms)
-  "Execute FORMS as though a passwordless :SUDO connection to localhost had been
-established.  Occasionally useful for testing purposes at the REPL."
-  `(with-local-connection
-     (let ((*connection* (establish-connection :sudo nil
-                                               :user "root" :password nil)))
-       ,@forms)))
-
 
 ;;;; Connection attributes
 

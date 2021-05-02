@@ -112,8 +112,6 @@
            #:delete-remote-trees
            #:readfile
            #:writefile
-           #:with-local-connection
-           #:with-local-passwordless-sudo-connection
 
            #:propagate-connattr
            #:get-connattr
@@ -200,6 +198,7 @@
            #:hostdeploy-these
            #:hostdeploy-these*
            #:continue-deploy*
+           #:evals
 
            ;; data.lisp
            #:data

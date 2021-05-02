@@ -271,3 +271,20 @@ different user."
     (pushnew system (slot-value (host-propspec *host*) 'systems)))
   (dolist (attr (getf (hostattrs host) :data))
     (push-hostattrs :data attr)))
+
+(defprop evals :posix (&rest forms)
+  "Property which just evaluates each of FORMS using EVAL.  Only for testing
+newly defined functions and programmatic applications of properties at the
+REPL with DEPLOY-THESE/HOSTDEPLOY-THESE -- do not add to hosts.
+
+For example, to sudo to root to test your new function which needs root
+privileges to do anything at all,
+
+    (deploy-these :sudo melete.silentflame.com (evals '(my-new-function)))
+
+where melete.silentflame.com is your laptop.
+
+Note that while this property is declared to be :POSIX for flexibility,
+whether it is actually :POSIX depends on what input and output FORMS perform."
+  (:desc (format nil "Evaluated ~{~S~^ ~}" forms))
+  (:apply (eval `(progn ,@forms))))
