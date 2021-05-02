@@ -373,7 +373,9 @@
            #:volume-contents
            #:volume-size
            #:subvolumes-of-type
+           #:all-subvolumes
            #:copy-volume-and-contents
+           #:require-volumes-data
 
            #:physical-disk
            #:disk-image

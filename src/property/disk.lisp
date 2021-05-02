@@ -92,6 +92,13 @@ volumes encountered whose type is a subtype of TYPE.")
                      (cons volume contents) contents))))
       (walk volume))))
 
+(defgeneric all-subvolumes (volume)
+  (:documentation
+   "Recursively examine VOLUME and its VOLUME-CONTENTS and return a list of all
+volumes encountered.")
+  (:method ((volume volume))
+    (subvolumes-of-type 'volume volume)))
+
 (defgeneric volume-contents-minimum-size (volume)
   (:documentation
    "Return the minimum size required to accommodate the VOLUME-CONTENTS of VOLUME.")
@@ -128,6 +135,23 @@ accommodate its contents, whichever is larger.")
    "Create VOLUME.  FILE is a pathname at or on which to create VOLUME, for types
 of VOLUME where that makes sense, and explicitly nil otherwise.
 Return values, if any, should be ignored."))
+
+(defgeneric volume-required-data (volume)
+  (:documentation
+   "Return (IDEN1 . IDEN2) pairs for each item of prerequisite data opening
+and/or creating the volume requires.")
+  (:method ((volume volume))
+    "Default implementation: nothing required."
+    nil))
+
+(defun require-volumes-data (volumes)
+  "Call REQUIRE-DATA on each item of prerequisite data requires for opening
+and/or creating each of VOLUMES.
+
+Called by property :HOSTATTRS subroutines."
+  (dolist (pair (mapcan #'volume-required-data
+                        (mapcan #'all-subvolumes volumes)))
+    (require-data (car pair) (cdr pair))))
 
 
 ;;;; Opened volumes
@@ -489,6 +513,10 @@ specify \"luks1\" if this is needed.")))
 
 (defclass-opened-volume opened-luks-container (luks-container))
 
+(defmethod volume-required-data ((volume luks-container))
+  (with-slots (luks-passphrase-iden1 volume-label) volume
+    (list (cons luks-passphrase-iden1 volume-label))))
+
 (defmethod open-volume ((volume luks-container) (file pathname))
   (with-slots (luks-passphrase-iden1 volume-label) volume
     (unless (and (stringp volume-label) (plusp (length volume-label)))
@@ -614,7 +642,10 @@ must not be modified."
     (volumes propapp &key (mount-below nil mount-below-supplied-p))
   (:retprop
    :type (propapptype propapp)
-   :hostattrs (get (car propapp) 'hostattrs)
+   :hostattrs (lambda (&rest ignore)
+                (declare (ignore ignore))
+                (require-volumes-data volumes)
+                (propappattrs propapp))
    :apply
    (lambda (&rest ignore)
      (declare (ignore ignore))
@@ -684,7 +715,7 @@ the LVM physical volumes corresponding to those volume groups."
   (:desc (declare (ignore volumes chroot rebuild))
          #?"Created raw disk image & other volumes")
   (:hostattrs
-   (declare (ignore volumes chroot rebuild))
+   (require-volumes-data volumes)
    ;; We require GNU du(1).
    (os:required 'os:linux))
   (:check
