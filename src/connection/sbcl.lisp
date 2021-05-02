@@ -50,6 +50,6 @@ recommended."))
       (unless (zerop exit)
         ;; print FORMS not PROGRAM because latter might contain sudo passwords
         (failed-change
-	 "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~A"
+	 "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~S"
          err forms))))
   nil)
