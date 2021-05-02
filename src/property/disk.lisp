@@ -569,13 +569,16 @@ must not be modified."
          (mapc #'close-volume (get-connattr :opened-volumes)))))
    :args (cdr propapp)))
 
-(defgeneric create-volume-and-contents (volume file)
-  (:documentation "Recursively create VOLUME and its contents, on or at FILE.
+(defgeneric create-volumes-and-contents (volumes)
+  (:documentation
+   "Where each of VOLUMES is a VOLUME which may be created by calling
+CREATE-VOLUME with NIL as the second argument, recursively create each of
+VOLUMES and any contents thereof.
 **THIS METHOD UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA.**")
-  (:method ((volume volume) file)
+  (:method (volumes)
     (let (opened-volumes)
       (labels
-          ((create (volume file)
+          ((create-volume-and-contents (volume file)
              (create-volume volume file)
              (when (slot-boundp volume 'volume-contents)
                (multiple-value-bind (opened opened-contents)
@@ -585,10 +588,13 @@ must not be modified."
                  (if opened-contents
                      (dolist (opened-volume opened-contents)
                        (when (slot-boundp opened-volume 'volume-contents)
-                         (create (volume-contents opened-volume)
-                                 (device-file opened-volume))))
-                     (create (volume-contents opened) (device-file opened)))))))
-        (unwind-protect (create volume file)
+                         (create-volume-and-contents
+                          (volume-contents opened-volume)
+                          (device-file opened-volume))))
+                     (create-volume-and-contents
+                      (volume-contents opened) (device-file opened)))))))
+        (unwind-protect
+             (mapc (rcurry #'create-volume-and-contents nil) volumes)
           (mrun "sync")
           (mapc #'close-volume opened-volumes))))))
 
@@ -675,7 +681,7 @@ the LVM physical volumes corresponding to those volume groups."
                                                         "/*"))))))))
                     (extra-space filesystem))))))
      ;; Finally, create the volumes.
-     (mapc (rcurry #'create-volume-and-contents nil) volumes))))
+     (create-volumes-and-contents volumes))))
 
 (defpropspec raw-image-built-for :lisp
     (options host image-pathname &key rebuild)
@@ -733,8 +739,7 @@ filesystems will be incrementally updated when other properties change."
 
 Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE."
   (:desc "Host volumes created")
-  (:apply
-   (mapc (rcurry #'create-volume-and-contents nil) (get-hostattrs :volumes))))
+  (:apply (create-volumes-and-contents (get-hostattrs :volumes))))
 
 
 ;;;; Utilities
