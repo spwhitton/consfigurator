@@ -132,6 +132,29 @@ Return values, if any, should be ignored."))
 
 ;;;; Opened volumes
 
+(defgeneric open-volume (volume file)
+  (:documentation "Renders contents of VOLUME directly accessible.
+FILE is something in the filesystem which serves as a means of accessing
+VOLUME, for types of VOLUME where that makes sense, and explicitly nil
+otherwise.
+
+Returns as a first value a fresh instance of OPENED-VOLUME corresponding to
+VOLUME.  In this case, it is legitimate to subsequently call OPEN-VOLUME on
+the VOLUME-CONTENTS of VOLUME.
+
+If opening this kind of volume results in opening its VOLUME-CONTENTS too,
+also return as a second value a list of fresh OPENED-VOLUME values
+corresponding to the VOLUME-CONTENTS of VOLUME.  In this case, the caller
+should not attempt to call OPEN-VOLUME on the VOLUME-CONTENTS of VOLUME."))
+
+(defgeneric close-volume (volume)
+  (:documentation
+   "Inverse of OPEN-VOLUME: `kpartx -d`, `cryptsetup luksClose`, etc.
+Return values, if any, should be ignored.")
+  (:method ((volume volume))
+    "Default implementation: assume there is nothing to close."
+    (values)))
+
 (defclass opened-volume (volume)
   ((device-file
     :type pathname
@@ -179,29 +202,6 @@ SUBCLASS-OF-VOLUME should be a symbol naming a subclass of VOLUME."
                      (slot-value volume slot-name))))
            (setf (slot-value new 'device-file) device-file)
            (reinitialize-instance new))))))
-
-(defgeneric open-volume (volume file)
-  (:documentation "Renders contents of VOLUME directly accessible.
-FILE is something in the filesystem which serves as a means of accessing
-VOLUME, for types of VOLUME where that makes sense, and explicitly nil
-otherwise.
-
-Returns as a first value a fresh instance of OPENED-VOLUME corresponding to
-VOLUME.  In this case, it is legitimate to subsequently call OPEN-VOLUME on
-the VOLUME-CONTENTS of VOLUME.
-
-If opening this kind of volume results in opening its VOLUME-CONTENTS too,
-also return as a second value a list of fresh OPENED-VOLUME values
-corresponding to the VOLUME-CONTENTS of VOLUME.  In this case, the caller
-should not attempt to call OPEN-VOLUME on the VOLUME-CONTENTS of VOLUME."))
-
-(defgeneric close-volume (volume)
-  (:documentation
-   "Inverse of OPEN-VOLUME: `kpartx -d`, `cryptsetup luksClose`, etc.
-Return values, if any, should be ignored.")
-  (:method ((volume volume))
-    "Default implementation: assume there is nothing to close."
-    (values)))
 
 (defclass physical-disk (top-level-volume opened-volume) ()
   (:documentation
