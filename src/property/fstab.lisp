@@ -75,7 +75,7 @@ Other properties might fill it in."
 procedure: existing lines of the fstab with the same mount point as any of
 ENTRIES are updated to match the corresponding members of ENTRIES, except that
 if the first field of the existing entry is not \"none\" and the corresponding
-member of ENTRIES is \"none\", use the existing field value.
+member of ENTRIES is \"none\", or \"PLACEHOLDER\", use the existing field value.
 
 This makes it easy to update mount options without having to specify the
 partition or filesystem UUID in your consfig."
@@ -92,7 +92,9 @@ partition or filesystem UUID in your consfig."
               for line-source = (entry->source line)
               and line-mountpoint = (entry->mountpoint line)
               for entry = (let ((entry (gethash line-mountpoint pending)))
-                            (if (and (string= (entry->source entry) "none")
+                            (if (and (member (entry->source entry)
+                                             '("none" "PLACEHOLDER")
+                                             :test #'string=)
                                      (not (string= line-source "none")))
                                 (format nil "~A ~{~A~^ ~}"
                                         line-source (cdr (split-string entry)))
