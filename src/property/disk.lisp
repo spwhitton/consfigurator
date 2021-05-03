@@ -477,7 +477,8 @@ possible.  Ignored if VOLUME-SIZE is also bound."))
 (defmethod close-volume ((volume mounted-filesystem))
   (mrun "umount" (device-file volume)))
 
-(defclass ext4-filesystem (filesystem) ())
+(defclass ext4-filesystem (filesystem)
+  ((mount-options :initform '("relatime"))))
 
 (defclass-opened-volume
     mounted-ext4-filesystem (ext4-filesystem mounted-filesystem))
