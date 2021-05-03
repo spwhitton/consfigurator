@@ -349,6 +349,14 @@ It should be a pure function aside from retrieving hostattrs (as set by other
 properties applied to the hosts to which the resulting property is applied,
 not as set by the properties in the returned propspec).
 
+Macro property combinators should be usable in the normal way in the body, but
+some other macros commonly used in DEFHOST and DEFPROPLIST forms will not work
+as expected.  In particular, the macros implementing dotted propapp notation
+expect to be used within unevaluated property application specification
+expressions and may not behave as expected in the body of DEFPROPSPEC.  You
+can work around this particular limitation using the PROPAPP macro.  See
+DISK:RAW-IMAGE-BUILT-FOR for an example of this technique.
+
 You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   ;; This is implemented by effectively pushing a null pointer to the front of
   ;; the propapp's arguments at :PREPROCESS-time, calling the user's code with

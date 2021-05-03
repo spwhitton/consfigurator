@@ -243,15 +243,18 @@ unevaluated propspec are defined before that unevaluated propspec is
 processed."
       (cell-error-name condition)))))
 
+(defmacro propapp (form)
+  "Convert a single element of an unevaluated property application specification
+expression to a property application specification expression."
+  (flet ((evaluate (propapp)
+           `(list ',(car propapp) ,@(cdr propapp))))
+    (handler-case (map-propspec-propapps #'evaluate form t)
+      (ambiguous-propspec (c)
+        ;; resignal with a more specific error message
+        (error 'ambiguous-unevaluated-propspec :name (cell-error-name c))))))
+
 (defmacro props (combinator &rest forms)
   "Apply variadic COMBINATOR to FORMS and convert from an unevaluated property
 application specification expression to a property application specification
 expression."
-  (flet ((evaluate (propapp)
-           `(list ',(car propapp) ,@(cdr propapp))))
-    (handler-case
-        (map-propspec-propapps #'evaluate (cons combinator forms) t)
-      (ambiguous-propspec (c)
-        ;; resignal with a more specific error message
-        (error 'ambiguous-unevaluated-propspec
-               :name (cell-error-name c))))))
+  `(propapp ,(cons combinator forms)))

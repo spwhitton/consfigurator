@@ -155,6 +155,7 @@
            #:propspec-props
            #:make-propspec
            #:append-propspecs
+           #:propapp
 
 	   ;; combinator.lisp
            #:define-function-property-combinator

@@ -44,12 +44,9 @@ Also update the fstab and crypttab, and try to install a bootloader."
             ".target"))))
     `(with-these-open-volumes (,volumes :mount-below ,target)
        (%update-target-from-chroot ,chroot ,target)
-       (chroot:deploys-these
-        ,target ,host
-        ,(make-propspec
-          :systems nil
-          :propspec
-          '(os:etypecase
+       ,(propapp
+         (chroot:deploys-these. target host
+           (os:etypecase
                (debianlike
                 (file:lacks-lines "/etc/fstab"
                                   "# UNCONFIGURED FSTAB FOR BASE SYSTEM")
