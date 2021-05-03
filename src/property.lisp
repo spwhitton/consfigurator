@@ -190,6 +190,11 @@ see MAP-PROPSPEC-PROPAPPS for how they are used.")
       (when indent
         (setf (get sym 'indent) indent)))))
 
+(defmacro with-*host*-*consfig* (&body forms)
+  `(progv `(,(intern "*CONSFIG*"))
+       `(,(propspec-systems (host-propspec *host*)))
+     ,@forms))
+
 (defmacro define-dotted-property-macro (name args &aux (whole (gensym)))
   "Affix a period to the end of NAME and define a macro expanding into a
 propapp calling the original NAME after applying the dotted propapp rules,
@@ -279,9 +284,9 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
                           (make-host
 			   :hostattrs (hostattrs *host*)
                            :propspec
-                           (make-propspec
-                            :systems nil
-                            :propspec (cons ',,name args)))))))))))))))
+                           (with-*host*-*consfig*
+                             (make-propspec
+                              :propspec (cons ',,name args))))))))))))))))
 
 (define-condition programmatic-apply-hostattrs (simple-warning) ())
 
@@ -374,12 +379,12 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
 		      ,@(cdr (pop forms))))))
   (setf (getf slots :hostattrs)
         `(lambda (plist)
-           (let ((propspec (preprocess-propspec
-                            (make-propspec
-                             :systems (propspec-systems (host-propspec *host*))
-                             :propspec (destructuring-bind ,lambda
-                                           (getf plist :orig-args)
-                                         ,@forms)))))
+           (let ((propspec (with-*host*-*consfig*
+                               (preprocess-propspec
+                                (make-propspec
+                                 :propspec (destructuring-bind ,lambda
+                                               (getf plist :orig-args)
+                                             ,@forms))))))
              (setf (getf plist :propspec) propspec)
              (propappattrs (eval-propspec propspec))))))
 
