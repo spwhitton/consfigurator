@@ -49,16 +49,18 @@ Also update the fstab and crypttab, and try to install a bootloader."
         ,(make-propspec
           :systems nil
           :propspec
-          '(eseqprops
-            ;; This will overwrite any custom mount options, etc., with values
-            ;; from VOLUMES.  Possibly it would be better to use a property
-            ;; which only updates the fs-spec field.  However, given that
-            ;; VOLUMES ultimately comes from the volumes the user has declared
-            ;; for the host, it is unlikely there are other properties setting
-            ;; mount options etc. which are in conflict with VOLUMES.
-            (fstab:entries-for-opened-volumes)
-            ;; Debian and derivatives add this line.
-            (file:lacks-lines "/etc/fstab" "# UNCONFIGURED FSTAB FOR BASE SYSTEM"))))
+          '(os:etypecase
+               (debianlike
+                (file:lacks-lines "/etc/fstab"
+                                  "# UNCONFIGURED FSTAB FOR BASE SYSTEM")
+                ;; This will overwrite any custom mount options, etc., with
+                ;; values from VOLUMES.  Possibly it would be better to use a
+                ;; property which only updates the fs-spec field.  However,
+                ;; given that VOLUMES ultimately comes from the volumes the
+                ;; user has declared for the host, it is unlikely there are
+                ;; other properties setting mount options etc. which are in
+                ;; conflict with VOLUMES.
+                (fstab:entries-for-opened-volumes)))))
        ;; TODO Update /etc/crypttab
        ;; TODO Install bootloader
        )))

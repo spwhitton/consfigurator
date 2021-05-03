@@ -460,7 +460,8 @@
 
 (defpackage :consfigurator.property.installer
   (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
-  (:local-nicknames (#:file      #:consfigurator.property.file)
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
                     (#:chroot    #:consfigurator.property.chroot)
                     (#:fstab     #:consfigurator.property.fstab))
   (:export #:chroot-installed-to-volumes))
