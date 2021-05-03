@@ -405,6 +405,7 @@
 
            #:luks-container
            #:opened-luks-container
+           #:crypttab-options
            #:linux-swap
 
            #:with-these-open-volumes
