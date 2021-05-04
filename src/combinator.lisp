@@ -89,14 +89,20 @@ apply the elements of REQUIREMENTS in reverse order."
   `(eseqprops ,@(reverse requirements) ,propapp))
 
 (define-function-property-combinator silent-seqprops (&rest propapps)
-  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
-            :hostattrs (lambda () (mapc #'propappattrs propapps))
-            :apply (lambda ()
-                     (with-skip-failed-changes
-                       (mapc #'propappapply propapps)))
-            :unapply (lambda ()
-                       (with-skip-failed-changes
-                         (mapc #'propappunapply (reverse propapps))))))
+  (flet ((gather-results (op propapps)
+           (with-skip-failed-changes
+             (let ((return-value :no-change))
+               (dolist (propapp propapps return-value)
+                 (let ((result (funcall op propapp)))
+                   (unless (eql result :no-change)
+                     (setq return-value result))))))))
+    (:retprop :type (collapse-types (mapcar #'propapptype propapps))
+              :hostattrs (lambda () (mapc #'propappattrs propapps))
+              :apply (lambda ()
+                       (gather-results #'propappapply propapps))
+              :unapply (lambda ()
+                         (gather-results #'propappunapply
+                                         (reverse propapps))))))
 
 ;; note that the :FAILED-CHANGE value is only used within this function and
 ;; should not be returned by property subroutines, per the spec
