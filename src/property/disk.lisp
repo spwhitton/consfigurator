@@ -308,8 +308,8 @@ value in the case of EFI system partitions, for which case use #xEF00."))
 (defclass-opened-volume opened-partition (partition))
 
 (defmethod volume-contents-minimum-size ((volume partitioned-volume))
-  "Add one mebibyte for the GPT metadata."
-  (1+ (call-next-method)))
+  "Add two mebibytes for the GPT metadata."
+  (+ 2 (call-next-method)))
 
 (defmethod open-volume ((volume partitioned-volume) (file pathname))
   (let ((loopdevs (mapcar
