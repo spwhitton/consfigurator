@@ -50,14 +50,14 @@ Also update the fstab and crypttab, and try to install a bootloader."
                (debianlike
                 (file:lacks-lines "/etc/fstab"
                                   "# UNCONFIGURED FSTAB FOR BASE SYSTEM")
-                ;; This will overwrite any custom mount options, etc., with
-                ;; values from VOLUMES.  Possibly it would be better to use a
-                ;; property which only updates the fs-spec field.  However,
-                ;; given that VOLUMES ultimately comes from the volumes the
-                ;; user has declared for the host, it is unlikely there are
-                ;; other properties setting mount options etc. which are in
-                ;; conflict with VOLUMES.
-                (fstab:entries-for-opened-volumes)))))
-       ;; TODO Update /etc/crypttab
+                ;; These will overwrite any custom mount options, etc., with
+                ;; values from VOLUMES.  Possibly it would be better to use
+                ;; properties which only update the fs-spec/source fields.
+                ;; However, given that VOLUMES ultimately comes from the
+                ;; volumes the user has declared for the host, it is unlikely
+                ;; there are other properties setting mount options etc. which
+                ;; are in conflict with VOLUMES.
+                (fstab:entries-for-opened-volumes)
+                (crypttab:entries-for-opened-volumes)))))
        ;; TODO Install bootloader
        )))

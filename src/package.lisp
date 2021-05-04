@@ -379,6 +379,7 @@
            #:all-subvolumes
            #:copy-volume-and-contents
            #:require-volumes-data
+           #:device-file
 
            #:physical-disk
            #:disk-image
@@ -430,6 +431,14 @@
            #:entries-for-volumes
            #:entries-for-opened-volumes))
 
+(defpackage :consfigurator.property.crypttab
+  (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
+  (:local-nicknames (#:re    #:cl-ppcre)
+                    (#:os    #:consfigurator.property.os)
+                    (#:file  #:consfigurator.property.file))
+  (:export #:volume->entry
+           #:entries-for-opened-volumes))
+
 (defpackage :consfigurator.property.gnupg
   (:use #:cl #:consfigurator)
   (:export #:public-key-imported))
@@ -469,7 +478,8 @@
   (:local-nicknames (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file)
                     (#:chroot    #:consfigurator.property.chroot)
-                    (#:fstab     #:consfigurator.property.fstab))
+                    (#:fstab     #:consfigurator.property.fstab)
+                    (#:crypttab  #:consfigurator.property.crypttab))
   (:export #:chroot-installed-to-volumes))
 
 (defpackage :consfigurator.connection.local
