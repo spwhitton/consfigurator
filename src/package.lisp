@@ -198,6 +198,8 @@
            #:hostdeploy*
            #:hostdeploy-these
            #:hostdeploy-these*
+           #:localsudo
+           #:localhd
            #:continue-deploy*
            #:evals
 

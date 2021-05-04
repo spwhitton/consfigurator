@@ -189,6 +189,42 @@ You can then eval (NAME) to execute this deployment."
                           (make-propspec
                            :propspec (props eseqprops ,@properties))))))
 
+(defun hostname-f ()
+  (stripln (run-program '("hostname" "-f") :output :string)))
+
+(defmacro localsudo (&rest properties)
+  "Deploy PROPERTIES to localhost using a :SUDO connection.
+
+It is assumed that on this system the shell command 'hostname -f' will return
+the full hostname, and that sudo is configured to ask for a password.  Useful
+for testing properties at the REPL.  See also EVALS."
+  (with-gensyms (username hostname host)
+    `(let* ((,username (parse-username-from-id
+                        (run-program '("id") :output :string)))
+            (,hostname (hostname-f))
+            (,host (or (symbol-value (find-symbol (string-upcase ,hostname)))
+                       (make-host :hostattrs `(:hostname (,,hostname))))))
+       (deploy-these*
+        `((:sudo :as ,(format nil "~A@~A" ,username ,hostname)))
+        ,host
+        (let ((*host* (shallow-copy-host ,host)))
+          (make-propspec :propspec (props eseqprops ,@properties)))))))
+
+(defmacro localhd (&rest properties)
+  "Deploy PROPERTIES to localhost using HOSTDEPLOY-THESE*.
+
+It is assumed that on this system the shell command 'hostname -f' will return
+the full hostname.  Useful for testing properties at the REPL.  See also
+EVALS."
+  (with-gensyms (hostname host)
+    `(let* ((,hostname (hostname-f))
+            (,host (or (symbol-value (find-symbol (string-upcase ,hostname)))
+                       (error "Localhost not defined using DEFHOST?"))))
+       (hostdeploy-these*
+        ,host
+        (let ((*host* (shallow-copy-host ,host)))
+          (make-propspec :propspec (props eseqprops ,@properties)))))))
+
 (defprop deploys :posix (connections host &optional additional-properties)
   "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
 except possibly with the property application specification

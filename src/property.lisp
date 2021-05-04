@@ -511,9 +511,7 @@ apply or unapply properties.")
   "Get the remote username."
   (or (slot-value *connection* 'remote-user)
       (setf (slot-value *connection* 'remote-user)
-            (multiple-value-bind (match groups)
-                (re:scan-to-strings "^uid=[0-9]+\\(([^)]+)" (mrun "id"))
-              (and match (elt groups 0))))))
+            (parse-username-from-id (mrun "id")))))
 
 (defun assert-connection-supports (type)
   (unless (or (eq type :posix) (lisp-connection-p))

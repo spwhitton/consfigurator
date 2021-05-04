@@ -195,6 +195,12 @@ one-dimensional collections of values."
   "Like UIOP:ESCAPE-SH-COMMAND, but also escape the empty string."
   (uiop:escape-command token s 'escape-sh-token))
 
+(defun parse-username-from-id (output)
+  "Where OUTPUT is the output of the id(1) command, extract the username."
+  (multiple-value-bind (match groups)
+      (re:scan-to-strings "^uid=[0-9]+\\(([^)]+)" output)
+    (and match (elt groups 0))))
+
 
 ;;;; Progress & debug printing
 
