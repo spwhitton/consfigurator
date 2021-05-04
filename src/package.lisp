@@ -409,6 +409,7 @@
            #:luks-container
            #:opened-luks-container
            #:crypttab-options
+           #:crypttab-keyfile
            #:linux-swap
 
            #:with-these-open-volumes

@@ -513,7 +513,8 @@ Note that GRUB2 older than 2.06 cannot open the default LUKS2 format, so
 specify \"luks1\" if this is needed.")
    (crypttab-options
     :type list :initform '("luks" "discard" "initramfs")
-    :initarg :crypttab-options :accessor crypttab-options)))
+    :initarg :crypttab-options :accessor crypttab-options)
+   (crypttab-keyfile :initarg :crypttab-keyfile :accessor crypttab-keyfile)))
 
 (defclass-opened-volume opened-luks-container (luks-container))
 
