@@ -64,12 +64,6 @@ Other properties might fill it in."
 
 ;;;; Properties
 
-(defun entry->source (entry)
-  (car (split-string entry)))
-
-(defun entry->mountpoint (entry)
-  (cadr (remove "" (split-string entry) :test #'string=)))
-
 (defprop entries :posix (&rest entries)
   "Ensure that /etc/fstab contains each of ENTRIES, using a simple merge
 procedure: existing lines of the fstab with the same mount point as any of
@@ -81,28 +75,7 @@ This makes it easy to update mount options without having to specify the
 partition or filesystem UUID in your consfig."
   (:desc (format nil "fstab entries for ~{~A~^, ~}"
                  (mapcar #'entry->mountpoint entries)))
-  (:apply
-   (file:map-file-lines
-    #P"/etc/fstab"
-    (lambda (lines)
-      (let ((pending (make-hash-table :test #'equal)))
-        (dolist (entry entries)
-          (setf (gethash (entry->mountpoint entry) pending) entry))
-        (loop for line in lines
-              for line-source = (entry->source line)
-              and line-mountpoint = (entry->mountpoint line)
-              for entry = (let ((entry (gethash line-mountpoint pending)))
-                            (if (and (member (entry->source entry)
-                                             '("none" "PLACEHOLDER")
-                                             :test #'string=)
-                                     (not (string= line-source "none")))
-                                (format nil "~A ~{~A~^ ~}"
-                                        line-source (cdr (split-string entry)))
-                                entry))
-              if entry
-                collect it into accum and do (remhash line-mountpoint pending)
-              else collect line into accum
-              finally (return (nconc accum (hash-table-values pending)))))))))
+  (:apply (file:update-unix-table #P"/etc/fstab" 0 1 entries)))
 
 (defprop entries-for-volumes :posix ()
   "Add or update entries in /etc/fstab for the host's volumes, as specified with

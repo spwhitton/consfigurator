@@ -260,7 +260,8 @@
            #:regex-replaced-lines
            #:directory-exists
            #:symlinked
-           #:is-copy-of))
+           #:is-copy-of
+           #:update-unix-table))
 
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)

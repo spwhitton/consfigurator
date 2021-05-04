@@ -409,3 +409,35 @@ removed, and semicolon comment chars will be replaced with '#'."
                  finally (return
                            (nconc new-lines
                                   (sort accum #'string< :key #'cadr)))))))))))
+
+(defun update-unix-table (file source target entries &key (no-source "none"))
+  "Ensure that the UNIX table at FILE (e.g. /etc/fstab) contains each of
+ENTRIES, using a simple merge procedure: existing lines of the file with the
+same value for the TARGETth field are updated to match the corresponding
+members of ENTRIES, except that if the SOURCEth field of the existing entry is
+not NO-SOURCE and the corresponding member of ENTRIES is STRING= to either
+NO-SOURCE or \"PLACEHOLDER\", use the existing field value."
+  (let ((unknown (list no-source "PLACEHOLDER"))
+        (pending (make-hash-table :test #'equal)))
+    (flet ((fields (entry)
+             (remove "" (split-string entry) :test #'string=)))
+      (dolist (entry entries)
+        (setf (gethash (nth target (fields entry)) pending) entry))
+      (map-file-lines
+       file
+       (lambda (lines)
+         (loop for line in lines
+               for line-fields = (fields line)
+               for line-source = (nth source line-fields)
+               and line-target = (nth target line-fields)
+               for entry = (when-let* ((entry (gethash line-target pending))
+                                       (fields (fields entry)))
+                             (and (member (nth source fields)
+                                          unknown :test #'string=)
+                                  (not (string= line-source no-source))
+                                  (setf (nth source fields) line-source)
+                                  (format nil "~{~A~^ ~}" fields)))
+               if entry
+                 collect it into accum and do (remhash line-target pending)
+               else collect line into accum
+               finally (return (nconc accum (hash-table-values pending)))))))))
