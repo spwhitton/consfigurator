@@ -73,8 +73,13 @@ member of ENTRIES is \"none\", or \"PLACEHOLDER\", use the existing field value.
 
 This makes it easy to update mount options without having to specify the
 partition or filesystem UUID in your consfig."
-  (:desc (format nil "fstab entries for ~{~A~^, ~}"
-                 (mapcar #'entry->mountpoint entries)))
+  (:desc
+   (let ((mount-points
+           (loop for entry in entries
+                 collect (cadr
+                          (remove "" (split-string entry) :test #'string=)))))
+     (format nil "fstab entr~@P for ~{~A~^, ~}"
+             (length mount-points) mount-points)))
   (:apply (file:update-unix-table #P"/etc/fstab" 0 1 entries)))
 
 (defprop entries-for-volumes :posix ()
