@@ -100,6 +100,7 @@ for example, such that we don't see it."
         (t
          (multiple-value-bind (pid status) (waitpid child 0)
            (declare (ignore pid))
+           (fresh-line)
            (princ (readfile output))
            (let ((exited (wifexited status)))
              (unless exited
