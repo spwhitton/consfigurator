@@ -57,6 +57,15 @@ Please read "How to Report Bugs Effectively" to ensure your bug report
 constitutes a useful contribution to the project:
 <https://www.chiark.greenend.org.uk/~sgtatham/bugs.html>
 
+Code style
+==========
+
+- Stick to a line width of 78.  An exception is made for string literals like
+  error messages.
+
+- Choose judiciously between a functional programming style and LOOP.  Err on
+  the side of LOOP.
+
 Signing off your commits
 ========================
 
