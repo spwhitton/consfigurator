@@ -538,7 +538,7 @@ Preprocessing must occur in the root Lisp."))
 		    ;; there will be a lot of spurious warnings due to not
 		    ;; compiling.
 		    (let ((string (make-array '(0)
-					      :element-type 'base-char
+					      :element-type 'character
 					      :fill-pointer 0 :adjustable t)))
 		      (handler-case
 			  (with-output-to-string (stream string)

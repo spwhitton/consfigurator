@@ -107,7 +107,7 @@ apply the elements of REQUIREMENTS in reverse order."
 ;; note that the :FAILED-CHANGE value is only used within this function and
 ;; should not be returned by property subroutines, per the spec
 (defun apply-and-print (propapps &optional unapply)
-  (let ((buffer (make-array '(0) :element-type 'base-char
+  (let ((buffer (make-array '(0) :element-type 'character
 			         :fill-pointer 0 :adjustable t))
         (return-value :no-change)
         ;; Remove any null propapps because we don't want to print anything
