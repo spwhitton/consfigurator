@@ -375,10 +375,12 @@
            #:volume-label
            #:volume-contents
            #:volume-size
+           #:volume-bootloader
            #:subvolumes-of-type
            #:all-subvolumes
            #:copy-volume-and-contents
            #:require-volumes-data
+           #:opened-volume
            #:device-file
 
            #:physical-disk
@@ -479,7 +481,19 @@
                     (#:chroot    #:consfigurator.property.chroot)
                     (#:fstab     #:consfigurator.property.fstab)
                     (#:crypttab  #:consfigurator.property.crypttab))
-  (:export #:chroot-installed-to-volumes))
+  (:export #:install-bootloader
+           #:install-bootloader-binaries
+           #:chroot-installed-to-volumes
+           #:bootloader-binaries-installed))
+
+(defpackage :consfigurator.property.grub
+  (:use #:cl #:alexandria #:consfigurator
+        #:consfigurator.property.disk
+        #:consfigurator.property.installer)
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
+                    (#:apt       #:consfigurator.property.apt))
+  (:export #:grub))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)

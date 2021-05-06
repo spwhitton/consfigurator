@@ -49,7 +49,17 @@ The special value :REMAINING means all remaining free space in the volume
 containing this one.
 
 If a larger size is required to accommodate the VOLUME-CONTENTS of the volume
-plus any metadata (e.g. partition tables), this value will be ignored."))
+plus any metadata (e.g. partition tables), this value will be ignored.")
+   (volume-bootloader
+    :type list :initarg :boots-with :accessor volume-bootloader
+    :documentation
+    "List specifying a bootloader to be installed to this volume.  The first
+element is a symbol identifying the type of bootloader, and the remaining
+elements are a plist of keyword arguments to be passed to the implementation
+of INSTALLER:INSTALL-BOOTLOADER for that bootloader type.
+
+Typically only the top level PHYSICAL-DISK of a host's volumes will have this
+slot bound."))
   (:documentation
    "Something which contains filesystems and/or other volumes."))
 
@@ -787,6 +797,16 @@ of the properties of the host will write to areas of the filesystem where
 filesystems stored on other physical disks would normally be mounted.
 
 OPTIONS will be passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+
+In most cases you will need to ensure that HOST has properties which do at
+least the following:
+
+  - declare the host's OS
+
+  - install a kernel
+
+  - install the binaries/packages needed to install the host's bootloader to
+    its volumes (usually with INSTALLER:BOOTLOADER-BINARIES-INSTALLED).
 
 Unless REBUILD, the image will not be repartitioned even if the specification
 of the host's volumes changes, although the contents of the image's
