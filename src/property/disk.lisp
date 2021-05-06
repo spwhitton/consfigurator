@@ -818,9 +818,11 @@ filesystems will be incrementally updated when other properties change."
                (unless found
                  (inapplicable-property
                   "Volumes list for host has no DISK:PHYSICAL-DISK with contents.")))))
-    `(on-change ,(propapp (chroot:os-bootstrapped-for. options chroot host
-                            (caches-cleaned)))
-       (%raw-image-created ,volumes :chroot ,chroot :rebuild ,rebuild)
+    `(on-change (eseqprops
+                 ,(propapp (chroot:os-bootstrapped-for. options chroot host
+                             (caches-cleaned)))
+                 (%raw-image-created
+                  ,volumes :chroot ,chroot :rebuild ,rebuild))
        (consfigurator.property.installer:chroot-installed-to-volumes
         ,host ,chroot ,volumes))))
 
