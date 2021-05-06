@@ -804,14 +804,10 @@ filesystems will be incrementally updated when other properties change."
             if (and physical-disk-p (not found)
                     (slot-boundp volume 'volume-contents))
               do (setq found t)
-              and collect
-                  (let ((new (make-instance
-                              'raw-disk-image
-                              :image-file image-pathname
-                              :volume-contents (volume-contents volume))))
-                    (when (slot-boundp volume 'volume-size)
-                      (setf (volume-size new) (volume-size volume)))
-                    new)
+              and collect (let ((copy (copy-volume-and-contents volume)))
+                            (change-class copy 'raw-disk-image)
+                            (setf (image-file copy) image-pathname)
+                            copy)
             else unless physical-disk-p
                    collect volume
             finally
