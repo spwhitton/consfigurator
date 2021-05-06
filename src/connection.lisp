@@ -184,11 +184,11 @@ if they need to handle streams and strings differently."))
   (:report (lambda (condition stream)
              (format
               stream
-              "~&'~A' failed, exit code ~A~%~%stdout was:~%~A~&~%stderr:~%~A"
+              "~&'~A' failed, exit code ~A~%~%stderr was:~%~A~&~%stdout:~%~A"
               (failed-cmd condition)
               (failed-exit-code condition)
-              (failed-stdout condition)
-              (failed-stderr condition)))))
+              (failed-stderr condition)
+              (failed-stdout condition)))))
 
 (defmacro with-remote-temporary-file ((file
                                        &key
