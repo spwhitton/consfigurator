@@ -438,7 +438,7 @@ PATH may be any kind of file, including directories."
       (flet ((dehyphen (s) (delete #\- s)))
         (multiple-value-bind (match groups)
             (re:scan-to-strings #?/^.(...)(...)(...).[0-9]+ ([0-9]+) ([0-9]+) /
-                                (run "ls" "-nd" pathname))
+                                (run :env '(:LOCALE "C") "ls" "-nd" pathname))
           (unless match
             (error
              "WRITEFILE could not determine ownership and mode of ~A" pathname))
