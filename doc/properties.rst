@@ -38,7 +38,7 @@ what work is being done.
 ``:preprocess`` subroutines
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Executed in the root Lisp to modify the arguments that will be passed to the
+Pure function executed to modify the arguments that will be passed to the
 other subroutines; should return a fresh list of the new arguments.  This
 subroutine is called on each atomic property application within a property
 application specification before the effects of property combinators have been
