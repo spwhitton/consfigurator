@@ -496,6 +496,14 @@
                     (#:apt       #:consfigurator.property.apt))
   (:export #:grub))
 
+(defpackage :consfigurator.property.u-boot
+  (:use #:cl #:alexandria #:consfigurator
+        #:consfigurator.property.disk
+        #:consfigurator.property.installer)
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:apt       #:consfigurator.property.apt))
+  (:export #:u-boot-install-rockchip))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
