@@ -29,9 +29,7 @@
        (test "-d" root)))
   (:apply
    (let* ((os (car (getf (hostattrs host) :os)))
-          (args (list (if (os:supports-arch-p (get-hostattrs-car :os)
-                                              (os:linux-architecture os))
-                          "debootstrap" "qemu-debootstrap")
+          (args (list "debootstrap"
                       (plist-to-cmd-args options)
                       (strcat "--arch=" (os:debian-architecture os))
                       (os:debian-suite os)
