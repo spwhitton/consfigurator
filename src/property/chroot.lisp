@@ -45,7 +45,7 @@
   `(os:host-etypecase ,host
      (debian
       (os:etypecase
-        (debianlike (apt:installed "debootstrap"))))))
+        (debianlike (apt:installed "debootstrap" "qemu-user-static"))))))
 
 (defpropspec %os-bootstrapped :posix (options root host)
   "Bootstrap OS into ROOT, e.g. with debootstrap(1)."
