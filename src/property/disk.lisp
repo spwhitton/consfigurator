@@ -312,7 +312,22 @@ directly writing out with dd(1)."))
 Either a two-byte hexadecimal number, or a string specifying the GUID.
 
 On GNU/Linux systems, you typically only need to set this to a non-default
-value in the case of EFI system partitions, for which case use #xEF00."))
+value in the case of EFI system partitions, for which case use #xEF00.")
+   (partition-bootable
+    :initform nil :initarg :partition-bootable :accessor partition-bootable
+    :documentation "Whether the legacy BIOS bootable attribute is set.")
+   (partition-start-sector
+    :type integer
+    :initform 0
+    :initarg :partition-start-sector
+    :accessor partition-start-sector
+    :documentation "The sector at which the partition should start.
+The default value of 0 means the next free sector.")
+   (partition-sectors
+    :type integer
+    :initarg :partition-sectors
+    :accessor partition-sectors
+    :documentation "The size of the partition in sectors."))
   (:documentation "A GPT partition."))
 
 (defclass-opened-volume opened-partition (partition))
@@ -346,21 +361,46 @@ value in the case of EFI system partitions, for which case use #xEF00."))
   (mrun "kpartx" "-dv" (device-file volume)))
 
 (defmethod create-volume ((volume partitioned-volume) (file pathname))
-  (mrun :inform "sgdisk" "--zap-all" file)
-  (mrun :inform "sgdisk"
-        (loop for partition in (volume-contents volume)
-              for code = (partition-typecode partition)
-              collect (strcat "--new=0:0:"
-                              (if (and (slot-boundp partition 'volume-size)
-                                       (eql (volume-size partition) :remaining))
-                                  "0"
-                                  (format nil "+~DM"
-                                          (volume-minimum-size partition))))
-              collect (strcat "--typecode=0:"
-                              (etypecase code
-                                (string code)
-                                (integer (format nil "~X" code)))))
-        file))
+  (with-slots (volume-contents) volume
+    (mrun :inform "sgdisk" "--zap-all" file)
+    (mrun :inform "sgdisk"
+          ;; Turn off partition alignment when specific start sectors have
+          ;; been specified, so that we can be sure they will be respected.
+          ;;
+          ;; Given this approach, if specify start sector for one partition,
+          ;; probably want to specify for all partitions to ensure alignment.
+          (and (loop for partition in volume-contents
+                       thereis (plusp (partition-start-sector partition)))
+               "--set-alignment=1")
+          (loop for partition in volume-contents
+                for code = (partition-typecode partition)
+                when (and (slot-boundp partition 'volume-size)
+                          (slot-boundp partition 'partition-sectors))
+                  do (failed-change
+                      "~A has both VOLUME-SIZE and PARTITION-SECTORS bound."
+                      partition)
+                collect (strcat
+                         "--new=0:"
+                         (format nil "~D" (partition-start-sector partition))
+                         ":"
+                         (cond
+                           ((slot-boundp partition 'partition-sectors)
+                            (format nil "~D"
+                                    (+ (partition-start-sector partition)
+                                       (1- (partition-sectors partition)))))
+                           ((and (slot-boundp partition 'volume-size)
+                                 (eql (volume-size partition) :remaining))
+                            "0")
+                           (t
+                            (format nil "+~DM"
+                                    (volume-minimum-size partition)))))
+                collect (strcat "--typecode=0:"
+                                (etypecase code
+                                  (string code)
+                                  (integer (format nil "~X" code))))
+                when (partition-bootable partition)
+                  collect "--attributes=0:set:2")
+          file)))
 
 
 ;;;; LVM
