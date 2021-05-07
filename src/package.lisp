@@ -109,6 +109,7 @@
            #:runlines
            #:test
            #:remote-exists-p
+           #:remote-file-mode-and-size
            #:delete-remote-trees
            #:readfile
            #:writefile

@@ -390,6 +390,26 @@ PATH may be any kind of file, including directories."
                       nconc (list "-e" (car path))
                       when (cdr path) collect "-a")))
 
+(defun remote-file-mode-and-size (path)
+  "Get the numeric mode and size in bytes of PATH, or NIL if it does not exist."
+  (flet ((sum (chars order)
+           (+ (if (char= (elt chars 0) #\r) (* order 4) 0)
+              (if (char= (elt chars 1) #\w) (* order 2) 0)
+              (eswitch ((elt chars 2) :test #'char=)
+                (#\S (if (= order #o100) #o4000 #o2000))
+                (#\s (if (= order #o100) #o4100 #o2010))
+                (#\T #o1000)
+                (#\t (+ order #o1000))
+                (#\x order)
+                (#\- 0)))))
+    (and (remote-exists-p path)
+         (let* ((ls (split-string (run "ls" "-ld" path)))
+                (lscar (car ls)))
+           (values (+ (sum (subseq lscar 1 4) #o100)
+                      (sum (subseq lscar 4 7) #o10)
+                      (sum (subseq lscar 7 10) 1))
+                   (parse-integer (nth 4 ls)))))))
+
 (defun readfile (path)
   (connection-readfile
    *connection*

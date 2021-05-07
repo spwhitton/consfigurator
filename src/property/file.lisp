@@ -35,14 +35,19 @@ CONTENT can be a list of lines or a single string."
   (declare (indent 1))
   (:desc (declare (ignore content mode mode-supplied-p))
          #?"${path} has defined content")
-  (:apply (with-change-if-changes-file-content-or-mode (path)
-            (let ((args (list path
-                              (etypecase content
-                                (cons (unlines content))
-                                (string (format nil "~A~&" content))))))
-              (when mode-supplied-p
-                (nconcf args (list :mode mode)))
-              (apply #'writefile args)))))
+  (:apply (let ((content (etypecase content
+                           (cons (unlines content))
+                           (string (format nil "~A~&" content)))))
+            (if (and (remote-exists-p path)
+                     (multiple-value-bind (existing-mode existing-size)
+                         (remote-file-mode-and-size path)
+                       (and (or (not mode-supplied-p) (= existing-mode mode))
+                            ;; Avoid downloading arbitrarily large files.
+                            (>= (* 4 (length content)) existing-size)
+                            (string= (readfile path) content))))
+                :no-change
+                (apply #'writefile
+                       path content (and mode-supplied-p `(:mode ,mode)))))))
 
 (defprop contains-lines :posix (path &rest lines)
   "Ensure there is a file at PATH containing each of LINES once."
