@@ -521,12 +521,12 @@ apply or unapply properties.")
      "Cannot apply :LISP properties using a POSIX-type connection")))
 
 (defun cksum (file)
-  (ignore-errors (parse-integer (car (split-string (mrun "cksum" file))))))
+  (ignore-errors (parse-integer (car (split-string (run "cksum" file))))))
 
 ;; this is a safe parse of ls(1) output given its POSIX specification
 (defun ls-cksum (file)
   (let ((ls (ignore-errors
-             (split-string (mrun :env '(:LOCALE "C") "ls" "-dlL" file))))
+             (split-string (run :env '(:LOCALE "C") "ls" "-dlL" file))))
         (cksum (cksum file)))
     (when (and ls cksum)
       (list* (car ls) cksum (subseq ls 2 8)))))
