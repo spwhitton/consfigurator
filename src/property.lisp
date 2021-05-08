@@ -279,14 +279,7 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
                          ;; in this way, so issue a warning.
                          ,@(and (getf ,slotsv :hostattrs)
                                 '((programmatic-apply-hostattrs)))
-                         (%consfigure
-                          nil
-                          (make-host
-			   :hostattrs (hostattrs *host*)
-                           :propspec
-                           (with-*host*-*consfig*
-                             (make-propspec
-                              :propspec (cons ',,name args))))))))))))))))
+                         (consfigure (cons ',,name args)))))))))))))
 
 (define-condition programmatic-apply-hostattrs (simple-warning) ())
 

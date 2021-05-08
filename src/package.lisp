@@ -185,6 +185,7 @@
            #:with-replace-hostattrs
 
            ;; deployment.lisp
+           #:consfigure
            #:defdeploy
            #:defdeploy-these
            #:deploy
@@ -482,8 +483,8 @@
                     (#:chroot    #:consfigurator.property.chroot)
                     (#:fstab     #:consfigurator.property.fstab)
                     (#:crypttab  #:consfigurator.property.crypttab))
-  (:export #:install-bootloader
-           #:install-bootloader-binaries
+  (:export #:install-bootloader-propspec
+           #:install-bootloader-binaries-propspec
            #:chroot-installed-to-volumes
            #:bootloader-binaries-installed))
 
@@ -494,7 +495,8 @@
   (:local-nicknames (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file)
                     (#:apt       #:consfigurator.property.apt))
-  (:export #:grub))
+  (:export #:grub
+           #:grub-installed))
 
 (defpackage :consfigurator.property.u-boot
   (:use #:cl #:alexandria #:consfigurator
@@ -502,7 +504,8 @@
         #:consfigurator.property.installer)
   (:local-nicknames (#:os        #:consfigurator.property.os)
                     (#:apt       #:consfigurator.property.apt))
-  (:export #:u-boot-install-rockchip))
+  (:export #:u-boot-install-rockchip
+           #:u-boot-installed-rockchip))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)

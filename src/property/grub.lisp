@@ -18,24 +18,12 @@
 (in-package :consfigurator.property.grub)
 (named-readtables:in-readtable :consfigurator)
 
-(defmethod install-bootloader
-    ((type (eql 'grub)) (volume opened-volume) running-on-target
-     &key (target "i386-pc") force-extra-removable)
-  (mrun :inform "update-initramfs" "-u")
-  (let ((os-prober (and (not running-on-target)
-                        (remote-exists-p "/etc/grub.d/30_os-prober"))))
-    ;; work around Debian bug #802717
-    (when os-prober (file:has-mode "/etc/grub.d/30_os-prober" #o644))
-    (mrun :inform "update-grub")
-    (when os-prober (file:has-mode "/etc/grub.d/30_os-prober" #o755)))
-  (mrun :inform "grub-install" (strcat "--target=" target)
-        (and (string-suffix-p target "-efi") (not running-on-target)
-             "--no-nvram")
-        (and force-extra-removable "--force-extra-removable")
-        (device-file volume))
-  (mrun "sync"))
+(defmethod install-bootloader-propspec
+    ((type (eql 'grub)) volume running-on-target
+     &rest args &key &allow-other-keys)
+  `(grub-installed ,volume ,running-on-target ,@args))
 
-(defmethod install-bootloader-binaries
+(defmethod install-bootloader-binaries-propspec
     ((type (eql 'grub)) volume &key (target "i386-pc") &allow-other-keys)
   `(os:etypecase
        (debianlike
@@ -44,3 +32,22 @@
          ,(eswitch (target :test #'string=)
             ("i386-pc" "grub-pc")
             ("x86_64-efi" "grub-efi-amd64"))))))
+
+(defprop grub-installed :posix
+    (volume running-on-target &key (target "i386-pc") force-extra-removable)
+  "Use grub-install(8) to install grub to VOLUME."
+  (:desc "GRUB installed")
+  (:apply
+   (assert-euid-root)
+   (mrun :inform "update-initramfs" "-u")
+   (let ((os-prober (and (not running-on-target)
+                         (remote-exists-p "/etc/grub.d/30_os-prober"))))
+     ;; work around Debian bug #802717
+     (when os-prober (file:has-mode "/etc/grub.d/30_os-prober" #o644))
+     (mrun :inform "update-grub")
+     (when os-prober (file:has-mode "/etc/grub.d/30_os-prober" #o755)))
+   (mrun :inform "grub-install" (strcat "--target=" target)
+         (and (string-suffix-p target "-efi") (not running-on-target)
+              "--no-nvram")
+         (and force-extra-removable "--force-extra-removable")
+         (device-file volume))))

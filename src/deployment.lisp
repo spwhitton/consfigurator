@@ -53,6 +53,24 @@ preprocessed."
         (t
          (connect '((:local))))))))
 
+(defun consfigure (propspec-expression)
+  "Immediately preprocess and apply PROPSPEC-EXPRESSION in the context of the
+current target host and connection.  This function is provided for use by
+specialised property combinators.  It should not be used in property
+definitions nor in consfigs.
+
+The :HOSTATTRS subroutines of properties applied by PROPSPEC-EXPRESSION will
+be executed, but any new hostattrs they push will be discarded.  Thus either
+PROPSPEC-EXPRESSION should not apply any properties whose :HOSTATTRS
+subroutines push new hostattrs, or the caller should seperately arrange for
+those subroutines to be executed in a context in which newly pushed hostattrs
+will not be discarded."
+  (%consfigure
+   nil (make-host
+        :hostattrs (hostattrs *host*)
+        :propspec (with-*host*-*consfig*
+                    (make-propspec :propspec propspec-expression)))))
+
 (defun deploy* (connections host &optional additional-properties)
   "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
 except possibly with the property application specification

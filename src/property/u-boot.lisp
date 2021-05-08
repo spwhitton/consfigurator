@@ -18,14 +18,25 @@
 (in-package :consfigurator.property.u-boot)
 (named-readtables:in-readtable :consfigurator)
 
-(defmethod install-bootloader ((type (eql 'u-boot-install-rockchip))
-                               (volume opened-volume)
-                               running-on-target &key)
-  (mrun "u-boot-install-rockchip" (device-file volume))
-  (mrun "sync"))
+;; Currently we have a distinct property for each (Debian-specific)
+;; installation script.  Perhaps there is some sensible parameterisation of
+;; these available instead.
 
-(defmethod install-bootloader-binaries
-    ((type (eql 'u-boot-install-rockchip)) volume &key)
-  `(os:etypecase
+(defmethod install-bootloader-propspec
+    ((type (eql 'u-boot-install-rockchip)) volume running-on-target
+     &key &allow-other-keys)
+  `(u-boot-installed-rockchip ,volume ,running-on-target))
+
+(defmethod install-bootloader-binaries-propspec
+    ((type (eql 'u-boot-install-rockchip)) volume &key &allow-other-keys)
+  '(os:etypecase
        (debianlike
         (apt:installed "u-boot-rockchip"))))
+
+(defprop u-boot-installed-rockchip :posix (volume running-on-target)
+  (:desc "Installed U-Boot using Debian scripts")
+  (:hostattrs
+   (os:required 'os:debianlike))
+  (:apply
+   (declare (ignore running-on-target))
+   (mrun "u-boot-install-rockchip" (device-file volume))))
