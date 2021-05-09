@@ -7,6 +7,7 @@ Consfigurator user's manual
 
    introduction
    installation
+   tutorial/disk_image
    connections
    properties
    hosts
