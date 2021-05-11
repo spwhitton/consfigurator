@@ -112,8 +112,10 @@ should be the mount point, without the chroot's root prefixed.")
          (datadir-inside
            (stripln
             (mrun
-             "chroot" into
-             "echo" "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))
+             (format
+              nil
+              "chroot ~A echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/"
+              (escape-sh-token (unix-namestring into))))))
          (datadir (ensure-pathname
                    (subseq datadir-inside 1)
                    :defaults into* :ensure-absolute t :ensure-directory t)))
