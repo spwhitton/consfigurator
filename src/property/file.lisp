@@ -87,8 +87,10 @@ CONTENT can be a list of lines or a single string."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (with-change-if-changes-file-content (destination)
-     (writefile destination (get-data-stream iden1 iden2)))))
+   (let ((destination (ensure-pathname destination :namestring :unix)))
+     (directory-exists (pathname-directory-pathname destination))
+     (with-change-if-changes-file-content (destination)
+       (writefile destination (get-data-stream iden1 iden2))))))
 
 (defprop host-data-uploaded :posix (destination)
   (:hostattrs
@@ -101,8 +103,10 @@ CONTENT can be a list of lines or a single string."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (with-change-if-changes-file-content (destination)
-     (writefile destination (get-data-stream iden1 iden2) :mode #o600))))
+   (let ((destination (ensure-pathname destination :namestring :unix)))
+     (directory-exists (pathname-directory-pathname destination))
+     (with-change-if-changes-file-content (destination)
+       (writefile destination (get-data-stream iden1 iden2) :mode #o600)))))
 
 (defprop host-secret-uploaded :posix (destination)
   (:hostattrs
