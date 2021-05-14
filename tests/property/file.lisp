@@ -11,8 +11,8 @@
 one three
 # one three
 EOF s))
-      (with-local-connection
-        (file:contains-conf-space temp "foo" "baz" "one" "four" "two" "five"))
+      (deploy-these :local "localhost"
+        (evals `(file:contains-conf-space ,temp "foo" "baz" "one" "four" "two" "five")))
       (read-file-string temp))
   #>EOF>foo baz
 
@@ -30,9 +30,9 @@ EOF)
 # bar=baz
 other="three word s"
 EOF s))
-      (with-local-connection
-        (file:contains-conf-shell
-         temp "bar" "two words" "quux" "one" "other" "one"))
+      (deploy-these :local "localhost"
+        (evals `(file:contains-conf-shell
+                 ,temp "bar" "two words" "quux" "one" "other" "one")))
       (read-file-string temp))
   #>EOF>foo="bar baz"
 
@@ -51,13 +51,13 @@ two=three
 ; bar = ba
 bar = baz baz quux
 EOF s))
-      (with-local-connection
-        (file:contains-ini-settings temp
-                                    '("one" "four" "five")
-                                    '("another" "k" "v")
-                                    '("other" "bar" "baz")
-                                    '("another" "key" "val")
-                                    '("finally" "this" "one")))
+      (deploy-these :local "localhost"
+        (evals `(file:contains-ini-settings ,temp
+                                            '("one" "four" "five")
+                                            '("another" "k" "v")
+                                            '("other" "bar" "baz")
+                                            '("another" "key" "val")
+                                            '("finally" "this" "one"))))
       (read-file-string temp))
   #>EOF>[one]
 two=three
