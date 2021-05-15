@@ -42,7 +42,7 @@ recommended."))
         (run :may-fail :input program
              "sbcl" "--noinform" "--noprint"
              "--disable-debugger"
-             "--no-sysinit" "--no-user-init")
+             "--no-sysinit" "--no-userinit")
       (inform t (if (zerop exit) "done." "failed.") :fresh-line nil)
       (when-let ((lines (lines out)))
         (inform t "  Output was:" :fresh-line nil)
