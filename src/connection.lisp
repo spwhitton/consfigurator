@@ -70,10 +70,6 @@ For an example of usage, see the :SUDO connection type."))
 
    ;; TODO some or all of these slots should probably become connattrs.  for
    ;; example, :CHROOT.FORK can have the remote-uid propagate.
-   (cached-data
-    :initform nil
-    :documentation
-    "Items of prerequisite data known to be cached on the remote side.")
    (remote-home
     :initform nil
     :documentation
@@ -480,6 +476,9 @@ connattr, or nil if nothing should be propagated.")
 (defun get-connattr (k)
   "Get the connattr identified by K for the current connection."
   (getf (slot-value *connection* 'connattrs) k))
+
+(defun (setf get-connattr) (v k)
+  (setf (getf (slot-value *connection* 'connattrs) k) v))
 
 (defmacro with-connattrs ((&rest connattrs) &body forms)
   "Execute FORMS with connattrs replaced as specified by CONNATTRS, a plist."

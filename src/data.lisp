@@ -283,11 +283,6 @@ implementation."))
                    (upload source destfile)))))))))
   (inform 1 "done." :fresh-line nil))
 
-(defmethod connection-upload :after ((connection connection) (data data))
-  (with-slots (iden1 iden2 data-version) data
-    (push (list iden1 iden2 (remote-data-pathname iden1 iden2 data-version))
-          (slot-value connection 'cached-data))))
-
 (defgeneric connection-clear-data-cache (connection iden1 iden2)
   (:documentation
    "Delete all versions of the data identified by IDEN1 and IDEN2 from the remote
@@ -312,31 +307,38 @@ This is called by implementations of ESTABLISH-CONNECTION which call
 CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
   ;; Retrieving & keeping in memory refers to how %GET-DATA stores items of
   ;; string data in *STRING-DATA*.
-  (loop with *data-sources* = (cons (register-data-source :asdf)
-                                    *data-sources*)
+  (flet ((record-cached-data (iden1 iden2 version)
+           (let ((*connection* connection))
+             (push
+              (list iden1 iden2 (remote-data-pathname iden1 iden2 version))
+              (get-connattr 'cached-data)))))
+    (loop with *data-sources* = (cons (register-data-source :asdf)
+                                      *data-sources*)
 
-        for (iden1 . iden2) in (get-hostattrs :data)
-        for highest-remote-version
-          = (caddar (remove-if-not (lambda (c)
-                                     (and (string= (first c) iden1)
-                                          (string= (second c) iden2)))
-                                   (sort-prerequisite-data-cache
-                                    (get-remote-cached-prerequisite-data
-                                     connection))))
-        for (thunk highest-local-version)
-          = (restart-case (multiple-value-list (%get-data iden1 iden2))
-              (missing-data () nil))
+          for (iden1 . iden2) in (get-hostattrs :data)
+          for highest-remote-version
+            = (caddar (remove-if-not (lambda (c)
+                                       (and (string= (first c) iden1)
+                                            (string= (second c) iden2)))
+                                     (sort-prerequisite-data-cache
+                                      (get-remote-cached-prerequisite-data
+                                       connection))))
+          for (thunk highest-local-version)
+            = (restart-case (multiple-value-list (%get-data iden1 iden2))
+                (missing-data () nil))
 
-        if (and highest-local-version
-                (or (not highest-remote-version)
-                    (version> highest-local-version highest-remote-version)))
-          do (let ((data (funcall thunk)))
-               (when (or upload-string-data
-                         (not (subtypep (type-of data) 'string-data)))
-                 (connection-clear-data-cache connection iden1 iden2)
-                 (connection-upload connection data)))
-        else unless highest-remote-version
-               do (error 'missing-data :iden1 iden1 :iden2 iden2)))
+          if (and highest-local-version
+                  (or (not highest-remote-version)
+                      (version> highest-local-version highest-remote-version)))
+            do (let ((data (funcall thunk)))
+                 (when (or upload-string-data
+                           (not (subtypep (type-of data) 'string-data)))
+                   (connection-clear-data-cache connection iden1 iden2)
+                   (connection-upload connection data)
+                   (record-cached-data iden1 iden2 (data-version data))))
+          else if highest-remote-version
+                 do (record-cached-data iden1 iden2 highest-remote-version)
+          else do (error 'missing-data :iden1 iden1 :iden2 iden2))))
 
 (defun try-get-file-mime-type (file)
   (handler-case (stripln (run-program
@@ -528,7 +530,7 @@ Preprocessing must occur in the root Lisp."))
                                 (lambda (d)
                                   (string= (car d) "--lisp-system")
                                   (string= (cadr d) (normalise-system system)))
-                                (slot-value *connection* 'cached-data))))))
+                                (get-connattr 'cached-data))))))
            (forms `((make-package "CONSFIGURATOR")
                     ,@intern-forms
 		    ,@proclamations
