@@ -12,7 +12,7 @@
                #:cl-interpol
                #:named-readtables
                #:cffi
-               #+sbcl #:sb-posix
+               (:feature :sbcl (:require #:sb-posix))
                #:closer-mop
                #:trivial-backtrace
                #:trivial-macroexpand-all)
@@ -72,7 +72,8 @@
   :licence "GPL-3+"
   :serial t
   :depends-on (#:consfigurator
-               #+sbcl #:sb-rt #-sbcl #:rt)
+               (:feature :sbcl (:require #:sb-rt))
+               (:feature (:not :sbcl) #:rt))
   :components ((:file "tests/package")
                (:file "tests/property/file"))
   :perform (test-op (o c) (symbol-call :consfigurator/tests '#:do-tests)))
