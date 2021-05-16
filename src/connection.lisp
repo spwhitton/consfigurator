@@ -334,7 +334,7 @@ case return only the exit code."
   (%process-run-args
     (with-remote-temporary-file (stdout)
       (setq cmd (format nil "( ~A ) >~A" cmd stdout))
-      (informat 3 "~&RUN ~A" cmd)
+      (informat 4 "~&RUN ~A" cmd)
       (multiple-value-bind (err exit)
           (connection-run *connection* cmd input)
         (let ((out (readfile stdout)))
@@ -357,7 +357,7 @@ Some :POSIX properties which want to run a lot of commands and don't need to
 separate the streams might want to use this too, but usually it is best to
 start with RUN."
   (%process-run-args
-    (informat 3 "~&MRUN ~A" cmd)
+    (informat 4 "~&MRUN ~A" cmd)
     (multiple-value-bind (out exit)
         (connection-run *connection* cmd input)
       (when inform (informat 1 "~&    % ~A~%~{    ~A~%~}" cmd (lines out)))
