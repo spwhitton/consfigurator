@@ -337,7 +337,10 @@ CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
                    (connection-upload connection data)
                    (record-cached-data iden1 iden2 (data-version data))))
           else if highest-remote-version
-                 do (record-cached-data iden1 iden2 highest-remote-version)
+                 do (informat 3 "~&Not uploading ~S | ~S ver ~S as remote has ~S"
+                              iden1 iden2
+                              highest-local-version highest-remote-version)
+                    (record-cached-data iden1 iden2 highest-remote-version)
           else do (error 'missing-data :iden1 iden1 :iden2 iden2))))
 
 (defun try-get-file-mime-type (file)
