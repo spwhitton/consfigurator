@@ -40,17 +40,8 @@
 (defun get-path-to-concatenated-system (iden1 system)
   "Try to concatenate all the source code for SYSTEM, store it somewhere and
 return the filename."
-  (let ((cache-dir (ensure-directory-pathname
-                    (strcat (or (getenv "XDG_CACHE_HOME")
-                                (strcat (getenv "HOME") "/.cache"))
-                            "/consfigurator/systems")))
-        (op 'asdf:monolithic-concatenate-source-op)
+  (let ((op 'asdf:monolithic-concatenate-source-op)
         (co (asdf:find-component system nil)))
-    (ensure-directories-exist cache-dir)
-    (asdf:initialize-output-translations `(:output-translations
-                                           (t ,cache-dir)
-                                           :disable-cache
-                                           :ignore-inherited-configuration))
     (asdf:operate op co)
     (make-instance 'file-data :file (asdf:output-file op co)
                               :mime "text/plain"
