@@ -74,7 +74,7 @@ can't decrypt the store.  If a prerequisite data source wants to effectively
 bypass caching and provide fresh data every time Consfigurator deploys the
 host, it can use ``GET-UNIVERSAL-TIME`` as its first function.
 
-Versions are compared using ``dpkg --compare-versions``.
+Versions are compared using ``UIOP:VERSION<`` and ``UIOP:VERSION<=``.
 
 Security issues
 ---------------

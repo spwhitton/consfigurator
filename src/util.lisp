@@ -249,28 +249,20 @@ previous output."
 
 ;;;; Version numbers
 
+(defun number->string (x)
+  (etypecase x (string x) (number (format nil "~D" x))))
+
 (defun version< (x y)
-  (dpkg-version-compare x "<<" y))
+  (uiop:version< (number->string x) (number->string y)))
 
 (defun version> (x y)
-  (dpkg-version-compare x ">>" y))
+  (version< y x))
 
 (defun version<= (x y)
-  (dpkg-version-compare x "<=" y))
+  (uiop:version<= (number->string x) (number->string y)))
 
 (defun version>= (x y)
-  (dpkg-version-compare x ">=" y))
-
-(defun dpkg-version-compare (x r y)
-  (zerop (nth-value 2 (run-program `("dpkg" "--compare-versions"
-                                            ,(etypecase x
-                                               (string x)
-                                               (number (format nil "~A" x)))
-                                            ,r
-                                            ,(etypecase y
-                                               (string y)
-                                               (number (format nil "~A" y))))
-                                   :ignore-error-status t))))
+  (version<= y x))
 
 
 ;;;; Encoding of strings to filenames
