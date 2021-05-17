@@ -6,6 +6,9 @@ Patches welcome.
 Properties
 ----------
 
+- Custom Emacs indentation rules for ``DISK:VOLUMES`` (and so
+  ``DISK:HAS-VOLUMES``), and reindent the examples in docstrings and manual.
+
 Connections
 -----------
 
