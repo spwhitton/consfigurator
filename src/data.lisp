@@ -536,39 +536,45 @@ Called by connection types which start up remote Lisp images.")
             do (require-data "--lisp-system"
                              (asdf:component-name requirement)))))
 
-(defgeneric asdf-requirements-load-forms (asdf-requirements)
+(defgeneric asdf-requirements-load-form (asdf-requirements)
   (:documentation
-   "Return forms to (compile and) load each of the Lisp systems specified in
+   "Return form to (compile and) load each of the Lisp systems specified in
 ASDF-REQUIREMENTS, after having uploaded those Lisp systems using
 UPLOAD-ALL-PREREQUISITE-DATA.")
   (:method ((asdf-requirements asdf-requirements))
-    (loop with table = (get-connattr 'cached-data)
-          for requirement in (slot-value asdf-requirements 'asdf-requirements)
-          for name = (asdf:component-name requirement)
-          collect
-          (etypecase requirement
-            (asdf:require-system `(require ,name))
-            (asdf:system
-             (let ((source (gethash (cons "--lisp-system" name) table)))
-               (unless source
-                 (error "Somehow Lisp system ~A was not uploaded." name))
-               ;; TODO Using COMPILE-FILE-PATHNAME* like this has the
-               ;; advantage that, for example, SBCL will save the FASL
-               ;; somewhere from which only the same version of SBCL will try
-               ;; to load FASLs.  However, FASLs corresponding to old versions
-               ;; of Lisp systems are not cleaned up, and are not tiny files.
-               `(let ((fasl (compile-file-pathname* ,source)))
-                  (if (file-exists-p fasl)
-                      (load fasl)
-                      ;; The concatenated source of at least Alexandria won't
-                      ;; compile unless it's loaded first.  This means we
-                      ;; compile every library that's changed since the last
-                      ;; deploy twice, which is not ideal.  One possible
-                      ;; improvement would be to maintain a list of systems
-                      ;; known not to have this problem, such as
-                      ;; Consfigurator, and switch the order of the LOAD and
-                      ;; COMPILE-FILE* here for those.
-                      (progn (load ,source) (compile-file* ,source))))))))))
+    ;; As soon as we recompile something, we have to recompile everything else
+    ;; following it in the list, because macro definitions may have changed.
+    `(let (recompile)
+       ,@(loop with table = (get-connattr 'cached-data)
+               for requirement in (slot-value asdf-requirements 'asdf-requirements)
+               for name = (asdf:component-name requirement)
+               collect
+               (etypecase requirement
+                 (asdf:require-system `(require ,name))
+                 (asdf:system
+                  (let ((source (gethash (cons "--lisp-system" name) table)))
+                    (unless source
+                      (error "Somehow Lisp system ~A was not uploaded." name))
+                    ;; TODO Using COMPILE-FILE-PATHNAME* like this has the
+                    ;; advantage that, for example, SBCL will save the FASL
+                    ;; somewhere from which only the same version of SBCL will
+                    ;; try to load FASLs.  However, FASLs corresponding to old
+                    ;; versions of Lisp systems are not cleaned up, and are
+                    ;; not tiny files.
+                    `(let ((fasl (compile-file-pathname* ,source)))
+                       (if (and (file-exists-p fasl) (not recompile))
+                           (load fasl)
+                           ;; The concatenated source of at least Alexandria
+                           ;; won't compile unless it's loaded first.  This
+                           ;; means we compile every library that's changed
+                           ;; since the last deploy twice, which is not ideal.
+                           ;; One possible improvement would be to maintain a
+                           ;; list of systems known not to have this problem,
+                           ;; such as Consfigurator, and switch the order of
+                           ;; the LOAD and COMPILE-FILE* here for those.
+                           (progn (load ,source)
+                                  (compile-file* ,source)
+                                  (setq recompile t)))))))))))
 
 (defgeneric continue-deploy*-program (remaining-connections asdf-requirements)
   (:documentation
@@ -633,7 +639,7 @@ Preprocessing must occur in the root Lisp."))
                                (with-output-to-string (stream string)
                                  (let ((*error-output* stream)
                                        (*standard-output* stream))
-                                   ,@(asdf-requirements-load-forms asdf-requirements)))
+                                   ,(asdf-requirements-load-form asdf-requirements)))
                              (serious-condition (c)
                                (format
                                 *error-output*
