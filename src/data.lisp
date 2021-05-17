@@ -633,8 +633,10 @@ Preprocessing must occur in the root Lisp."))
                                     (*standard-output* stream))
                                 ,(wrap (asdf-requirements-load-forms asdf-requirements))))
                           (serious-condition (c)
-                            (format *error-output*
-                                    "~&Failed to compile and/or load:~%~A" c)
+                            (format
+                             *error-output*
+                             "~&Failed to compile and/or load:~%~A~&~%Compile and/or load output:~%~%~A"
+                             c string)
                             (uiop:quit 2))))
                       ,(wrap `((%consfigure ',remaining-connections ,*host*))))))
         (handler-case
