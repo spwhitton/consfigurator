@@ -518,11 +518,14 @@ Preprocessing must occur in the root Lisp."))
                   (*consfigurator-debug-level* ,*consfigurator-debug-level*))
               ,@forms)))
     (let* ((intern-forms
-             (loop for name in '("*NO-DATA-SOURCES*"
-                                 "*CONSFIGURATOR-DEBUG-LEVEL*")
-                   collect
-                   `(export (intern ,name (find-package "CONSFIGURATOR"))
-                            (find-package "CONSFIGURATOR"))))
+             (loop for (export . name)
+                     in '((nil . "*NO-DATA-SOURCES*")
+                          (t . "*CONSFIGURATOR-DEBUG-LEVEL*"))
+                   for intern-form
+                     = `(intern ,name (find-package "CONSFIGURATOR"))
+                   if export collect
+                     `(export ,intern-form (find-package "CONSFIGURATOR"))
+                   else collect intern-form))
 	   (proclamations `((proclaim '(special *no-data-sources*))
                             (proclaim '(special *consfigurator-debug-level*))))
            (load-forms
