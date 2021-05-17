@@ -24,6 +24,9 @@
   (os:etypecase
     (debianlike (apt:installed "sbcl"))))
 
+(defparameter *sbcl* '("sbcl" "--noinform" "--noprint"
+                       "--disable-debugger" "--no-sysinit" "--no-userinit"))
+
 (defmethod establish-connection ((type (eql :sbcl)) remaining &key)
   (when (lisp-connection-p)
     (warn
@@ -32,24 +35,24 @@ Lisp. This can mean that prerequisite data gets extracted from encrypted
 stores and stored unencrypted under ~~/.cache, and as such is not
 recommended."))
   (ignoring-hostattrs (sbcl-available))
-  (request-lisp-systems)
-  (upload-all-prerequisite-data)
-  (inform t "Waiting for remote Lisp to exit, this may take some time ... ")
-  (force-output)
-  (multiple-value-bind (program forms)
-      (continue-deploy*-program remaining)
-    (multiple-value-bind (out err exit)
-        (run :may-fail :input program
-             "sbcl" "--noinform" "--noprint"
-             "--disable-debugger"
-             "--no-sysinit" "--no-userinit")
-      (inform t (if (zerop exit) "done." "failed.") :fresh-line nil)
-      (when-let ((lines (lines out)))
-        (inform t "  Output was:" :fresh-line nil)
-        (with-indented-inform (inform t lines)))
-      (unless (zerop exit)
-        ;; print FORMS not PROGRAM because latter might contain sudo passwords
-        (failed-change
-	 "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~S"
-         err forms))))
+  (let ((requirements (asdf-requirements-for-host-and-features
+                       (safe-read-from-string
+                        (run :input "(prin1 *features*)" *sbcl*)
+                        :package :cl-user))))
+    (request-asdf-requirements requirements)
+    (upload-all-prerequisite-data)
+    (inform t "Waiting for remote Lisp to exit, this may take some time ... ")
+    (force-output)
+    (multiple-value-bind (program forms)
+        (continue-deploy*-program remaining requirements)
+      (multiple-value-bind (out err exit) (run :may-fail :input program *sbcl*)
+        (inform t (if (zerop exit) "done." "failed.") :fresh-line nil)
+        (when-let ((lines (lines out)))
+          (inform t "  Output was:" :fresh-line nil)
+          (with-indented-inform (inform t lines)))
+        (unless (zerop exit)
+          ;; print FORMS not PROGRAM because latter might contain sudo passwords
+          (failed-change
+	   "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~S"
+           err forms)))))
   nil)

@@ -18,33 +18,27 @@
 (in-package :consfigurator.data.asdf)
 (named-readtables:in-readtable :consfigurator)
 
-;; could we have both :asdf-monolithic and :asdf-something_else where in the
-;; latter we filter out the names of systems already known to be available on
-;; the remote side, so those don't need to be uploaded?  for example, the
-;; :sbcl connection type can try to install them with apt on the remote side,
-;; then ask asdf for a concatenated source for everything excluding those.  if
-;; asdf can't be asked to do that, maybe we can ask it to produce one file per
-;; system, and then we eliminate those we don't want and concatenate the
-;; result ourselves.  maybe we can create a fake system object based on the
-;; real one, remove some deps from it according to a known mapping of systems
-;; to Debian package names, then ask asdf to concatenate that system
-
 (defmethod register-data-source ((type (eql :asdf)) &key)
   (cons #'asdf-data-source-check #'get-path-to-concatenated-system))
 
 (defun asdf-data-source-check (iden1 system)
-  (when (and (string= iden1 "--lisp-system")
-             (asdf:find-system system nil))
-    (get-universal-time)))
+  (let ((system (and (string= iden1 "--lisp-system")
+                     (asdf:find-system system nil))))
+    (and system (system-version system))))
 
 (defun get-path-to-concatenated-system (iden1 system)
   "Try to concatenate all the source code for SYSTEM, store it somewhere and
 return the filename."
-  (let ((op 'asdf:monolithic-concatenate-source-op)
+  (let ((op 'asdf:concatenate-source-op)
         (co (asdf:find-component system nil)))
     (asdf:operate op co)
     (make-instance 'file-data :file (asdf:output-file op co)
                               :mime "text/plain"
                               :iden1 iden1
                               :iden2 system
-                              :version (get-universal-time))))
+                              :version (system-version co))))
+
+(defun system-version (system)
+  (reduce #'max
+          (mapcar #'file-write-date
+                  (asdf:input-files 'asdf:concatenate-source-op system))))

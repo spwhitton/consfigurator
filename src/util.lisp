@@ -33,12 +33,6 @@
   `(and (symbolp ,symbol)
         (string= (symbol-name ',name) (symbol-name ,symbol))))
 
-(defun normalise-system (system)
-  (etypecase system
-    (string system)
-    (symbol (string-downcase
-             (symbol-name system)))))
-
 (defun memstring= (string list)
   (member string list :test #'string=))
 

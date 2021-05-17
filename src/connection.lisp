@@ -473,12 +473,12 @@ connattr, or nil if nothing should be propagated.")
                (when-let ((new (propagate-connattr k v connection)))
                  (setf (getf (slot-value connection 'connattrs) k) new))))))
 
-(defun get-connattr (k)
+(defun get-connattr (k &optional (connection *connection*))
   "Get the connattr identified by K for the current connection."
-  (getf (slot-value *connection* 'connattrs) k))
+  (getf (slot-value connection 'connattrs) k))
 
-(defun (setf get-connattr) (v k)
-  (setf (getf (slot-value *connection* 'connattrs) k) v))
+(defun (setf get-connattr) (v k &optional (connection *connection*))
+  (setf (getf (slot-value connection 'connattrs) k) v))
 
 (defmacro with-connattrs ((&rest connattrs) &body forms)
   "Execute FORMS with connattrs replaced as specified by CONNATTRS, a plist."

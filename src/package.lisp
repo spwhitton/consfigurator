@@ -27,7 +27,10 @@
                           #:file-exists-p
 			  #:directory-exists-p
                           #:with-current-directory
-			  #:delete-directory-tree)
+			  #:delete-directory-tree
+                          #:safe-read-from-string
+                          #:compile-file*
+                          #:compile-file-pathname*)
   (:export ;; re-export from UIOP
            #:strcat
            #:string-prefix-p
@@ -53,6 +56,9 @@
 	   #:directory-exists-p
            #:with-current-directory
 	   #:delete-directory-tree
+           #:safe-read-from-string
+           #:compile-file*
+           #:compile-file-pathname*
 
            ;; util.lisp
            #:lines
@@ -234,10 +240,11 @@
            #:connection-upload
            #:connection-clear-data-cache
            #:upload-all-prerequisite-data
-           #:request-lisp-systems
            #:passphrase
            #:make-passphrase
            #:get-data-protected-string
+           #:asdf-requirements-for-host-and-features
+           #:request-asdf-requirements
            #:continue-deploy*-program))
 
 (defpackage :consfigurator.property.cmd

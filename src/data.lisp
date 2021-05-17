@@ -307,11 +307,13 @@ This is called by implementations of ESTABLISH-CONNECTION which call
 CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
   ;; Retrieving & keeping in memory refers to how %GET-DATA stores items of
   ;; string data in *STRING-DATA*.
+  (unless (get-connattr 'cached-data connection)
+    (setf (get-connattr 'cached-data connection)
+          (make-hash-table :test #'equal)))
   (flet ((record-cached-data (iden1 iden2 version)
            (let ((*connection* connection))
-             (push
-              (list iden1 iden2 (remote-data-pathname iden1 iden2 version))
-              (get-connattr 'cached-data)))))
+             (setf (gethash (cons iden1 iden2) (get-connattr 'cached-data))
+                   (remote-data-pathname iden1 iden2 version)))))
     (loop with *data-sources* = (cons (register-data-source :asdf)
                                       *data-sources*)
 
@@ -480,12 +482,97 @@ chance of those passwords showing up in the clear in the Lisp debugger."
 
 ;;;; Programs for remote Lisp images
 
-;; TODO unclear whether the need for sb-cltl2 require is a bug in trivial-macroexpand-all
-(defparameter continue-deploy*-program-implementation-specific
-  "#+sbcl (require \"sb-posix\") #+sbcl (require \"sb-cltl2\")")
+(defclass asdf-requirements ()
+  ((asdf-requirements :type list :initform nil))
+  (:documentation
+   "A list of requirements as returned by certain calls to
+ASDF:REQUIRED-COMPONENTS.
+Elements are instances of ASDF:SYSTEM and/or ASDF:REQUIRE-SYSTEM."))
 
-(defun continue-deploy*-program (remaining-connections)
-  "Return a program to complete the work of an enclosing call to DEPLOY*.
+(defun asdf-requirements-for-host-and-features (remote-lisp-features)
+  "Make an instance of ASDF-REQUIREMENTS for starting up a remote Lisp image in
+which *FEATURES* has the value of REMOTE-LISP-FEATURES, based on the Lisp
+systems required by the host currently being deployed.
+
+Called by connection types which start up remote Lisp images."
+  (let ((*features* remote-lisp-features)
+        (requirements (make-instance 'asdf-requirements)))
+    (with-slots (asdf-requirements) requirements
+      (dolist (system (propspec-systems (host-propspec *host*)))
+        (dolist (requirement
+                 ;; This call to ASDF:REQUIRED-COMPONENTS is based on one in
+                 ;; the definition of the ASDF:COMPONENT-DEPENDS-ON generic
+                 ;; for ((o gather-operation) (s system)).  We use
+                 ;; ASDF:COMPILE-OP as the :KEEP-OPERATION because
+                 ;; ASDF::BASIC-COMPILE-OP is not exported, so this won't work
+                 ;; for certain exotic systems.  See the comment in ASDF source.
+                 ;;
+                 ;; TODO Can we detect when this won't work and fail, possibly
+                 ;; falling back to ASDF:MONOLITHIC-CONCATENATE-SOURCE-OP?
+                 (asdf:required-components
+                  (asdf:find-system system)
+                  :other-systems t :component-type 'asdf:system
+                  :keep-component 'asdf:system :goal-operation 'asdf:load-op
+                  :keep-operation 'asdf:compile-op))
+          ;; Handle UIOP specially because it comes with ASDF.
+          (unless (string= "uiop" (asdf:component-name requirement))
+            ;; What we really want instead of PUSHNEW here is a proper
+            ;; topological sort.
+            (pushnew requirement asdf-requirements))))
+      (nreversef asdf-requirements))
+    requirements))
+
+(defgeneric request-asdf-requirements (asdf-requirements)
+  (:documentation
+   "Request that all Lisp systems required to fulfill ASDF-REQUIREMENTS be
+uploaded to the remote cache of the currently established connection.
+
+Called by connection types which start up remote Lisp images.")
+  (:method ((asdf-requirements asdf-requirements))
+    (loop for requirement in (slot-value asdf-requirements 'asdf-requirements)
+          for type = (type-of requirement)
+          when (and (subtypep type 'asdf:system)
+                    (not (subtypep type 'asdf:require-system)))
+            do (require-data "--lisp-system"
+                             (asdf:component-name requirement)))))
+
+(defgeneric asdf-requirements-load-forms (asdf-requirements)
+  (:documentation
+   "Return forms to (compile and) load each of the Lisp systems specified in
+ASDF-REQUIREMENTS, after having uploaded those Lisp systems using
+UPLOAD-ALL-PREREQUISITE-DATA.")
+  (:method ((asdf-requirements asdf-requirements))
+    (loop with table = (get-connattr 'cached-data)
+          for requirement in (slot-value asdf-requirements 'asdf-requirements)
+          for name = (asdf:component-name requirement)
+          collect
+          (etypecase requirement
+            (asdf:require-system `(require ,name))
+            (asdf:system
+             (let ((source (gethash (cons "--lisp-system" name) table)))
+               (unless source
+                 (error "Somehow Lisp system ~A was not uploaded." name))
+               ;; TODO Using COMPILE-FILE-PATHNAME* like this has the
+               ;; advantage that, for example, SBCL will save the FASL
+               ;; somewhere from which only the same version of SBCL will try
+               ;; to load FASLs.  However, FASLs corresponding to old versions
+               ;; of Lisp systems are not cleaned up, and are not tiny files.
+               `(let ((fasl (compile-file-pathname* ,source)))
+                  (if (file-exists-p fasl)
+                      (load fasl)
+                      ;; The concatenated source of at least Alexandria won't
+                      ;; compile unless it's loaded first.  This means we
+                      ;; compile every library that's changed since the last
+                      ;; deploy twice, which is not ideal.  One possible
+                      ;; improvement would be to maintain a list of systems
+                      ;; known not to have this problem, such as
+                      ;; Consfigurator, and switch the order of the LOAD and
+                      ;; COMPILE-FILE* here for those.
+                      (progn (load ,source) (compile-file* ,source))))))))))
+
+(defgeneric continue-deploy*-program (remaining-connections asdf-requirements)
+  (:documentation
+   "Return a program to complete the work of an enclosing call to DEPLOY*.
 
 Implementations of ESTABLISH-CONNECTION which start up remote Lisp images call
 this function, instead of CONTINUE-DEPLOY*, and use the result to instruct the
@@ -497,79 +584,70 @@ host which will run the Lisp image must already be established.
 The program returned is a single string consisting of a number of sexps
 separated by newlines.  Each sexp must be evaluated by the remote Lisp image
 before the following sexp is offered to its reader.  Usually this can be
-achieved by sending the return value of this function into a REPL's stdin."
-  (unless (eq (type-of *host*) 'preprocessed-host)
-    (error "Attempt to send unpreprocessed host to remote Lisp.
+achieved by sending the return value of this function into a REPL's stdin.")
+  (:method (remaining-connections (asdf-requirements asdf-requirements))
+    (unless (eq (type-of *host*) 'preprocessed-host)
+      (error "Attempt to send unpreprocessed host to remote Lisp.
 
 Preprocessing must occur in the root Lisp."))
-  (flet ((wrap (forms)
-           ;; We used to bind a handler here to invoke SKIP-DATA-SOURCES upon
-           ;; MISSING-DATA-SOURCE, which means that remote Lisp images were
-           ;; allowed to try querying data sources.  Now we just bind
-           ;; *NO-DATA-SOURCES* to t here.  While some data sources make sense
-           ;; in remote Lisp images, others might make arbitrary network
-           ;; connections or read out of other users' homedirs (e.g. if you
-           ;; are using (:SUDO :SBCL), the remote Lisp might try to read your
-           ;; ~/.gnupg, or on another host, someone else's ~/.gnupg who has
-           ;; the same username as you), which are usually undesirable.  So at
-           ;; least until some cool use case comes along, just require all
-           ;; data source queries to occur in the root Lisp.
-           `(let ((*no-data-sources* t)
-                  (*consfigurator-debug-level* ,*consfigurator-debug-level*))
-              ,@forms)))
-    (let* ((intern-forms
-             (loop for (export . name)
-                     in '((nil . "*NO-DATA-SOURCES*")
-                          (t . "*CONSFIGURATOR-DEBUG-LEVEL*"))
-                   for intern-form
-                     = `(intern ,name (find-package "CONSFIGURATOR"))
-                   if export collect
-                     `(export ,intern-form (find-package "CONSFIGURATOR"))
-                   else collect intern-form))
-	   (proclamations `((proclaim '(special *no-data-sources*))
-                            (proclaim '(special *consfigurator-debug-level*))))
-           (load-forms
-             (loop for system in (propspec-systems (host-propspec *host*))
-                   collect `(load
-                             ,(caddar
-                               (remove-if-not
-                                (lambda (d)
-                                  (string= (car d) "--lisp-system")
-                                  (string= (cadr d) (normalise-system system)))
-                                (get-connattr 'cached-data))))))
-           (forms `((make-package "CONSFIGURATOR")
-                    ,@intern-forms
-		    ,@proclamations
-                    ;; (define-condition missing-data-source (error) ())
-                    (require "asdf")
-		    ;; Hide the LOAD output unless loading failed, because
-		    ;; there will be a lot of spurious warnings due to not
-		    ;; compiling.
-		    (let ((string (make-array '(0)
-					      :element-type 'character
-					      :fill-pointer 0 :adjustable t)))
-		      (handler-case
-			  (with-output-to-string (stream string)
-			    (let ((*error-output* stream)
-				  (*standard-output* stream))
-			      ,(wrap load-forms)))
-			(serious-condition (c)
-			  (format *error-output* "~&Failed to LOAD:~%~A" c)
-			  (uiop:quit 2))))
-                    ,(wrap `((%consfigure ',remaining-connections ,*host*))))))
-      (handler-case
-          (with-standard-io-syntax
-            (let ((*allow-printing-passphrases* t))
-              ;; need line breaks in between so that packages exist before we
-              ;; try to have remote Lisp read sexps containing symbols from
-              ;; those packages
-              (values
-               (format nil "~A~%~{~A~^~%~}"
-                       continue-deploy*-program-implementation-specific
-                       (mapcar #'prin1-to-string forms))
-               forms)))
-        (print-not-readable (c)
-          (error "The Lisp printer could not serialise ~A for
+    (flet ((wrap (forms)
+             ;; We used to bind a handler here to invoke SKIP-DATA-SOURCES
+             ;; upon MISSING-DATA-SOURCE, which means that remote Lisp images
+             ;; were allowed to try querying data sources.  Now we just bind
+             ;; *NO-DATA-SOURCES* to t here.  While some data sources make
+             ;; sense in remote Lisp images, others might make arbitrary
+             ;; network connections or read out of other users' homedirs
+             ;; (e.g. if you are using (:SUDO :SBCL), the remote Lisp might
+             ;; try to read your ~/.gnupg, or on another host, someone else's
+             ;; ~/.gnupg who has the same username as you), which are usually
+             ;; undesirable.  So at least until some cool use case comes
+             ;; along, just require all data source queries to occur in the
+             ;; root Lisp.
+             `(let ((*no-data-sources* t)
+                    (*consfigurator-debug-level* ,*consfigurator-debug-level*))
+                ,@forms)))
+      (let* ((intern-forms
+               (loop for (export . name)
+                       in '((nil . "*NO-DATA-SOURCES*")
+                            (t . "*CONSFIGURATOR-DEBUG-LEVEL*"))
+                     for intern-form
+                       = `(intern ,name (find-package "CONSFIGURATOR"))
+                     if export collect
+                       `(export ,intern-form (find-package "CONSFIGURATOR"))
+                     else collect intern-form))
+             (proclamations `((proclaim '(special *no-data-sources*))
+                              (proclaim '(special *consfigurator-debug-level*))))
+             (forms `((make-package "CONSFIGURATOR")
+                      ,@intern-forms
+                      ,@proclamations
+                      ;; (define-condition missing-data-source (error) ())
+                      (require "asdf")
+                      ;; Hide the compile and/or load output unless there are
+                      ;; failures, as it's verbose and rarely of interest.
+                      (let ((string (make-array '(0)
+                                                :element-type 'character
+                                                :fill-pointer 0 :adjustable t)))
+                        (handler-case
+                            (with-output-to-string (stream string)
+                              (let ((*error-output* stream)
+                                    (*standard-output* stream))
+                                ,(wrap (asdf-requirements-load-forms asdf-requirements))))
+                          (serious-condition (c)
+                            (format *error-output*
+                                    "~&Failed to compile and/or load:~%~A" c)
+                            (uiop:quit 2))))
+                      ,(wrap `((%consfigure ',remaining-connections ,*host*))))))
+        (handler-case
+            (with-standard-io-syntax
+              (let ((*allow-printing-passphrases* t))
+                ;; need line breaks in between so that packages exist before we
+                ;; try to have remote Lisp read sexps containing symbols from
+                ;; those packages
+                (values
+                 (format nil "~{~A~^~%~}" (mapcar #'prin1-to-string forms))
+                 forms)))
+          (print-not-readable (c)
+            (error "The Lisp printer could not serialise ~A for
 transmission to the remote Lisp.
 
 This is probably because your property application specification and/or static
@@ -581,12 +659,4 @@ hostattrs; see \"Pitfalls\" in the Consfigurator user manual.
 If ~:*~A is a simple object then you may be able to resolve this by defining
 a PRINT-OBJECT method for your class, possibly using
 CONSFIGURATOR:DEFINE-PRINT-OBJECT-FOR-STRUCTLIKE."
-                 (print-not-readable-object c)))))))
-
-(defun request-lisp-systems ()
-  "Request that all Lisp systems required by the host currently being deployed
-are uploaded to the remote cache of the currently established connection.
-
-Called by connections which start up remote Lisp images."
-  (dolist (system (propspec-systems (host-propspec *host*)))
-    (push-hostattrs :data (cons "--lisp-system" (normalise-system system)))))
+                   (print-not-readable-object c))))))))
