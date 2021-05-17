@@ -7,9 +7,11 @@
       (asdf:*user-cache* (uiop:getenv "AUTOPKGTEST_TMP")))
   (asdf:load-system "consfigurator/tests"))
 
-;; we can't use ASDF:TEST-SYSTEM because its return value does not indicate
-;; whether any tests failed
-(unless (consfigurator/tests::do-tests)
-  (uiop:quit 2))
+;; We can't use ASDF:TEST-SYSTEM because its return value does not indicate
+;; whether any tests failed.  We have to switch the package back and forth as
+;; CL-USER has no *CONSFIG*.
+(let ((*package* (find-package :consfigurator/tests)))
+  (unless (consfigurator/tests::do-tests)
+    (uiop:quit 2)))
 
 (fresh-line)

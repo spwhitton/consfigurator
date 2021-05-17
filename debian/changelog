@@ -2,6 +2,9 @@ consfigurator (0.6.0-1) UNRELEASED; urgency=medium
 
   * New upstream release.
   * Add dep and build-dep on cl-closer-mop.
+  * d/tests/compile-and-tests.lisp: Switch the *PACKAGE* to
+    CONSFIGURATOR/TESTS when running tests so that there is a value
+    for *CONSFIG*.
   * d/rules: also clean *.fasl from tests/.
 
  -- Sean Whitton <spwhitton@spwhitton.name>  Tue, 13 Apr 2021 14:52:23 -0700
