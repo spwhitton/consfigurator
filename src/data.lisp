@@ -623,32 +623,34 @@ Preprocessing must occur in the root Lisp."))
                      else collect intern-form))
              (proclamations `((proclaim '(special *no-data-sources*))
                               (proclaim '(special *consfigurator-debug-level*))))
-             (forms `((make-package "CONSFIGURATOR")
-                      ,@intern-forms
-                      ,@proclamations
-                      ;; (define-condition missing-data-source (error) ())
-                      (require "asdf")
-                      ;; Hide the compile and/or load output unless there are
-                      ;; failures or the debug level is at least 3, as it's verbose
-                      ;; and not usually of interest.
-                      ,(wrap
-                        `(let ((string
-                                 (make-array '(0) :element-type 'character
-                                                  :fill-pointer 0 :adjustable t)))
-                           (handler-case
-                               (with-output-to-string (stream string)
-                                 (let ((*error-output* stream)
-                                       (*standard-output* stream))
-                                   ,(asdf-requirements-load-form asdf-requirements)))
-                             (serious-condition (c)
-                               (format
-                                *error-output*
-                                "~&Failed to compile and/or load:~%~A~&~%Compile and/or load output:~%~%~A"
-                                c string)
-                               (uiop:quit 2)))
-                           (when (>= *consfigurator-debug-level* 3)
-                             (format t "~&~A" string))))
-                      ,(wrap `(%consfigure ',remaining-connections ,*host*)))))
+             (forms
+               `((make-package "CONSFIGURATOR")
+                 ,@intern-forms
+                 ,@proclamations
+                 ;; (define-condition missing-data-source (error) ())
+                 (require "asdf")
+                 ;; Hide the compile and/or load output unless there are
+                 ;; failures or the debug level is at least 3, as it's verbose
+                 ;; and not usually of interest.
+                 ,(wrap
+                   `(let ((string
+                            (make-array '(0) :element-type 'character
+                                             :fill-pointer 0 :adjustable t)))
+                      (handler-case
+                          (with-output-to-string (stream string)
+                            (let ((*error-output* stream)
+                                  (*standard-output* stream))
+                              ,(asdf-requirements-load-form
+                                asdf-requirements)))
+                        (serious-condition (c)
+                          (format
+                           *error-output*
+                           "~&Failed to compile and/or load:~%~A~&~%Compile and/or load output:~%~%~A"
+                           c string)
+                          (uiop:quit 2)))
+                      (when (>= *consfigurator-debug-level* 3)
+                        (format t "~&~A" string))))
+                 ,(wrap `(%consfigure ',remaining-connections ,*host*)))))
         (handler-case
             (with-standard-io-syntax
               (let ((*allow-printing-passphrases* t))
