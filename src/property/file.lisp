@@ -52,13 +52,14 @@ CONTENT can be a list of lines or a single string."
 (defprop contains-lines :posix (path &rest lines)
   "Ensure there is a file at PATH containing each of LINES once."
   (:apply
-   (with-change-if-changes-file-content (path)
-     (let ((new-lines (copy-list (ensure-cons lines)))
-           (existing-lines (and (remote-exists-p path)
-                                (lines (readfile path)))))
-       (dolist (existing-line existing-lines)
-         (deletef new-lines existing-line :test #'string=))
-       (writefile path (unlines (nconc existing-lines new-lines)))))))
+   (let ((new-lines (copy-list (ensure-cons lines)))
+         (existing-lines (and (remote-exists-p path)
+                              (lines (readfile path)))))
+     (dolist (existing-line existing-lines)
+       (deletef new-lines existing-line :test #'string=))
+     (if new-lines
+         (writefile path (unlines (nconc existing-lines new-lines)))
+         :no-change))))
 
 (defprop lacks-lines :posix (path &rest lines)
   "If there is a file at PATH, ensure it does not contain any of LINES."
