@@ -125,6 +125,18 @@ Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
    ;; assume it was already there
    :no-change))
 
+(defprop containing-directory-exists :posix (file)
+  "Ensure that a file's directory and the latter's parents exist."
+  (:desc #?"Directory containing ${file} exists")
+  (:apply
+   (if (pathname-name file)
+       (let ((parent (unix-namestring (pathname-directory-pathname file))))
+         (when (plusp (length parent))
+           (mrun "mkdir" "-p" parent)))
+       (mrun "mkdir" "-p" (pathname-parent-directory-pathname file)))
+   ;; likewise assume it was already there
+   :no-change))
+
 ;; readlink(1) is not POSIX
 (defun remote-link-target (symlink)
   (loop with s = (stripln (run :env '(:LOCALE "POSIX") "ls" "-ld" symlink))

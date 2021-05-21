@@ -16,6 +16,7 @@
                           #:stripln
                           #:unix-namestring
                           #:pathname-directory-pathname
+                          #:pathname-parent-directory-pathname
                           #:with-temporary-file
                           #:ensure-directory-pathname
                           #:ensure-pathname
@@ -44,6 +45,7 @@
            #:stripln
            #:unix-namestring
            #:pathname-directory-pathname
+           #:pathname-parent-directory-pathname
            #:with-temporary-file
            #:ensure-directory-pathname
            #:ensure-pathname
@@ -271,6 +273,7 @@
            #:contains-ini-settings
            #:regex-replaced-lines
            #:directory-exists
+           #:containing-directory-exists
            #:symlinked
            #:is-copy-of
            #:update-unix-table))
