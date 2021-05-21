@@ -140,8 +140,9 @@ one solution is to convert your property to a :LISP property."
 
 (defun pathname-file (pathname)
   "Like PATHNAME-NAME but include any file extension."
-  (namestring
-   (enough-pathname pathname (pathname-directory-pathname pathname))))
+  (and (pathname-name pathname)
+       (namestring
+        (enough-pathname pathname (pathname-directory-pathname pathname)))))
 
 (defun drop-trailing-slash (namestring)
   (if (string-suffix-p namestring "/")
