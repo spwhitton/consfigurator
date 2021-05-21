@@ -64,8 +64,8 @@ prerequisite data."))
               (parse-integer
                (car
                 (split-string
-                 (run-program
-                  `("cksum" ,(data-file data)) :output :string))))))))
+                 (run-program `("cksum" ,(unix-namestring (data-file data)))
+                              :output :string))))))))
 
 ;; If this proves to be inadequate then an alternative would be to maintain a
 ;; mapping of ASDF systems to data sources, and then DEPLOY* could look up the
