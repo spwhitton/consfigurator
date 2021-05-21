@@ -485,6 +485,19 @@ Called by property subroutines."
   "Signal problems with the connection and errors while actually attempting to
 apply or unapply properties.")
 
+(defun maybe-writefile-string (path content &key (mode nil mode-supplied-p))
+  "Wrapper around WRITEFILE which returns :NO-CHANGE and avoids writing PATH if
+PATH already has the specified CONTENT and MODE."
+  (if (and (remote-exists-p path)
+           (multiple-value-bind (existing-mode existing-size)
+               (remote-file-mode-and-size path)
+             (and (or (not mode-supplied-p) (= mode existing-mode))
+                  (and (>= (* 4 (length content)) existing-size)
+                       (string= (readfile path) content)))))
+      :no-change
+      (apply #'writefile
+             path content (and mode-supplied-p `(:mode ,mode)))))
+
 (defun call-with-os (f &rest args)
   (apply (ensure-function f) (get-hostattrs-car :os) args))
 

@@ -151,6 +151,7 @@
            #:assert-euid-root
            #:get-user
            #:assert-connection-supports
+           #:maybe-writefile-string
            #:call-with-os
            #:with-change-if-changes-file
            #:with-change-if-changes-file-content
