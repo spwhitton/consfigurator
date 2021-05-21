@@ -81,9 +81,8 @@ CONTENT can be a list of lines or a single string."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (let ((destination (ensure-pathname destination :namestring :unix)))
-     (directory-exists (pathname-directory-pathname destination))
-     (maybe-writefile-data destination iden1 iden2))))
+   (containing-directory-exists destination)
+   (maybe-writefile-data destination iden1 iden2)))
 
 (defprop host-data-uploaded :posix (destination)
   (:hostattrs
@@ -96,9 +95,8 @@ CONTENT can be a list of lines or a single string."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (let ((destination (ensure-pathname destination :namestring :unix)))
-     (directory-exists (pathname-directory-pathname destination))
-     (maybe-writefile-data destination iden1 iden2 :mode #o600))))
+   (containing-directory-exists destination)
+   (maybe-writefile-data destination iden1 iden2 :mode #o600)))
 
 (defprop host-secret-uploaded :posix (destination)
   (:hostattrs
