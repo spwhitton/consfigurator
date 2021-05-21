@@ -527,13 +527,13 @@ PATH already has the specified CONTENT and MODE."
      "Cannot apply :LISP properties using a POSIX-type connection")))
 
 (defun cksum (file)
-  (ignore-errors (parse-integer (car (split-string (run "cksum" file))))))
+  (parse-integer (car (split-string (run "cksum" file)))))
 
 ;; this is a safe parse of ls(1) output given its POSIX specification
 (defun ls-cksum (file)
   (let ((ls (ignore-errors
              (split-string (run :env '(:LOCALE "C") "ls" "-dlL" file))))
-        (cksum (cksum file)))
+        (cksum (ignore-errors (cksum file))))
     (when (and ls cksum)
       (list* (car ls) cksum (subseq ls 2 8)))))
 
@@ -553,7 +553,7 @@ changes in properties which will change the file but not the output of `ls
 (defmacro with-change-if-changes-file-content ((file) &body forms)
   "Execute FORMS and yield :NO-CHANGE if FILE has the same content afterwards."
   (with-gensyms (before)
-    `(let* ((,before (cksum ,file))
+    `(let* ((,before (ignore-errors (cksum ,file)))
             (result (progn ,@forms)))
        (if (and ,before (eql ,before (cksum ,file)))
            :no-change result))))

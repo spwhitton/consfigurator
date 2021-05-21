@@ -225,6 +225,7 @@
            #:file-data
            #:data-file
 	   #:data-source-providing-p
+           #:maybe-writefile-data
            #:missing-data-source
            #:data-pathname
 	   #:local-data-pathname

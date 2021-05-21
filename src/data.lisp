@@ -49,11 +49,23 @@ prerequisite data."))
    "An item of prerequisite data directly accessible to Lisp."))
 
 (defclass file-data (data)
-  ((data-file
-    :initarg :file
-    :reader data-file))
+  ((data-cksum :initarg :cksum)
+   (data-file :initarg :file :reader data-file))
   (:documentation
    "An item of prerequisite data accessible via the filesystem."))
+
+(defgeneric data-cksum (data)
+  (:documentation
+   "Return a CRC checksum for the data as calculated by POSIX cksum(1).")
+  (:method ((data file-data))
+    (if (slot-boundp data 'data-cksum)
+        (slot-value data 'data-cksum)
+        (setf (slot-value data 'data-cksum)
+              (parse-integer
+               (car
+                (split-string
+                 (run-program
+                  `("cksum" ,(data-file data)) :output :string))))))))
 
 ;; If this proves to be inadequate then an alternative would be to maintain a
 ;; mapping of ASDF systems to data sources, and then DEPLOY* could look up the
@@ -246,6 +258,26 @@ identified by IDEN1 and IDEN2?
 This function is for implementation of REGISTER-DATA-SOURCE to check for
 clashes.  It should not be called by properties."
   (if (query-data-sources iden1 iden2) t nil))
+
+(defun maybe-writefile-data (path iden1 iden2 &key (mode nil mode-supplied-p))
+  "Wrapper around WRITEFILE which returns :NO-CHANGE and avoids touching PATH if
+PATH's content is already the prerequisite data identified by IDEN1 and IDEN2
+and PATH has mode MODE."
+  (let ((data (funcall (%get-data iden1 iden2))))
+    (etypecase data
+      (string-data (apply #'maybe-writefile-string path (data-string data)
+                          (and mode-supplied-p `(:mode ,mode))))
+      (file-data
+       (let ((stream (%get-data-stream data)))
+         (if (and (remote-exists-p path)
+                  (multiple-value-bind (existing-mode existing-size)
+                      (remote-file-mode-and-size path)
+                    (and (or (not mode-supplied-p) (= mode existing-mode))
+                         (= (file-length stream) existing-size)
+                         (= (data-cksum data) (cksum path)))))
+             :no-change
+             (apply #'writefile path stream
+                    (and mode-supplied-p `(:mode ,mode)))))))))
 
 (defgeneric connection-upload (connection data)
   (:documentation
