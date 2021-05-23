@@ -29,7 +29,8 @@
    (run "useradd" "-m" username)))
 
 (defprop has-login-shell :posix (username shell)
-  "Ensures that USERNAME has login shell SHELL."
+  "Ensures that USERNAME has login shell SHELL.
+Note that this uses getent(1) and so is not strictly POSIX-compatible."
   (:desc #?"${username} has login shell ${shell}")
   (:check
    (string= (passwd-entry 6 username) shell))
@@ -38,6 +39,9 @@
    (mrun "chsh" "--shell" shell username)))
 
 (defun passwd-entry (n username-or-uid)
+  "Get the nth entry in the getent(1) output for USERNAME-OR-UID.
+Note that getent(1) is not specified in POSIX so use of this function makes
+properties not strictly POSIX-compatible."
   (let ((u (etypecase username-or-uid
 	     (string username-or-uid)
 	     (number (write-to-string username-or-uid)))))
