@@ -1,6 +1,7 @@
 consfigurator (0.6.0-1) UNRELEASED; urgency=medium
 
   * New upstream release.
+  * Upload to unstable.
   * Add dep and build-dep on cl-closer-mop.
   * d/tests/compile-and-tests.lisp: Switch the *PACKAGE* to
     CONSFIGURATOR/TESTS when running tests so that there is a value
