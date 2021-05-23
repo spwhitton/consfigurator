@@ -26,39 +26,46 @@
   #+sbcl      (sb-posix:setgid gid)
   #-(or sbcl) (foreign-funcall "setgid" :unsigned-int uid :int))
 
-(defclass setuid-connection (rehome-connection fork-connection)
-  ((uid :type :integer :initarg :uid)
-   (gid :type :integer :initarg :gid)
-   (home :type :string :initarg :home)))
+(defclass setuid-connection (rehome-connection fork-connection) ())
 
 (defmethod establish-connection ((type (eql :setuid)) remaining &key to)
   (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
     (error "~&SETUIDing requires a Lisp image running as root"))
   (informat 1 "~&SETUIDing to ~A" to)
-  (re:register-groups-bind ((#'parse-integer uid gid))
-      (#?/uid=([0-9]+).+gid=([0-9]+)/ (mrun "id" to))
-    (let ((home (user:passwd-entry 5 uid))
-          (datadir
-            (ensure-directory-pathname
-             (stripln
-              (mrun
-               "su" to "-c"
-               "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
-      (continue-connection
-       (make-instance
-        'setuid-connection :uid uid :gid gid :datadir datadir :home home)
-       remaining))))
+  (multiple-value-bind (match groups)
+      (re:scan-to-strings #?/uid=([0-9]+).+gid=([0-9]+)/ (run "id" to))
+    (unless match
+      (error "Could not determine UID and GID of ~A" to))
+    (let* ((uid (parse-integer (elt groups 0)))
+           (gid (parse-integer (elt groups 1)))
+           (home
+             ;; tilde expansion is POSIX
+             (ensure-directory-pathname (stripln (run (strcat "echo ~" to)))))
+           (datadir
+             (ensure-directory-pathname
+              (stripln
+               (mrun
+                "su" to "-c"
+                "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
+      (continue-connection (make-instance 'setuid-connection
+                                          :datadir datadir
+                                          :connattrs `(:remote-uid ,uid
+                                                       :remote-gid ,gid
+                                                       :remote-home ,home))
+                           remaining))))
 
 (defmethod post-fork ((connection setuid-connection))
   ;; TODO Set up the new environment more systematically.  Perhaps look at how
   ;; runuser(1) uses PAM to do this.
-  (with-slots (uid gid home datadir) connection
+  (let ((uid (connection-connattr connection :remote-uid))
+        (gid (connection-connattr connection :remote-gid))
+        (home (connection-connattr connection :remote-home)))
     (run-program (list "chown" "-R"
                        (format nil "~A:~A" uid gid)
-                       (unix-namestring datadir)))
+                       (unix-namestring (slot-value connection 'datadir))))
     (unless (zerop (setgid gid))
       (error "setgid(2) failed!"))
     (unless (zerop (setuid uid))
       (error "setuid(2) failed!"))
-    (setf (getenv "HOME") home)
+    (setf (getenv "HOME") (unix-namestring home))
     (uiop:chdir home)))

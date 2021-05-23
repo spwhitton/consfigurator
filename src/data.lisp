@@ -326,6 +326,10 @@ new versions of data, to avoid them piling up."))
          (dir (ensure-directory-pathname (remote-data-pathname iden1 iden2))))
     (delete-remote-trees dir)))
 
+(defmethod connection-connattr
+    ((connection connection) (k (eql 'cached-data)))
+  (make-hash-table :test #'equal))
+
 (defun upload-all-prerequisite-data
     (&key (upload-string-data t) (connection *connection*))
   "Upload all prerequisite data required by the current deployment to the remote
@@ -339,9 +343,6 @@ This is called by implementations of ESTABLISH-CONNECTION which call
 CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
   ;; Retrieving & keeping in memory refers to how %GET-DATA stores items of
   ;; string data in *STRING-DATA*.
-  (unless (get-connattr 'cached-data connection)
-    (setf (get-connattr 'cached-data connection)
-          (make-hash-table :test #'equal)))
   (flet ((record-cached-data (iden1 iden2 version)
            (let ((*connection* connection))
              (setf (gethash (cons iden1 iden2) (get-connattr 'cached-data))

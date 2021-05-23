@@ -21,7 +21,7 @@
 (defprop authorized-keys :posix (&rest keys)
   "Permits using KEYS to SSH in as the current user."
   (:desc (declare (ignore keys))
-         (strcat (get-user) " has authorized_keys"))
+         (strcat (get-connattr :remote-user) " has authorized_keys"))
   (:apply
    (file:directory-exists ".ssh")
    (apply #'file:contains-lines ".ssh/authorized_keys" keys))

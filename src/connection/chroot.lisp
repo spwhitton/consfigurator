@@ -94,6 +94,14 @@ should be the mount point, without the chroot's root prefixed.")
                       copy)
           else collect volume)))
 
+(defmethod propagate-connattr
+    ((type (eql :remote-uid)) connattr (connection chroot-connection))
+  connattr)
+
+(defmethod propagate-connattr
+    ((type (eql :remote-gid)) connattr (connection chroot-connection))
+  connattr)
+
 
 ;;;; :CHROOT.FORK
 
@@ -109,27 +117,34 @@ should be the mount point, without the chroot's root prefixed.")
     (error "~&Forking into a chroot requires a Lisp image running as root"))
   (informat 1 "~&Forking into chroot at ~A" into)
   (let* ((into* (ensure-directory-pathname into))
-         (datadir-inside
-           (stripln
-            (mrun
-             (format
-              nil
-              "chroot ~A echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/"
-              (escape-sh-token (unix-namestring into))))))
-         (datadir (ensure-pathname
-                   (subseq datadir-inside 1)
-                   :defaults into* :ensure-absolute t :ensure-directory t)))
-    (let ((connection (make-instance 'chroot.fork-connection
-                                     :into into :datadir datadir)))
+         (connection (make-instance 'shell-chroot-connection :into into*)))
+    ;; This has the side effect of populating the CONSFIGURATOR::ID and
+    ;; :REMOTE-HOME connattrs correctly, so that they don't get bogus values
+    ;; when this connection object is used in UPLOAD-ALL-PREREQUISITE-DATA.
+    (multiple-value-bind (datadir-inside exit)
+        (connection-run
+         connection
+         (format nil "echo ${XDG_CACHE_HOME:-~A/.cache}/consfigurator/data/"
+                 (connection-connattr connection :remote-home))
+         nil)
+      (unless (zerop exit)
+        (error "Failed to determine datadir inside chroot."))
+      (setq connection (change-class connection 'chroot.fork-connection))
+      (setf (slot-value connection 'datadir)
+            (ensure-pathname
+             (subseq datadir-inside 1)
+             :defaults into* :ensure-absolute t :ensure-directory t))
       (unwind-protect-in-parent (continue-connection connection remaining)
         (connection-teardown connection)))))
 
 (defmethod post-fork ((connection chroot.fork-connection))
   (unless (zerop (chroot (slot-value connection 'into)))
     (error "chroot(2) failed!"))
-  ;; chdir, else our current working directory is a pointer to something
-  ;; outside the chroot
-  (uiop:chdir "/"))
+  (let ((home (connection-connattr connection :remote-home)))
+    (setf (uiop:getenv "HOME") (unix-namestring home))
+    ;; chdir, else our current working directory is a pointer to something
+    ;; outside the chroot
+    (uiop:chdir home)))
 
 
 ;;;; :CHROOT.SHELL

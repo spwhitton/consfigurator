@@ -43,7 +43,7 @@
   (declare (ignore remaining))
   (informat 1 "~&Establishing sudo connection to ~A" user)
   (make-instance 'sudo-connection
-                 :user user
+                 :connattrs `(:remote-user ,user)
                  ;; we'll send the password followed by ^M, then the real
                  ;; stdin.  use CODE-CHAR in this way so that we can be sure
                  ;; ASCII ^M is what will get emitted.
@@ -53,10 +53,7 @@
                                          (string (code-char 13)))))))
 
 (defclass sudo-connection (shell-wrap-connection)
-  ((user
-    :initarg :user)
-   (password
-    :initarg :password)))
+  ((password :initarg :password)))
 
 (defmethod get-sudo-password ((connection sudo-connection))
   (let ((value (slot-value connection 'password)))
@@ -66,7 +63,7 @@
   ;; wrap in sh -c so that it is more likely we are either asked for a
   ;; password for all our commands or not asked for one for any
   (format nil "sudo -HkS --prompt=\"\" --user=~A sh -c ~A"
-	  (slot-value connection 'user) (escape-sh-token cmd)))
+	  (connection-connattr connection :remote-user) (escape-sh-token cmd)))
 
 (defmethod connection-run ((c sudo-connection) cmd (input null))
   (call-next-method c cmd (get-sudo-password c)))

@@ -503,23 +503,8 @@ PATH already has the specified CONTENT and MODE."
 
 (defun assert-euid-root ()
   "Assert that the remote user has uid 0 (root)"
-  (if-let ((uid (slot-value *connection* 'remote-uid)))
-    (unless (zerop uid)
-      (failed-change "Property requires root to apply"))
-    (multiple-value-bind (out err exit)
-        (run :may-fail "id" "-u")
-      (unless (zerop exit)
-        (failed-change #?"Failed to run id(1) on remote system: ${err}"))
-      (let ((new-uid (parse-integer out)))
-        (unless (zerop new-uid)
-          (failed-change "Property requires root to apply"))
-        (setf (slot-value *connection* 'remote-uid) new-uid)))))
-
-(defun get-user ()
-  "Get the remote username."
-  (or (slot-value *connection* 'remote-user)
-      (setf (slot-value *connection* 'remote-user)
-            (parse-username-from-id (mrun "id")))))
+  (unless (zerop (get-connattr :remote-uid))
+    (failed-change "Property requires root to apply")))
 
 (defun assert-connection-supports (type)
   (unless (or (eq type :posix) (lisp-connection-p))

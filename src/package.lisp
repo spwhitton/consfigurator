@@ -108,6 +108,8 @@
            #:connection-readfile
            #:connection-writefile
            #:connection-teardown
+           #:connection-connattr
+           #:propagate-connattr
 
            #:run
            #:mrun
@@ -121,8 +123,6 @@
            #:delete-remote-trees
            #:readfile
            #:writefile
-
-           #:propagate-connattr
            #:get-connattr
            #:with-connattrs
 
@@ -151,7 +151,6 @@
            #:require-data
            #:failed-change
            #:assert-euid-root
-           #:get-user
            #:assert-connection-supports
            #:maybe-writefile-string
            #:call-with-os

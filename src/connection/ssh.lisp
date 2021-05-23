@@ -32,6 +32,7 @@
   ((hostname
     :initarg :hostname
     :documentation "Hostname to SSH to.")
+   ;; This is deliberately distinct from the :REMOTE-USER connattr.
    (user
     :initarg :user
     :documentation "User to log in as."))

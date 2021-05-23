@@ -65,27 +65,9 @@ For an example of usage, see the :SUDO connection type."))
     :documentation
     "The value of *CONNECTION* at the time this connection was established.")
    (connattrs
+    :initarg :connattrs
     :initform nil
-    :documentation "This connection's connection attributes.")
-
-   ;; TODO some or all of these slots should probably become connattrs.  for
-   ;; example, :CHROOT.FORK can have the remote-uid propagate.
-   (remote-home
-    :initform nil
-    :documentation
-    "The remote user's home directory.")
-   (current-directory
-    :initform nil
-    :documentation
-    "The current working directory for RUN, MRUN, READFILE and WRITEFILE.")
-   (remote-uid
-    :initform nil
-    :documentation
-    "Effective user-id of the remote (deploying) user")
-   (remote-user
-    :initform nil
-    :documentation
-    "The name of the remote user.")))
+    :documentation "This connection's connection attributes.")))
 
 (defclass lisp-connection (connection) ())
 
@@ -162,6 +144,86 @@ if they need to handle streams and strings differently."))
 ;; many connection types don't need anything to be done to disconnect
 (defmethod connection-teardown ((connection connection))
    (values))
+
+(defgeneric connection-connattr (connection k)
+  (:documentation "Get the connattr identified by K for CONNECTION.")
+  (:method :around ((connection connection) (k symbol))
+    "Retrieve stored connattr or call next method to determine connattr."
+    (or (getf (slot-value connection 'connattrs) k)
+        (setf (getf (slot-value connection 'connattrs) k)
+              (let ((*connection* (slot-value connection 'parent)))
+                (call-next-method)))))
+    (:method ((connection connection) (k symbol))
+    "Default: if no stored value, there is no connattr identified by K."
+    nil))
+
+(defun (setf connection-connattr) (v connection k)
+  (setf (getf (slot-value connection 'connattrs) k) v))
+
+(defgeneric propagate-connattr (type connattr connection)
+  (:documentation
+   "Possibly propagate CONNATTR, a connattr identified by TYPE, through to the
+newly-established CONNECTION.  Implementations should specialise on TYPE and
+CONNECTION, not modify any of their arguments, and either return the new
+connattr, or nil if nothing should be propagated.")
+  (:method (type connattr connection)
+    "Default implementation: don't propagate."
+    nil))
+
+(defmethod initialize-instance :after ((connection connection) &key)
+  "Propagate connattrs which should be propagated."
+  (with-slots (parent) connection
+    (when (and parent (slot-boundp parent 'connattrs))
+      (doplist (k v (slot-value parent 'connattrs))
+               (when-let ((new (propagate-connattr k v connection)))
+                 (setf (connection-connattr connection k) new))))))
+
+
+;;;; Default methods to set some global connattrs
+
+;;; For connection types where this default implementations won't work, either
+;;; set the value of the connattr in ESTABLISH-CONNECTION or provide an
+;;; implementation specialising on both arguments.
+
+(defmethod connection-connattr ((connection connection) (k (eql 'id)))
+  (multiple-value-bind (out exit) (connection-run connection "id" nil)
+    (if (zerop exit)
+        (stripln out)
+        (failed-change "Failed to run id(1) on remote system."))))
+
+(defmethod connection-connattr
+    ((connection connection) (k (eql :remote-user)))
+  (parse-username-from-id (connection-connattr connection 'id)))
+
+(defmethod connection-connattr
+    ((connection connection) (k (eql :remote-uid)))
+  (multiple-value-bind (match groups)
+      (re:scan-to-strings "^uid=([0-9]+)"
+                          (connection-connattr connection 'id))
+    (and match (parse-integer (elt groups 0)))))
+
+(defmethod connection-connattr
+    ((connection connection) (k (eql :remote-gid)))
+  (multiple-value-bind (match groups)
+      (re:scan-to-strings "\\) gid=([0-9]+)"
+                          (connection-connattr connection 'id))
+    (and match (parse-integer (elt groups 0)))))
+
+(defmethod connection-connattr
+    ((connection connection) (k (eql :remote-home)))
+  "Fetch home directory using tilde expansion, which is POSIX.
+Note that looking at $HOME can give the wrong answer when chrooting, as
+/etc/passwd inside the chroot is not consulted even for login shells, e.g.
+\"chroot /chroot sh -lc 'echo $HOME'\" (we would need something which emulates
+login(1)).  Tilde expansion works correctly."
+  (multiple-value-bind (home exit)
+      (connection-run connection
+                      (strcat "echo ~"
+                              (connection-connattr connection :remote-user))
+                      nil)
+    (if (or (string= "" home) (plusp exit))
+        (failed-change "Failed to determine remote home directory.")
+        (ensure-directory-pathname (stripln home)))))
 
 
 ;;;; Functions to access the slots of the current connection
@@ -242,26 +304,19 @@ the resolution of relative pathnames passed as the first argument of READFILE
 and WRITEFILE.  For Lisp-type connections, it additionally temporarily sets
 the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
   (with-gensyms (previous new)
-    `(let ((,previous (slot-value *connection* 'current-directory))
+    `(let ((,previous (get-connattr 'current-directory))
            (,new (ensure-pathname ,dir
                                   :defaults (pwd)
                                   :ensure-absolute t :ensure-directory t)))
-       (setf (slot-value *connection* 'current-directory) ,new)
+       (setf (get-connattr 'current-directory) ,new)
        (unwind-protect
             (if (lisp-connection-p)
                 (with-current-directory (,new) ,@forms)
                 (progn ,@forms))
-         (setf (slot-value *connection* 'current-directory) ,previous)))))
+         (setf (get-connattr 'current-directory) ,previous)))))
 
 (defun pwd ()
-  (or (slot-value *connection* 'current-directory)
-      (slot-value *connection* 'remote-home)
-      (setf (slot-value *connection* 'remote-home)
-            (let ((home
-                    (stripln (connection-run *connection* "echo $HOME" nil))))
-              (if (string-equal "" home)
-                  (error "Failed to determine remote home directory.")
-                  (ensure-directory-pathname home))))))
+  (or (get-connattr 'current-directory) (get-connattr :remote-home)))
 
 (defmacro %process-run-args (&body forms)
   `(let (cmd input may-fail for-exit env inform)
@@ -298,8 +353,18 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
                 ;; to start a fresh 'sh -c' for each command run, but that's
                 ;; desirable to ensure any variables set by CMD are reset.
                 (setq cmd (format nil "~{export ~A;~^ ~} ~A" accum cmd))))
-     (setq cmd (format nil "cd ~A; ~A"
-                       (escape-sh-token (unix-namestring (pwd))) cmd))
+     ;; Set HOME (in a way which ENV can override) because with certain
+     ;; connection types the value sh(1) sets or inherits is wrong.  E.g. with
+     ;; :CHROOT.SHELL we get the value from /etc/passwd outside the chroot.
+     ;; Do this unconditionally up here rather than down in the
+     ;; implementations of connection types which actually require it for
+     ;; simplicity, particularly to avoid having to check whether the connattr
+     ;; is set yet, because setting it requires working CONNECTION-RUN.
+     (setq cmd (format nil "export HOME=~A; cd ~A; ~A"
+                       (escape-sh-token (unix-namestring
+                                         (get-connattr :remote-home)))
+                       (escape-sh-token (unix-namestring (pwd)))
+                       cmd))
      ,@forms))
 
 (defun run (&rest args)
@@ -452,33 +517,12 @@ PATH may be any kind of file, including directories."
               (mrun :may-fail #?"chown ${uid}:${gid} ${namestring}")))))
       (connection-writefile *connection* namestring content mode)))
 
-
-;;;; Connection attributes
-
-(defgeneric propagate-connattr (type connattr connection)
-  (:documentation
-   "Possibly propagate CONNATTR, a connattr identified by TYPE, through to the
-newly-established CONNECTION.  Implementations should specialise on TYPE and
-CONNECTION, not modify any of their arguments, and either return the new
-connattr, or nil if nothing should be propagated.")
-  (:method (type connattr connection)
-    "Default implementation: don't propagate."
-    nil))
-
-(defmethod initialize-instance :after ((connection connection) &key)
-  "Propagate connattrs which should be propagated."
-  (with-slots (parent) connection
-    (when (and parent (slot-boundp parent 'connattrs))
-      (doplist (k v (slot-value parent 'connattrs))
-               (when-let ((new (propagate-connattr k v connection)))
-                 (setf (getf (slot-value connection 'connattrs) k) new))))))
-
-(defun get-connattr (k &optional (connection *connection*))
+(defun get-connattr (k)
   "Get the connattr identified by K for the current connection."
-  (getf (slot-value connection 'connattrs) k))
+  (connection-connattr *connection* k))
 
-(defun (setf get-connattr) (v k &optional (connection *connection*))
-  (setf (getf (slot-value connection 'connattrs) k) v))
+(defun (setf get-connattr) (v k)
+  (setf (connection-connattr *connection* k) v))
 
 (defmacro with-connattrs ((&rest connattrs) &body forms)
   "Execute FORMS with connattrs replaced as specified by CONNATTRS, a plist."
