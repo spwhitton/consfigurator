@@ -28,6 +28,7 @@
 (defclass su-connection (shell-wrap-connection)
   ((user :initarg :user)))
 
+;; TODO -c is not portable to other su implementations.
 (defmethod connection-shell-wrap ((connection su-connection) cmd)
   (format nil "su ~A -c ~A"
           (escape-sh-token (slot-value connection 'user))
