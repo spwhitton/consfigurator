@@ -69,10 +69,10 @@ because it might be required for other applications of this property."
    (os:required 'os:debianlike))
   (:apply
    (ignoring-hostattrs (available locale))
-   (with-change-if-changes-file ("/etc/default/locale")
-     (run "update-locale"
-          (mapcar (lambda (v) (strcat v "=" locale)) locale-variables))))
+   (with-change-if-changes-file-content ("/etc/default/locale")
+     (mrun "update-locale"
+           (mapcar (lambda (v) (strcat v "=" locale)) locale-variables))))
   (:unapply
    (declare (ignore locale))
-   (with-change-if-changes-file ("/etc/default/locale")
-     (run "update-locale" locale-variables))))
+   (with-change-if-changes-file-content ("/etc/default/locale")
+     (mrun "update-locale" locale-variables))))
