@@ -105,3 +105,11 @@ They should perform I/O only by calling ``RUN``, ``RUNLINES``, ``READFILE``,
 running in a Lisp image on the host to which they are to be applied, so they
 can perform arbitrary I/O in that context.  They can also make use of ``RUN``,
 ``RUNLINES``, ``READFILE`` and ``WRITEFILE`` if desired.
+
+``:posix`` properties are characterised by the limited set of ways in which
+they perform I/O, not by the use of only facilities defined in the Single UNIX
+Specification.  Nevertheless, if a ``:posix`` property or function intended to
+be called by ``:posix`` properties uses non-POSIX facilities, but it is not
+obvious given the stated purpose of the property that it will do this, it is
+good to mention the use of non-POSIX facilities in the docstring.  For
+examples of this, see ``USER:HAS-LOGIN-SHELL`` and ``USER:PASSWD-ENTRY``.
