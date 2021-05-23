@@ -606,7 +606,8 @@ UPLOAD-ALL-PREREQUISITE-DATA.")
                            ;; such as Consfigurator, and switch the order of
                            ;; the LOAD and COMPILE-FILE* here for those.
                            (progn (load ,source)
-                                  (compile-file* ,source)
+                                  (or (compile-file* ,source)
+                                      (error "Failed to compile ~S" ,source))
                                   (setq recompile t)))))))))))
 
 (defgeneric continue-deploy*-program (remaining-connections asdf-requirements)
