@@ -7,11 +7,9 @@ Debian and Debian derivatives
 -----------------------------
 
 The most recent tagged release of Consfigurator is included in `Debian
-experimental`_, and the .deb there should work fine on Debian stable, testing
-and unstable, and derivatives like Ubuntu.  After enabling the repository,
-``apt-get install cl-consfigurator/experimental``.
-
-.. _Debian experimental: https://wiki.debian.org/DebianExperimental
+unstable`_, and the .deb there should work fine on Debian stable and testing,
+and derivatives like Ubuntu.  After adding an apt source for unstable, if
+necessary, ``apt-get install cl-consfigurator/unstable``.
 
 Quicklisp
 ---------

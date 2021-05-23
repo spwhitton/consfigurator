@@ -38,10 +38,9 @@ if ! dpkg-parsechangelog | grep -q "New upstream release."; then
     exit 1
 fi
 
-msg="release Consfigurator $version (-1 to Debian experimental)"
+msg="release Consfigurator $version (-1 to Debian unstable)"
 git commit -s -m"$msg" -- $changed_files
 git tag -s -m"$msg" v$version
 
 git deborig
-# need to pass -d here while we're uploading to experimental
-dgit sbuild -d unstable --run-piuparts --run-autopkgtest
+dgit sbuild --run-piuparts --run-autopkgtest
