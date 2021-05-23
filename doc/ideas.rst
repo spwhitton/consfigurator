@@ -78,5 +78,7 @@ Project & packaging
 -------------------
 
 - Define a semantics for version numbers (probably just like Propellor's),
-  start keeping a NEWS file, move from Debian experimental to unstable,
-  start actually announcing releases to sgo-software-announce.
+  start keeping a NEWS file, move from Debian experimental to unstable, start
+  actually announcing releases to sgo-software-announce.  Take the opportunity
+  to review whole public API for good choices of names and sensible separation
+  of responsibilities.  Increment major version number from zero to one.
