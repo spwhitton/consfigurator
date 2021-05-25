@@ -20,7 +20,8 @@
 (named-readtables:in-readtable :consfigurator)
 
 (defprop has-account :posix (username)
-  "Ensure there is an account for USERNAME."
+  "Ensure there is an account for USERNAME.
+Note that this uses getent(1) and so is not strictly POSIX-compatible."
   (:desc #?"Account for ${username}")
   (:check
    (user-exists username))
