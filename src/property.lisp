@@ -232,7 +232,15 @@ through unmodified, so supplied-p information is preserved."
              (if will-props
                  (setq rest (lastcar main)
                        main (nconc (nbutlast main) (list '&rest rest)))
-                 (nconc (list '&whole whole) (ordinary-ll-without-&aux args)))))
+                 (list* '&whole whole
+                        ;; Strip default values (so we don't evaluate those
+                        ;; forms here and also in the property), and strip
+                        ;; supplied-p parameters for good measure as we will
+                        ;; not use them.
+                        (loop for elt in (ordinary-ll-without-&aux args)
+                              if (listp elt)
+                                collect (list (car elt) nil)
+                              else collect elt)))))
       `(defmacro ,(format-symbol (symbol-package name) "~A." name) ,new-args
          ,@(cond
              ((and first will-props)
@@ -243,13 +251,11 @@ through unmodified, so supplied-p information is preserved."
                                      :propspec (props eseqprops ,@,rest)))))
              (first
               `((declare (ignore ,@(cdr (ordinary-ll-variable-names
-                                         (ordinary-ll-without-&aux args)
-                                         :include-supplied-p t))))
+                                         (ordinary-ll-without-&aux args)))))
                 (list* ',name ,first (cddr ,whole))))
              (t
               `((declare (ignore ,@(ordinary-ll-variable-names
-                                    (ordinary-ll-without-&aux args)
-                                    :include-supplied-p t)))
+                                    (ordinary-ll-without-&aux args))))
                 (cons ',name (cdr ,whole)))))))))
 
 (defmacro define-property-defining-macro
