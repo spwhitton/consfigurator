@@ -418,9 +418,12 @@ Some (but not all) connection types will want to use this when implementing
 ESTABLISH-CONNECTION, CONNECTION-RUN, CONNECTION-WRITEFILE etc. to avoid the
 overhead of splitting the output streams only to immediately recombine them.
 
-Some :POSIX properties which want to run a lot of commands and don't need to
-separate the streams might want to use this too, but usually it is best to
-start with RUN."
+Code in property definitions which will not examine command output should
+usually use this in preference to RUN for a performance boost; an exception is
+when the command sends a lot of text to stdout which might make it harder for
+the user to pick out error messages.  Code which examines command output
+should use RUN and only examine the stream from which the output to be read is
+expected."
   (%process-run-args
     (informat 4 "~&MRUN ~A" cmd)
     (multiple-value-bind (out exit)
