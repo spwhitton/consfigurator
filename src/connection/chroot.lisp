@@ -141,7 +141,7 @@ should be the mount point, without the chroot's root prefixed.")
   (unless (zerop (chroot (slot-value connection 'into)))
     (error "chroot(2) failed!"))
   (let ((home (connection-connattr connection :remote-home)))
-    (setf (uiop:getenv "HOME") (unix-namestring home))
+    (setf (getenv "HOME") (unix-namestring home))
     ;; chdir, else our current working directory is a pointer to something
     ;; outside the chroot
     (uiop:chdir home)))

@@ -24,7 +24,7 @@
 CL-PPCRE regular expressions IDEN1-RE and IDEN2-RE, obtaining the data by
 using ssh-askpass(1) to prompt the user to input it.  Useful for things like
 sudo passwords."
-  (unless (uiop:getenv "DISPLAY")
+  (unless (getenv "DISPLAY")
     (missing-data-source "DISPLAY not set; cannot launch ssh-askpass(1)."))
   ;; This cache duplicates CONSFIGURATOR::*STRING-DATA*, but if we don't keep
   ;; our own cache here, then we would always have to return the current time
