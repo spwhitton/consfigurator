@@ -30,6 +30,7 @@
                (:file "src/property/cmd")
                (:file "src/property/file")
                (:file "src/property/os")
+               (:file "src/property/container")
                (:file "src/property/mount")
                (:file "src/property/service")
                (:file "src/property/apt")

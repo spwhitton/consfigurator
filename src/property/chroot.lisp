@@ -58,11 +58,13 @@
 
 (defmethod %make-child-host ((host unpreprocessed-host))
   (let ((propspec (host-propspec host)))
-    (make-child-host :hostattrs (hostattrs host)
-                     :propspec (make-propspec
-                                :systems (propspec-systems propspec)
-                                :propspec `(service:without-starting-services
-                                               ,(propspec-props propspec))))))
+    (make-child-host
+     :hostattrs (hostattrs host)
+     :propspec (make-propspec
+                :systems (propspec-systems propspec)
+                :propspec `(service:without-starting-services
+                             (container:contained :filesystem)
+                             ,(propspec-props propspec))))))
 
 (defproplist deploys :lisp (root host &optional additional-properties)
   "Like DEPLOYS with first argument `((:chroot :into ,root)), but disable

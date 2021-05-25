@@ -298,6 +298,11 @@
            #:required
            #:supports-arch-p))
 
+(defpackage :consfigurator.property.container
+  (:use #:cl #:consfigurator)
+  (:export #:contained
+           #:when-contained))
+
 (defpackage :consfigurator.property.mount
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os    #:consfigurator.property.os)
@@ -355,6 +360,7 @@
   (:local-nicknames (#:service   #:consfigurator.property.service)
                     (#:apt       #:consfigurator.property.apt)
                     (#:os        #:consfigurator.property.os)
+                    (#:container #:consfigurator.property.container)
                     (#:file      #:consfigurator.property.file))
   (:shadow #:deploys #:deploys. #:deploys-these #:deploys-these.)
   (:export #:deploys
