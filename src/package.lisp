@@ -269,6 +269,7 @@
            #:host-secret-uploaded
            #:contains-conf-equals
            #:contains-conf-space
+           #:contains-conf-tab
            #:contains-conf-shell
            #:contains-ini-settings
            #:regex-replaced-lines

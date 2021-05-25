@@ -323,6 +323,14 @@ uncommented and used to set the value, if it exists."
                               :parse-kv #?/^(\S+)\s+(.+)/
                               :new-kv (lambda (k v) #?"${k} ${v}"))))
 
+(defprop contains-conf-tab :posix (file &rest pairs)
+  "Like FILE:CONTAINS-CONF-SPACE, but separate keys and values with a tab rather
+than a space when updating lines."
+  (:desc (format nil "~A has ~{\"~A ~A\"~^, ~}" file pairs))
+  (:apply (simple-conf-update file pairs
+                              :parse-kv #?/^(\S+)\s+(.+)/
+                              :new-kv (lambda (k v) #?"${k}	${v}"))))
+
 (defprop contains-conf-equals :posix (file &rest pairs)
   "Where FILE is a config file in which keys and values are separated by \" = \"
 and there are no sections, and PAIRS is a list of even length of alternating
