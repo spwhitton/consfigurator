@@ -50,4 +50,4 @@ properties not strictly POSIX-compatible."
 			 :separator ":"))))
 
 (defun user-exists (username)
-  (zerop (run :for-exit "getent" "passwd" username)))
+  (zerop (mrun :for-exit "getent" "passwd" username)))
