@@ -39,6 +39,20 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (file:contains-lines "/etc/shells" shell)
    (mrun "chsh" "--shell" shell username)))
 
+(defprop has-enabled-password :posix (username initial-password)
+  "Ensures that it is possible to login as USERNAME; if this requires enabling
+the account's password, also set it to INITIAL-PASSWORD.
+The main purpose of this property is to ensure that in a freshly installed
+system it will be possible to log in.  The password should usually be changed
+to something which is not stored in plain text in your consfig right after,
+and then this property will do nothing."
+  (:desc #?"${username} has an enabled password")
+  (:check
+   (declare (ignore initial-password))
+   (string= "P" (cadr (split-string (run "passwd" "-S" username)))))
+  (:apply
+   (mrun :input (format nil "~A:~A" username initial-password) "chpasswd")))
+
 (defun passwd-entry (n username-or-uid)
   "Get the nth entry in the getent(1) output for USERNAME-OR-UID.
 Note that getent(1) is not specified in POSIX so use of this function makes

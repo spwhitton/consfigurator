@@ -354,6 +354,7 @@
   (:local-nicknames (#:file  #:consfigurator.property.file))
   (:export #:has-account
 	   #:has-login-shell
+           #:has-enabled-password
 	   #:passwd-entry))
 
 (defpackage :consfigurator.property.chroot
