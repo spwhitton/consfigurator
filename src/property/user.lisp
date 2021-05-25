@@ -27,7 +27,7 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (user-exists username))
   (:apply
    (assert-euid-root)
-   (run "useradd" "-m" username)))
+   (mrun "useradd" "-m" username)))
 
 (defprop has-login-shell :posix (username shell)
   "Ensures that USERNAME has login shell SHELL.
