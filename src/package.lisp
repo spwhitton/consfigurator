@@ -279,6 +279,12 @@
            #:is-copy-of
            #:update-unix-table))
 
+(defpackage :consfigurator.property.etc-default
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:file  #:consfigurator.property.file))
+  (:shadow #:set)
+  (:export #:set))
+
 (defpackage :consfigurator.property.os
   (:use #:cl #:consfigurator)
   (:shadow #:typecase #:etypecase)

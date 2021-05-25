@@ -29,6 +29,7 @@
                (:file "src/data")
                (:file "src/property/cmd")
                (:file "src/property/file")
+               (:file "src/property/etc-default")
                (:file "src/property/os")
                (:file "src/property/container")
                (:file "src/property/mount")
