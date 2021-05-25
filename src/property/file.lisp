@@ -318,7 +318,7 @@ keys and values, set each of these keys and values in FILE.
 If there are any other lines which set values for the same keys, they will be
 commented out; the first commented or uncommented line for each key will be
 uncommented and used to set the value, if it exists."
-  (:desc (format nil "~A has ~{~A ~A~^, ~}" file pairs))
+  (:desc (format nil "~A has ~{\"~A ~A\"~^, ~}" file pairs))
   (:apply (simple-conf-update file pairs
                               :parse-kv #?/^(\S+)\s+(.+)/
                               :new-kv (lambda (k v) #?"${k} ${v}"))))
