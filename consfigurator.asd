@@ -48,6 +48,7 @@
                (:file "src/property/installer")
                (:file "src/property/grub")
                (:file "src/property/u-boot")
+               (:file "src/property/hostname")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
                (:file "src/connection/rehome")

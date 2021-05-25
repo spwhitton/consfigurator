@@ -525,6 +525,15 @@
   (:export #:u-boot-install-rockchip
            #:u-boot-installed-rockchip))
 
+(defpackage :consfigurator.property.hostname
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
+                    (#:container #:consfigurator.property.container)
+                    (#:file      #:consfigurator.property.file))
+  (:export #:configured
+           #:mailname-configured
+           #:search-configured))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))

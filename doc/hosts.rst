@@ -28,7 +28,8 @@ all of those properties are defined.  This minimises the risk of any clashes.
 Many attributes, however, will be shared across properties, and should use
 keyword symbols.  The semantics of these attributes are documented here:
 
-- ``:HOSTNAME``: the host's hostname
+- ``:HOSTNAME``: the host's hostname -- if the host has a domain name, then
+  the FQDN, not just the part before the first dot
 
 - ``:DATA``: items of prerequisite data required by the host
 
