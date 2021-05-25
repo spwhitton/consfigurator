@@ -28,13 +28,10 @@ Try it out / quick start
 
         (in-package :cl-user)
 
-        (defpackage :com.example.consfig
-          (:use #:cl #:alexandria #:consfigurator)
-          (:local-nicknames (#:os            #:consfigurator.property.os)
-                            (#:apt           #:consfigurator.property.apt)
-                            (#:cmd           #:consfigurator.property.cmd)
-                            (#:file          #:consfigurator.property.file)
-                            (#:chroot        #:consfigurator.property.chroot)))
+	;; this macro is a simple wrapper of DEFPACKAGE which sets up local
+	;; nicknames for packages providing properties and data sources
+        (consfigurator:defpackage-consfig :com.example.consfig
+          (:use #:cl #:alexandria #:consfigurator))
 
 4. Define some hosts and deployments.
 
@@ -281,6 +278,9 @@ recommended package nicknaming schemes for use in consfigs, e.g.::
     (:local-nicknames (#:file        #:consfigurator.property.file)
                       (#:cmd         #:consfigurator.property.cmd)
 		      (#:data.pgp    #:consfigurator.data.pgp)))
+
+You can use the ``DEFPACKAGE-CONSFIG`` macro to set up all these local
+nicknames.
 
 Portability and stability
 -------------------------

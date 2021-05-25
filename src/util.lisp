@@ -196,6 +196,39 @@ one-dimensional collections of values."
       (re:scan-to-strings "^uid=[0-9]+\\(([^)]+)" output)
     (and match (elt groups 0))))
 
+;; not DEFCONSFIG because a consfig is a system not a package
+(defmacro defpackage-consfig (name &body forms)
+  "Convenience wrapper around DEFPACKAGE for consfigs.
+Adds recommended local nicknames for all the property and data source packages
+that come with Consfigurator.  Either use this directly or use its macro
+expansion as a starting point for your own DEFPACKAGE form for your consfig."
+  (let ((forms (copy-list forms))
+        (local-nicknames
+          (cons :local-nicknames
+                (loop for package in (list-all-packages)
+                      for name = (package-name package)
+                      if (string-prefix-p "CONSFIGURATOR.PROPERTY." name)
+                        collect (list (make-symbol (subseq name 23))
+                                      (make-symbol name))
+                      else if (string-prefix-p "CONSFIGURATOR.DATA." name)
+                             collect (list (make-symbol (subseq name 14))
+                                           (make-symbol name))))))
+    (if-let ((form (loop for form on forms
+                         when (and (listp (car form))
+                                   (eql :local-nicknames (caar form)))
+                           return form)))
+      (rplaca form (nconc local-nicknames (cdar form)))
+      (push local-nicknames forms))
+    ;; Not much benefit to importing CONSFIGURATOR for the user as it only
+    ;; needs to be done once, and some users will prefer to import qualified,
+    ;; but we could also have:
+    ;; (if-let ((form (loop for form on forms
+    ;;                      when (and (listp (car form)) (eql :use (caar form)))
+    ;;                        return form)))
+    ;;   (rplaca form (list* :use '#:consfigurator (cdar form)))
+    ;;   (push '(:use '#:cl '#:consfigurator) forms))
+    `(defpackage ,name ,@forms)))
+
 
 ;;;; Progress & debug printing
 

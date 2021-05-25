@@ -78,6 +78,7 @@
            #:in-chroot-pathname
            #:escape-sh-token
            #:escape-sh-command
+           #:defpackage-consfig
 
            #:*consfigurator-debug-level*
            #:with-indented-inform
