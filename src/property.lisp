@@ -203,12 +203,23 @@ to the extent that doing so makes sense given the structure of ARGS.
 For most properties this is a dummy definition which will not be exported.
 However, for properties where someone might like to use the dotted propapp
 rules in unevaluated propspecs containing calls to the property, export the
-dotted name alongside NAME."
+dotted name alongside NAME.
+
+With the current implementation, for properties whose lambda lists are such
+that the dotted propapp rule regarding the last required or optional parameter
+is applicable, optional parameters other than the last become required, and
+information about whether or not optional parameters were supplied (supplied-p
+parameters) is lost.  This is not much of a limitation in practice, however,
+because in order to supply an embedded unevaluated propspec as the value of
+the &rest parameter, any other optional parameters must be supplied too.  When
+only the dotted propapp rule regarding the first parameter is applicable, that
+argument becomes required, but the rest of the supplied parameters are passed
+through unmodified, so supplied-p information is preserved."
   (multiple-value-bind (required optional rest kwargs)
       (parse-ordinary-lambda-list args :allow-specializers nil)
     (let* ((will-props (not (or rest kwargs)))
-           (main (nconc required optional))
-           (firstsym (ensure-car (car main)))
+           (main (nconc required (mapcar #'car optional)))
+           (firstsym (car main))
            (first (and firstsym
                        `(if (and (listp ,firstsym)
                                  (or (keywordp (car ,firstsym))
@@ -216,10 +227,10 @@ dotted name alongside NAME."
                                           (keywordp (caar ,firstsym)))))
                             `',,firstsym
                             ,firstsym)))
-           (middle (mapcar #'ensure-car (butlast (if first (cdr main) main))))
+           (middle (butlast (if first (cdr main) main)))
            (new-args
              (if will-props
-                 (setq rest (ensure-car (lastcar main))
+                 (setq rest (lastcar main)
                        main (nconc (nbutlast main) (list '&rest rest)))
                  (nconc (list '&whole whole) (ordinary-ll-without-&aux args)))))
       `(defmacro ,(format-symbol (symbol-package name) "~A." name) ,new-args
