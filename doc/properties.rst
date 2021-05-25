@@ -71,7 +71,7 @@ informational attributes.
 Determine whether or not the property is already applied to the host and
 return a generalised boolean indicating such.  Whether or not the ``:apply``
 and ``:unapply`` subroutines get called depends on this return value.  If
-absent, it is always assumed the property is applied, i.e., an attempt to
+absent, it is always assumed the property is unapplied, i.e., an attempt to
 apply the property will always be made.
 
 ``:apply`` and ``:unapply`` subroutines
