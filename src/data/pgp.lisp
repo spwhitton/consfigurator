@@ -52,7 +52,7 @@
 
 (defun read-store (location)
   (handler-case
-      (read-from-string
+      (safe-read-from-string
        (run-program
         (escape-sh-command (list "gpg" "--decrypt" (unix-namestring location)))
         :output :string))
