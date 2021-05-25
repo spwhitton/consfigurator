@@ -202,7 +202,7 @@ one-dimensional collections of values."
 Adds recommended local nicknames for all the property and data source packages
 that come with Consfigurator.  Either use this directly or use its macro
 expansion as a starting point for your own DEFPACKAGE form for your consfig."
-  (let ((forms (copy-list forms))
+  (let ((forms (copy-tree forms))
         (local-nicknames
           (cons :local-nicknames
                 (loop for package in (list-all-packages)
