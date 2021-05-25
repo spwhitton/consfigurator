@@ -578,37 +578,43 @@ UPLOAD-ALL-PREREQUISITE-DATA.")
     ;; As soon as we recompile something, we have to recompile everything else
     ;; following it in the list, because macro definitions may have changed.
     `(let (recompile)
-       ,@(loop with table = (get-connattr 'cached-data)
-               for requirement in (slot-value asdf-requirements 'asdf-requirements)
-               for name = (asdf:component-name requirement)
-               collect
-               (etypecase requirement
-                 (asdf:require-system `(require ,name))
-                 (asdf:system
-                  (let ((source (gethash (cons "--lisp-system" name) table)))
-                    (unless source
-                      (error "Somehow Lisp system ~A was not uploaded." name))
-                    ;; TODO Using COMPILE-FILE-PATHNAME* like this has the
-                    ;; advantage that, for example, SBCL will save the FASL
-                    ;; somewhere from which only the same version of SBCL will
-                    ;; try to load FASLs.  However, FASLs corresponding to old
-                    ;; versions of Lisp systems are not cleaned up, and are
-                    ;; not tiny files.
-                    `(let ((fasl (compile-file-pathname* ,source)))
-                       (if (and (file-exists-p fasl) (not recompile))
-                           (load fasl)
-                           ;; The concatenated source of at least Alexandria
-                           ;; won't compile unless it's loaded first.  This
-                           ;; means we compile every library that's changed
-                           ;; since the last deploy twice, which is not ideal.
-                           ;; One possible improvement would be to maintain a
-                           ;; list of systems known not to have this problem,
-                           ;; such as Consfigurator, and switch the order of
-                           ;; the LOAD and COMPILE-FILE* here for those.
-                           (progn (load ,source)
-                                  (or (compile-file* ,source)
-                                      (error "Failed to compile ~S" ,source))
-                                  (setq recompile t)))))))))))
+       (with-open-file
+           (record (merge-pathnames "consfigurator/fasls"
+                                    (ensure-directory-pathname
+                                     (or (getenv "XDG_CACHE_HOME")
+                                         (strcat (getenv "HOME") "/.cache"))))
+                   :direction :output
+                   :if-exists :append :if-does-not-exist :create)
+         ,@(loop with table = (get-connattr 'cached-data)
+                 for requirement in (slot-value asdf-requirements 'asdf-requirements)
+                 for name = (asdf:component-name requirement)
+                 collect
+                 (etypecase requirement
+                   (asdf:require-system `(require ,name))
+                   (asdf:system
+                    (let ((source (gethash (cons "--lisp-system" name) table)))
+                      (unless source
+                        (error "Somehow Lisp system ~A was not uploaded." name))
+                      ;; Using COMPILE-FILE-PATHNAME* like this has the
+                      ;; advantage that, for example, SBCL will save the FASL
+                      ;; somewhere from which only the same version of SBCL will
+                      ;; try to load FASLs.
+                      `(let ((fasl (compile-file-pathname* ,source)))
+                         (if (and (file-exists-p fasl) (not recompile))
+                             (load fasl)
+                             ;; The concatenated source of at least Alexandria
+                             ;; won't compile unless it's loaded first.  This
+                             ;; means we compile every library that's changed
+                             ;; since the last deploy twice, which is not ideal.
+                             ;; One possible improvement would be to maintain a
+                             ;; list of systems known not to have this problem,
+                             ;; such as Consfigurator, and switch the order of
+                             ;; the LOAD and COMPILE-FILE* here for those.
+                             (progn (load ,source)
+                                    (or (compile-file* ,source)
+                                        (error "Failed to compile ~S" ,source))
+                                    (format record "~A ~A~%" ,source fasl)
+                                    (setq recompile t))))))))))))
 
 (defgeneric continue-deploy*-program (remaining-connections asdf-requirements)
   (:documentation
@@ -684,6 +690,22 @@ Preprocessing must occur in the root Lisp."))
                           (uiop:quit 2)))
                       (when (>= *consfigurator-debug-level* 3)
                         (format t "~&~A" string))))
+                 ;; Delete old FASLs.  With SBCL they are megabytes in size.
+                 (let* ((fasls (merge-pathnames
+                                "consfigurator/fasls"
+                                (ensure-directory-pathname
+                                 (or (getenv "XDG_CACHE_HOME")
+                                     (strcat (getenv "HOME") "/.cache")))))
+                        (lines (mapcar #'split-string
+                                       (with-open-file (record fasls)
+                                         (slurp-stream-lines record)))))
+                   (with-open-file (record fasls :direction :output
+                                                 :if-exists :supersede)
+                     (loop for (source fasl) in lines
+                           if (file-exists-p source)
+                             do (format record "~A ~A~%" source fasl)
+                           else do (ignore-errors (delete-file fasl)))))
+                 ;; Continue the deployment.
                  ,(wrap `(%consfigure ',remaining-connections ,*host*)))))
         (handler-case
             (with-standard-io-syntax
