@@ -39,7 +39,8 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (file:contains-lines "/etc/shells" shell)
    (mrun "chsh" "--shell" shell username)))
 
-(defprop has-enabled-password :posix (username &key (initial-password "changeme"))
+(defprop has-enabled-password :posix
+    (username &key (initial-password "changeme"))
   "Ensures that it is possible to login as USERNAME; if this requires enabling
 the account's password, also set it to INITIAL-PASSWORD.
 The main purpose of this property is to ensure that in a freshly installed
