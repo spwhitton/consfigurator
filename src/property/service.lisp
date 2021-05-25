@@ -62,7 +62,7 @@ properties."
 
 (define-function-property-combinator without-starting-services (&rest propapps)
   "Apply PROPAPPS with SERVICE:NO-SERVICES temporarily in effect."
-  (let ((propapp (if (cdr propapps) (eseqprops propapps) (car propapps))))
+  (let ((propapp (if (cdr propapps) (apply #'eseqprops propapps) (car propapps))))
     (:retprop :type :lisp
               :hostattrs
               (lambda () (propappattrs propapp) (os:required 'os:debianlike))
