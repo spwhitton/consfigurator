@@ -62,7 +62,9 @@
 
 (defun put-store (location data)
   (run-program (list "gpg" "--encrypt")
-               :input (make-string-input-stream (prin1-to-string data))
+               :input (make-string-input-stream
+                       (with-standard-io-syntax
+                         (prin1-to-string data)))
                :output (unix-namestring location)))
 
 (defun data-assoc (iden1 iden2 data)
