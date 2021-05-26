@@ -577,44 +577,57 @@ UPLOAD-ALL-PREREQUISITE-DATA.")
   (:method ((asdf-requirements asdf-requirements))
     ;; As soon as we recompile something, we have to recompile everything else
     ;; following it in the list, because macro definitions may have changed.
-    `(let (recompile)
-       (with-open-file
-           (record (merge-pathnames "consfigurator/fasls"
-                                    (ensure-directory-pathname
-                                     (or (getenv "XDG_CACHE_HOME")
-                                         (strcat (getenv "HOME") "/.cache"))))
-                   :direction :output
-                   :if-exists :append :if-does-not-exist :create)
-         ,@(loop with table = (get-connattr 'cached-data)
-                 for requirement in (slot-value asdf-requirements 'asdf-requirements)
-                 for name = (asdf:component-name requirement)
-                 collect
-                 (etypecase requirement
-                   (asdf:require-system `(require ,name))
-                   (asdf:system
-                    (let ((source (gethash (cons "--lisp-system" name) table)))
-                      (unless source
-                        (error "Somehow Lisp system ~A was not uploaded." name))
-                      ;; Using COMPILE-FILE-PATHNAME* like this has the
-                      ;; advantage that, for example, SBCL will save the FASL
-                      ;; somewhere from which only the same version of SBCL will
-                      ;; try to load FASLs.
-                      `(let ((fasl (compile-file-pathname* ,source)))
-                         (if (and (file-exists-p fasl) (not recompile))
-                             (load fasl)
-                             ;; The concatenated source of at least Alexandria
-                             ;; won't compile unless it's loaded first.  This
-                             ;; means we compile every library that's changed
-                             ;; since the last deploy twice, which is not ideal.
-                             ;; One possible improvement would be to maintain a
-                             ;; list of systems known not to have this problem,
-                             ;; such as Consfigurator, and switch the order of
-                             ;; the LOAD and COMPILE-FILE* here for those.
-                             (progn (load ,source)
-                                    (or (compile-file* ,source)
-                                        (error "Failed to compile ~S" ,source))
-                                    (format record "~A ~A~%" ,source fasl)
-                                    (setq recompile t))))))))))))
+    `(let* (recompile
+            (file (merge-pathnames "consfigurator/fasls"
+                                   (ensure-directory-pathname
+                                    (or (getenv "XDG_CACHE_HOME")
+                                        (strcat (getenv "HOME") "/.cache")))))
+            (record (with-open-file (stream file :if-does-not-exist nil)
+                      (and stream (safe-read-from-string
+                                   (slurp-stream-string stream))))))
+       (unwind-protect
+            (progn
+              ,@(loop
+                  with table = (get-connattr 'cached-data)
+                  for requirement
+                    in (slot-value asdf-requirements 'asdf-requirements)
+                  for name = (asdf:component-name requirement)
+                  collect
+                  (etypecase requirement
+                    (asdf:require-system `(require ,name))
+                    (asdf:system
+                     (let ((source
+                             (gethash (cons "--lisp-system" name) table)))
+                       (unless source
+                         (error "Somehow Lisp system ~A was not uploaded."
+                                name))
+                       ;; Using COMPILE-FILE-PATHNAME* like this has the
+                       ;; advantage that, for example, SBCL will save the FASL
+                       ;; somewhere from which only the same version of SBCL
+                       ;; will try to load FASLs.
+                       `(let ((fasl (compile-file-pathname* ,source)))
+                          (if (and (file-exists-p fasl) (not recompile))
+                              (load fasl)
+                              ;; The concatenated source of at least
+                              ;; Alexandria won't compile unless it's loaded
+                              ;; first.  This means we compile every library
+                              ;; that's changed since the last deploy twice,
+                              ;; which is not ideal.  One possible improvement
+                              ;; would be to maintain a list of systems known
+                              ;; not to have this problem, such as
+                              ;; Consfigurator, and switch the order of the
+                              ;; LOAD and COMPILE-FILE* here for those.
+                              (let ((pair (assoc ,source record)))
+                                (load ,source)
+                                (or (compile-file* ,source)
+                                    (error "Failed to compile ~S" ,source))
+                                (if pair
+                                    (rplacd pair fasl)
+                                    (setq record (acons ,source fasl record)))
+                                (setq recompile t)))))))))
+         (with-open-file (stream file :direction :output :if-exists :supersede)
+           (with-standard-io-syntax
+             (prin1 record stream)))))))
 
 (defgeneric continue-deploy*-program (remaining-connections asdf-requirements)
   (:documentation
@@ -691,20 +704,17 @@ Preprocessing must occur in the root Lisp."))
                       (when (>= *consfigurator-debug-level* 3)
                         (format t "~&~A" string))))
                  ;; Delete old FASLs.  With SBCL they are megabytes in size.
-                 (let* ((fasls (merge-pathnames
-                                "consfigurator/fasls"
-                                (ensure-directory-pathname
-                                 (or (getenv "XDG_CACHE_HOME")
-                                     (strcat (getenv "HOME") "/.cache")))))
-                        (lines (mapcar #'split-string
-                                       (with-open-file (record fasls)
-                                         (slurp-stream-lines record)))))
-                   (with-open-file (record fasls :direction :output
-                                                 :if-exists :supersede)
-                     (loop for (source fasl) in lines
-                           if (file-exists-p source)
-                             do (format record "~A ~A~%" source fasl)
-                           else do (ignore-errors (delete-file fasl)))))
+                 (with-lisp-data-file
+                     (record (merge-pathnames
+                              "consfigurator/fasls"
+                              (ensure-directory-pathname
+                               (or (getenv "XDG_CACHE_HOME")
+                                   (strcat (getenv "HOME") "/.cache")))))
+                   (loop for cell in record
+                         if (file-exists-p (car cell))
+                           collect cell into accum
+                         else do (ignore-errors (delete-file (cdr cell)))
+                         finally (setq record accum)))
                  ;; Continue the deployment.
                  ,(wrap `(%consfigure ',remaining-connections ,*host*)))))
         (handler-case

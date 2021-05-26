@@ -12,7 +12,7 @@
                           #:run-program
                           #:read-file-string
                           #:copy-stream-to-stream
-                          #:slurp-stream-lines
+                          #:slurp-stream-string
                           #:subprocess-error
                           #:stripln
                           #:unix-namestring
@@ -42,7 +42,7 @@
            #:run-program
            #:read-file-string
            #:copy-stream-to-stream
-           #:slurp-stream-lines
+           #:slurp-stream-string
            #:subprocess-error
            #:stripln
            #:unix-namestring

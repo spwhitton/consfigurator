@@ -363,3 +363,17 @@ of this macro."
   "Cancel the CLEANUP forms in all enclosing uses of UNWIND-PROTECT-IN-PARENT.
 Should be called soon after fork(2) in child processes."
   (signal 'in-child-process))
+
+
+;;;; Lisp data files
+
+(defmacro with-lisp-data-file ((data file) &body forms)
+  (with-gensyms (before)
+    `(let* ((,before (and (file-exists-p ,file) (read-file-string ,file)))
+            (,data (and ,before (plusp (length ,before))
+                        (safe-read-from-string ,before))))
+       (unwind-protect-in-parent (progn ,@forms)
+         (with-open-file
+             (stream ,file :direction :output :if-exists :supersede)
+           (with-standard-io-syntax
+             (prin1 ,data stream)))))))
