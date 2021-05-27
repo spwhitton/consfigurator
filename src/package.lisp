@@ -362,6 +362,7 @@
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:file  #:consfigurator.property.file))
   (:export #:has-account
+           #:has-groups
 	   #:has-login-shell
            #:has-enabled-password
 	   #:passwd-entry))

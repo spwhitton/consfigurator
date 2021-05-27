@@ -29,6 +29,18 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (assert-euid-root)
    (mrun "useradd" "-m" username)))
 
+(defprop has-groups :posix
+    (username &rest groups &aux (groups* (format nil "~{~A~^,~}" groups)))
+  "Ensure that USERNAME is a member of secondary groups GROUPS."
+  (:desc (format nil "~A in group~P ~A" username (length groups) groups*))
+  (:check
+   (declare (ignore groups*))
+   (subsetp groups (cddr (split-string (stripln (run "groups" username))))
+            :test #'string=))
+  (:apply
+   (assert-euid-root)
+   (mrun "usermod" "-a" "-G" groups* username)))
+
 (defprop has-login-shell :posix (username shell)
   "Ensures that USERNAME has login shell SHELL.
 Note that this uses getent(1) and so is not strictly POSIX-compatible."
