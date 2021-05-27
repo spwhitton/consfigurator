@@ -544,6 +544,15 @@
            #:mailname-configured
            #:search-configured))
 
+(defpackage :consfigurator.property.libvirt
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
+                    (#:apt       #:consfigurator.property.apt))
+  (:export #:installed
+           #:default-network-started
+           #:default-network-autostarted))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
