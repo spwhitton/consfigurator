@@ -228,6 +228,15 @@ systems."
                                  `(silent-seqprops ,firstp ,secondp)
                                  (or firstp secondp)))))
 
+(defmethod append-propspecs ((first null) (second unpreprocessed-propspec))
+  second)
+
+(defmethod append-propspecs ((first unpreprocessed-propspec) (second null))
+  first)
+
+(defmethod append-propspecs ((first null) (second null))
+  nil)
+
 (defmethod eval-propspec ((propspec preprocessed-propspec))
   (eval (slot-value propspec 'preprocessed-propspec-expression)))
 
