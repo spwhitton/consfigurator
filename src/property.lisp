@@ -333,7 +333,8 @@ subroutine does not push any new hostattrs."
                              `((declare
                                 (ignorable
                                  ,@(ordinary-ll-variable-names
-                                    (ordinary-ll-without-&aux lambda))))))
+                                    (ordinary-ll-without-&aux lambda)
+                                    :include-supplied-p t)))))
                       ,@slot)))))
 
 (define-property-defining-macro defpropspec (type lambda slots forms)
@@ -393,7 +394,8 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
                       ,@(and (member (caar forms) '(:desc :hostattrs))
                              `((declare
                                 (ignorable
-                                 ,@(ordinary-ll-variable-names lambda)))))
+                                 ,@(ordinary-ll-variable-names
+                                    lambda :include-supplied-p t)))))
 		      ,@(cdr (pop forms))))))
   (setf (getf slots :hostattrs)
         `(lambda (plist)
