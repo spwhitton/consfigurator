@@ -51,6 +51,45 @@ On Debian, it is not started by default after installation of libvirt."
   (%default-network-autostarted)
   (%default-network-started))
 
+(defmethod os-variant ((os os:debian-stable))
+  (switch ((os:debian-suite os) :test #'string=)
+    ("jessie" "debian8")
+    ("stretch" "debian9")
+    (t nil)))
+
+(defmethod os-variant ((os os:debian-testing))
+  "debiantesting")
+
+(defmethod os-variant ((os os:debian-unstable))
+  "debiantesting")
+
+(defmethod os-variant (os))
+
+(defprop defined :posix
+    (host &rest arguments
+          &aux (hostname (car (getf (hostattrs host) :hostname))))
+  "Define a libvirt domain for HOST by providing ARGUMENTS to virt-install(1).
+With the current implementation, if ARGUMENTS changes, virt-install(1) will
+not be run again.  You will need to either unapply and reapply this property,
+or use virt-xml(1) to perform a modification.
+
+Unapplying this property when the domain is running will use the 'undefine'
+subcommand of virsh(1) to convert the running domain into a transient domain."
+  (:check (declare (ignore arguments))
+          (remote-exists-p (merge-pathnames (strcat hostname ".xml")
+                                            "/etc/libvirt/qemu/")))
+  (:apply
+   (with-remote-temporary-file (file)
+     (mrun
+      (format
+       nil
+       "virt-install --print-xml -n ~A~:[~; --os-variant=~:*~A~]~{ ~A~} >~S"
+       hostname (os-variant host) (mapcar #'escape-sh-token arguments) file))
+     (mrun "virsh" "define" file)))
+  (:unapply
+   (declare (ignore arguments))
+   (mrun "virsh" "undefine" hostname)))
+
 (defun virsh-get-columns (&rest arguments)
   "Run a virsh command that is expected to yield tabular output, with the given
 list of ARGUMENTS, and return the rows."

@@ -546,13 +546,14 @@
            #:search-configured))
 
 (defpackage :consfigurator.property.libvirt
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file)
                     (#:apt       #:consfigurator.property.apt))
   (:export #:installed
            #:default-network-started
-           #:default-network-autostarted))
+           #:default-network-autostarted
+           #:defined))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
