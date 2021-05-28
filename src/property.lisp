@@ -453,20 +453,20 @@ other than constant values and propapps to property combinators."
 this property cannot be applied to this host.  E.g. the property will try to
 install an apt package but the host is FreeBSD.")
 
-(defun get-hostattrs (k)
+(defun get-hostattrs (k &optional (host *host*))
   "Retrieve the list of static informational attributes of type KEY.
 
 Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."
-  (getf (slot-value *host* 'hostattrs) k))
+  (getf (slot-value host 'hostattrs) k))
 
-(defun get-hostattrs-car (k)
-  (car (get-hostattrs k)))
+(defun get-hostattrs-car (k &optional (host *host*))
+  (car (get-hostattrs k host)))
 
-(defun get-parent-hostattrs (k)
-  (getf (get-hostattrs :parent-hostattrs) k))
+(defun get-parent-hostattrs (k &optional (host *host*))
+  (getf (get-hostattrs :parent-hostattrs host) k))
 
-(defun get-parent-hostattrs-car (k)
-  (car (get-parent-hostattrs k)))
+(defun get-parent-hostattrs-car (k &optional (host *host*))
+  (car (get-parent-hostattrs k host)))
 
 (defun push-hostattrs (k &rest vs)
   "Push new static informational attributes VS of type KEY.
@@ -489,11 +489,12 @@ is needed to deploy a property.
 Called by property :HOSTATTRS subroutines."
   (pushnew-hostattrs :data (cons iden1 iden2)))
 
-(defun get-hostname ()
-  "Get the hostname of the host to which properties are being applied.
+(defun get-hostname (&optional (host *host*))
+  "Get the hostname of HOST, defaulting to the host to which properties are
+being applied.
 
 Called by property subroutines."
-  (get-hostattrs-car :hostname))
+  (get-hostattrs-car :hostname host))
 
 
 ;;;; :APPLY subroutines

@@ -305,7 +305,7 @@ different user."
      (setf (getf (slot-value host 'hostattrs) :data) nil)
      (setq host (preprocess-host host))
      (doplist (k v (hostattrs host))
-              (loop with root = (getf (hostattrs *host*) k)
+              (loop with root = (get-hostattrs k)
                     for cell on v until (eq cell root)
                     collect (car cell) into accum
                     finally (apply #'push-hostattrs k (nreverse accum))))
@@ -323,7 +323,7 @@ different user."
 (defun %propagate-hostattrs (host)
   (dolist (system (propspec-systems (host-propspec host)))
     (pushnew system (slot-value (host-propspec *host*) 'systems)))
-  (dolist (attr (getf (hostattrs host) :data))
+  (dolist (attr (get-hostattrs :data host))
     (push-hostattrs :data attr)))
 
 (defprop evals :posix (&rest forms)

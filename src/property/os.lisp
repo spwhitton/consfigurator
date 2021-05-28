@@ -85,7 +85,7 @@
 
 (defun typecase-host (host)
   (class-of (if host
-                (car (getf (hostattrs host) :os))
+                (get-hostattrs-car :os host)
                 (get-hostattrs-car :os))))
 
 (defun typecase-choose (host cases)

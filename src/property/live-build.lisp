@@ -99,7 +99,7 @@ and might undo some of their effects.  For example, to configure
                                 (merge-pathnames "config/" dir))
                         '("binary" "bootstrap" "chroot" "common" "source")))
          (host (make-host :propspec properties))
-         (host-os (car (getf (hostattrs (preprocess-host host)) :os))))
+         (host-os (get-hostattrs-car :os (preprocess-host host))))
     (when-let ((mirror (get-hostattrs-car :apt.mirror)))
       (setq config (list* "-m" mirror config)))
     (setq config (list* "-a" (os:debian-architecture host-os)

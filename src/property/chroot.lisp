@@ -28,7 +28,7 @@
        (progn (delete-remote-trees root) nil)
        (remote-exists-p (merge-pathnames "usr/lib/os-release" root))))
   (:apply
-   (let* ((os (car (getf (hostattrs host) :os)))
+   (let* ((os (get-hostattrs-car :os host))
           (args (list "debootstrap"
                       (plist-to-cmd-args options)
                       (strcat "--arch=" (os:debian-architecture os))
@@ -92,7 +92,7 @@ starting services in the chroot, and set up access to parent hostattrs."
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc
    (declare (ignore options))
-   #?"Built chroot for ${(car (getf (hostattrs host) :hostname))} @ ${root}")
+   #?"Built chroot for ${(get-hostname host)} @ ${root}")
   (%os-bootstrapper-installed child-host*)
   (%os-bootstrapped options root child-host*)
   (consfigurator:deploys `((:chroot :into ,root)) child-host))

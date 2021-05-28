@@ -851,15 +851,13 @@ least the following:
 Unless REBUILD, the image will not be repartitioned even if the specification
 of the host's volumes changes, although the contents of the image's
 filesystems will be incrementally updated when other properties change."
-  (:desc (declare (ignore options rebuild))
-         (let ((hostname (car (getf (hostattrs host) :hostname))))
-           #?"Built image for ${hostname} @ ${image-pathname}"))
+  (:desc #?"Built image for ${(get-hostname host)} @ ${image-pathname}")
   (let ((chroot (ensure-directory-pathname
                  (strcat (unix-namestring image-pathname) ".chroot")))
         (volumes
           (loop
             with found
-            for volume in (getf (hostattrs (preprocess-host host)) :volumes)
+            for volume in (get-hostattrs :volumes (preprocess-host host))
             for physical-disk-p = (subtypep (type-of volume) 'physical-disk)
             if (and physical-disk-p (not found)
                     (slot-boundp volume 'volume-contents))

@@ -65,9 +65,7 @@ On Debian, it is not started by default after installation of libvirt."
 
 (defmethod os-variant (os))
 
-(defprop defined :posix
-    (host &rest arguments
-          &aux (hostname (car (getf (hostattrs host) :hostname))))
+(defprop defined :posix (host &rest arguments)
   "Define a libvirt domain for HOST by providing ARGUMENTS to virt-install(1).
 With the current implementation, if ARGUMENTS changes, virt-install(1) will
 not be run again.  You will need to either unapply and reapply this property,
@@ -76,7 +74,7 @@ or use virt-xml(1) to perform a modification.
 Unapplying this property when the domain is running will use the 'undefine'
 subcommand of virsh(1) to convert the running domain into a transient domain."
   (:check (declare (ignore arguments))
-          (remote-exists-p (merge-pathnames (strcat hostname ".xml")
+          (remote-exists-p (merge-pathnames (strcat (get-hostname host) ".xml")
                                             "/etc/libvirt/qemu/")))
   (:apply
    (with-remote-temporary-file (file)
@@ -84,11 +82,12 @@ subcommand of virsh(1) to convert the running domain into a transient domain."
       (format
        nil
        "virt-install --print-xml -n ~A~:[~; --os-variant=~:*~A~]~{ ~A~} >~S"
-       hostname (os-variant host) (mapcar #'escape-sh-token arguments) file))
+       (get-hostname host) (os-variant host)
+       (mapcar #'escape-sh-token arguments) file))
      (mrun "virsh" "define" file)))
   (:unapply
    (declare (ignore arguments))
-   (mrun "virsh" "undefine" hostname)))
+   (mrun "virsh" "undefine" (get-hostname host))))
 
 (defun virsh-get-columns (&rest arguments)
   "Run a virsh command that is expected to yield tabular output, with the given
