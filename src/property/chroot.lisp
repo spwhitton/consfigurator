@@ -26,7 +26,7 @@
    (if (test "-d" (merge-pathnames "debootstrap/"
                                    (ensure-directory-pathname root)))
        (progn (delete-remote-trees root) nil)
-       (test "-d" root)))
+       (remote-exists-p (merge-pathnames "usr/lib/os-release" root))))
   (:apply
    (let* ((os (car (getf (hostattrs host) :os)))
           (args (list "debootstrap"
