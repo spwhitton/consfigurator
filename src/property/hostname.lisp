@@ -21,8 +21,15 @@
 (defun domain (hostname)
   (subseq hostname (min (length hostname) (1+ (position #\. hostname)))))
 
+(defprop is :posix (hostname)
+  "Specify that the hostname of this host is HOSTNAME.
+Useful for hosts implicitly defined inline using dotted propapp notation.
+Unlikely to be useful for hosts defined using DEFHOST."
+  (:hostattrs (push-hostattrs :hostname hostname)))
+
 (defpropspec configured :posix
-    (&optional (hostname (get-hostname)) (domain (domain hostname))
+    (&optional (hostname (get-hostname) hostname-supplied-p)
+               (domain (domain hostname))
                &aux (short (car (split-string hostname :separator "."))))
   "Set the hostname in the standard Debian way.
 When HOSTNAME is an FQDN, DOMAIN is the domain part of the hostname,
@@ -30,6 +37,7 @@ defaulting to everything after the first dot.  (For some hosts, the domain
 should rather be the whole hostname.)"
   (:desc "Hostname configured")
   `(seqprops
+    ,@(and hostname-supplied-p `((is ,hostname)))
     (on-change (file:has-content "/etc/hostname" ,short)
       (container:when-contained (:hostname)
         (cmd:single ,(strcat "hostname " short))))

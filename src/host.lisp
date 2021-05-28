@@ -98,10 +98,13 @@ values higher up the call stack."))
 (defun make-child-host (&key hostattrs propspec)
   "Make a host object to represent a chroot, container or the like.
 Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
-  (make-instance
-   'unpreprocessed-host
-   :propspec propspec
-   :hostattrs (list* :parent-hostattrs (hostattrs *host*) hostattrs)))
+  (let ((hostattrs*
+          (list* :parent-hostattrs (hostattrs *host*) (copy-list hostattrs))))
+    (unless (getf hostattrs :hostname)
+      (push (car (getf (hostattrs *host*) :hostname))
+            (getf hostattrs* :hostname)))
+    (make-instance 'unpreprocessed-host
+                   :propspec propspec :hostattrs hostattrs*)))
 
 (define-print-object-for-structlike host)
 

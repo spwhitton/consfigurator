@@ -541,7 +541,8 @@
   (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
                     (#:container #:consfigurator.property.container)
                     (#:file      #:consfigurator.property.file))
-  (:export #:configured
+  (:export #:is
+           #:configured
            #:mailname-configured
            #:search-configured))
 
