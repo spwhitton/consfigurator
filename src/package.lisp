@@ -460,6 +460,7 @@
   (:local-nicknames (#:os    #:consfigurator.property.os)
                     (#:file  #:consfigurator.property.file))
   (:export #:volume->entry
+           #:entries
            #:entries-for-volumes
            #:entries-for-opened-volumes))
 
