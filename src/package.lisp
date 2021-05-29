@@ -180,6 +180,7 @@
            #:desc
            #:on-change
 	   #:as
+           #:with-flagfile
 
            ;; host.lisp
            #:host

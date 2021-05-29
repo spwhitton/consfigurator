@@ -219,3 +219,29 @@ affect /root and not /home."
   (if (and (stringp user) (string= user "root"))
       `(eseqprops ,@properties)
       `(reconnects. `((:as :to ,,user)) ,@properties)))
+
+(defmacro with-flagfile (flagfile &body propapps)
+  "Apply PROPAPPS unless FLAGFILE exists on the remote; after applying, create
+FLAGFILE.
+Useful to ensure that something is done just once.  Has the semantics that if
+FLAGFILE exists, PROPAPPS are assumed to all be already applied."
+  `(with-flagfile*
+    ,flagfile
+    ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))))
+
+(define-function-property-combinator with-flagfile* (flagfile propapp)
+  (:retprop :type (propapptype propapp)
+            :desc (get (car propapp) 'desc)
+            :hostattrs (get (car propapp) 'hostattrs)
+            :check (lambda (&rest ignore)
+                     (declare (ignore ignore))
+                     (remote-exists-p flagfile))
+            :apply (lambda (&rest ignore)
+                     (declare (ignore ignore))
+                     (prog1 (propappapply propapp)
+                       (mrun "touch" flagfile)))
+            :unapply (lambda (&rest ignore)
+                       (declare (ignore ignore))
+                       (prog1 (propappunapply propapp)
+                         (mrun "rm" flagfile)))
+            :args (cdr propapp)))
