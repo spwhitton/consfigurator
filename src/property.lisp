@@ -115,7 +115,7 @@
 
 (defun propappunapply (propapp)
   (if propapp
-      (apply #'propappunapply propapp)
+      (apply #'propunapply propapp)
       :no-change))
 
 (defvar *known-properties* nil
