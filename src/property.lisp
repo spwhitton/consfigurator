@@ -457,7 +457,19 @@ install an apt package but the host is FreeBSD.")
   "Retrieve the list of static informational attributes of type KEY.
 
 Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."
-  (getf (slot-value host 'hostattrs) k))
+  ;; Ensure the host is preprocessed so the desired hostattrs are actually
+  ;; there, assuming we're not already preprocessing it.  Avoid calling
+  ;; PREPROCESS-HOST on PREPROCESSED-HOST values to avoid pointless copying.
+  ;;
+  ;; This is just to improve readability for some property definitions and
+  ;; avoid confusing situations where hostattrs appear to be missing (for
+  ;; example, if the hostname is not set until HOSTNAME:IS); properties which
+  ;; will look up multiple hostattrs by supplying a value for HOST should call
+  ;; PREPROCESS-HOST on that value themselves.
+  (let ((host (if (and (subtypep (class-of host) 'unpreprocessed-host)
+                       (not (eql host *preprocessing-host*)))
+                  (preprocess-host host) host)))
+    (getf (slot-value host 'hostattrs) k)))
 
 (defun get-hostattrs-car (k &optional (host *host*))
   (car (get-hostattrs k host)))
