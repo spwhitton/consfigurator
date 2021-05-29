@@ -92,7 +92,7 @@ starting services in the chroot, and set up access to parent hostattrs."
 OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc
    (declare (ignore options))
-   #?"Built chroot for ${(get-hostname host)} @ ${root}")
+   #?"Built chroot for ${(get-hostname child-host*)} @ ${root}")
   (%os-bootstrapper-installed child-host*)
   (%os-bootstrapped options root child-host*)
   (consfigurator:deploys `((:chroot :into ,root)) child-host))
