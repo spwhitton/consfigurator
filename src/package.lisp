@@ -556,7 +556,8 @@
   (:export #:installed
            #:default-network-started
            #:default-network-autostarted
-           #:defined))
+           #:defined
+           #:started))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)

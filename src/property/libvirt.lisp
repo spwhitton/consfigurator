@@ -93,6 +93,19 @@ subcommand of virsh(1) to convert the running domain into a transient domain."
    (declare (ignore arguments))
    (mrun "virsh" "undefine" (get-hostname host))))
 
+(defprop started :posix (host)
+  "Ensure the libvirt domain for the host designated by HOST is started.
+(I.e., if HOST is a string, ensure the domain named HOST is started; if HOST
+is a HOST value, start the libvirt domain whose name is HOST's hostname.)"
+  (:desc #?"libvirt domain ${(get-hostname host)} started")
+  (:check
+   ;; The "State" column in the output of 'virsh list' is to be ignored here;
+   ;; 'virsh start' will do nothing if the VM appears at all in the output of
+   ;; 'virsh list'.
+   (member (get-hostname host) (mapcar #'cadr (virsh-get-columns "list"))
+           :test #'string=))
+  (:apply (mrun "virsh" "start" (get-hostname host))))
+
 (defun virsh-get-columns (&rest arguments)
   "Run a virsh command that is expected to yield tabular output, with the given
 list of ARGUMENTS, and return the rows."
