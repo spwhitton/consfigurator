@@ -220,13 +220,36 @@ systems."
 ;; shouldn't need to append those
 (defmethod append-propspecs
     ((first unpreprocessed-propspec) (second unpreprocessed-propspec))
-  (make-propspec :systems (union (propspec-systems first)
-                                 (propspec-systems second))
-                 :propspec (let ((firstp (propspec-props first))
-                                 (secondp (propspec-props second)))
-                             (if (and firstp secondp)
-                                 `(silent-seqprops ,firstp ,secondp)
-                                 (or firstp secondp)))))
+  (make-propspec
+   :systems (union (propspec-systems first) (propspec-systems second))
+   :propspec
+   (let ((firstp (propspec-props first))
+         (secondp (propspec-props second)))
+     (if (and firstp secondp)
+         (destructuring-bind (1first . 1rest) firstp
+           (destructuring-bind (2first . 2rest) secondp
+             ;; We used to unconditionally combine with SILENT-SEQPROPS but
+             ;; (i) if either FIRSTP or SECONDP don't call APPLY-AND-PRINT
+             ;; then properties get applied without any output being printed
+             ;; which would normally be printed; and (ii) it implicitly
+             ;; suppresses errors but we should only do that when SEQPROPS or
+             ;; similar is used explicitly (or by DEFHOST).
+             (cond ((and (eql 1first 2first)
+                         (member 1first '(eseqprops seqprops)))
+                    (cons 1first (append 1rest 2rest)))
+                   ;; Already combined with sequencing combinators, so let
+                   ;; them handle it.
+                   ((and (member 1first '(eseqprops seqprops))
+                         (member 2first '(eseqprops seqprops)))
+                    `(silent-seqprops ,firstp ,secondp))
+                   ;; Avoid a pointless nested ESEQPROPS.
+                   ((eql 1first 'eseqprops)
+                    `(eseqprops ,@1rest ,secondp))
+                   ((eql 2first 'eseqprops)
+                    `(eseqprops ,firstp ,@2rest))
+                   ;; Default.
+                   (t `(eseqprops ,firstp ,secondp)))))
+         (or firstp secondp)))))
 
 (defmethod append-propspecs ((first null) (second unpreprocessed-propspec))
   second)
