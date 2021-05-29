@@ -98,13 +98,32 @@ subcommand of virsh(1) to convert the running domain into a transient domain."
 (I.e., if HOST is a string, ensure the domain named HOST is started; if HOST
 is a HOST value, start the libvirt domain whose name is HOST's hostname.)"
   (:desc #?"libvirt domain ${(get-hostname host)} started")
-  (:check
-   ;; The "State" column in the output of 'virsh list' is to be ignored here;
-   ;; 'virsh start' will do nothing if the VM appears at all in the output of
-   ;; 'virsh list'.
-   (member (get-hostname host) (mapcar #'cadr (virsh-get-columns "list"))
-           :test #'string=))
+  (:check (host-domain-started-p host))
   (:apply (mrun "virsh" "start" (get-hostname host))))
+
+(defmacro when-started (host &body propapps)
+  "Apply PROPAPPS only when the libvirt domain for the host designated by HOST
+is already running.
+Useful to conditionalise a DEPLOYS property to do nothing unless the VM is
+already running, for a VM which is not always booted, e.g. on a laptop."
+  `(when-started*
+    ',host
+    ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))))
+
+(define-function-property-combinator when-started* (host propapp)
+  (macrolet ((check-started (form)
+               `(if (host-domain-started-p host)
+                    ,form :no-change)))
+    (:retprop :type (propapptype propapp)
+              :desc (get (car propapp) 'desc)
+              :hostattrs (get (car propapp) 'hostattrs)
+              :apply (lambda (&rest ignore)
+                       (declare (ignore ignore))
+                       (check-started (propappapply propapp)))
+              :unapply (lambda (&rest ignore)
+                         (declare (ignore ignore))
+                         (check-started (propappunapply propapp)))
+              :args (cdr propapp))))
 
 (defun virsh-get-columns (&rest arguments)
   "Run a virsh command that is expected to yield tabular output, with the given
@@ -112,3 +131,10 @@ list of ARGUMENTS, and return the rows."
   (mapcar (lambda (row)
             (delete "" (split-string row) :test #'string=))
           (cddr (nbutlast (runlines "virsh" arguments)))))
+
+(defun host-domain-started-p (host)
+  ;; The "State" column in the output of 'virsh list' is to be ignored here;
+  ;; 'virsh start' will do nothing if the VM appears at all in the output of
+  ;; 'virsh list'.
+  (member (get-hostname host) (mapcar #'cadr (virsh-get-columns "list"))
+          :test #'string=))
