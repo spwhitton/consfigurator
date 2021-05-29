@@ -52,10 +52,11 @@ container type."
 (define-function-property-combinator when-contained* (contained propapp)
   (macrolet ((check-contained (form)
                `(let ((host-contained (get-hostattrs 'iscontained)))
-                  (when (or (not host-contained)
+                  (if (or (not host-contained)
                             (loop for factor in contained
                                   always (member factor host-contained)))
-                    ,form))))
+                      ,form
+                      :no-change))))
     (:retprop :type (propapptype propapp)
               :hostattrs (lambda (&rest ignore)
                            (declare (ignore ignore))
