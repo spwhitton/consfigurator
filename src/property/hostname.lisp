@@ -25,6 +25,7 @@
   "Specify that the hostname of this host is HOSTNAME.
 Useful for hosts implicitly defined inline using dotted propapp notation.
 Unlikely to be useful for hosts defined using DEFHOST."
+  (:desc #?"Hostname is ${hostname}")
   (:hostattrs (push-hostattrs :hostname hostname)))
 
 (defpropspec configured :posix

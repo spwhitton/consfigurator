@@ -26,6 +26,7 @@
                                "libvirt-daemon" "libvirt-daemon-system"))))
 
 (defprop %default-network-started :posix ()
+  (:desc "libvirt's default network started")
   (:check
    (member "default" (mapcar #'car (virsh-get-columns "net-list"))
            :test #'string=))
@@ -33,6 +34,7 @@
    (mrun "virsh" "net-start" "default")))
 
 (defprop %default-network-autostarted :posix ()
+  (:desc "libvirt's default network marked for autostart")
   (:check
    (remote-exists-p "/etc/libvirt/qemu/networks/autostart/default.xml"))
   (:apply
@@ -47,6 +49,7 @@
 (defproplist default-network-autostarted :posix ()
   "Ensure that the default libvirt network is set to autostart, and start it.
 On Debian, it is not started by default after installation of libvirt."
+  (:desc "libvirt's default network started & marked for autostart")
   (installed)
   (%default-network-autostarted)
   (%default-network-started))
@@ -73,6 +76,7 @@ or use virt-xml(1) to perform a modification.
 
 Unapplying this property when the domain is running will use the 'undefine'
 subcommand of virsh(1) to convert the running domain into a transient domain."
+  (:desc "libvirt domain XML defined")
   (:check (declare (ignore arguments))
           (remote-exists-p (merge-pathnames (strcat (get-hostname host) ".xml")
                                             "/etc/libvirt/qemu/")))
