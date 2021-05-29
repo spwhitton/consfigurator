@@ -37,3 +37,11 @@ keyword symbols.  The semantics of these attributes are documented here:
 
 - ``:APT.MIRROR``: for hosts running Debian or a Debian derivative, the host's
   preferred apt mirror
+
+Host designators
+----------------
+
+A string designates a host with that hostname and no properties.  Using
+strings to designate hosts is not valid in all contexts -- some macros and
+properties where it might be useful to pass a string instead of a ``HOST``
+object call ``ENSURE-HOST`` to convert, but this is not done everywhere.

@@ -453,7 +453,7 @@ other than constant values and propapps to property combinators."
 this property cannot be applied to this host.  E.g. the property will try to
 install an apt package but the host is FreeBSD.")
 
-(defun get-hostattrs (k &optional (host *host*))
+(defun get-hostattrs (k &optional (host *host*) &aux (host (ensure-host host)))
   "Retrieve the list of static informational attributes of type KEY.
 
 Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."

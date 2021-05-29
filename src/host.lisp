@@ -49,6 +49,13 @@
   (:documentation
    "A host whose :PREPROCESS and :HOSTATTRS subroutines have not been run."))
 
+(defgeneric ensure-host (host)
+  (:documentation "Return the HOST value designated by HOST.")
+  (:method ((host host))
+    host)
+  (:method ((hostname string))
+    (make-host :hostattrs `(:hostname (,hostname)))))
+
 (defmethod shallow-copy-host ((host host))
   (make-instance (type-of host)
                  :hostattrs (copy-list (hostattrs host))

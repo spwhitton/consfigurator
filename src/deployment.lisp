@@ -156,9 +156,7 @@ The evaluation of PROPERTIES to produce a property application specification
 may retrieve existing hostattrs, but should not set any new ones (not to be
 confused with how the :HOSTATTRS subroutines of properties in PROPERTIES may
 set additional hostattrs)."
-  (once-only ((host (if (stringp host)
-                        `(make-host :hostattrs (list :hostname (list ,host)))
-                        host)))
+  (once-only ((host `(ensure-host ,host)))
     `(deploy-these* ',connections
                     ,host
                     (let ((*host* (shallow-copy-host ,host)))

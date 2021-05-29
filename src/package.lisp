@@ -192,6 +192,7 @@
            #:hostattrs
            #:host-propspec
            #:preprocess-host
+           #:ensure-host
            #:with-preserve-hostattrs
            #:with-replace-hostattrs
 
