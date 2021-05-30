@@ -60,10 +60,21 @@
     (and value (passphrase value))))
 
 (defmethod connection-shell-wrap ((connection sudo-connection) cmd)
-  ;; wrap in sh -c so that it is more likely we are either asked for a
-  ;; password for all our commands or not asked for one for any
-  (format nil "sudo -HkS --prompt=\"\" --user=~A sh -c ~A"
-	  (connection-connattr connection :remote-user) (escape-sh-token cmd)))
+  ;; Wrap in sh -c so that it is more likely we are either asked for a
+  ;; password for all our commands or not asked for one for any.
+  ;;
+  ;; Preserve SSH_AUTH_SOCK for root to enable this sort of workflow: deploy
+  ;; laptop using (:SUDO :SBCL) and then DEFHOST for laptop contains (DEPLOYS
+  ;; ((:SSH :TO "root")) ...) to deploy a VM running on the laptop.
+  ;;
+  ;; This only works for sudoing to root because only the superuser can access
+  ;; the socket (and was always able to, so we're not granting new access
+  ;; which may be unwanted).
+  (let ((user (connection-connattr connection :remote-user)))
+    (format
+     nil
+"sudo -HkS --prompt=\"\" ~:[~;--preserve-env=SSH_AUTH_SOCK ~]--user=~A sh -c ~A"
+     (string= user "root") user (escape-sh-token cmd))))
 
 (defmethod connection-run ((c sudo-connection) cmd (input null))
   (call-next-method c cmd (get-sudo-password c)))
