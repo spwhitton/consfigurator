@@ -451,11 +451,11 @@ NO-SOURCE or \"PLACEHOLDER\", use the existing field value."
                and line-target = (nth target line-fields)
                for entry = (when-let* ((entry (gethash line-target pending))
                                        (fields (fields entry)))
-                             (and (member (nth source fields)
-                                          unknown :test #'string=)
-                                  (not (string= line-source no-source))
-                                  (setf (nth source fields) line-source)
-                                  (format nil "~{~A~^ ~}" fields)))
+                             (when (and (member (nth source fields)
+                                                unknown :test #'string=)
+                                        (not (string= line-source no-source)))
+                               (setf (nth source fields) line-source))
+                             (format nil "~{~A~^ ~}" fields))
                if entry
                  collect it into accum and do (remhash line-target pending)
                else collect line into accum
