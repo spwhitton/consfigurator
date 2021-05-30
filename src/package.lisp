@@ -549,6 +549,12 @@
            #:mailname-configured
            #:search-configured))
 
+(defpackage :consfigurator.property.network
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file))
+  (:export #:static))
+
 (defpackage :consfigurator.property.libvirt
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os        #:consfigurator.property.os)

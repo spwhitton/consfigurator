@@ -50,6 +50,7 @@
                (:file "src/property/grub")
                (:file "src/property/u-boot")
                (:file "src/property/hostname")
+               (:file "src/property/network")
                (:file "src/property/libvirt")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
