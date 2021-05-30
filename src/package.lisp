@@ -318,8 +318,10 @@
 (defpackage :consfigurator.property.mount
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os    #:consfigurator.property.os)
-                    (#:cmd   #:consfigurator.property.cmd))
-  (:export #:unmounted-below
+                    (#:cmd   #:consfigurator.property.cmd)
+                    (#:file  #:consfigurator.property.file))
+  (:export #:mounted
+           #:unmounted-below
            #:unmounted-below-and-removed))
 
 (defpackage :consfigurator.property.service

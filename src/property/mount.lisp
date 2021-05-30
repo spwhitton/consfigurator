@@ -18,6 +18,17 @@
 (in-package :consfigurator.property.mount)
 (named-readtables:in-readtable :consfigurator)
 
+(defprop mounted :posix (&key target)
+  "Ensures that TARGET, a mount point configured in /etc/fstab, is mounted.
+Mainly useful as a dependency of properties which might do the wrong thing if
+the mount is not actually active."
+  (:desc #?"${target} mounted")
+  (:hostattrs (os:required 'os:linux))
+  (:check (zerop (mrun :for-exit "findmnt" target)))
+  (:apply (assert-euid-root)
+          (file:directory-exists target)
+          (mrun "mount" target)))
+
 (defprop unmounted-below :posix (dir)
   "Unmount anything mounted at or below DIR.
 
