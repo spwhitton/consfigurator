@@ -125,6 +125,175 @@ already running, for a VM which is not always booted, e.g. on a laptop."
                          (check-started (propappunapply propapp)))
               :args (cdr propapp))))
 
+;; Another possible approach would be to convert DISK:VOLUME values to --disk
+;; arguments to virt-install(1).
+
+(defpropspec kvm-boots-chroot-for :lisp
+    (options host &optional additional-properties
+             &aux (host* (preprocess-host
+                          (make-child-host
+                           :hostattrs (hostattrs host)
+                           :propspec (host-propspec
+                                      (union-propspec-into-host
+                                       host additional-properties))))))
+  "Build a chroot for HOST and boot it as a libvirt KVM virtual machine.
+Virtio-FS and direct kernel boot are used to avoid the need for either a
+bootloader or an intermediary disk image.  That makes this property suitable
+for both long-lived virtual machines and quickly bringing up fresh OS installs
+for testing.
+
+OPTIONS is a plist of keyword parameters.
+
+  - :VCPUS -- coresponds to the --vcpus argument to virt-install(1).  Defaults
+    to 1.
+
+  - :MEMORY -- corresponds to the --memory argument to virt-install(1).
+    Defaults to 1024.
+
+  - :AUTOSTART -- Lisp boolean corresponding to the --autostart argument to
+    virt-install(1), and also determines whether applying this property
+    attempts to start the VM.  Defaults to nil.
+
+  - :VIRT-OPTIONS -- list of additional arguments to pass to virt-install(1).
+
+  - :CHROOT-OPTIONS -- passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+
+  - :ALWAYS-DEPLOYS -- Thanks to Virtio-FS, the VM's root filesystem is
+    simultaneously accessible to both the hypervisor host and the VM.  That
+    means the chroot can be updated by Consfigurator even while the VM is
+    running.  If this parameter is true then each time this property is
+    applied, the chroot will be updated to reflect any changes to HOST and
+    ADDITIONAL-PROPERTIES, using DEPLOYS.  This has the advantage that you do
+    not need to arrange connecting to the VM to keep its configuration
+    up-to-date.
+
+    It is not appropriate to set this for untrusted VMs because it could be
+    used to break out into the hypervisor.  However, even for VMs which will
+    handle untrusted data you could temporarily set this while incrementally
+    building up the list of properties the VM will need, before it has been
+    exposed to anything untrusted.
+
+    Some properties do nothing or do not have their full effect when applied
+    to a chroot, such as properties which start services.  If you have
+    properties like that, and/or the VM is untrusted, leave this parameter set
+    to nil, and arrange deploying the host by connecting to the running VM,
+    perhaps by adding a call to DEPLOYS to the definition of the hypervisor
+    host (see example below).
+
+    Defaults to nil.
+
+  - :KERNEL -- Path to the kernel, under the chroot if relative.  Defaults to
+    \"vmlinuz\".
+
+  - :INITRD -- Path to the initrd, under the chroot if relative.  Defaults to
+    \"initrd.img\".
+
+  - :APPEND -- String to append to the kernel command line.
+
+If the :VCPUS, :MEMORY, :AUTOSTART or :VIRT-OPTIONS parameters change,
+virt-install(1) will not be rerun; see LIBVIRT:DEFINED.
+
+Sample usage:
+
+    (defhost subbox.laptop.example.com ()
+      (os:debian-stable \"bullseye\" :amd64)
+      (apt:installed \"linux-image-amd64\")
+
+      (hostname:configured)
+      (network:static \"ens4\" \"192.168.122.31\" \"192.168.122.1\")
+      (file:has-content \"/etc/resolv.conf\" \"...\")
+
+      (sshd:installed)
+      (as \"root\" (ssh:authorized-keys \"...\")))
+
+    (defhost laptop.example.com ()
+      ;; ...
+
+      (file:contains-conf-tab \"/etc/hosts\"
+                              \"192.168.122.31\" \"subbox.laptop.example.com\")
+      (libvirt:kvm-boots-chroot-for. (:vcpus 2 :memory 2048)
+          subbox.laptop.example.com)
+      (libvirt:when-started subbox.laptop.example.com
+        ;; Here we elide most of the configuration necessary to ensure that
+        ;; root can SSH into the VM.  You can deploy a passwordless SSH key,
+        ;; set up OpenSSH host-based authentication, or use SSH agent
+        ;; forwarding across the connection chain by means of which you
+        ;; deploy laptop.example.com.  This last option has the disadvantage
+        ;; that you can't easily switch to deploying laptop.example.com with
+        ;; other connection chains.
+        ;;
+        ;; For example, you can use (:sudo :sbcl) to deploy laptop.example.com
+        ;; and also execute 'xhost +SI:localuser:root' to enable root's SSH
+        ;; process to prompt you (the :SUDO connection type preserves
+        ;; SSH_AUTH_SOCK when sudoing to root).  Another possibility is to use
+        ;; :SETUID to switch back to the account which has your SSH agent in
+        ;; the DEPLOYS propapp.
+        (deploys ((:ssh :user \"root\") :sbcl) subbox.laptop.example.com)))
+
+There's repetition here, and you might like to use DEFPROPSPEC to establish
+your preferred VM networking setup and corresponding DEPLOYS propapp."
+  (:desc #?"libvirt KVM VM for ${(get-hostname host*)} defined")
+  (when (string= (get-hostname host*) (get-hostname))
+    (warn "KVM VM has same hostname as hypervisor host; may cause issues."))
+  (destructuring-bind
+      (&key (vcpus 1) (memory 1024) autostart
+         virt-options chroot-options always-deploys
+         (kernel "vmlinuz") (initrd "initrd.img") append
+       &aux (chroot (ensure-directory-pathname
+                     (merge-pathnames (get-hostname host*)
+                                      #P"/var/lib/libvirt/images/")))
+         (flagfile (merge-pathnames
+                    (strcat (get-hostname host*) ".bootstrapped")
+                    #P"/var/lib/libvirt/images/"))
+         (additional-properties
+          (append-propspecs
+           additional-properties
+           (make-propspec
+            :propspec
+            '(os:etypecase
+              (debianlike
+               (on-change (desc "virtiofs module added to initramfs"
+                                (file:contains-lines
+                                 "/etc/initramfs-tools/modules" "virtiofs"))
+                 (cmd:single "update-initramfs" "-u"))))))))
+      options
+    `(eseqprops
+      (installed)
+      (file:contains-conf-equals "/etc/libvirt/qemu.conf"
+                                 "memory_backing_dir" #?'"/dev/shm"')
+      ,@(if always-deploys
+            `((chroot:os-bootstrapped-for
+               ,chroot-options ,chroot ,host ,additional-properties)
+              ;; Create the flagfile anyway in case ALWAYS-DEPLOYS is
+              ;; changed t->nil right after this deploy.
+              (file:has-content ,flagfile ""))
+            `((with-flagfile ,flagfile
+                (chroot:os-bootstrapped-for
+                 ,chroot-options ,chroot ,host ,additional-properties))))
+      (defined ,host*
+          ,(format nil "--vcpus=~D" vcpus) ,(format nil "--memory=~D" memory)
+        "--filesystem"
+        ,(format
+          nil
+"type=mount,accessmode=passthrough,driver.type=virtiofs,source.dir=~A,target.dir=rootfs"
+          chroot)
+        "--boot"
+        ,(format
+          nil
+"kernel=~A,initrd=~A,kernel_args=\"root=rootfs rootfstype=virtiofs rw~:[~; ~:*~A~]\""
+          (ensure-pathname kernel :defaults chroot :ensure-absolute t)
+          (ensure-pathname initrd :defaults chroot :ensure-absolute t)
+          append)
+        "--memorybacking=access.mode=shared"
+        ,@(and autostart '("--autostart"))
+        ,@virt-options)
+      ,@(and autostart `((started ,host))))))
+
+(defproplist kvm-boots-chroot :lisp (options properties)
+  "Like LIBVIRT:KVM-BOOTS-CHROOT-FOR but define a new host using PROPERTIES."
+  (:desc #?"libvirt KVM VM for chroot defined")
+  (kvm-boots-chroot-for options (make-host :propspec properties)))
+
 (defun virsh-get-columns (&rest arguments)
   "Run a virsh command that is expected to yield tabular output, with the given
 list of ARGUMENTS, and return the rows."

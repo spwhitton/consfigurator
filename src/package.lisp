@@ -558,14 +558,20 @@
 (defpackage :consfigurator.property.libvirt
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:cmd       #:consfigurator.property.cmd)
                     (#:file      #:consfigurator.property.file)
+                    (#:chroot    #:consfigurator.property.chroot)
                     (#:apt       #:consfigurator.property.apt))
   (:export #:installed
            #:default-network-started
            #:default-network-autostarted
            #:defined
            #:started
-           #:when-started))
+           #:when-started
+           #:kvm-boots-chroot-for
+           #:kvm-boots-chroot-for.
+           #:kvm-boots-chroot
+           #:kvm-boots-chroot.))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
