@@ -72,7 +72,8 @@ Core
 - Combinator WITH-REQUIREMENTS-FOR-CHANGE to only apply dependencies if the
   first property's :CHECK routine indicates that a change it needed.  For
   example, if the chroot already exists, we don't attempt to install
-  debootstrap.
+  debootstrap.  (The ``SBCL-AVAILABLE`` property in
+  ``src/connection/sbcl.lisp`` achieves a similar effect in another way.)
 
 Project & packaging
 -------------------
