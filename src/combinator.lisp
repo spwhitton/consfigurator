@@ -104,8 +104,6 @@ apply the elements of REQUIREMENTS in reverse order."
                          (gather-results #'propappunapply
                                          (reverse propapps))))))
 
-;; note that the :FAILED-CHANGE value is only used within this function and
-;; should not be returned by property subroutines, per the spec
 (defun apply-and-print (propapps &optional unapply)
   (let ((buffer (make-array '(0) :element-type 'character
 			         :fill-pointer 0 :adjustable t))
@@ -135,7 +133,7 @@ apply the elements of REQUIREMENTS in reverse order."
               (setq result (restart-case (if announce
                                              (announce-propapp-apply propapp)
                                              (propapp-apply propapp))
-                             (skip-property () :failed-change)))
+                             (skip-property () 'failed-change)))
             (when (and (plusp (length buffer))
                        (or (> *consfigurator-debug-level* 1)
                            (not (eql result :no-change))))
@@ -146,7 +144,7 @@ apply the elements of REQUIREMENTS in reverse order."
                       (get-hostname) (propappdesc propapp)
                       (case result
                         (:no-change     "ok")
-                        (:failed-change "failed")
+                        ('failed-change "failed")
                         (t              "done"))))
           (unless (eql result :no-change)
             (setq return-value result)))))))
