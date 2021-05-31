@@ -120,9 +120,17 @@ apply the elements of REQUIREMENTS in reverse order."
                  (with-indented-inform
                    (propapp-apply propapp)))))
       (dolist (propapp propapps return-value)
-        (let ((announce (or (> *consfigurator-debug-level* 1)
-                            (not (get (get (car propapp) 'combinator)
-                                      'inline-combinator))))
+        (let ((announce
+                (or (> *consfigurator-debug-level* 1)
+                    (and
+                     (not (get (get (car propapp) 'combinator)
+                               'inline-combinator))
+                     ;; We don't announce properties whose names begin with
+                     ;; '%' and which have no description; these are typically
+                     ;; DEFPROPs which exist only for use within a
+                     ;; DEFPROPLIST/DEFPROPSPEC defining an exported property.
+                     (not (and (char= #\% (char (symbol-name (car propapp)) 0))
+                               (not (get (car propapp) 'desc)))))))
               result)
           (unwind-protect-in-parent
               ;; TODO Nested combinators can mean that we establish this
