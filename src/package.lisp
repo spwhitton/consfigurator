@@ -67,6 +67,8 @@
            ;; util.lisp
            #:lines
            #:unlines
+           #:words
+           #:unwords
            #:noop
            #:symbol-named
            #:memstring=

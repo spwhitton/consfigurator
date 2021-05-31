@@ -74,10 +74,7 @@ member of ENTRIES is \"none\", or \"PLACEHOLDER\", use the existing field value.
 This makes it easy to update mount options without having to specify the
 partition or filesystem UUID in your consfig."
   (:desc
-   (let ((mount-points
-           (loop for entry in entries
-                 collect (cadr
-                          (remove "" (split-string entry) :test #'string=)))))
+   (let ((mount-points (mapcar (compose #'cadr #'words) entries)))
      (format nil "fstab entr~@P for ~{~A~^, ~}"
              (length mount-points) mount-points)))
   (:apply (file:update-unix-table #P"/etc/fstab" 0 1 entries)))

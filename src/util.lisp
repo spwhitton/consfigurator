@@ -29,6 +29,12 @@
 (defun unlines (lines)
   (format nil "~{~A~%~}" lines))
 
+(defun words (text)
+  (remove "" (split-string text) :test #'string=))
+
+(defun unwords (words)
+  (format nil "~{~A~^ ~}" words))
+
 (defmacro symbol-named (name symbol)
   `(and (symbolp ,symbol)
         (string= (symbol-name ',name) (symbol-name ,symbol))))
