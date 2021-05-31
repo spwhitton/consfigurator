@@ -46,11 +46,10 @@ Data sources
 Core
 ----
 
-- Could we signal a condition whenever the contents of a property's function
-  cell is called when that property has a :HOSTATTRS subroutine?  The point
-  would be to avoid calling the property within another property without
-  calling its :HOSTATTRS subroutine too -- could we figure out catching and
-  ignoring the condition when its :HOSTATTRS subroutine did get run?
+- We signal a warning whenever the contents of a property's function cell is
+  called when that property has a :HOSTATTRS subroutine.  Could we figure out
+  catching and muffling the warning when the :HOSTATTRS subroutine did get
+  run?
 
 - A CONCURRENTLY combinator for property application specifications, which
   means to apply each of the enclosed properties in parallel.  Particularly
