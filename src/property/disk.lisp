@@ -447,7 +447,7 @@ DISK:HAS-VOLUMES, rather than as the VOLUME-CONTENTS of another volume."))
     (unless (member volume-label (all-vgs) :test #'string=)
       (failed-change "Looks like no PVs for VG ~A?" volume-label))
     (dolist (lv volume-contents)
-      (mrun :inform "lvcreate"
+      (mrun :inform "lvcreate" "-Wn"
             (if (and (slot-boundp lv 'volume-size)
                      (eql (volume-size lv) :remaining))
                 '("-l" "100%FREE")
