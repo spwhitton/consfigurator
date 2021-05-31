@@ -490,6 +490,35 @@ We do not specify what logical volumes it contains."))
       (mrun :inform "vgextend" (volume-group volume) file)
       (mrun :inform "vgcreate" "--systemid" "" (volume-group volume) file)))
 
+(defprop host-lvm-logical-volumes-exist :posix ()
+  (:desc "Host LVM logical volumes all exist")
+  (:apply
+   (loop initially (assert-euid-root)
+         with existing-lvs
+           = (loop for (lv vg) in (mapcar #'words (cdr (runlines "lvs")))
+                   collect (cons lv vg))
+         ;; We assume that the VGs are already active.
+         with vgs
+           = (loop for volume in (get-hostattrs :volumes)
+                   when (subtypep (class-of volume) 'lvm-volume-group)
+                     collect (make-opened-volume volume nil))
+
+         for vg in vgs
+         for new-contents
+           = (loop for lv in (volume-contents vg)
+                   unless (member (cons (volume-label lv) (volume-label vg))
+                                  existing-lvs :test #'equal)
+                     collect lv)
+         when new-contents
+           do (setf (volume-contents vg) new-contents)
+           and collect vg into to-create
+
+         ;; Here we rely on how CREATE-VOLUMES-AND-CONTENTS won't try to close
+         ;; OPENED-VOLUMEs.
+         finally (return (if to-create
+                             (create-volumes-and-contents to-create)
+                             :no-change)))))
+
 
 ;;;; Filesystems
 
@@ -898,6 +927,18 @@ filesystems will be incrementally updated when other properties change."
 Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE."
   (:desc "Host volumes created")
   (:apply (create-volumes-and-contents (get-hostattrs :volumes))))
+
+;; TODO Possibly we want (a version of) this to not fail, but just do nothing,
+;; if the relevant volume groups etc. are inactive?
+(defproplist host-logical-volumes-exist :lisp ()
+  "Create missing logical volumes, like LVM logical volumes and BTRFS
+subvolumes, as specified by DISK:HAS-VOLUMES.  Does not delete or overwrite
+anything.  Intended to make it easy to add new logical volumes by just editing
+the volumes specification.
+
+Currently only creation of LVM logical volumes is implemented."
+  (:desc "Host logical volumes all exist")
+  (host-lvm-logical-volumes-exist))
 
 
 ;;;; Utilities

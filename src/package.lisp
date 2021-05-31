@@ -458,6 +458,7 @@
            #:caches-cleaned
            #:raw-image-built-for
            #:host-volumes-created
+           #:host-logical-volumes-exist
 
            #:volumes))
 
