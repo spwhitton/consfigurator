@@ -490,7 +490,7 @@ We do not specify what logical volumes it contains."))
       (mrun :inform "vgextend" (volume-group volume) file)
       (mrun :inform "vgcreate" "--systemid" "" (volume-group volume) file)))
 
-(defprop host-lvm-logical-volumes-exist :posix ()
+(defprop host-lvm-logical-volumes-exist :lisp ()
   (:desc "Host LVM logical volumes all exist")
   (:apply
    (loop initially (assert-euid-root)
