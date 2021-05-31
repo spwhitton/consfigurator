@@ -507,7 +507,8 @@
                     (#:sshd      #:consfigurator.property.sshd))
   (:export #:authorized-keys
            #:known-host
-           #:globally-known-host))
+           #:globally-known-host
+           #:parent-is-globally-known-host))
 
 (defpackage :consfigurator.property.locale
   (:use #:cl #:consfigurator)

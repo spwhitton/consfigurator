@@ -72,3 +72,12 @@ identifying HOST, to simplify refreshing keys."
   (:desc #?"${(get-hostname host)} is globally known host to ssh client")
   (%update-known-hosts
    "/etc/ssh/ssh_known_hosts" host :short-hostname short-hostname))
+
+(defproplist parent-is-globally-known-host :posix (&key short-hostname)
+  "Ensures that the SSH host keys of the parent host are stored in
+/etc/ssh/ssh_known_hosts; SHORT-HOSTNAME is as for SSH:GLOBALLY-KNOWN-HOST."
+  (:desc "Parent host is globally known host to ssh client")
+  (%update-known-hosts
+   "/etc/ssh/ssh_known_hosts" (make-host :hostattrs
+                                         (get-hostattrs :parent-hostattrs))
+   :short-hostname short-hostname))
