@@ -18,6 +18,8 @@
 (in-package :consfigurator.property.sshd)
 (named-readtables:in-readtable :consfigurator)
 
+;;;; Basic configuration
+
 (defproplist installed :posix ()
   "Install an OpenSSH server."
   (:desc "OpenSSH server installed")
@@ -42,3 +44,30 @@ refuses to proceed if root has no authorized_keys."
      (failed-change "root has no authorized_keys"))
    (configured "PermitRootLogin" "without-password"
                "PasswordAuthentication" "no")))
+
+
+;;;; Host keys
+
+(defprop has-host-public-key :posix (type public-key)
+  "Records an SSH public key of type TYPE as identifying this host."
+  (:desc #?"Has SSH host key of type ${type}")
+  (:hostattrs (push-hostattrs 'host-public-key (cons type public-key))))
+
+(defproplist has-host-key :posix (type public-key)
+  "Installs the host key whose public part is PUBLIC-KEY and is of type TYPE.
+The private key is obtained as an item of prerequisite data."
+  (:desc #?"SSH host key of type ${type} installed")
+  (has-host-public-key type public-key)
+  (file:has-content (merge-pathnames (strcat "ssh_host_" type "_key.pub")
+                                     #P"/etc/ssh/")
+    public-key)
+  (file:host-secret-uploaded (merge-pathnames (strcat "ssh_host_" type "_key")
+                                              #P"/etc/ssh/")))
+
+(defun get-host-public-keys (host &key short-hostname)
+  (let* ((host (preprocess-host host))
+         (hostname (get-hostname host)))
+    (cons (format nil "~A~:[~;,~A~]"
+                  hostname (and short-hostname (find #\. hostname))
+                  (car (split-string hostname :separator ".")))
+          (mapcar #'cdr (get-hostattrs 'host-public-key host)))))

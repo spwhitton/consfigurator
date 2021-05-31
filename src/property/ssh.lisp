@@ -27,3 +27,48 @@
    (apply #'file:contains-lines ".ssh/authorized_keys" keys))
   (:unapply
    (apply #'file:lacks-lines ".ssh/authorized_keys" keys)))
+
+(defprop %update-known-hosts :posix (file host &key short-hostname)
+  (:apply
+   (file:map-file-lines
+    file
+    (lambda (lines)
+      (loop with (identifier . keys)
+              = (sshd:get-host-public-keys host :short-hostname short-hostname)
+            for line in lines
+            for index = (position #\Space line)
+            for line-identifier = (subseq line 0 index)
+            and line-key = (subseq line (1+ index))
+            when (or (not (string= line-identifier identifier))
+                     (member line-key keys :test #'string=))
+              collect line into accum
+              and do (deletef keys line-key :test #'string=)
+            finally
+               (return
+                 (nconc accum
+                        (loop for key in keys
+                              collect (format nil "~A ~A" identifier key))))))))
+  (:unapply
+   (destructuring-bind (identifier . keys)
+       (sshd:get-host-public-keys host :short-hostname short-hostname)
+     (file:lacks-lines file
+                       (loop for key in keys
+                             collect (format nil "~A ~A" identifier key))))))
+
+(defproplist known-host :posix (host &key short-hostname)
+  "Ensures that the SSH host keys of HOST are stored in ~/.ssh/known_hosts.
+If SHORT-HOSTNAME, include the part of HOST's hostname before the first dot as
+one of the hostnames identifying HOST.  Removes any other host keys
+identifying HOST, to simplify refreshing keys."
+  (:desc #?"${(get-hostname host)} is known host to ssh client")
+  (file:directory-exists ".ssh")
+  (%update-known-hosts ".ssh/known_hosts" host :short-hostname short-hostname))
+
+(defproplist globally-known-host :posix (host &key short-hostname)
+  "Ensures that SSH host keys of HOST are stored in /etc/ssh/ssh_known_hosts.
+If SHORT-HOSTNAME, include the part of HOST's hostname before the first dot as
+one of the hostnames identifying HOST.  Removes any other host keys
+identifying HOST, to simplify refreshing keys."
+  (:desc #?"${(get-hostname host)} is globally known host to ssh client")
+  (%update-known-hosts
+   "/etc/ssh/ssh_known_hosts" host :short-hostname short-hostname))

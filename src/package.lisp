@@ -485,11 +485,6 @@
   (:local-nicknames (#:file      #:consfigurator.property.file))
   (:export #:snapshot-extracted))
 
-(defpackage :consfigurator.property.ssh
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file      #:consfigurator.property.file))
-  (:export #:authorized-keys))
-
 (defpackage :consfigurator.property.sshd
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:re        #:cl-ppcre)
@@ -498,7 +493,18 @@
                     (#:apt       #:consfigurator.property.apt))
   (:export #:installed
            #:configured
-           #:no-passwords))
+           #:no-passwords
+           #:get-host-public-keys
+           #:has-host-public-key
+           #:has-host-key))
+
+(defpackage :consfigurator.property.ssh
+  (:use #:cl #:alexandria #:consfigurator)
+  (:local-nicknames (#:file      #:consfigurator.property.file)
+                    (#:sshd      #:consfigurator.property.sshd))
+  (:export #:authorized-keys
+           #:known-host
+           #:globally-known-host))
 
 (defpackage :consfigurator.property.locale
   (:use #:cl #:consfigurator)
