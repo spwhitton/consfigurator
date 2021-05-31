@@ -75,6 +75,12 @@ Core
   debootstrap.  (The ``SBCL-AVAILABLE`` property in
   ``src/connection/sbcl.lisp`` achieves a similar effect in another way.)
 
+- We might want ``DEPLOYS``, ``DEPLOYS-THESE`` to push the host object to the
+  parent host's hostattrs, under ``:CHILD-HOSTS`` or something.  This means
+  that hosts implicitly defined inline using dotted propapp notation are
+  accessible via their parents, so that a property which gathers up DNS
+  information about all hosts, for example, would be able to find them.
+
 Project & packaging
 -------------------
 
