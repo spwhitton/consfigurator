@@ -199,7 +199,7 @@ Return values, if any, should be ignored.")
    "A VOLUME object which has been made directly accessible as a block device."))
 
 (defmethod open-volume ((volume opened-volume) file)
-  volume)
+  (copy-volume-and-contents volume))
 
 (defmethod create-volume ((volume opened-volume) file)
   (values))
