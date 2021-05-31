@@ -201,9 +201,6 @@ Return values, if any, should be ignored.")
 (defmethod open-volume ((volume opened-volume) file)
   (copy-volume-and-contents volume))
 
-(defmethod create-volume ((volume opened-volume) file)
-  (values))
-
 (defgeneric make-opened-volume (volume device-file)
   (:documentation
    "Where there is a class which is a subclass of both the class of VOLUME and
@@ -632,8 +629,13 @@ single attempt will be made to close all volumes opened up to that point."
                    (multiple-value-bind (opened opened-contents)
                        (open-volume volume file)
                      (setq opened-volumes
-                           (append opened-contents
-                                   (cons opened opened-volumes)))
+                           (append
+                            opened-contents
+                            ;; Don't queue for closure volumes which were
+                            ;; already open before we began.
+                            (if (subtypep (class-of volume) 'opened-volume)
+                                opened-volumes
+                                (cons opened opened-volumes))))
                      (dolist (opened-volume (or opened-contents `(,opened)))
                        (when (slot-boundp opened-volume 'volume-contents)
                          (open-volume-and-contents
@@ -720,13 +722,22 @@ argument, recursively create each of VOLUMES and any contents thereof.
 **THIS FUNCTION UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA.**"
   (let (opened-volumes)
     (labels
-        ((create-volume-and-contents (volume file)
-           (create-volume volume file)
+        ((create-volume-and-contents
+             (volume file
+              &aux
+                (already-opened (subtypep (class-of volume) 'opened-volume)))
+           (unless already-opened
+             (create-volume volume file))
            (when (slot-boundp volume 'volume-contents)
              (multiple-value-bind (opened opened-contents)
                  (open-volume volume file)
                (setq opened-volumes
-                     (append opened-contents (cons opened opened-volumes)))
+                     (append opened-contents
+                             ;; Don't queue for closure volumes which were
+                             ;; already open before we began.
+                             (if already-opened
+                                 opened-volumes
+                                 (cons opened opened-volumes))))
                (if opened-contents
                    (dolist (opened-volume opened-contents)
                      (when (slot-boundp opened-volume 'volume-contents)
