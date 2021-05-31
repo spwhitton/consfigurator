@@ -98,7 +98,8 @@ CONTENT can be a list of lines or a single string."
    (containing-directory-exists destination)
    (maybe-writefile-data destination iden1 iden2 :mode #o600)))
 
-(defprop host-secret-uploaded :posix (destination)
+(defprop host-secret-uploaded :posix
+    (destination &aux (destination (unix-namestring destination)))
   (:hostattrs
    (require-data (get-hostname) destination))
   (:apply
