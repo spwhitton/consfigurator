@@ -713,34 +713,33 @@ must not be modified."
          (mapc #'close-volume (get-connattr :opened-volumes)))))
    :args (cdr propapp)))
 
-(defgeneric create-volumes-and-contents (volumes)
-  (:documentation
-   "Where each of VOLUMES is a VOLUME which may be created by calling
-CREATE-VOLUME with NIL as the second argument, recursively create each of
-VOLUMES and any contents thereof.
-**THIS METHOD UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA.**")
-  (:method (volumes)
-    (let (opened-volumes)
-      (labels
-          ((create-volume-and-contents (volume file)
-             (create-volume volume file)
-             (when (slot-boundp volume 'volume-contents)
-               (multiple-value-bind (opened opened-contents)
-                   (open-volume volume file)
-                 (setq opened-volumes
-                       (append opened-contents (cons opened opened-volumes)))
-                 (if opened-contents
-                     (dolist (opened-volume opened-contents)
-                       (when (slot-boundp opened-volume 'volume-contents)
-                         (create-volume-and-contents
-                          (volume-contents opened-volume)
-                          (device-file opened-volume))))
-                     (create-volume-and-contents
-                      (volume-contents opened) (device-file opened)))))))
-        (unwind-protect
-             (mapc (rcurry #'create-volume-and-contents nil) volumes)
-          (mrun "sync")
-          (mapc #'close-volume opened-volumes))))))
+(defun create-volumes-and-contents (volumes &optional files)
+  "Where each of VOLUMES is a VOLUME which may be created by calling
+CREATE-VOLUME with the corresponding entry of FILES, or NIL, as a second
+argument, recursively create each of VOLUMES and any contents thereof.
+**THIS FUNCTION UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA.**"
+  (let (opened-volumes)
+    (labels
+        ((create-volume-and-contents (volume file)
+           (create-volume volume file)
+           (when (slot-boundp volume 'volume-contents)
+             (multiple-value-bind (opened opened-contents)
+                 (open-volume volume file)
+               (setq opened-volumes
+                     (append opened-contents (cons opened opened-volumes)))
+               (if opened-contents
+                   (dolist (opened-volume opened-contents)
+                     (when (slot-boundp opened-volume 'volume-contents)
+                       (create-volume-and-contents
+                        (volume-contents opened-volume)
+                        (device-file opened-volume))))
+                   (create-volume-and-contents
+                    (volume-contents opened) (device-file opened)))))))
+      (unwind-protect
+           (mapc #'create-volume-and-contents
+                 volumes (loop repeat (length volumes) collect (pop files)))
+        (mrun "sync")
+        (mapc #'close-volume opened-volumes)))))
 
 
 ;;;; Properties
