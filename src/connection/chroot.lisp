@@ -132,7 +132,7 @@ should be the mount point, without the chroot's root prefixed.")
       (setq connection (change-class connection 'chroot.fork-connection))
       (setf (slot-value connection 'datadir)
             (ensure-pathname
-             (subseq datadir-inside 1)
+             (stripln (subseq datadir-inside 1))
              :defaults into* :ensure-absolute t :ensure-directory t))
       (unwind-protect-in-parent (continue-connection connection remaining)
         (connection-teardown connection)))))
