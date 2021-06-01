@@ -37,7 +37,11 @@ Other properties might fill it in."
   (strcat "PARTUUID=" (get-findmnt-field (mount-point volume) "PARTUUID")))
 
 (defmethod fs-file ((volume filesystem))
-  (mount-point volume))
+  (let* ((ns (unix-namestring (mount-point volume)))
+         (length (length ns)))
+    (if (and (> length 1) (char= #\/ (last-char ns)))
+        (subseq ns 0 (1- (length ns)))
+        ns)))
 
 (defmethod fs-vfstype ((volume ext4-filesystem))
   "ext4")
