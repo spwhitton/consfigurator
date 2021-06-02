@@ -474,6 +474,10 @@ We do not specify what logical volumes it contains."))
 
 (defclass-opened-volume activated-lvm-logical-volume (lvm-logical-volume))
 
+(defmethod volume-contents-minimum-size ((volume lvm-logical-volume))
+  "LVs cannot be of zero size."
+  (max 1 (call-next-method)))
+
 (defmethod open-volume ((volume lvm-logical-volume) (file null))
   (with-slots (volume-label lvm-volume-group) volume
     (mrun "lvchange" "-ay" (strcat lvm-volume-group "/" volume-label))
