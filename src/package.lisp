@@ -431,7 +431,6 @@
            #:opened-partition
 
            #:lvm-volume-group
-           #:activated-lvm-volume-group
            #:lvm-logical-volume
            #:activated-lvm-logical-volume
            #:lvm-physical-volume

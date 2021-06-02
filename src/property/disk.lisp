@@ -402,77 +402,37 @@ The default value of 0 means the next free sector.")
 
 ;;;; LVM
 
-(defclass lvm-volume-group (top-level-volume)
-  ((volume-label
-    :documentation "The name of the VG, often starting with \"vg_\".")
-   ;; (volume-depth :initform 3)
-   (volume-contents
-    :type list
-    :documentation "A list of objects of type LVM-LOGICAL-VOLUME."))
-  (:documentation
-   "An LVM volume group.  Typically specified as a top level volume in
-DISK:HAS-VOLUMES, rather than as the VOLUME-CONTENTS of another volume."))
-
-(defclass-opened-volume activated-lvm-volume-group (lvm-volume-group)
-                        :device-file-type null)
-
-(defun all-vgs ()
-  (mapcar (curry #'string-trim " ")
-          (runlines "vgs" "--no-headings" "-ovg_name")))
-
-(defmethod open-volume ((volume lvm-volume-group) (file null))
-  (with-slots (volume-label volume-contents) volume
-    (mrun "vgscan")
-    (mrun "vgchange" "-ay" volume-label)
-    ;; lvm(8) says not to use the /dev/mapper names, but rather /dev/vg/lv
-    (let ((dir (ensure-directory-pathname
-                (merge-pathnames volume-label #P"/dev/"))))
-      (values
-       (make-opened-volume volume nil)
-       (loop for lv in volume-contents
-             collect (make-opened-volume
-                      lv (merge-pathnames (volume-label lv) dir)))))))
-
-(defmethod close-volume ((volume activated-lvm-volume-group))
-  (with-slots (volume-label) volume
-    (mrun "vgchange" "-an" volume-label)))
-
-(defmethod create-volume ((volume lvm-volume-group) (file null))
-  ;; We expect that the VG was already created when the PVs were created, and
-  ;; this method actually implements creation of the LVs.
-  (with-slots (volume-label volume-contents) volume
-    (unless (member volume-label (all-vgs) :test #'string=)
-      (failed-change "Looks like no PVs for VG ~A?" volume-label))
-    (dolist (lv volume-contents)
-      (mrun :inform "lvcreate" "-Wn"
-            (if (and (slot-boundp lv 'volume-size)
-                     (eql (volume-size lv) :remaining))
-                '("-l" "100%FREE")
-                `("-L" ,(format nil "~DM" (volume-minimum-size lv))))
-            volume-label
-            "-n" (volume-label lv)))))
-
-(defclass lvm-logical-volume (volume)
-  ((volume-label
-    :initform (simple-program-error "LVs must have names.")
-    :documentation "The name of the LV, often starting with \"lv_\".")))
-
-(defclass-opened-volume activated-lvm-logical-volume (lvm-logical-volume))
-
 (defclass lvm-physical-volume (volume)
-  ((volume-group
+  ((lvm-volume-group
     :type string
     :initarg :volume-group
     :initform
     (simple-program-error "LVM physical volume must have volume group.")
-    :accessor volume-group
+    :accessor lvm-volume-group
     :documentation
     "The name of the LVM volume group to which this volume belongs.")
+
+   ;; pvcreate(8) options
    (data-alignment
     :type string
     :initarg :data-alignment
     :accessor data-alignment
-    :documentation "Value for the --dataalignment argument to pvcreate(8)."))
+    :documentation "Value for the --dataalignment argument to pvcreate(8).")
+
+   ;; vgcreate(8) options
+   (physical-extent-size
+    :type string
+    :initarg :physical-extent-size
+    :accessor physical-extent-size
+    :documentation "Value for the --dataalignment argument to vgcreate(8).
+Should be the same for all PVs in this VG.")
+   (alloc
+    :type string
+    :initarg :alloc
+    :accessor alloc
+    :documentation "Value for the --alloc argument to vgcreate(8).
+Should be the same for all PVs in this VG."))
+
   (:documentation "An LVM physical volume.
 We do not specify what logical volumes it contains."))
 
@@ -486,38 +446,78 @@ We do not specify what logical volumes it contains."))
         (and (slot-boundp volume 'data-alignment)
              `("--dataalignment" ,(data-alignment volume)))
         file)
-  (if (member (volume-group volume) (all-vgs) :test #'string=)
-      (mrun :inform "vgextend" (volume-group volume) file)
-      (mrun :inform "vgcreate" "--systemid" "" (volume-group volume) file)))
+  (if (member (lvm-volume-group volume) (all-vgs) :test #'string=)
+      (mrun :inform "vgextend" (lvm-volume-group volume) file)
+      (mrun :inform "vgcreate" "--systemid" ""
+            (and (slot-boundp volume 'physical-extent-size)
+                 `("--physicalextentsize" ,(physical-extent-size volume)))
+            (and (slot-boundp volume 'alloc)
+                 `("--alloc" ,(alloc volume)))
+            (lvm-volume-group volume) file)))
+
+(defun all-vgs ()
+  (mapcar (curry #'string-trim " ")
+          (runlines "vgs" "--no-headings" "-ovg_name")))
+
+(defclass lvm-logical-volume (top-level-volume)
+  ((volume-label
+    :initform (simple-program-error "LVs must have names.")
+    :documentation "The name of the LV, often starting with \"lv_\".")
+   (lvm-volume-group
+    :type string
+    :initarg :volume-group
+    :initform
+    (simple-program-error "LVM logical volumes must have a volume group.")
+    :accessor lvm-volume-group
+    :documentation
+    "The name of the LVM volume group to which this volume belongs.")))
+
+(defclass-opened-volume activated-lvm-logical-volume (lvm-logical-volume))
+
+(defmethod open-volume ((volume lvm-logical-volume) (file null))
+  (with-slots (volume-label lvm-volume-group) volume
+    (mrun "lvchange" "-ay" (strcat lvm-volume-group "/" volume-label))
+    ;; lvm(8) says not to use the /dev/mapper names, but rather /dev/vg/lv
+    (make-opened-volume
+     volume (merge-pathnames volume-label
+                             (ensure-directory-pathname
+                              (merge-pathnames lvm-volume-group #P"/dev/"))))))
+
+(defmethod close-volume ((volume activated-lvm-logical-volume))
+  (mrun "lvchange" "-an"
+        (strcat (lvm-volume-group volume) "/" (volume-label volume))))
+
+(defmethod create-volume ((volume lvm-logical-volume) (file null))
+  (with-slots (volume-label lvm-volume-group) volume
+    ;; Check that the VG exists.
+    (unless (member lvm-volume-group (all-vgs) :test #'string=)
+      (failed-change "Looks like no PVs for VG ~A?" lvm-volume-group))
+    ;; Create the LV.
+    (mrun :inform "lvcreate" "-Wn"
+          (if (and (slot-boundp volume 'volume-size)
+                   (eql (volume-size volume) :remaining))
+              '("-l" "100%FREE")
+              `("-L" ,(format nil "~DM" (volume-minimum-size volume))))
+          lvm-volume-group "-n" volume-label)))
 
 (defprop host-lvm-logical-volumes-exist :lisp ()
   (:desc "Host LVM logical volumes all exist")
   (:apply
-   (loop initially (assert-euid-root)
-         with existing-lvs
-           = (loop for (lv vg) in (mapcar #'words (cdr (runlines "lvs")))
-                   collect (cons lv vg))
-         ;; We assume that the VGs are already active.
-         with vgs
-           = (loop for volume in (get-hostattrs :volumes)
-                   when (subtypep (class-of volume) 'lvm-volume-group)
-                     collect (make-opened-volume volume nil))
-
-         for vg in vgs
-         for new-contents
-           = (loop for lv in (volume-contents vg)
-                   unless (member (cons (volume-label lv) (volume-label vg))
-                                  existing-lvs :test #'equal)
-                     collect lv)
-         when new-contents
-           do (setf (volume-contents vg) new-contents)
-           and collect vg into to-create
-
-         ;; Here we rely on how CREATE-VOLUMES-AND-CONTENTS won't try to close
-         ;; OPENED-VOLUMEs.
-         finally (return (if to-create
-                             (create-volumes-and-contents to-create)
-                             :no-change)))))
+   (assert-euid-root)
+   (let* ((existing-lvs
+            (loop for (lv vg) in (mapcar #'words (cdr (runlines "lvs")))
+                  collect (cons lv vg)))
+          (to-create
+            ;; LVs are TOP-LEVEL-VOLUMEs.
+            (loop for volume in (get-hostattrs :volumes)
+                  when (subtypep (class-of volume) 'lvm-logical-volume)
+                    unless (member (cons (volume-label volume)
+                                         (lvm-volume-group volume))
+                                   existing-lvs :test #'equal)
+                      collect volume)))
+     (if to-create
+         (create-volumes-and-contents to-create)
+         :no-change))))
 
 
 ;;;; Filesystems
@@ -976,12 +976,10 @@ Example usage:
         (luks-container
          (lvm-physical-volume
           :volume-group \"vg_melete\"))))))
-    (lvm-volume-group
-     :volume-label \"vg_melete\"
-     ((lvm-logical-volume
+    (lvm-logical-volume
+       :volume-group \"vg_melete\"
        :volume-label \"lv_melete_root\"
-       (ext4-filesystem
-        :mount-point #P\"/\")))))"
+       (ext4-filesystem :mount-point #P\"/\")))"
   (labels
       ((parse (spec)
          (unless (listp spec)

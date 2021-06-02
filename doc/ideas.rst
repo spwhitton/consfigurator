@@ -9,17 +9,6 @@ Properties
 - Custom Emacs indentation rules for ``DISK:VOLUMES`` (and so
   ``DISK:HAS-VOLUMES``), and reindent the examples in docstrings and manual.
 
-- Currently it wouldn't be easy to write a property which combines adding an
-  LVM logical volume to the host's volumes, calling
-  ``DISK:HOST-LOGICAL-VOLUMES-EXIST``, mounting the new volume and setting up
-  a root filesystem for a virtual machine there.  Ideally the new property
-  would just be able to push the LV to the :VOLUMES hostattrs, but that is
-  tricky because LVs are presently not TOP-LEVEL-VOLUMEs, instead contained
-  within objects representing VGs.  Perhaps we could lift LVs to the top
-  level, with just a reference to the name of their VG, like we have with PVs.
-  We would probably still want it to be possible to include VGs in the list of
-  volumes, optionally, for specifying VG-level options like extent size.
-
 Connections
 -----------
 
