@@ -108,10 +108,22 @@
 
 (defun propunapply (prop &rest args)
   (with-some-errors-are-failed-change
-    (let ((check (get prop 'check)))
-      (if (and check (not (apply check args)))
-          :no-change
-          (apply (get prop 'unapply (constantly :no-change)) args)))))
+    (let ((check (get prop 'check))
+          (apply (get prop 'apply))
+          (unapply (get prop 'unapply)))
+      ;; Only fail if there's no :UNAPPLY when there is an :APPLY, because
+      ;; that is the case in which we can't do what was requested.  If there
+      ;; is no :APPLY then we can infer that there is nothing on the host to
+      ;; unapply (this will be the case for pure :HOSTATTRS properties).
+      (cond
+        ((or (and (not apply) (not unapply))
+             (and check (not (apply check args))))
+         :no-change)
+        (unapply
+         (apply unapply args))
+        (apply
+         (failed-change
+"Attempt to unapply property with :APPLY subroutine but no :UNAPPLY subroutine."))))))
 
 (defun propappunapply (propapp)
   (if propapp
