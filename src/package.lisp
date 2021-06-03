@@ -154,6 +154,7 @@
            #:push-hostattrs
            #:pushnew-hostattrs
            #:get-hostname
+           #:get-short-hostname
            #:require-data
            #:failed-change
            #:assert-euid-root

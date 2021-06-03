@@ -525,6 +525,13 @@ being applied.
 Called by property subroutines."
   (get-hostattrs-car :hostname host))
 
+(defun get-short-hostname (&optional (host *host*))
+  "Get the short hostname of HOST, defaulting to the host to which properties
+are being applied.
+
+Called by property subroutines."
+  (car (split-string (get-hostattrs-car :hostname host) :separator ".")))
+
 
 ;;;; :APPLY subroutines
 
