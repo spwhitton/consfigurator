@@ -65,6 +65,7 @@
            #:compile-file-pathname*
 
            ;; util.lisp
+           #:multiple-value-mapcan
            #:lines
            #:unlines
            #:words

@@ -91,16 +91,21 @@ subsequently replace the copied values of some slots.")
 (defgeneric subvolumes-of-type (type volume)
   (:documentation
    "Recursively examine VOLUME and its VOLUME-CONTENTS and return a list of all
-volumes encountered whose type is a subtype of TYPE.")
+volumes encountered whose type is a subtype of TYPE.
+Returns as a second value a corresponding list of the immediate parents of
+each returned volume.")
   (:method ((type symbol) (volume volume))
-    (labels ((walk (volume)
-               (let ((contents
-                       (and (slot-boundp volume 'volume-contents)
-                            (mapcan #'walk
-                                    (ensure-cons (volume-contents volume))))))
+    (labels ((walk (volume parent &aux (second-arg (list volume)))
+               (multiple-value-bind (contents contents-parents)
+                   (and (slot-boundp volume 'volume-contents)
+                        (multiple-value-mapcan
+                         #'walk (ensure-cons (volume-contents volume))
+                         (rplacd second-arg second-arg)))
                  (if (subtypep (type-of volume) type)
-                     (cons volume contents) contents))))
-      (walk volume))))
+                     (values (cons volume contents)
+                             (cons parent contents-parents))
+                     (values contents contents-parents)))))
+      (walk volume nil))))
 
 (defgeneric all-subvolumes (volume)
   (:documentation

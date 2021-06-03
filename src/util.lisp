@@ -18,6 +18,23 @@
 (in-package :consfigurator)
 (named-readtables:in-readtable :consfigurator)
 
+(defun multiple-value-mapcan (function &rest lists)
+  "Variant of MAPCAN which preserves multiple return values."
+  (let ((lists (copy-list lists))
+        (results (make-array '(2) :initial-element nil :adjustable t)))
+    (loop for new-results
+            = (multiple-value-list
+               (apply function
+                      (loop for list on lists
+                            if (car list)
+                              collect (pop (car list))
+                            else do (return-from multiple-value-mapcan
+                                      (values-list (coerce results 'list))))))
+          do (adjust-array results (max (length results) (length new-results))
+                           :initial-element nil)
+             (loop for result in new-results and i upfrom 0
+                   do (nconcf (aref results i) result)))))
+
 (defun noop (&rest args)
   "Accept any arguments and do nothing."
   (declare (ignore args))
