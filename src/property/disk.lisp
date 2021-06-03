@@ -511,6 +511,7 @@ We do not specify what logical volumes it contains."))
 
 (defprop host-lvm-logical-volumes-exist :lisp ()
   (:desc "Host LVM logical volumes all exist")
+  (:hostattrs (os:required 'os:linux))
   (:apply
    (assert-euid-root)
    (let* ((existing-lvs
@@ -523,9 +524,22 @@ We do not specify what logical volumes it contains."))
                     unless (member (cons (volume-label volume)
                                          (lvm-volume-group volume))
                                    existing-lvs :test #'equal)
-                      collect volume)))
+                      collect volume))
+          (to-mount
+            (loop for volume in to-create
+                  nconc (loop for volume
+                                in (subvolumes-of-type 'filesystem volume)
+                              when (slot-boundp volume 'mount-point)
+                                collect volume))))
      (if to-create
-         (create-volumes-and-contents to-create)
+         (prog2 (ignoring-hostattrs
+                 (consfigurator.property.fstab:entries-for-volumes to-create))
+             (create-volumes-and-contents to-create)
+           (dolist (volume to-create)
+             (open-volume volume nil))
+           (dolist (volume to-mount)
+             (consfigurator.property.mount:mounted
+              :target (mount-point volume))))
          :no-change))))
 
 
@@ -942,10 +956,13 @@ Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE."
 (defproplist host-logical-volumes-exist :lisp ()
   "Create missing logical volumes, like LVM logical volumes and BTRFS
 subvolumes, as specified by DISK:HAS-VOLUMES.  Does not delete or overwrite
-anything.  Intended to make it easy to add new logical volumes by just editing
-the volumes specification.
+anything, aside from editing /etc/fstab in some cases.  Intended to make it
+easy to add new logical volumes by just editing the volumes specification.
 
-Currently only creation of LVM logical volumes is implemented."
+For logical volumes containing instances of FILESYSTEM with a specified
+MOUNT-POINT, ensure there's an /etc/fstab entry and try to mount.
+
+Currently only handling of LVM logical volumes is implemented."
   (:desc "Host logical volumes all exist")
   (host-lvm-logical-volumes-exist))
 
