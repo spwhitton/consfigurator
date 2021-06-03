@@ -144,8 +144,8 @@ for testing.
 
 OPTIONS is a plist of keyword parameters.
 
-  - :VCPUS -- coresponds to the --vcpus argument to virt-install(1).  Defaults
-    to 1.
+  - :VCPUS -- corresponds to the --vcpus argument to virt-install(1).
+    Defaults to 1.
 
   - :MEMORY -- corresponds to the --memory argument to virt-install(1).
     Defaults to 1024.
