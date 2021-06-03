@@ -465,6 +465,10 @@ other than constant values and propapps to property combinators."
 this property cannot be applied to this host.  E.g. the property will try to
 install an apt package but the host is FreeBSD.")
 
+(defparameter *preprocessing-host* nil
+  "HOST value currently being preprocessed.
+Used by GET-HOSTATTRS to break infinite loops.")
+
 (defun get-hostattrs (k &optional (host *host*) &aux (host (ensure-host host)))
   "Retrieve the list of static informational attributes of type KEY.
 

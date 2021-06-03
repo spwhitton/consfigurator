@@ -87,10 +87,6 @@ attributes, so that implementations of ESTABLISH-CONNECTION can push new
 attributes (typically to request prerequisite data) without disturbing host
 values higher up the call stack."))
 
-(defparameter *preprocessing-host* nil
-  "HOST value currently being preprocessed.
-Used by GET-HOSTATTRS to break infinite loops.")
-
 (defmethod preprocess-host ((host preprocessed-host))
   (shallow-copy-host host))
 
