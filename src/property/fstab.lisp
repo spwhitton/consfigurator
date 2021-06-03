@@ -25,16 +25,24 @@
 (defun get-findmnt-field (mountpoint field)
   (stripln (run "findmnt" "-nro" field mountpoint)))
 
-(defmethod fs-spec ((volume filesystem))
+(defmethod fs-spec ((volume filesystem) parent)
   "Default implementation: no known source.
 Other properties might fill it in."
   "none")
 
-(defmethod fs-spec ((volume mounted-ext4-filesystem))
+(defmethod fs-spec ((volume mounted-ext4-filesystem) parent)
   (strcat "UUID=" (get-findmnt-field (mount-point volume) "UUID")))
 
-(defmethod fs-spec ((volume mounted-fat32-filesystem))
+(defmethod fs-spec ((volume mounted-fat32-filesystem) (parent partition))
   (strcat "PARTUUID=" (get-findmnt-field (mount-point volume) "PARTUUID")))
+
+;; Filesystems of any type directly contained within LVM LVs, mounted or not.
+(defmethod fs-spec ((volume filesystem) (parent lvm-logical-volume))
+  (with-slots (volume-label lvm-volume-group) parent
+    (unix-namestring
+     (merge-pathnames volume-label
+                      (ensure-directory-pathname
+                       (merge-pathnames lvm-volume-group #P"/dev/"))))))
 
 (defmethod fs-file ((volume filesystem))
   (let* ((ns (unix-namestring (mount-point volume)))
@@ -59,9 +67,9 @@ Other properties might fill it in."
   (if (eql #P"/" (mount-point volume))
       1 2))
 
-(defmethod volume->entry ((volume filesystem))
+(defmethod volume->entry ((volume filesystem) parent)
   (format nil "~A ~A ~A ~{~A~^,~} ~A ~A"
-          (fs-spec volume) (fs-file volume)
+          (fs-spec volume parent) (fs-file volume)
           (fs-vfstype volume) (fs-mntops volume)
           (fs-freq volume) (fs-passno volume)))
 
@@ -89,9 +97,11 @@ DISK:HAS-VOLUMES."
   (:desc "fstab entries for host's volumes")
   (:hostattrs (os:required 'os:linux))
   (:apply (apply #'entries
-                 (mapcar #'volume->entry
-                         (mapcan (curry #'subvolumes-of-type 'filesystem)
-                                 (get-hostattrs :volumes))))))
+                 (apply #'mapcar #'volume->entry
+                        (multiple-value-list
+                         (multiple-value-mapcan
+                          (curry #'subvolumes-of-type 'filesystem)
+                          (get-hostattrs :volumes)))))))
 
 (defprop entries-for-opened-volumes :posix ()
   "Add or update entries in /etc/fstab for currently open volumes.
@@ -101,6 +111,8 @@ This is used when building disk images and installing operating systems."
   (:hostattrs (os:required 'os:linux))
   (:apply
    (apply #'entries
-          (mapcar #'volume->entry
-                  (mapcan (curry #'subvolumes-of-type 'mounted-filesystem)
-                          (get-connattr :opened-volumes))))))
+          (apply #'mapcar #'volume->entry
+                 (multiple-value-list
+                  (multiple-value-mapcan
+                   (curry #'subvolumes-of-type 'mounted-filesystem)
+                   (get-connattr :opened-volumes)))))))
