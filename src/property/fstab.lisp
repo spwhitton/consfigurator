@@ -91,17 +91,17 @@ partition or filesystem UUID in your consfig."
              (length mount-points) mount-points)))
   (:apply (file:update-unix-table #P"/etc/fstab" 0 1 entries)))
 
-(defprop entries-for-volumes :posix ()
-  "Add or update entries in /etc/fstab for the host's volumes, as specified with
-DISK:HAS-VOLUMES."
-  (:desc "fstab entries for host's volumes")
+(defprop entries-for-volumes :posix (&optional volumes)
+  "Add or update entries in /etc/fstab for VOLUMES, or the host's volumes, as
+specified with DISK:HAS-VOLUMES."
+  (:desc (format nil "fstab entries for ~:[~;host's ~]volumes" volumes))
   (:hostattrs (os:required 'os:linux))
   (:apply (apply #'entries
                  (apply #'mapcar #'volume->entry
                         (multiple-value-list
                          (multiple-value-mapcan
                           (curry #'subvolumes-of-type 'filesystem)
-                          (get-hostattrs :volumes)))))))
+                          (or volumes (get-hostattrs :volumes))))))))
 
 (defprop entries-for-opened-volumes :posix ()
   "Add or update entries in /etc/fstab for currently open volumes.
