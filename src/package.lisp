@@ -461,6 +461,7 @@
            #:host-volumes-created
            #:host-logical-volumes-exist
 
+           #:parse-volume-size
            #:volumes))
 
 (defpackage :consfigurator.property.fstab

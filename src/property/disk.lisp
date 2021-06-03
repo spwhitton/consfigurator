@@ -969,6 +969,20 @@ Currently only handling of LVM logical volumes is implemented."
 
 ;;;; Utilities
 
+(defun parse-volume-size (volume-size-specification)
+  (if (stringp volume-size-specification)
+      (multiple-value-bind (match groups)
+          (re:scan-to-strings #?/\A([0-9]+)([MGT])?\z/ volume-size-specification)
+        (unless match
+          (simple-program-error
+           "~A is not a valid volume size." volume-size-specification))
+        (* (parse-integer (elt groups 0))
+           (eswitch ((elt groups 1) :test #'string=)
+             ("M" 1)
+             ("G" 1024)
+             ("T" 1048576))))
+      volume-size-specification))
+
 (defmacro volumes (&body volume-specifications)
   "Return a list of instances of VOLUME, one for each element of
 VOLUME-SPECIFICATIONS.  Each of VOLUME-SPECIFICATIONS is an (unquoted) list of
@@ -1015,20 +1029,9 @@ Example usage:
                   (if contentsp (butlast (cdr spec)) (cdr spec)))
                 (contents (and contentsp (lastcar (cdr spec)))))
            (when (loop for key on initargs by #'cddr
-                         thereis (and (eql (car key) :volume-size)
-                                      (stringp (cadr key))))
-             (let ((input (getf initargs :volume-size)))
-               (multiple-value-bind (match groups)
-                   (re:scan-to-strings #?/\A([0-9]+)([MGT])?\z/ input)
-                 (unless match
-                   (simple-program-error
-                    "~A is not a valid volume size." input))
-                 (setf (getf initargs :volume-size)
-                       (* (parse-integer (elt groups 0))
-                          (eswitch ((elt groups 1) :test #'string=)
-                            ("M" 1)
-                            ("G" 1024)
-                            ("T" 1048576)))))))
+                         thereis (and (eql (car key) :volume-size)))
+             (setf (getf initargs :volume-size)
+                   `(parse-volume-size ,(getf initargs :volume-size))))
            (when (and contents (not (listp contents)))
              (simple-program-error "~A is not a list." contents))
            `(make-instance
