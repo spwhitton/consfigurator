@@ -233,8 +233,10 @@ Sample usage:
 There's repetition here, and you might like to use DEFPROPSPEC to establish
 your preferred VM networking setup and corresponding DEPLOYS propapp."
   (:desc #?"libvirt KVM VM for ${(get-hostname host*)} defined")
+  ;; Same hostname probably means that the VM HOST inherited the hypervisor
+  ;; HOST's hostname as one was not explicitly set; probably a mistake.
   (when (string= (get-hostname host*) (get-hostname))
-    (warn "KVM VM has same hostname as hypervisor host; may cause issues."))
+    (failed-change "KVM VM has same hostname as hypervisor host."))
   (destructuring-bind
       (&key (vcpus 1) (memory 1024) autostart
          virt-options chroot-options always-deploys
