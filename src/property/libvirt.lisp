@@ -297,9 +297,7 @@ your preferred VM networking setup and corresponding DEPLOYS propapp."
 (defun virsh-get-columns (&rest arguments)
   "Run a virsh command that is expected to yield tabular output, with the given
 list of ARGUMENTS, and return the rows."
-  (mapcar (lambda (row)
-            (delete "" (split-string row) :test #'string=))
-          (cddr (nbutlast (runlines "virsh" arguments)))))
+  (mapcar #'words (cddr (nbutlast (runlines "virsh" arguments)))))
 
 (defun host-domain-started-p (host)
   ;; The "State" column in the output of 'virsh list' is to be ignored here;
