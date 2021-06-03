@@ -47,7 +47,7 @@
   (format nil "~{~A~%~}" lines))
 
 (defun words (text)
-  (remove "" (split-string text) :test #'string=))
+  (delete "" (split-string text) :test #'string=))
 
 (defun unwords (words)
   (format nil "~{~A~^ ~}" words))
