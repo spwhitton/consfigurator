@@ -295,16 +295,17 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
                          ;; new hostattrs should not be used programmatically
                          ;; in this way, so issue a warning.
                          ,@(and (getf ,slotsv :hostattrs)
-                                '((programmatic-apply-hostattrs)))
+                                `((warn 'programmatic-apply-hostattrs
+                                        :property ',,name)))
                          (consfigure (cons ',,name args)))))))))))))
 
-(define-condition programmatic-apply-hostattrs (simple-warning) ())
-
-(defun programmatic-apply-hostattrs ()
-  (warn 'programmatic-apply-hostattrs
-        :format-control
-        "Calling property which has :HOSTATTRS subroutine programmatically.
-Use DEFPROPLIST/DEFPROPSPEC to avoid trouble."))
+(define-condition programmatic-apply-hostattrs (warning)
+  ((property :initarg :property))
+  (:report (lambda (condition stream)
+             (format stream "Calling property ~S,
+which has :HOSTATTRS subroutine, programmatically.  Use DEFPROPLIST/DEFPROPSPEC
+to avoid trouble."
+                     (slot-value condition 'property)))))
 
 (defmacro ignoring-hostattrs (form)
   "Where FORM is a programmatic call to a property which has a :HOSTATTRS
