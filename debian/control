@@ -12,7 +12,7 @@ Build-Depends:
  cl-ppcre,
  cl-closer-mop,
  cl-trivial-backtrace,
- cl-trivial-macroexpand-all,
+ cl-agnostic-lizard,
  debhelper-compat (= 13),
  dh-elpa,
  python3-sphinx,
@@ -37,7 +37,7 @@ Depends:
  cl-ppcre,
  cl-closer-mop,
  cl-trivial-backtrace,
- cl-trivial-macroexpand-all,
+ cl-agnostic-lizard,
  emacsen-common,
  ${misc:Depends},
 Recommends:

@@ -133,22 +133,10 @@
 (defvar *known-properties* nil
   "All properties whose definitions have been loaded.")
 
-(defvar *known-property-macrolets* nil
-  "Macro definitions for all known properties as used in MAP-PROPSPEC-PROPAPPS.
-
-This variable exists just to avoid consing these forms over and over again;
-see MAP-PROPSPEC-PROPAPPS for how they are used.")
-
 (defun record-known-property (psym)
   (unless (get psym 'isprop)
     (setf (get psym 'isprop) t)
-    (push psym *known-properties*)
-    (push `(,psym (&rest args)
-                  (let ((gensym (gensym)))
-                    (push (list* gensym ',psym args)
-                          *replaced-propapps*)
-                    gensym))
-          *known-property-macrolets*)))
+    (push psym *known-properties*)))
 
 (defun dump-properties-for-emacs (from to)
   (let ((put-forms

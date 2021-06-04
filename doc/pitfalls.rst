@@ -48,3 +48,34 @@ serialisable, so you can't pass anonymous functions or objects containing
 those.  You can work around the latter restriction by defining a new property
 which passes in the desired anonymous function, and then adding the new
 property to your property application specification.
+
+Code-walking limitations
+------------------------
+
+The preprocessing of propspecs, and the conversion of unevaluated propspecs
+into propspecs, both require code walking.  Consfigurator's implementation of
+this is in the function ``MAP-PROPSPEC-PROPAPPS``.  However, due to
+limitations in the Common Lisp standard, it is not possible to implement the
+work of that function in a way which is both always correct and fully
+portable.  I have not found a general purpose code walker which hooks into
+implementation-specific functionality and that is currently maintained, and so
+at present we use a best-effort portable code walker, Agnostic Lizard.
+
+This will almost always generate the correct expansions, but if you have
+particularly advanced macro property combinators then it is possible that
+``MAP-PROPSPEC-PROPAPPS`` will return incorrectly expanded forms.  For full
+details see Michael Raskin.  2017.  "Writing a best-effort portable code
+walker in Common Lisp."  In *Proceedings of 10th European Lisp Symposium*,
+Vrije Universiteit Brussel, Belgium, April 2017 (ELS2017).  DOI:
+10.5281/zenodo.3254669.
+
+It is possible to implement the work of ``MAP-PROPSPEC-PROPAPPS`` in terms of
+``MACROEXPAND-ALL``, whose semantics are conventionally well-understood and
+for which fully correct implementations are available in most implementations
+of Common Lisp (the trivial-macroexpand-all library can be used to get at
+these).  However, note that we cannot just call ``MACROEXPAND-ALL`` on
+propspecs because unquoted lists appearing as arguments to properties in
+atomic property applications will look like invalid function calls to the code
+walker.  Avoiding this would seem to require wrapping the propspec in one
+macrolet for each known property, and this makes ``MACROEXPAND-ALL`` too slow,
+even if the macrolet forms are precomputed.

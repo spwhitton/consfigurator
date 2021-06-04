@@ -14,8 +14,8 @@
                #:cffi
                (:feature :sbcl (:require #:sb-posix))
                #:closer-mop
-               #:trivial-backtrace
-               #:trivial-macroexpand-all)
+               #:agnostic-lizard
+               #:trivial-backtrace)
   :components ((:file "src/package")
                (:file "src/reader")
                (:file "src/util")

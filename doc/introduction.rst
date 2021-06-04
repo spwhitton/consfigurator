@@ -290,10 +290,9 @@ Portability and stability
 
 - All of the code in the core library should be portable ANSI Common Lisp,
   though optional packages providing properties and connection types might use
-  implementation-specific functionality.  There is one exception: we require
-  an implementation of ``MACROEXPAND-ALL``, but most Lisps in use today
-  provide this.  Little to no testing is done by the author on implementations
-  other than SBCL, so testing and portability patches are welcome.
+  implementation-specific functionality.  Little to no testing is done by the
+  author on implementations other than SBCL, so testing and portability
+  patches are welcome.
 
 - Little attempt is made by the author to support systems other than Debian
   GNU/Linux, but again, portability patches are welcome, and the design of
