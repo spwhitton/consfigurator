@@ -387,6 +387,14 @@ of this macro."
 Should be called soon after fork(2) in child processes."
   (signal 'in-child-process))
 
+(defmacro with-backtrace-and-exit-code-two (&body forms)
+  `(handler-bind
+       ((serious-condition
+          (lambda (c)
+            (trivial-backtrace:print-backtrace c :output *error-output*)
+            (uiop:quit 2))))
+     ,@forms))
+
 
 ;;;; Lisp data files
 

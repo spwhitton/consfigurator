@@ -100,6 +100,7 @@
 
            #:unwind-protect-in-parent
            #:cancel-unwind-protect-in-parent-cleanup
+           #:with-backtrace-and-exit-code-two
 
            ;; connection.lisp
            #:establish-connection

@@ -66,11 +66,7 @@ for example, such that we don't see it."
         (-1
          (error "fork(2) failed"))
         (0
-         (handler-bind ((serious-condition
-                          (lambda (c)
-                            (trivial-backtrace:print-backtrace
-                             c :output *error-output*)
-                            (uiop:quit 2))))
+         (with-backtrace-and-exit-code-two
            ;; Capture child stdout in case *STANDARD-OUTPUT* has been rebound
            ;; to somewhere else in the parent, e.g. by APPLY-AND-PRINT.  The
            ;; parent can then send the contents of the file named by OUTPUT to

@@ -716,7 +716,13 @@ Preprocessing must occur in the root Lisp."))
                          else do (ignore-errors (delete-file (cdr cell)))
                          finally (setq record accum)))
                  ;; Continue the deployment.
-                 ,(wrap `(%consfigure ',remaining-connections ,*host*)))))
+                 ,(wrap
+                   `(with-backtrace-and-exit-code-two
+                      (uiop:quit
+                       (if (eql :no-change
+                                (%consfigure ',remaining-connections ,*host*))
+                           0
+                           1)))))))
         (handler-case
             (with-standard-io-syntax
               (let ((*allow-printing-passphrases* t))
