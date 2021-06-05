@@ -60,9 +60,9 @@
   `(handler-bind ((failed-change
                     (lambda (c)
                       (with-indented-inform
-                        (informat t
-                                  (simple-condition-format-control c)
-                                  (simple-condition-format-arguments c)))
+                        (apply #'informat t
+                               (simple-condition-format-control c)
+                               (simple-condition-format-arguments c)))
                       (invoke-restart 'skip-property))))
      ,@forms))
 
