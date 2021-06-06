@@ -268,7 +268,8 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
     (with-gensyms (name body declarations)
       `(defmacro ,mname (,name ,typev ,lambdav &body ,body)
          ,@(and mdocstring `(,mdocstring))
-         (let ((,slotsv (list :type ,typev :lambda `',,lambdav)))
+         (let ((programmatic-warning t)
+               (,slotsv (list :type ,typev :lambda `',,lambdav)))
            (multiple-value-bind (,formsv ,declarations)
                (parse-body ,body :documentation t)
              (when (> (length ,declarations) 1)
@@ -294,7 +295,8 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
                          ;; Properties with :HOSTATTRS subroutines which set
                          ;; new hostattrs should not be used programmatically
                          ;; in this way, so issue a warning.
-                         ,@(and (getf ,slotsv :hostattrs)
+                         ,@(and programmatic-warning
+                                (getf ,slotsv :hostattrs)
                                 `((warn 'programmatic-apply-hostattrs
                                         :property ',,name)))
                          (consfigure (cons ',,name args)))))))))))))
@@ -401,6 +403,8 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
                                  ,@(ordinary-ll-variable-names
                                     lambda :include-supplied-p t)))))
 		      ,@(cdr (pop forms))))))
+  (unless (getf slots :hostattrs)
+    (setq programmatic-warning nil))
   (setf (getf slots :hostattrs)
         `(lambda (plist)
            ,@(cddr (getf slots :hostattrs))
