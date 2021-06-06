@@ -354,13 +354,14 @@ subroutines at the right time.
 If the first element of the body is a string, it will be considered a
 docstring for the resulting property.  If the first element of the body after
 any such string is a list beginning with :DESC, the remainder will be used as
-the :DESC subroutine for the resulting property, like DEFPROP.  Supplying a
-:CHECK subroutine in the same way is also supported.  Otherwise, the body
-defines a function of the arguments specified by the lambda list which returns
-the property application specification expression to be evaluated and applied.
-It should be a pure function aside from retrieving hostattrs (as set by other
-properties applied to the hosts to which the resulting property is applied,
-not as set by the properties in the returned propspec).
+the :DESC subroutine for the resulting property, like DEFPROP.  Supplying
+:CHECK and :HOSTATTRS subroutines in the same way is also supported.
+Otherwise, the body defines a function of the arguments specified by the
+lambda list which returns the property application specification expression to
+be evaluated and applied.  It should be a pure function aside from retrieving
+hostattrs (as set by other properties applied to the hosts to which the
+resulting property is applied, not as set by the properties in the returned
+propspec).
 
 Macro property combinators should be usable in the normal way in the body, but
 some other macros commonly used in DEFHOST and DEFPROPLIST forms will not work
@@ -401,6 +402,7 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
 		      ,@(cdr (pop forms))))))
   (setf (getf slots :hostattrs)
         `(lambda (plist)
+           ,@(cddr (getf slots :hostattrs))
            (let ((propspec (with-*host*-*consfig*
                                (preprocess-propspec
                                 (make-propspec
@@ -419,7 +421,7 @@ If the first element of PROPERTIES is a string, it will be considered a
 docstring for the resulting property.  If the first element of PROPERTIES
 after any such string is a list beginning with :DESC, the remainder will be
 used as the :DESC subroutine for the resulting property, like DEFPROP.
-Supplying a :CHECK subroutine in the same way is also supported.
+Supplying :CHECK and :HOSTATTRS subroutines in the same way is also supported.
 
 Otherwise, the body should not contain any references to variables other than
 those in LAMBDA.  LAMBDA is an ordinary lambda list, so you can use &AUX
@@ -439,8 +441,9 @@ other than constant values and propapps to property combinators."
           (loop for remaining on properties
                 for car = (car remaining)
                 if (or (stringp car)
-                       (and (listp car) (member (car car)
-						'(:desc :check declare))))
+                       (and (listp car)
+                            (member (car car)
+                                    '(:desc :check :hostattrs declare))))
                   collect car into begin
                 else
                   return (nreverse
