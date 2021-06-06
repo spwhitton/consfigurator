@@ -304,7 +304,8 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
   (:report (lambda (condition stream)
              (format stream "Calling property ~S,
 which has :HOSTATTRS subroutine, programmatically.  Use DEFPROPLIST/DEFPROPSPEC
-to avoid trouble."
+to avoid trouble.  Use IGNORING-HOSTATTRS to muffle this warning if
+~:*~S does not push any new hostattrs."
                      (slot-value condition 'property)))))
 
 (defmacro ignoring-hostattrs (form)
