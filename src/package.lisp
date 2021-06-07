@@ -128,6 +128,8 @@
            #:test
            #:remote-exists-p
            #:remote-file-stats
+           #:remote-last-reboot
+           #:remote-consfigurator-cache-pathname
            #:delete-remote-trees
            #:readfile
            #:writefile
@@ -325,6 +327,11 @@
   (:use #:cl #:consfigurator)
   (:export #:contained
            #:when-contained))
+
+(defpackage :consfigurator.property.periodic
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:file  #:consfigurator.property.file))
+  (:export #:at-most))
 
 (defpackage :consfigurator.property.mount
   (:use #:cl #:alexandria #:consfigurator)

@@ -434,10 +434,7 @@ of CONNECTION, where each entry is of the form
               (and (zerop exit) (lines out))))))
 
 (defun get-remote-data-cache-dir ()
-  (ensure-directory-pathname
-   (car
-    (lines
-     (mrun "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
+  (remote-consfigurator-cache-pathname "data/"))
 
 
 ;;;; Local caches

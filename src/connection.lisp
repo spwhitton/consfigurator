@@ -500,6 +500,25 @@ specification of POSIX ls(1))."
                          (encode-universal-time
                           0 0 0 date month (parse-integer (nth 7 ls)) 0))))))))
 
+(defun remote-last-reboot ()
+  "Get the time of the last reboot, rounded down to the nearest minute."
+  ;; The '-b' option to who(1) is specified in POSIX, though not the output
+  ;; format; this parse is based on GNU coreutils who(1).
+  (multiple-value-bind (match groups)
+      (re:scan-to-strings
+       "([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})"
+       (car (runlines :env '(:TZ "UTC") "who" "-b")))
+    (if match
+        (let ((groups (map 'vector #'parse-integer groups)))
+          (encode-universal-time 0 (elt groups 4) (elt groups 3)
+                                 (elt groups 2) (elt groups 1) (elt groups 0)
+                                 0))
+        (failed-change "Could not determine time of remote's last reboot."))))
+
+(defun remote-consfigurator-cache-pathname (path)
+  (merge-pathnames
+   path (car (runlines "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/"))))
+
 (defun readfile (path)
   (connection-readfile
    *connection*

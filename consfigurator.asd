@@ -32,6 +32,7 @@
                (:file "src/property/etc-default")
                (:file "src/property/os")
                (:file "src/property/container")
+               (:file "src/property/periodic")
                (:file "src/property/mount")
                (:file "src/property/service")
                (:file "src/property/apt")
