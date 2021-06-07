@@ -568,7 +568,7 @@ PATH already has the specified CONTENT and MODE."
 ;; this is a safe parse of ls(1) output given its POSIX specification
 (defun ls-cksum (file)
   (let ((ls (ignore-errors
-             (split-string (run :env '(:LOCALE "C") "ls" "-dlL" file))))
+             (words (run :env '(:LC_ALL "C") "ls" "-dlL" file))))
         (cksum (ignore-errors (cksum file))))
     (when (and ls cksum)
       (list* (car ls) cksum (subseq ls 2 8)))))

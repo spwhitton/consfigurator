@@ -136,7 +136,7 @@ Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
 
 ;; readlink(1) is not POSIX
 (defun remote-link-target (symlink)
-  (loop with s = (stripln (run :env '(:LOCALE "POSIX") "ls" "-ld" symlink))
+  (loop with s = (stripln (run :env '(:LC_ALL "C") "ls" "-ld" symlink))
         with found = 0
         for i from 0 below (length s)
         when (char= (elt s i) #\Space)

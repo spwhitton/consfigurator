@@ -467,7 +467,7 @@ PATH may be any kind of file, including directories."
                 (#\x order)
                 (#\- 0)))))
     (and (remote-exists-p path)
-         (let* ((ls (split-string (run "ls" "-ld" path)))
+         (let* ((ls (words (run :env '(:LC_ALL "C") "ls" "-ld" path)))
                 (lscar (car ls)))
            (values (+ (sum (subseq lscar 1 4) #o100)
                       (sum (subseq lscar 4 7) #o10)
