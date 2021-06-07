@@ -46,7 +46,7 @@
   (when apply
     (setf (get sym 'papply) apply))
   (when unapply
-    (setf (get sym 'unapply) unapply))
+    (setf (get sym 'punapply) unapply))
   sym)
 
 (defun isprop (prop)
@@ -110,7 +110,7 @@
   (with-some-errors-are-failed-change
     (let ((check (get prop 'check))
           (apply (get prop 'apply))
-          (unapply (get prop 'unapply)))
+          (unapply (get prop 'punapply)))
       ;; Only fail if there's no :UNAPPLY when there is an :APPLY, because
       ;; that is the case in which we can't do what was requested.  If there
       ;; is no :APPLY then we can infer that there is nothing on the host to

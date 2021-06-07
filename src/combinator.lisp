@@ -171,7 +171,7 @@ apply the elements of REQUIREMENTS in reverse order."
                            ;; subroutine is only to check compatibility
                            (with-preserve-hostattrs
                              (apply #'propattrs psym args)))
-              :apply (get psym 'unapply)
+              :apply (get psym 'punapply)
               :unapply (get psym 'papply)
               :args args)))
 

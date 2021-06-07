@@ -166,6 +166,11 @@
            #:with-change-if-changes-file-content
            #:with-change-if-changes-file-content-or-mode
 
+           #:ptype
+           #:plambda
+           #:papply
+           #:punapply
+
            ;; propspec.lisp
            #:in-consfig
            #:propspec-systems
