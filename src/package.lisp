@@ -84,6 +84,7 @@
            #:escape-sh-token
            #:escape-sh-command
            #:defpackage-consfig
+           #:lambda-ignoring-args
 
            #:*consfigurator-debug-level*
            #:with-indented-inform

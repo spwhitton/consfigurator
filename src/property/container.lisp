@@ -58,13 +58,10 @@ container type."
                       ,form
                       :no-change))))
     (:retprop :type (propapptype propapp)
-              :hostattrs (lambda (&rest ignore)
-                           (declare (ignore ignore))
+              :hostattrs (lambda-ignoring-args
                            (propappattrs propapp))
-              :apply (lambda (&rest ignore)
-                       (declare (ignore ignore))
+              :apply (lambda-ignoring-args
                        (check-contained (propappapply propapp)))
-              :unapply (lambda (&rest ignore)
-                         (declare (ignore ignore))
+              :unapply (lambda-ignoring-args
                          (check-contained (propappunapply propapp)))
               :args (cdr propapp))))

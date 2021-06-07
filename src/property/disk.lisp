@@ -751,13 +751,11 @@ must not be modified."
     (volumes propapp &key (mount-below nil mount-below-supplied-p))
   (:retprop
    :type (propapptype propapp)
-   :hostattrs (lambda (&rest ignore)
-                (declare (ignore ignore))
+   :hostattrs (lambda-ignoring-args
                 (require-volumes-data volumes)
                 (propappattrs propapp))
    :apply
-   (lambda (&rest ignore)
-     (declare (ignore ignore))
+   (lambda-ignoring-args
      (with-connattrs (:opened-volumes
                       (apply #'open-volumes-and-contents
                              `(,volumes ,@(and mount-below-supplied-p

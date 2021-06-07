@@ -252,6 +252,13 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
     ;;   (push '(:use '#:cl '#:consfigurator) forms))
     `(defpackage ,name ,@forms)))
 
+(defmacro lambda-ignoring-args (&body body)
+  (multiple-value-bind (forms declarations) (parse-body body)
+    (with-gensyms (ignore)
+      `(lambda (&rest ,ignore)
+         (declare (ignore ,ignore) ,@declarations)
+         ,@forms))))
+
 
 ;;;; Progress & debug printing
 

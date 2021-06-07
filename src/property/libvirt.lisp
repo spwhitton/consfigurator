@@ -117,11 +117,9 @@ already running, for a VM which is not always booted, e.g. on a laptop."
     (:retprop :type (propapptype propapp)
               :desc (get (car propapp) 'desc)
               :hostattrs (get (car propapp) 'hostattrs)
-              :apply (lambda (&rest ignore)
-                       (declare (ignore ignore))
+              :apply (lambda-ignoring-args
                        (check-started (propappapply propapp)))
-              :unapply (lambda (&rest ignore)
-                         (declare (ignore ignore))
+              :unapply (lambda-ignoring-args
                          (check-started (propappunapply propapp)))
               :args (cdr propapp))))
 

@@ -239,15 +239,12 @@ FLAGFILE exists, PROPAPPS are assumed to all be already applied."
   (:retprop :type (propapptype propapp)
             :desc (get (car propapp) 'desc)
             :hostattrs (get (car propapp) 'hostattrs)
-            :check (lambda (&rest ignore)
-                     (declare (ignore ignore))
+            :check (lambda-ignoring-args
                      (remote-exists-p flagfile))
-            :apply (lambda (&rest ignore)
-                     (declare (ignore ignore))
+            :apply (lambda-ignoring-args
                      (prog1 (propappapply propapp)
                        (mrun "touch" flagfile)))
-            :unapply (lambda (&rest ignore)
-                       (declare (ignore ignore))
+            :unapply (lambda-ignoring-args
                        (prog1 (propappunapply propapp)
                          (mrun "rm" flagfile)))
             :args (cdr propapp)))
