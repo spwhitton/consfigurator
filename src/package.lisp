@@ -250,6 +250,7 @@
            #:get-remote-cached-prerequisite-data
            #:get-local-cached-prerequisite-data
 	   #:get-highest-local-cached-prerequisite-data
+           #:get-remote-data-cache-dir
 
            #:try-register-data-source
            #:register-data-source
@@ -281,10 +282,12 @@
            #:lacks-lines
            #:has-mode
            #:does-not-exist
+           #:directory-does-not-exist
            #:data-uploaded
            #:host-data-uploaded
            #:secret-uploaded
            #:host-secret-uploaded
+           #:data-cache-purged
            #:contains-conf-equals
            #:contains-conf-space
            #:contains-conf-tab

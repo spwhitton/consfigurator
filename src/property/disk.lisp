@@ -823,6 +823,7 @@ the LVM physical volumes corresponding to those volume groups."
 (defproplist caches-cleaned :posix ()
   "Clean all caches we know how to clean in preparation for image creation."
   (:desc "Caches cleaned")
+  (file:data-cache-purged)
   (os:typecase
     (debianlike (apt:cache-cleaned))))
 

@@ -76,6 +76,18 @@ CONTENT can be a list of lines or a single string."
   (:check (not (apply #'remote-exists-p paths)))
   (:apply (mrun "rm" "-f" paths)))
 
+(defprop directory-does-not-exist :posix (&rest directories)
+  "Recursively ensure that DIRECTORIES do not exist."
+  (:desc (if (cdr directories)
+             #?"@{directories} do not exist"
+             #?"${(car directories)} does not exist"))
+  (:check (not (apply #'remote-exists-p directories)))
+  (:apply
+   (if (test (format nil "~{( -e ~A -a ! -d ~:*~A )~^ -o ~}" directories))
+       (failed-change "At least one of ~S exists and is not a directory."
+                      directories)
+       (apply #'delete-remote-trees directories))))
+
 (defprop data-uploaded :posix (iden1 iden2 destination)
   (:hostattrs
    (declare (ignore destination))
@@ -104,6 +116,11 @@ CONTENT can be a list of lines or a single string."
    (require-data (get-hostname) destination))
   (:apply
    (secret-uploaded (get-hostname) destination destination)))
+
+(defproplist data-cache-purged :posix ()
+  "Ensure that any prerequisite data cached in the remote home directory is removed."
+  (:desc "Consfigurator data cache cleaned")
+  (directory-does-not-exist (get-remote-data-cache-dir)))
 
 (defprop regex-replaced-lines :posix (file regex replace)
   "Like s/REGEX/REPLACE/ on the lines of FILE.
