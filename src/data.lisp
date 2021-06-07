@@ -271,7 +271,7 @@ and PATH has mode MODE."
        (let ((stream (%get-data-stream data)))
          (if (and (remote-exists-p path)
                   (multiple-value-bind (existing-mode existing-size)
-                      (remote-file-mode-and-size path)
+                      (remote-file-stats path)
                     (and (or (not mode-supplied-p) (= mode existing-mode))
                          (= (file-length stream) existing-size)
                          (= (data-cksum data) (cksum path)))))

@@ -454,8 +454,14 @@ PATH may be any kind of file, including directories."
                       nconc (list "-e" (car path))
                       when (cdr path) collect "-a")))
 
-(defun remote-file-mode-and-size (path)
-  "Get the numeric mode and size in bytes of PATH, or NIL if it does not exist."
+(defun remote-file-stats (path)
+  "Get the numeric mode, size in bytes and mtime of PATH, or NIL if it does not
+exist.
+
+The mtime is only accurate to the nearest UTC day, rounding down, if the file
+was modified in the past six months or its mtime is in the future, and only
+accurate to the nearest minute, rounding down, otherwise (see the
+specification of POSIX ls(1))."
   (flet ((sum (chars order)
            (+ (if (char= (elt chars 0) #\r) (* order 4) 0)
               (if (char= (elt chars 1) #\w) (* order 2) 0)
@@ -467,12 +473,32 @@ PATH may be any kind of file, including directories."
                 (#\x order)
                 (#\- 0)))))
     (and (remote-exists-p path)
-         (let* ((ls (words (run :env '(:LC_ALL "C") "ls" "-ld" path)))
+         ;; This is a safe parse of ls(1) given its POSIX specification.
+         (let* ((ls (words
+                     (run :env '(:LC_ALL "C" :TZ "UTC") "ls" "-ld" path)))
                 (lscar (car ls)))
            (values (+ (sum (subseq lscar 1 4) #o100)
                       (sum (subseq lscar 4 7) #o10)
                       (sum (subseq lscar 7 10) 1))
-                   (parse-integer (nth 4 ls)))))))
+                   (parse-integer (nth 4 ls))
+                   (let ((date (parse-integer (nth 6 ls)))
+                         (month (cdr
+                                 (assoc
+                                  (nth 5 ls)
+                                  '(("Jan" . 1) ("Feb" . 2) ("Mar" . 3)
+                                    ("Apr" . 4) ("May" . 5) ("Jun" . 6)
+                                    ("Jul" . 7) ("Aug" . 8) ("Sep" . 9)
+                                    ("Oct" . 10) ("Nov" . 11) ("Dec" . 12))
+                                  :test #'string=))))
+                     (if (find #\: (nth 7 ls))
+                         (destructuring-bind (hour minute)
+                             (split-string (nth 7 ls) :separator ":")
+                           (encode-universal-time
+                            0 (parse-integer minute) (parse-integer hour)
+                            date month (nth-value 5 (get-decoded-time))
+                            0))
+                         (encode-universal-time
+                          0 0 0 date month (parse-integer (nth 7 ls)) 0))))))))
 
 (defun readfile (path)
   (connection-readfile

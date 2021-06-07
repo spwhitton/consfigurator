@@ -541,7 +541,7 @@ apply or unapply properties.")
 PATH already has the specified CONTENT and MODE."
   (if (and (remote-exists-p path)
            (multiple-value-bind (existing-mode existing-size)
-               (remote-file-mode-and-size path)
+               (remote-file-stats path)
              (and (or (not mode-supplied-p) (= mode existing-mode))
                   (and (>= (* 4 (length content)) existing-size)
                        (string= (readfile path) content)))))
