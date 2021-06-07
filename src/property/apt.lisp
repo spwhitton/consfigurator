@@ -27,7 +27,7 @@
        (updated)
        ,form)))
 
-(defmacro with-changes-dpkg-status (&rest forms)
+(defmacro with-changes-dpkg-status (&body forms)
   `(with-change-if-changes-file-content ("/var/lib/dpkg/status") ,@forms))
 
 (define-constant +sections+ '("main" "contrib" "non-free") :test #'equal)
