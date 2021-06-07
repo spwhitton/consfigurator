@@ -106,6 +106,18 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
      (cmd:single :env +noninteractive-env+ :inform
                  "apt-get" "update" "--allow-releaseinfo-change"))))
 
+(defprop upgraded :posix ()
+  (:desc "apt upgraded")
+  (:hostattrs (os:required 'os:debianlike))
+  (:apply (with-changes-dpkg-status
+            (apt-get :inform "-y" "dist-upgrade"))))
+
+(defprop autoremoved :posix ()
+  (:desc "apt removed automatically installed packages")
+  (:hostattrs (os:required 'os:debianlike))
+  (:apply (with-changes-dpkg-status
+            (apt-get :inform "-y" "autoremove"))))
+
 (defprop periodic-updates :posix ()
   "Enable periodically updating the apt indexes and downloading new versions of
 packages.  Does not do any automatic upgrades."

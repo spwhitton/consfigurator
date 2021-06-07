@@ -363,6 +363,8 @@
            #:service-installed-running
            #:all-configured
            #:updated
+           #:upgraded
+           #:autoremoved
            #:periodic-updates
            #:unattended-upgrades
            #:mirror
