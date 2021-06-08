@@ -140,6 +140,7 @@
            #:propattrs
            #:propunapply
            #:collapse-types
+           #:collapse-propapp-types
            #:propapptype
            #:propappdesc
            #:propappattrs
@@ -194,6 +195,7 @@
            #:on-change
 	   #:as
            #:with-flagfile
+           #:with-unapply
 
            ;; host.lisp
            #:host

@@ -248,3 +248,32 @@ FLAGFILE exists, PROPAPPS are assumed to all be already applied."
                        (prog1 (propappunapply propapp)
                          (mrun "rm" flagfile)))
             :args (cdr propapp)))
+
+(define-function-property-combinator with-unapply (&rest propapps)
+  "As ESEQPROPS, except that if :UNAPPLY appears in PROPAPPS, then return a
+property which applies the elements of PROPAPPS prior to :UNAPPLY, but which
+when unapplied ignores the elements of PROPAPPS prior to :UNAPPLY, and instead
+applies the elements of PROPAPPS appearing after :UNAPPLY.
+
+Analogously to how DEFPROPLIST/DEFPROPSPEC allow you to define a property
+which works by calling other properties, this combinator allows you to define
+an :UNAPPLY subroutine for a property which works by calling other properties."
+  (let* ((apply (loop for propapp in propapps
+                      until (eql propapp :unapply) collect propapp))
+         (unapply (member :unapply propapps))
+         (apply-propapp
+           (if (cdr apply) (apply #'eseqprops apply) (car apply)))
+         (unapply-propapp (if (cddr unapply)
+                              (apply #'eseqprops (cdr unapply))
+                              (cadr unapply))))
+    (if unapply
+        (:retprop :type (collapse-propapp-types apply (cdr unapply))
+                  :hostattrs (lambda-ignoring-args
+                               (propappattrs apply-propapp)
+                               ;; as in definition of UNAPPLY combinator
+                               (with-preserve-hostattrs
+                                 (propappattrs unapply-propapp)))
+                  :apply (lambda-ignoring-args (propappapply apply-propapp))
+                  :unapply (lambda-ignoring-args
+                             (propappapply unapply-propapp)))
+        apply-propapp)))
