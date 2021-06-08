@@ -611,6 +611,40 @@
            #:kvm-boots-chroot
            #:kvm-boots-chroot.))
 
+(defpackage :consfigurator.property.ccache
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
+                    (#:apt       #:consfigurator.property.apt))
+  (:export #:installed
+           #:has-limits
+           #:group-cache))
+
+(defpackage :consfigurator.property.schroot
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
+                    (#:apt       #:consfigurator.property.apt))
+  (:export #:installed
+           #:uses-overlays
+           #:overlays-in-tmpfs))
+
+(defpackage :consfigurator.property.sbuild
+  (:use #:cl #:alexandria #:consfigurator)
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
+                    (#:chroot    #:consfigurator.property.chroot)
+                    (#:user      #:consfigurator.property.user)
+                    (#:apt       #:consfigurator.property.apt)
+                    (#:ccache    #:consfigurator.property.ccache)
+                    (#:schroot   #:consfigurator.property.schroot)
+                    (#:periodic  #:consfigurator.property.periodic))
+  (:export #:installed
+           #:usable-by
+           #:built
+           #:built.
+           #:standard-debian-schroot))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
