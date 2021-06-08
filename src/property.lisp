@@ -571,11 +571,14 @@ PATH already has the specified CONTENT and MODE."
 
 ;; this is a safe parse of ls(1) output given its POSIX specification
 (defun ls-cksum (file)
-  (let ((ls (ignore-errors
-             (words (run :env '(:LC_ALL "C") "ls" "-dlL" file))))
-        (cksum (ignore-errors (cksum file))))
-    (when (and ls cksum)
-      (list* (car ls) cksum (subseq ls 2 8)))))
+  (when-let* ((ls (ignore-errors
+                   (words (run :env '(:LC_ALL "C") "ls" "-dlL" file))))
+              (ls-car (car ls))
+              (ls-end (subseq ls 2 8)))
+    (if (char= #\d (elt ls-car 0))
+        (cons ls-car ls-end)
+        (let ((cksum (ignore-errors (cksum file))))
+          (and cksum (list* ls-car cksum ls-end))))))
 
 (defmacro with-change-if-changes-file ((file) &body forms)
   "Execute FORMS and yield :NO-CHANGE if FILE does not change.
