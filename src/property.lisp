@@ -113,7 +113,7 @@
 (defun propunapply (prop &rest args)
   (with-some-errors-are-failed-change
     (let ((check (get prop 'check))
-          (apply (get prop 'apply))
+          (apply (get prop 'papply))
           (unapply (get prop 'punapply)))
       ;; Only fail if there's no :UNAPPLY when there is an :APPLY, because
       ;; that is the case in which we can't do what was requested.  If there
