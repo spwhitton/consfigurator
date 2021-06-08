@@ -68,6 +68,19 @@ CONTENT can be a list of lines or a single string."
    (with-change-if-changes-file (path)
      (mrun (format nil "chmod ~O ~A" mode path)))))
 
+(defprop has-ownership :posix (path &key user group)
+  "Ensure that a file has particular ownership and group ownership."
+  (:desc (format nil "~A has~:[~; owner ~:*~A~]~:[~;~2:*~:[~;,~] group ~A~]"
+                 path user group))
+  (:hostattrs
+   (unless (or user group)
+     (inapplicable-property "Not enough arguments.")))
+  (:apply
+   (with-change-if-changes-file (path)
+     (if user
+         (mrun "chown" "-h" (format nil "~A~:[~;:~:*~A~]" user group) path)
+         (mrun "chgrp" "-h" group path)))))
+
 (defprop does-not-exist :posix (&rest paths)
   "Ensure that files do not exist."
   (:desc (if (cdr paths)

@@ -283,6 +283,7 @@
            #:contains-lines
            #:lacks-lines
            #:has-mode
+           #:has-ownership
            #:does-not-exist
            #:directory-does-not-exist
            #:data-uploaded
