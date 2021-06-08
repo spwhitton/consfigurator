@@ -44,6 +44,7 @@ CONTENT can be a list of lines or a single string."
 
 (defprop contains-lines :posix (path &rest lines)
   "Ensure there is a file at PATH containing each of LINES once."
+  (declare (indent 1))
   (:apply
    (let ((new-lines (copy-list (ensure-cons lines)))
          (existing-lines (and (remote-exists-p path)
