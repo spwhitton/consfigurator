@@ -28,16 +28,22 @@
        (progn (delete-remote-trees root) nil)
        (remote-exists-p (merge-pathnames "usr/lib/os-release" root))))
   (:apply
-   (let* ((os (get-hostattrs-car :os host))
+   (destructuring-bind
+       (&key (apt.proxy (get-hostattrs-car :apt.proxy host))
+          (apt.mirror (get-hostattrs-car :apt.mirror host))
+        &allow-other-keys
+        &aux (os (get-hostattrs-car :os host))
           (args (list "debootstrap"
-                      (plist-to-cmd-args options)
+                      (plist-to-cmd-args
+                       (remove-from-plist options :apt.proxy :apt.mirror))
                       (strcat "--arch=" (os:debian-architecture os))
                       (os:debian-suite os)
                       root)))
-     (when-let ((proxy (get-hostattrs-car :apt.proxy)))
-       (setq args (list* :env (list :http_proxy proxy) args)))
-     (when-let ((mirror (get-hostattrs-car :apt.mirror)))
-       (nconcf args (list mirror)))
+       options
+     (when apt.proxy
+       (setq args (list* :env (list :http_proxy apt.proxy) args)))
+     (when apt.mirror
+       (nconcf args (list apt.mirror)))
      (apply #'run args))))
 
 (defpropspec %os-bootstrapper-installed :posix (host)
