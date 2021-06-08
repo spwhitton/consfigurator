@@ -99,9 +99,11 @@ OPTIONS is a plist of values to pass to the OS-specific bootstrapping property."
   (:desc
    (declare (ignore options))
    #?"Built chroot for ${(get-hostname child-host*)} @ ${root}")
-  (%os-bootstrapper-installed child-host*)
-  (%os-bootstrapped options root child-host*)
-  (consfigurator:deploys `((:chroot :into ,root)) child-host))
+  (with-unapply
+    (%os-bootstrapper-installed child-host*)
+    (%os-bootstrapped options root child-host*)
+    (consfigurator:deploys `((:chroot :into ,root)) child-host)
+    :unapply (mount:unmounted-below-and-removed root)))
 
 (defproplist os-bootstrapped :lisp (options root properties)
   "Bootstrap an OS into ROOT and apply PROPERTIES.

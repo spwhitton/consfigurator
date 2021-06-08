@@ -404,6 +404,7 @@
                     (#:apt       #:consfigurator.property.apt)
                     (#:os        #:consfigurator.property.os)
                     (#:container #:consfigurator.property.container)
+                    (#:mount     #:consfigurator.property.mount)
                     (#:file      #:consfigurator.property.file))
   (:shadow #:deploys #:deploys. #:deploys-these #:deploys-these.)
   (:export #:deploys
