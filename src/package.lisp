@@ -76,6 +76,7 @@
            #:plist-to-cmd-args
 	   #:with-local-temporary-directory
            #:pathname-file
+           #:ensure-trailing-slash
            #:drop-trailing-slash
            #:quote-nonselfeval
            #:define-print-object-for-structlike

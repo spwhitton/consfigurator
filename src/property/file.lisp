@@ -89,17 +89,20 @@ CONTENT can be a list of lines or a single string."
   (:check (not (apply #'remote-exists-p paths)))
   (:apply (mrun "rm" "-f" paths)))
 
-(defprop directory-does-not-exist :posix (&rest directories)
+(defprop directory-does-not-exist :posix
+    (&rest directories
+           ;; Ensure that there's a trailing slash at the end of each
+           ;; namestring, such that if a regular file of the same name as the
+           ;; directory exists, 'rm -rf' will not delete it.
+           &aux (directories
+                 (mapcar (compose #'ensure-trailing-slash #'unix-namestring)
+                         directories)))
   "Recursively ensure that DIRECTORIES do not exist."
   (:desc (if (cdr directories)
              #?"@{directories} do not exist"
              #?"${(car directories)} does not exist"))
   (:check (not (apply #'remote-exists-p directories)))
-  (:apply
-   (if (test (format nil "~{( -e ~A -a ! -d ~:*~A )~^ -o ~}" directories))
-       (failed-change "At least one of ~S exists and is not a directory."
-                      directories)
-       (apply #'delete-remote-trees directories))))
+  (:apply (mrun "rm" "-rf" directories)))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
   (:hostattrs
