@@ -40,7 +40,7 @@ exist, so that the user can easily override this default."
 (defpropspec built :lisp
     (options properties
              &aux (host
-                   (make-host
+                   (make-child-host
                     :propspec
                     (append-propspecs
                      properties
