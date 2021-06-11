@@ -31,6 +31,7 @@ See ccache(1) for the format of MAX-SIZE."
   (:desc (format nil "~A has max size ~D & max files ~D"
                  cache max-size max-files))
   (:apply
+   (installed)
    (with-change-if-changes-file-content
        ((merge-pathnames "ccache.conf" (ensure-directory-pathname cache)))
      ;; Let ccache(1) handle editing and deduplicating the config file, etc.
