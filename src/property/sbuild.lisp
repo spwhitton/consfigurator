@@ -172,7 +172,7 @@ EOF :mode #o755)
 
               ("command-prefix"
                ,(if use-ccache
-                    "/var/cache/ccache-sbuild/sbuild-setup:eatmydata"
+                    "/var/cache/ccache-sbuild/sbuild-setup,eatmydata"
                     "eatmydata"))))))
 
        ;; TODO We should kill any sessions still using the chroot before
