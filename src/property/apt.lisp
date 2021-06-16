@@ -206,7 +206,7 @@ only upgrade Debian stable."
          (security (and (not (subtypep (type-of os) 'os:debian-unstable))
                         (list
                          (list* "http://security.debian.org/debian-security"
-                               security-suite +sections+)))))
+                                security-suite +sections+)))))
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
             (nconc archive security))))
 
