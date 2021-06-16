@@ -365,6 +365,7 @@
                     (#:os         #:consfigurator.property.os)
                     (#:service    #:consfigurator.property.service))
   (:export #:installed
+           #:installed-minimally
            #:removed
            #:reconfigured
            #:service-installed-running
@@ -380,6 +381,7 @@
            #:uses-parent-proxy
            #:uses-local-cacher
            #:standard-sources.list
+           #:additional-sources
            #:cache-cleaned
            #:all-installed-p
            #:none-installed-p))

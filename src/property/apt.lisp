@@ -43,13 +43,20 @@
   "Ensure all of the apt packages PACKAGES are installed."
   (:desc #?"apt installed @{packages}")
   (:preprocess (flatten packages))
-  (:hostattrs
-   (declare (ignore packages))
-   (os:required 'os:debianlike))
-  (:check
-   (all-installed-p packages))
+  (:hostattrs (os:required 'os:debianlike))
+  (:check (all-installed-p packages))
   (:apply
    (with-maybe-update (apt-get :inform "-y" "install" packages))))
+
+(defprop installed-minimally :posix (&rest packages)
+  "Ensure all of the apt packages PACKAGES are installed, without recommends."
+  (:desc #?"apt installed @{packages}")
+  (:preprocess (flatten packages))
+  (:hostattrs (os:required 'os:debianlike))
+  (:check (all-installed-p packages))
+  (:apply
+   (with-maybe-update
+       (apt-get :inform "-y" "--no-install-recommends" "install" packages))))
 
 (defprop removed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are removed."
@@ -203,6 +210,13 @@ only upgrade Debian stable."
                                security-suite +sections+)))))
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
             (nconc archive security))))
+
+(defprop additional-sources :posix (basename content)
+  "Add additional apt source lines to a file in /etc/apt/sources.list.d named
+after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
+  (on-change
+      (file:has-content #?"/etc/apt/sources.list.d/${basename}.list" content)
+    (updated)))
 
 (defprop cache-cleaned :posix ()
   "Empty apt's cache to recover disk space."
