@@ -191,11 +191,10 @@ only upgrade Debian stable."
 (defmethod get-default-mirrors ((os os:debian))
   '("http://deb.debian.org/debian"))
 
-(defprop standard-sources.list :posix ()
+(defproplist standard-sources.list :posix ()
   (:desc "Standard sources.list")
-  (:apply
-   (file:has-content "/etc/apt/sources.list"
-     (call-with-os #'standard-sources-for))))
+  (file:has-content "/etc/apt/sources.list"
+    (call-with-os #'standard-sources-for)))
 
 (defmethod standard-sources-for ((os os:debian))
   (let* ((suite (os:debian-suite os))
