@@ -383,6 +383,7 @@
            #:standard-sources.list
            #:additional-sources
            #:cache-cleaned
+           #:trusts-key
            #:all-installed-p
            #:none-installed-p))
 

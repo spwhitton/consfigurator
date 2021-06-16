@@ -34,7 +34,7 @@ other purposes.
   identified by ``NAME``; see ``DATA.GIT-SNAPSHOT``
 
 - ``("--pgp-pubkey" . FINGERPRINT)`` means the/a OpenPGP public key with
-  fingerprint FINGERPRINT
+  fingerprint FINGERPRINT, ASCII-armoured
 
 - ``("--luks-passphrase" . VOLUME-LABEL)`` means a LUKS passphrase for volume
   with label ``VOLUME-LABEL``.

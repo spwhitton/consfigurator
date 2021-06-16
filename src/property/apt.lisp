@@ -224,6 +224,15 @@ after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
   (:hostattrs (os:required 'os:debianlike))
   (:apply (apt-get "clean") :no-change))
 
+(defproplist trusts-key :posix
+    (fingerprint &optional (basename (remove #\Space fingerprint))
+                 &aux (file #?"/etc/apt/trusted.gpg.d/${basename}.asc"))
+  "Have apt trust the PGP key identified by FINGERPRINT to sign apt archives."
+  (:desc #?"apt trusts PGP public key ${fingerprint}")
+  (with-unapply
+    (file:data-uploaded "--pgp-pubkey" (remove #\Space fingerprint) file)
+    :unapply (file:does-not-exist file)))
+
 
 ;;;; Reports on installation status
 
