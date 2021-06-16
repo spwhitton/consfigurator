@@ -200,6 +200,14 @@ only upgrade Debian stable."
   (let* ((suite (os:debian-suite os))
          (archive (mapcar (lambda (m) (list* m suite +sections+))
                           (get-mirrors)))
+         (updates (and (subtypep (type-of os) 'os:debian-stable)
+                       (mapcar (lambda (m)
+                                 (list* m #?"${suite}-updates" +sections+))
+                               (get-mirrors))))
+         (backports (and (subtypep (type-of os) 'os:debian-stable)
+                         (mapcar (lambda (m)
+                                   (list* m #?"${suite}-backports" +sections+))
+                                 (get-mirrors))))
          (security-suite (if (memstring= suite '("stretch" "jessie" "buster"))
                              #?"${suite}/updates"
                              #?"${suite}-security"))
@@ -208,7 +216,7 @@ only upgrade Debian stable."
                          (list* "http://security.debian.org/debian-security"
                                 security-suite +sections+)))))
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
-            (nconc archive security))))
+            (nconc archive updates backports security))))
 
 (defproplist additional-sources :posix (basename content)
   "Add additional apt source lines to a file in /etc/apt/sources.list.d named
