@@ -42,6 +42,20 @@ CONTENT can be a list of lines or a single string."
                    (string (format nil "~A~&" content)))
                  (and mode-supplied-p `(:mode ,mode)))))
 
+(defpropspec exists-with-content :posix
+    (path content &key (mode nil mode-supplied-p))
+  "Like FILE:HAS-CONTENT, but unapplicable, where unapplying means deleting
+PATH, rather than restoring any old content it might have had.
+
+The semantics of this property are that if it is applied, the file has content
+CONTENT, and if it is not applied to a host, the file does not exist.  Thus,
+it should be used to create new files on the host, not to replace the contents
+of existing files, such as those installed by operating system packages.  For
+replacing the contents of existing files, prefer FILE:HAS-CONTENT."
+  `(with-unapply
+     (has-content ,path ,content ,@(and mode-supplied-p `(:mode ,mode)))
+     :unapply (does-not-exist ,path)))
+
 (defprop contains-lines :posix (path &rest lines)
   "Ensure there is a file at PATH containing each of LINES once."
   (declare (indent 1))

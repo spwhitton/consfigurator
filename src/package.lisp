@@ -281,6 +281,7 @@
   (:local-nicknames (#:re #:cl-ppcre))
   (:export #:map-file-lines
            #:has-content
+           #:exists-with-content
            #:contains-lines
            #:lacks-lines
            #:has-mode
