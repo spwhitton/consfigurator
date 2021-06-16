@@ -210,8 +210,8 @@ ON-CHANGE in order."
                        (if (eql :no-change
                                 (propappunapply (cons (car propapp) args)))
                            :no-change
-                           (dolist (propapp (reverse propapps))
-                             (propappunapply propapp))))
+                           (dolist (propapp propapps)
+                             (propappapply propapp))))
             :args (cdr propapp)))
 
 (defmacro as (user &body properties)
