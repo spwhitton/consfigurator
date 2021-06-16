@@ -221,6 +221,7 @@ only upgrade Debian stable."
 (defproplist additional-sources :posix (basename content)
   "Add additional apt source lines to a file in /etc/apt/sources.list.d named
 after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
+  (declare (indent 1))
   (on-change (file:exists-with-content
               #?"/etc/apt/sources.list.d/${basename}.list" content)
     (updated)))
