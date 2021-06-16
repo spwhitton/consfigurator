@@ -211,7 +211,7 @@ only upgrade Debian stable."
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
             (nconc archive security))))
 
-(defprop additional-sources :posix (basename content)
+(defproplist additional-sources :posix (basename content)
   "Add additional apt source lines to a file in /etc/apt/sources.list.d named
 after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
   (on-change
