@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2017, 2021  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -239,6 +239,56 @@ after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
   (with-unapply
     (file:data-uploaded "--pgp-pubkey" (remove #\Space fingerprint) file)
     :unapply (file:does-not-exist file)))
+
+
+;;;; Pinning
+
+(defmethod suite-pin ((os os:debian-stable))
+  (strcat "n=" (os:debian-suite os)))
+
+(defmethod suite-pin ((os os:debian))
+  (strcat "a=" (os:debian-suite os)))
+
+(defmethod suite-pin-block ((pref string) (os os:debian) pin-priority)
+  `("Explanation: This file added by Consfigurator"
+    ,(strcat "Package: " pref)
+    ,(strcat "Pin: release " (suite-pin os))
+    ,(format nil "Pin-Priority: ~D" pin-priority)))
+
+(defpropspec suites-available-pinned :posix (&rest pairs)
+  "Where PAIRS is a list of even length of alternating instances of OS:DEBIAN
+and apt pin priorities, add an apt source for the instance of OS:DEBIAN and
+pin that suite to a given pin value (see apt_preferences(5)).  Unapply to drop
+the source and unpin the suite.
+
+If the OS:DEBIAN is the host's OS, the suite is pinned, but no source is
+added.  That apt source should already be available, or you can use a property
+like APT:STANDARD-SOURCES.LIST."
+  (:desc (loop for (os pin) on pairs by #'cddr
+               for suite = (os:debian-suite os)
+               collect #?{Debian "${suite}" pinned, priority ${pin}}
+                 into accum
+               finally (return (format nil "~{~A~^; ~}" accum))))
+  (:hostattrs (os:required 'os:debian))
+  `(eseqprops
+    ,@(loop for (os pin) on pairs by #'cddr
+            for suite = (os:debian-suite os)
+            do (check-type pin integer)
+            collect `(file:exists-with-content
+                      ,#?"/etc/apt/preferences.d/20${suite}.pref"
+                      ,(suite-pin-block "*" os pin))
+            unless (and
+                    (subtypep (type-of (get-hostattrs-car :os)) 'os:debian)
+                    (string= suite (os:debian-suite (get-hostattrs-car :os))))
+              ;; Unless we are pinning a backports suite, filter out any
+              ;; backports sources that were added by STANDARD-SOURCES-FOR.
+              ;; Probably don't want those to be pinned to the same value.
+              collect `(additional-sources
+                        ,suite ,(if (string-suffix-p suite "-backports")
+                                    (standard-sources-for os)
+                                    (loop for line in (standard-sources-for os)
+                                          unless (search "-backports" line)
+                                            collect line))))))
 
 
 ;;;; Reports on installation status

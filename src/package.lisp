@@ -322,6 +322,7 @@
            #:debian-stable
            #:debian-testing
            #:debian-unstable
+           #:debian-experimental
            #:debian-suite
            #:debian-architecture
            #:typecase
@@ -386,7 +387,8 @@
            #:cache-cleaned
            #:trusts-key
            #:all-installed-p
-           #:none-installed-p))
+           #:none-installed-p
+           #:suites-available-pinned))
 
 (defpackage :consfigurator.connection.sbcl
   (:use #:cl #:alexandria #:consfigurator)
