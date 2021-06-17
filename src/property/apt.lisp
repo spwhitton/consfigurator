@@ -291,6 +291,49 @@ like APT:STANDARD-SOURCES.LIST."
                                           unless (search "-backports" line)
                                             collect line))))))
 
+(defpropspec pinned :posix (preferences &rest pairs)
+  "Pins a list of packages, package wildcards and/or regular expressions,
+PREFERENCES, to a list of suites and corresponding pin priorities.  Unapply to
+unpin.  PAIRS is a list of even length of alternating instances of OS:DEBIAN
+and apt pin priorities.
+
+Each package, package wildcard or regular expression will be pinned to all of
+the specified suites.  Each of PREFERENCES is the name of a package, a glob to
+match the names of packages, or a regexp surrounded by slashes to match the
+names of packages.  See apt_preferences(5), \"Regular expressions and glob(7)
+syntax\".
+
+Note that this will have no effect unless there is an apt source for each of
+the suites.  One way to add an apt source is APT:SUITES-AVAILABLE-PINNED.
+
+For example, to obtain Emacs Lisp addon packages not present in your stable
+release of Debian from testing, falling back to sid if they're not available
+in testing, you could use:
+
+    (os:debian-stable \"bullseye\" :amd64)
+    (apt:suites-available-pinned (os:debian-testing)  -10
+                                 (os:debian-unstable) -10)
+    (apt:pinned '(\"elpa-*\")
+                (os:debian-testing)  100
+                (os:debian-unstable) 50)"
+  (:desc (loop for (os pin) on pairs by #'cddr
+               for suite = (os:debian-suite os)
+               collect #?{Debian "${suite}", priority ${pin}} into accum
+               finally (return (format nil "~{~A~^, ~} pinned to ~{~A~^; ~}"
+                                       preferences accum))))
+  (:hostattrs (os:required 'os:debian))
+  `(eseqprops
+    ,@(loop for preference in preferences
+            collect (list
+                     'file:exists-with-content
+                     (strcat "/etc/apt/preferences.d/10consfig_"
+                             (string->filename preference)
+                             ".pref")
+                     (nbutlast
+                      (loop for (os pin) on pairs by #'cddr
+                            nconc (suite-pin-block preference os pin)
+                            collect ""))))))
+
 
 ;;;; Reports on installation status
 

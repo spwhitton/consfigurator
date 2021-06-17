@@ -388,7 +388,8 @@
            #:trusts-key
            #:all-installed-p
            #:none-installed-p
-           #:suites-available-pinned))
+           #:suites-available-pinned
+           #:pinned))
 
 (defpackage :consfigurator.connection.sbcl
   (:use #:cl #:alexandria #:consfigurator)
