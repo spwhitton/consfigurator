@@ -382,6 +382,7 @@
            #:proxy
            #:uses-parent-proxy
            #:uses-local-cacher
+           #:get-mirrors
            #:standard-sources.list
            #:additional-sources
            #:cache-cleaned
