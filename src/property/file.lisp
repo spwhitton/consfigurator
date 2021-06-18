@@ -387,7 +387,7 @@ commented out; the first commented or uncommented line for each key will be
 uncommented and used to set the value, if it exists."
   (:desc (format nil "~A has ~{~A = ~A~^, ~}" file pairs))
   (:apply (simple-conf-update file pairs
-                              :parse-kv #?/^(\S+) = (.+)/
+                              :parse-kv #?/^(\S+)\s?=\s?(.*)/
                               :new-kv (lambda (k v) #?"${k} = ${v}"))))
 
 (defprop contains-conf-shell :posix (file &rest pairs)
