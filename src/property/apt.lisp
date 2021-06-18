@@ -211,7 +211,8 @@ only upgrade Debian stable."
          (security-suite (if (memstring= suite '("stretch" "jessie" "buster"))
                              #?"${suite}/updates"
                              #?"${suite}-security"))
-         (security (and (not (subtypep (type-of os) 'os:debian-unstable))
+         (security (and (or (subtypep (type-of os) 'os:debian-stable)
+                            (subtypep (type-of os) 'os:debian-testing))
                         (list
                          (list* "http://security.debian.org/debian-security"
                                 security-suite +sections+)))))
