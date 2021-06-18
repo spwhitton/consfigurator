@@ -182,11 +182,15 @@ Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
 ;; readlink(1) is not POSIX
 (defun remote-link-target (symlink)
   (loop with s = (stripln (run :env '(:LC_ALL "C") "ls" "-ld" symlink))
-        with found = 0
+        and found = 0 and just-found
         for i from 0 below (length s)
-        when (char= (elt s i) #\Space)
-          do (incf found)
-        when (>= found 9)
+
+        if (char= (elt s i) #\Space)
+          unless just-found do (incf found) (setq just-found t)
+            end
+        else do (setq just-found nil)
+
+        when (>= found 8)
           return (subseq s (+ (length symlink) i 5))))
 
 (defprop symlinked :posix (&key from to)
