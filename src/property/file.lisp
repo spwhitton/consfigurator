@@ -52,6 +52,7 @@ CONTENT, and if it is not applied to a host, the file does not exist.  Thus,
 it should be used to create new files on the host, not to replace the contents
 of existing files, such as those installed by operating system packages.  For
 replacing the contents of existing files, prefer FILE:HAS-CONTENT."
+  (declare (indent 1))
   `(with-unapply
      (has-content ,path ,content ,@(and mode-supplied-p `(:mode ,mode)))
      :unapply (does-not-exist ,path)))
