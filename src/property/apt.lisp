@@ -162,10 +162,12 @@ only upgrade Debian stable."
   (:hostattrs
    (pushnew-hostattrs :apt.mirror uri)))
 
-(defproplist uses-parent-mirror :posix ()
-  (:desc #?"Uses parent's apt mirror")
-  (mirror (or (get-parent-hostattrs-car :apt.mirror)
-              (failed-change "Parent has no apt mirror"))))
+(defpropspec uses-parent-mirrors :posix ()
+  (:desc #?"Uses parent's apt mirror(s), if any")
+  (let ((mirrors (get-parent-hostattrs :apt-mirror)))
+    (and mirrors
+         `(eseqprops
+           ,@(loop for mirror in mirrors collect `(mirror ,mirror))))))
 
 (defprop proxy :posix (uri)
   (:desc #?"${uri} apt proxy selected")

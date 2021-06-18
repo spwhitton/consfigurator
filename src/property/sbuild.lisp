@@ -80,7 +80,7 @@ Example usage:
       (os:debian-unstable :amd64)
       (sbuild:standard-debian-schroot)
       (apt:uses-parent-proxy)
-      (apt:uses-parent-mirror))
+      (apt:uses-parent-mirrors))
 
 To take advantage of the piuparts and autopkgtest support, add to your
 ~/.sbuildrc:

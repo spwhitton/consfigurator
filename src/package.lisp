@@ -381,7 +381,7 @@
            #:periodic-updates
            #:unattended-upgrades
            #:mirror
-           #:uses-parent-mirror
+           #:uses-parent-mirrors
            #:proxy
            #:uses-parent-proxy
            #:uses-local-cacher

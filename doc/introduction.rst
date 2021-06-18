@@ -83,7 +83,7 @@ Try it out / quick start
 	    ;; These two properties are not for debootstrap(1) for but apt
 	    ;; inside the chroot.
 	    (apt:uses-parent-proxy) ; use the apt-cacher-ng set up outside chroot
-	    (apt:uses-parent-mirror))) ; use the apt mirror set up above
+	    (apt:uses-parent-mirrors))) ; use the apt mirror set up above
 
     Here, "spwhitton" is my username on athena; we have to tell Consfigurator
     what user it will be when it tries to sudo, so it knows whose password it
