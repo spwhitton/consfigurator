@@ -141,12 +141,9 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
    (containing-directory-exists destination)
    (maybe-writefile-data destination iden1 iden2 :mode #o600)))
 
-(defprop host-secret-uploaded :posix
+(defproplist host-secret-uploaded :posix
     (destination &aux (destination (unix-namestring destination)))
-  (:hostattrs
-   (require-data (get-hostname) destination))
-  (:apply
-   (secret-uploaded (get-hostname) destination destination)))
+  (secret-uploaded (get-hostname) destination destination))
 
 (defproplist data-cache-purged :posix ()
   "Ensure that any prerequisite data cached in the remote home directory is removed."
