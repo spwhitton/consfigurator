@@ -48,6 +48,10 @@ not affect you."
   (os:etypecase
       (debianlike (%policy-rc.d))))
 
+(defun service (service action)
+  (unless (get-hostattrs-car :no-services)
+    (run :may-fail "service" service action)))
+
 (defprop running :posix (service)
   "Attempt to start service using service(1).
 Assumes that if service(1) returns nonzero, it means the service was already
@@ -55,10 +59,17 @@ running.  If something more robust is required, use init system-specific
 properties."
   (:desc #?"Attempt to start ${service} has been made")
   (:apply
-   (unless (get-hostattrs-car :no-services)
-     (run :may-fail "service" service "start"))
+   (service service "start")
    ;; assume it was already running
    :no-change))
+
+(defprop restarted :posix (service)
+  (:desc "Attempt to restart ${service}")
+  (:apply (service service "restart")))
+
+(defprop reloaded :posix (service)
+  (:desc "Attempt to reload ${service}")
+  (:apply (service service "reload")))
 
 (define-function-property-combinator without-starting-services (&rest propapps)
   "Apply PROPAPPS with SERVICE:NO-SERVICES temporarily in effect."

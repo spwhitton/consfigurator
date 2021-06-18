@@ -357,6 +357,8 @@
                     (#:file  #:consfigurator.property.file))
   (:export #:no-services
            #:running
+           #:restarted
+           #:reloaded
            #:without-starting-services))
 
 (defpackage :consfigurator.property.apt
