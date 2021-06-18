@@ -56,6 +56,7 @@
                (:file "src/property/ccache")
                (:file "src/property/schroot")
                (:file "src/property/sbuild")
+               (:file "src/property/postfix")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
                (:file "src/connection/rehome")

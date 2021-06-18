@@ -21,6 +21,15 @@
 ;;;; Property combinators
 
 (defmacro define-function-property-combinator (name args &body body)
+  "Define a function property combinator NAME with lambda list ARGS.
+
+Usage notes:
+
+- If you need to read individual arguments to propapps passed as arguments to
+  NAME, call PROPAPPARGS to access them.  For passing a whole list of args on
+  to a property subroutine, just take the cdr of the propapp.
+
+  For an example showing both techniques at work, see POSTFIX:MAPPED-FILE."
   (multiple-value-bind (forms declarations docstring)
       (parse-body body :documentation t)
     `(defun ,name ,args

@@ -63,6 +63,11 @@
       (get (car propapp) 'ptype)
       :posix))
 
+(defun propappargs (propapp)
+  (if (member :orig-args (cadr propapp))
+      (getf (cadr propapp) :orig-args)
+      (cdr propapp)))
+
 (defun collapse-types (&rest lists)
   (if (member :posix (flatten lists)) :posix :lisp))
 

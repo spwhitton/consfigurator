@@ -143,6 +143,7 @@
            #:collapse-types
            #:collapse-propapp-types
            #:propapptype
+           #:propappargs
            #:propappdesc
            #:propappattrs
            #:propappcheck
@@ -654,6 +655,18 @@
            #:built
            #:built.
            #:standard-debian-schroot))
+
+(defpackage :consfigurator.property.postfix
+  (:use #:cl #:alexandria #:consfigurator)
+  (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
+                    (#:service   #:consfigurator.property.service)
+                    (#:apt       #:consfigurator.property.apt)
+                    (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file))
+  (:export #:installed
+           #:reloaded
+           #:main-configured
+           #:mapped-file))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
