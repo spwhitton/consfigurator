@@ -402,9 +402,11 @@
 
 (defpackage :consfigurator.property.user
   (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file  #:consfigurator.property.file))
+  (:local-nicknames (#:file  #:consfigurator.property.file)
+                    (#:os    #:consfigurator.property.os))
   (:export #:has-account
            #:has-groups
+           #:has-desktop-groups
 	   #:has-login-shell
            #:has-enabled-password
 	   #:passwd-entry))

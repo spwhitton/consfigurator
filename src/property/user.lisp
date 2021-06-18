@@ -41,6 +41,25 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (assert-euid-root)
    (mrun "usermod" "-a" "-G" groups* username)))
 
+(defparameter *desktop-groups*
+  '("audio" "cdrom" "dip" "floppy" "video" "plugdev" "netdev" "scanner"
+    "bluetooth" "debian-tor" "lpadmin")
+  "See the debconf template passwd/user-default-groups for package user-setup.")
+
+(defprop has-desktop-groups :posix (username)
+  "Add user to the secondary groups to which the OS installer normally adds the
+default account it creates.  Skips over groups which do not exist yet, pending
+the installation of other software."
+  (:desc #?"${username} is in standard desktop groups")
+  (:hostattrs (os:required 'os:debianlike))
+  (:apply
+   (let ((existing-groups
+           (loop for line in (lines (readfile "/etc/group"))
+                 collect (car (split-string line :separator ":")))))
+     (apply #'has-groups username (loop for group in *desktop-groups*
+                                        when (memstring= group existing-groups)
+                                          collect group)))))
+
 (defprop has-login-shell :posix (username shell)
   "Ensures that USERNAME has login shell SHELL.
 Note that this uses getent(1) and so is not strictly POSIX-compatible."
