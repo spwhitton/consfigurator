@@ -309,7 +309,7 @@ Other arguments:
                        collect (list commentedp current-section k v)
                      else collect line))
              (mapped (funcall map unmapped)))
-        (loop with current-section
+        (loop with current-section and collectedp
               for line in mapped
               for line-section = (etypecase line
                                    (cons (cadr line))
@@ -318,7 +318,7 @@ Other arguments:
               if (and (listp line)
                       line-section
                       (not (string= line-section current-section)))
-                collect ""
+                when collectedp collect "" end
                 and collect (funcall new-section line-section)
                 and do (setq current-section line-section)
               else if (and (stringp line)
@@ -332,7 +332,8 @@ Other arguments:
                             (declare (ignore sec))
                             (when commentedp (princ new-comment s))
                             (princ (funcall new-kv k v) s)))
-              else collect line)))))
+              else collect line
+              do (setq collectedp t))))))
 
 (defun simple-conf-update (file pairs &rest args)
   (let ((keys (make-hash-table :test #'equal)))
