@@ -18,9 +18,7 @@
 (in-package :consfigurator.property.gnupg)
 (named-readtables:in-readtable :consfigurator)
 
-(defprop public-key-imported :posix (fingerprint)
-  "Import the PGP public key identified by FINGERPRINT to gpg's default
-keyring."
+(defprop %public-key-imported :posix (fingerprint)
   (:desc #?"PGP public key ${fingerprint} imported")
   (:preprocess
    (list (remove #\Space fingerprint)))
@@ -33,19 +31,25 @@ keyring."
      (mrun
       :input (get-data-stream "--pgp-pubkey" fingerprint) "gpg" "--import"))))
 
-(defprop trusts-public-key :posix (fingerprint level)
-  "Ensure that the PGP public key identified by FINGERPRINT is trusted at level
-LEVEL, an integer."
+(defprop %trusts-public-key :posix (fingerprint level)
   (:desc #?"PGP public key ${fingerprint} trusted, level ${level}")
   (:preprocess (list (remove #\Space fingerprint) level))
   (:apply (with-change-if-changes-file (".gnupg/trustdb.gpg")
             (mrun :input (format nil "~A:~A:~%" fingerprint level)
                   "gpg" "--import-ownertrust"))))
 
-(defproplist public-key-imported-and-trusted :posix (fingerprint level)
-  (:desc "PGP public key ${fingerprint} imported and trusted, level ${level}")
-  (public-key-imported fingerprint)
-  (trusts-public-key fingerprint level))
+(defpropspec public-key-imported :posix (fingerprint &key trust-level)
+  "Import the PGP public key identified by FINGERPRINT to gpg's default keyring.
+If TRUST-LEVEL, also ensure that the key is trusted at that level, an
+integer."
+  (:desc
+   (if trust-level
+       #?"PGP public key ${fingerprint} imported and trusted, level ${trust-level}"
+       #?"PGP public key ${fingerprint} imported"))
+  (if trust-level
+      `(eseqprops (%public-key-imported ,fingerprint)
+                  (%trusts-public-key ,fingerprint ,trust-level))
+      `(%public-key-imported ,fingerprint)))
 
 (defprop secret-key-imported :posix (fingerprint)
   (:desc #?"PGP public key ${fingerprint} imported")

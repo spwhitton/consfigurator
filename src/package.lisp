@@ -522,8 +522,6 @@
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:re        #:cl-ppcre))
   (:export #:public-key-imported
-           #:trusts-public-key
-           #:public-key-imported-and-trusted
            #:secret-key-imported))
 
 (defpackage :consfigurator.property.git
