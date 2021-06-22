@@ -688,6 +688,17 @@
   (:export #:system-job
            #:nice-system-job))
 
+(defpackage :consfigurator.property.apache
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:service   #:consfigurator.property.service)
+                    (#:apt       #:consfigurator.property.apt)
+                    (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file))
+  (:export #:installed
+           #:reloaded
+           #:mod-enabled
+           #:conf-enabled))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
