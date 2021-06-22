@@ -21,7 +21,8 @@ not use prerequisite data identified by strings matching these conditions for
 other purposes.
 
 - ``(HOSTNAME . PATH)`` means the data that should be uploaded to ``PATH`` on
-  ``HOSTNAME`` (and nowhere else)
+  ``HOSTNAME`` (and usually nowhere else, except in the case of, e.g., a
+  public key)
 
 - ``("--lisp-system" . SYSTEM)`` means the data is Lisp code which, when
   loaded, defines the packages and symbols contained in the ASDF system
