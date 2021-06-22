@@ -146,16 +146,18 @@ EOF))
 Note that in its default configuration on Debian, unattended-upgrades will
 only upgrade Debian stable."
   (:desc "Unattended upgrades enabled")
-  (on-change (installed "unattended-upgrades")
-    (reconfigured
-     "unattended-upgrades"
-     '("unattended-upgrades/enable_auto_updates" "boolean" "true")))
-  (service:running "cron")
-  (desc "unattended-upgrades will mail root"
-        (file:contains-lines "/etc/apt/apt.conf.d/50unattended-upgrades"
-                             "Unattended-Upgrade::Mail \"root\";"))
-  ;; work around Debian bug #812380
-  (file:does-not-exist "/etc/apt/apt.conf.d/50unattended-upgrades.ucf-dist"))
+  (with-unapply
+   (on-change (installed "unattended-upgrades")
+     (reconfigured
+      "unattended-upgrades"
+      '("unattended-upgrades/enable_auto_updates" "boolean" "true")))
+   (service:running "cron")
+   (desc "unattended-upgrades will mail root"
+         (file:contains-lines "/etc/apt/apt.conf.d/50unattended-upgrades"
+                              "Unattended-Upgrade::Mail \"root\";"))
+   ;; work around Debian bug #812380
+   (file:does-not-exist "/etc/apt/apt.conf.d/50unattended-upgrades.ucf-dist")
+   :unapply (removed "unattended-upgrades")))
 
 (defprop mirror :posix (uri)
   (:desc #?"${uri} apt mirror selected")
