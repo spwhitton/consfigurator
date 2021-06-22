@@ -57,6 +57,7 @@
                (:file "src/property/schroot")
                (:file "src/property/sbuild")
                (:file "src/property/postfix")
+               (:file "src/property/cron")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
                (:file "src/connection/rehome")

@@ -36,6 +36,9 @@ other purposes.
 - ``("--pgp-pubkey" . FINGERPRINT)`` means the/a OpenPGP public key with
   fingerprint FINGERPRINT, ASCII-armoured
 
+- ``("--pgp-seckey" . FINGERPRINT)`` means the/a OpenPGP secret key with
+  fingerprint FINGERPRINT, ASCII-armoured
+
 - ``("--luks-passphrase" . VOLUME-LABEL)`` means a LUKS passphrase for volume
   with label ``VOLUME-LABEL``.
 

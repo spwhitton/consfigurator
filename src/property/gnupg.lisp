@@ -32,3 +32,31 @@ keyring."
    (with-change-if-changes-file (".gnupg/pubring.kbx")
      (mrun
       :input (get-data-stream "--pgp-pubkey" fingerprint) "gpg" "--import"))))
+
+(defprop trusts-public-key :posix (fingerprint level)
+  "Ensure that the PGP public key identified by FINGERPRINT is trusted at level
+LEVEL, an integer."
+  (:desc #?"PGP public key ${fingerprint} trusted, level ${level}")
+  (:preprocess (list (remove #\Space fingerprint) level))
+  (:apply (with-change-if-changes-file (".gnupg/trustdb.gpg")
+            (mrun :input (format nil "~A:~A:~%" fingerprint level)
+                  "gpg" "--import-ownertrust"))))
+
+(defproplist public-key-imported-and-trusted :posix (fingerprint level)
+  (:desc "PGP public key ${fingerprint} imported and trusted, level ${level}")
+  (public-key-imported fingerprint)
+  (trusts-public-key fingerprint level))
+
+(defprop secret-key-imported :posix (fingerprint)
+  (:desc #?"PGP public key ${fingerprint} imported")
+  (:preprocess (list (remove #\Space fingerprint)))
+  (:hostattrs (require-data "--pgp-seckey" fingerprint))
+  (:check
+   ;; Look for plain "sec" not, e.g., "sec#", which indicates the secret key
+   ;; is not available.
+   (multiple-value-bind (out err exit)
+       (run :may-fail "gpg" "--list-secret-keys" fingerprint)
+     (declare (ignore err))
+     (and (zerop exit) (re:scan #?/^sec\s/ out))))
+  (:apply (mrun :input (get-data-stream "--pgp-seckey" fingerprint)
+                "gpg" "--import")))

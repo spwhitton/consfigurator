@@ -18,6 +18,12 @@
 (in-package :consfigurator.property.git)
 (named-readtables:in-readtable :consfigurator)
 
+(defproplist installed :posix ()
+  "Ensures that git(1) is installed."
+  (:desc "Git installed")
+  (os:etypecase
+    (debianlike (apt:installed "git"))))
+
 (defprop snapshot-extracted :posix
     (directory snapshot-name
                &key replace
@@ -45,3 +51,45 @@ available version of the snapshot is present on the remote system."
   (:unapply
    (declare (ignore replace))
    (delete-remote-trees dest)))
+
+(defprop %cloned :posix (url dest branch
+                             &aux (dest (ensure-directory-pathname dest)))
+  (:check
+   (declare (ignore branch))
+   (let ((config (merge-pathnames ".git/config" dest)))
+     (and (remote-exists-p config)
+          (string= url (car (runlines "git" "config" "--file" config
+                                      "remote.origin.url"))))))
+  (:apply
+   (delete-remote-trees dest)
+   (file:containing-directory-exists dest)
+   (run "git" "clone" url dest)
+   (with-remote-current-directory (dest)
+     (when branch
+       (mrun "git" "checkout" branch))
+     ;; Do this in case this repo is to be served via HTTP, though note that
+     ;; we don't set up the hook to do this upon update here.
+     (mrun "git" "update-server-info"))))
+
+(defproplist cloned :posix (url dest &optional branch)
+  "Clone git repo available at URL to DEST.
+If the directory already exists and contains anything but a git repo cloned
+from URL, recursively delete it first.  If BRANCH, check out that branch."
+  (:desc #?"${url} cloned to ${dest}")
+  (installed)
+  (%cloned url dest branch))
+
+(defprop %pulled :posix (dest &aux (dest (ensure-directory-pathname dest)))
+  (:apply
+   (with-change-if-changes-file-content
+       ((merge-pathnames ".git/FETCH_HEAD" dest))
+     (with-remote-current-directory (dest)
+       (mrun "git" "pull")
+       (mrun "git" "update-server-info")))))
+
+(defproplist pulled :posix (url dest &optional branch)
+  "Like GIT:CLONED, but also 'git pull' each time this property is applied."
+  (:desc #?"${url} pulled to ${dest}")
+  (installed)
+  (%cloned url dest branch)
+  (%pulled dest))

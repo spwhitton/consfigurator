@@ -520,12 +520,21 @@
 
 (defpackage :consfigurator.property.gnupg
   (:use #:cl #:consfigurator)
-  (:export #:public-key-imported))
+  (:local-nicknames (#:re        #:cl-ppcre))
+  (:export #:public-key-imported
+           #:trusts-public-key
+           #:public-key-imported-and-trusted
+           #:secret-key-imported))
 
 (defpackage :consfigurator.property.git
   (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file      #:consfigurator.property.file))
-  (:export #:snapshot-extracted))
+  (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file)
+                    (#:apt       #:consfigurator.property.apt))
+  (:export #:installed
+           #:snapshot-extracted
+           #:cloned
+           #:pulled))
 
 (defpackage :consfigurator.property.sshd
   (:use #:cl #:consfigurator)
@@ -669,6 +678,15 @@
            #:reloaded
            #:main-configured
            #:mapped-file))
+
+(defpackage :consfigurator.property.cron
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:service   #:consfigurator.property.service)
+                    (#:apt       #:consfigurator.property.apt)
+                    (#:os        #:consfigurator.property.os)
+                    (#:file      #:consfigurator.property.file))
+  (:export #:system-job
+           #:nice-system-job))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
