@@ -699,6 +699,14 @@
            #:mod-enabled
            #:conf-enabled))
 
+(defpackage :consfigurator.property.systemd
+  (:use #:cl #:consfigurator)
+  (:export #:started
+           #:stopped
+           #:enabled
+           #:disabled
+           #:masked))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))

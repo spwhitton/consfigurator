@@ -59,6 +59,7 @@
                (:file "src/property/postfix")
                (:file "src/property/cron")
                (:file "src/property/apache")
+               (:file "src/property/systemd")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
                (:file "src/connection/rehome")
