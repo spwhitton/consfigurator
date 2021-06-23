@@ -595,7 +595,8 @@ changes in properties which will change the file but not the output of `ls
   (with-gensyms (before)
     `(let* ((,before (ls-cksum ,file))
             (result (progn ,@forms)))
-       (if (and ,before (equal ,before (ls-cksum ,file)))
+       (if (or (eql result :no-change)
+               (and ,before (equal ,before (ls-cksum ,file))))
            :no-change result))))
 
 (defmacro with-change-if-changes-file-content ((file) &body forms)
@@ -603,7 +604,8 @@ changes in properties which will change the file but not the output of `ls
   (with-gensyms (before)
     `(let* ((,before (ignore-errors (cksum ,file)))
             (result (progn ,@forms)))
-       (if (and ,before (eql ,before (cksum ,file)))
+       (if (or (eql result :no-change)
+               (and ,before (eql ,before (cksum ,file))))
            :no-change result))))
 
 (defmacro with-change-if-changes-file-content-or-mode ((file) &body forms)
@@ -612,8 +614,10 @@ afterwards."
   (with-gensyms (before)
     `(let* ((,before (ls-cksum ,file))
             (result (progn ,@forms)))
-       (let ((after (ls-cksum ,file)))
-         (if (and ,before
-                  (string= (car ,before) (car after) :start1 1 :start2 1)
-                  (eql (cadr ,before) (cadr after)))
-             :no-change result)))))
+       (if (equal result :no-change)
+           :no-change
+           (let ((after (ls-cksum ,file)))
+             (if (and ,before
+                      (string= (car ,before) (car after) :start1 1 :start2 1)
+                      (eql (cadr ,before) (cadr after)))
+                 :no-change result))))))
