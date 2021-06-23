@@ -782,3 +782,6 @@
 (defpackage :consfigurator.data.ssh-askpass
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:re   #:cl-ppcre)))
+
+(defpackage :consfigurator.data.local-file
+  (:use #:cl #:consfigurator))
