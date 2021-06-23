@@ -359,7 +359,7 @@ CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
                                       (get-remote-cached-prerequisite-data
                                        connection))))
           for (thunk highest-local-version)
-            = (restart-case (multiple-value-list (%get-data iden1 iden2))
+            = (handler-case (multiple-value-list (%get-data iden1 iden2))
                 (missing-data () nil))
 
           if (and highest-local-version
