@@ -128,7 +128,12 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
    (containing-directory-exists destination)
    (maybe-writefile-data destination iden1 iden2)))
 
-(defprop host-data-uploaded :posix (destination)
+(defprop host-data-uploaded :posix
+    (destination
+     ;; Require an absolute path because we don't know the remote home
+     ;; directory at hostattrs time, so can't resolve it ourselves.
+     &aux (destination (unix-namestring
+                        (ensure-pathname destination :want-absolute t))))
   (:hostattrs
    (require-data (get-hostname) destination))
   (:apply
@@ -143,7 +148,10 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
    (maybe-writefile-data destination iden1 iden2 :mode #o600)))
 
 (defproplist host-secret-uploaded :posix
-    (destination &aux (destination (unix-namestring destination)))
+    (destination
+     ;; Require an absolute path like with HOST-DATA-UPLOADED.
+     &aux (destination (unix-namestring
+                        (ensure-pathname destination :want-absolute t))))
   (secret-uploaded (get-hostname) destination destination))
 
 (defproplist data-cache-purged :posix ()
