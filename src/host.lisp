@@ -132,8 +132,13 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
   ;; value to have all the hostattrs it would have were PROPSPEC not to be
   ;; substituted in
   (make-instance 'unpreprocessed-host
-                 :hostattrs (hostattrs
-                             (preprocess-host (shallow-copy-host host)))
+                 ;; Drop items of prerequisite data the host usually requires,
+                 ;; as we don't need them if we're not applying its usual
+                 ;; properties.
+                 :hostattrs (remove-from-plist
+                             (hostattrs
+                              (preprocess-host (shallow-copy-host host)))
+                             :data)
                  :propspec propspec))
 
 (defmacro defhost (hostname (&key deploy) &body properties)
