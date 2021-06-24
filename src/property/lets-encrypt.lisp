@@ -38,32 +38,33 @@ etc."))
    (check-type agree-tos agree-tos)
    (let ((dir (ensure-directory-pathname
                (merge-pathnames (car domains) #P"/etc/letsencrypt/live/"))))
-     (with-change-if-changes-file ((merge-pathnames "fullchain.pem" dir))
-       (with-change-if-changes-file ((merge-pathnames "chain.pem" dir))
-         (with-change-if-changes-file ((merge-pathnames "privkey.pem" dir))
-           (with-change-if-changes-file ((merge-pathnames "cert.pem" dir))
-             (mrun "letsencrypt" "certonly" "--agree-tos"
-                   (if (slot-boundp agree-tos 'email-address)
-                       (strcat "--email=" (slot-value agree-tos 'email-address))
-                       "--register-unsafely-without-email")
-                   "--webroot" "--webroot-path" htdocs
-                   "--text" "--noninteractive" "--keep-until-expiring"
-                   ;; Always request expansion in case DOMAINS has changed.
-                   "--expand"
-                   (loop for domain in domains
-                         collect (strcat "--domain=" domain))))))))))
+     (with-change-if-changes-files ((merge-pathnames "cert.pem" dir)
+                                    (merge-pathnames "chain.pem" dir)
+                                    (merge-pathnames "privkey.pem" dir)
+                                    (merge-pathnames "fullchain.pem" dir))
+       (mrun "letsencrypt" "certonly" "--agree-tos"
+             (if (slot-boundp agree-tos 'email-address)
+                 (strcat "--email=" (slot-value agree-tos 'email-address))
+                 "--register-unsafely-without-email")
+             "--webroot" "--webroot-path" htdocs
+             "--text" "--noninteractive" "--keep-until-expiring"
+             ;; Always request expansion in case DOMAINS has changed.
+             "--expand"
+             (loop for domain in domains
+                   when (and (stringp domain) (plusp (length domain)))
+                     collect (strcat "--domain=" domain)))))))
 
 (defproplist certificate-obtained :posix (agree-tos htdocs &rest domains)
   "Obtains, and renews as necessary, an SSL certificate for DOMAINS.
-The first element of DOMAINS is the Common Name of the certificate.  Use of
-this property implies agreement with the Let's Encrypt Subscriber Agreement;
-AGREE-TOS is an instance of LETS-ENCRYPT:AGREE-TOS.  HTDOCS is the web root
-for DOMAINS, which must be writeable, and publically available over plain
-HTTP.
+The first element of DOMAINS, after flattening, is the Common Name of the
+certificate.  Use of this property implies agreement with the Let's Encrypt
+Subscriber Agreement; AGREE-TOS is an instance of LETS-ENCRYPT:AGREE-TOS.
+HTDOCS is the web root for DOMAINS, which must be writeable, and publically
+available over plain HTTP.
 
 This property does nothing to ensure that your web server will actually use
 the obtained certificate.  Typically you'll want to combine this property with
 web server-specific properties in a DEFPROPLIST/DEFPROPSPEC."
   (:desc (format nil "Let's Encrypt for ~{~A~^, ~}" domains))
   (installed)
-  (%obtained agree-tos htdocs domains))
+  (%obtained agree-tos htdocs (flatten domains)))

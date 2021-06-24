@@ -169,6 +169,7 @@
            #:maybe-writefile-string
            #:call-with-os
            #:with-change-if-changes-file
+           #:with-change-if-changes-files
            #:with-change-if-changes-file-content
            #:with-change-if-changes-file-content-or-mode
 
@@ -687,7 +688,7 @@
            #:nice-system-job))
 
 (defpackage :consfigurator.property.lets-encrypt
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:apt       #:consfigurator.property.apt)
                     (#:os        #:consfigurator.property.os))
   (:export #:installed

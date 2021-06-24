@@ -599,6 +599,19 @@ changes in properties which will change the file but not the output of `ls
                (and ,before (equal ,before (ls-cksum ,file))))
            :no-change result))))
 
+(defmacro with-change-if-changes-files ((&rest files) &body forms)
+  "Execute FORMS and yield :NO-CHANGE if none of FILES change.
+See WITH-CHANGE-IF-CHANGES-FILE docstring regarding the sense of 'change'."
+  (with-gensyms (filesg beforeg)
+    `(let* ((,filesg (list ,@files))
+            (,beforeg (mapcar #'ls-cksum ,filesg))
+            (result (progn ,@forms)))
+       (if (or (eql result :no-change)
+               (loop for file in ,filesg and before in ,beforeg
+                     always before
+                     always (equal before (ls-cksum file))))
+           :no-change result))))
+
 (defmacro with-change-if-changes-file-content ((file) &body forms)
   "Execute FORMS and yield :NO-CHANGE if FILE has the same content afterwards."
   (with-gensyms (before)
