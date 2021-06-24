@@ -39,14 +39,24 @@
   (on-change (%mod-enabled name)
     (reloaded)))
 
+(defproplist conf-available :posix (name config)
+  (:desc #?"Apache conf ${name} available")
+  (file:exists-with-content
+   (merge-pathnames (strcat name ".conf") #P"/etc/apache2/conf-available/")
+   config))
+
 (defprop %conf-enabled :posix (name)
   (:hostattrs (os:required 'os:debianlike))
   (:check (zerop (mrun :for-exit "a2query" "-q" "-c" name)))
   (:apply (mrun "a2enconf" "--quiet" name))
   (:unapply (mrun "a2disconf" "--quiet" name)))
 
-(defproplist conf-enabled :posix (name)
+(defpropspec conf-enabled :posix (name &optional config)
   (:desc #?"Apache configuration ${name} enabled")
-  (installed)
-  (on-change (%conf-enabled name)
-    (reloaded)))
+  `(eseqprops
+    (installed)
+    (on-change ,(if config
+                    `(eseqprops (conf-available ,name ,config)
+                                (%conf-enabled ,name))
+                    `(%conf-enabled ,name))
+      (reloaded))))

@@ -708,7 +708,8 @@
   (:export #:installed
            #:reloaded
            #:mod-enabled
-           #:conf-enabled))
+           #:conf-enabled
+           #:conf-available))
 
 (defpackage :consfigurator.property.systemd
   (:use #:cl #:consfigurator)
