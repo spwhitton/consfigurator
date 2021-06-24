@@ -686,6 +686,14 @@
   (:export #:system-job
            #:nice-system-job))
 
+(defpackage :consfigurator.property.lets-encrypt
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:apt       #:consfigurator.property.apt)
+                    (#:os        #:consfigurator.property.os))
+  (:export #:installed
+           #:agree-tos
+           #:certificate-obtained))
+
 (defpackage :consfigurator.property.apache
   (:use #:cl #:consfigurator)
   (:local-nicknames (#:service   #:consfigurator.property.service)

@@ -58,6 +58,7 @@
                (:file "src/property/sbuild")
                (:file "src/property/postfix")
                (:file "src/property/cron")
+               (:file "src/property/lets-encrypt")
                (:file "src/property/apache")
                (:file "src/property/systemd")
                (:file "src/connection/shell-wrap")
