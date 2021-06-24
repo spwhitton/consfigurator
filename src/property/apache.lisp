@@ -60,3 +60,86 @@
                                 (%conf-enabled ,name))
                     `(%conf-enabled ,name))
       (reloaded))))
+
+(defproplist site-available :posix (domain config)
+  (:desc #?"Apache site ${domain} available")
+  (file:exists-with-content
+   (merge-pathnames (strcat domain ".conf") #P"/etc/apache2/sites-available/")
+   config))
+
+(defprop %site-enabled :posix (domain)
+  (:hostattrs (os:required 'os:debianlike))
+  (:check (zerop (mrun :for-exit "a2query" "-q" "-s" domain)))
+  (:apply (mrun "a2ensite" "--quiet" domain))
+  (:unapply (mrun "a2dissite" "--quiet" domain)))
+
+(defpropspec site-enabled :posix (domain &optional config)
+  (:desc #?"Apache site ${domain} enabled")
+  `(eseqprops
+    (installed)
+    (on-change ,(if config
+                    `(eseqprops (site-available ,domain ,config)
+                                (%site-enabled ,domain))
+                    `(%site-enabled ,domain))
+      (reloaded))))
+
+(defproplist https-vhost :posix
+    (domain htdocs agree-tos
+            &key aliases additional-config additional-config-https)
+  "Configure an HTTPS Apache virtual host using a Let's Encrypt certificate.
+ALIASES are the values for ServerAlias entries; these must be specified
+separately for proper handling of the redirects from HTTP to HTTPS.  Use of
+this property implies agreement with the Let's Encrypt Subscriber Agreement;
+AGREE-TOS is an instance of LETS-ENCRYPT:AGREE-TOS.  ADDITIONAL-CONFIG are
+additional lines to add to the Apache configuration for both the HTTP and
+HTTPS virtual hosts; ADDITIONAL-CONFIG-HTTPS are additional lines to be added
+only to the HTTPS virtual host.
+
+Unapplying removes the Apache site config but leaves the certificate behind."
+  (with-unapply
+    (mod-enabled "ssl")
+    (conf-enabled "stapling"
+                  '("SSLStaplingCache shmcb:/tmp/stapling_cache(128000)"))
+    (mod-enabled "rewrite")
+    (site-enabled
+     domain
+     (let ((initial `(,(strcat "DocumentRoot " htdocs)
+                      "ErrorLog /var/log/apache2/error.log"
+                      "LogLevel warn"
+                      "CustomLog /var/log/apache2/access.log combined"
+                      "ServerSignature on")))
+       `(,(strcat "<IfFile " (unix-namestring
+                              (lets-encrypt:certificate-for domain))
+                  ">")
+         "<VirtualHost *:443>"
+         ,(strcat "ServerName " domain ":443")
+         ,@(loop for alias in aliases collect (strcat "ServerAlias " alias))
+         ,@initial
+         "SSLEngine on"
+         ,(strcat "SSLCertificateFile "
+                  (unix-namestring (lets-encrypt:certificate-for domain)))
+         ,(strcat "SSLCertificateKeyFile "
+                  (unix-namestring (lets-encrypt:privkey-for domain)))
+         ,(strcat "SSLCertificateChainFile "
+                  (unix-namestring (lets-encrypt:chain-for domain)))
+         "SSLUseStapling on"
+         ,@additional-config
+         ,@additional-config-https
+         "</VirtualHost>" "</IfFile>"
+         ,@(loop for name in (cons domain aliases) append
+                 `(""
+                   "<VirtualHost *:80>"
+                   ,(strcat "ServerName " name ":80")
+                   ,@initial
+                   "RewriteEngine On"
+                   "RewriteRule ^/.well-known/(.*) - [L]"
+                   ;; redirect everything else to https
+                   ,(strcat "RewriteRule ^/(.*) https://" name "/$1 [L,R,NE]")
+                   ,@additional-config
+                   "</VirtualHost>")))))
+    (on-change
+        (lets-encrypt:certificate-obtained agree-tos htdocs domain aliases)
+      (reloaded))
+    :unapply
+    (unapply (site-enabled domain))
+    (unapply (site-available domain ""))))
