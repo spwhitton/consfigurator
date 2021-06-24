@@ -553,6 +553,7 @@
   (:local-nicknames (#:file      #:consfigurator.property.file)
                     (#:sshd      #:consfigurator.property.sshd))
   (:export #:authorized-keys
+           #:has-user-key
            #:known-host
            #:globally-known-host
            #:parent-is-globally-known-host))

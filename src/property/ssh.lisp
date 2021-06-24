@@ -28,6 +28,16 @@
   (:unapply
    (apply #'file:lacks-lines ".ssh/authorized_keys" keys)))
 
+(defpropspec has-user-key :posix
+    (type public-key
+          &key (dest (merge-pathnames (strcat "id_" type) #P".ssh/")) iden1)
+  "Installs an SSH keypair to DEST, which defaults to ~/.ssh/id_TYPE{,.pub}."
+  `(eseqprops (file:exists-with-content
+               ,(strcat (unix-namestring dest) ".pub") ,public-key)
+              ,(if iden1
+                   `(file:secret-uploaded ,iden1 ,dest)
+                   `(file:host-secret-uploaded ,dest))))
+
 (defprop %update-known-hosts :posix (file host &key short-hostname)
   (:apply
    (file:map-file-lines
