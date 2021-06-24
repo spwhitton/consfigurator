@@ -68,3 +68,19 @@ web server-specific properties in a DEFPROPLIST/DEFPROPSPEC."
   (:desc (format nil "Let's Encrypt for ~{~A~^, ~}" domains))
   (installed)
   (%obtained agree-tos htdocs (flatten domains)))
+
+(defun dir-for (domain)
+  (ensure-directory-pathname
+   (merge-pathnames domain #P"/etc/letsencrypt/live/")))
+
+(defun fullchain-for (domain)
+  (merge-pathnames "fullchain.pem" (dir-for domain)))
+
+(defun chain-for (domain)
+  (merge-pathnames "chain.pem" (dir-for domain)))
+
+(defun certificate-for (domain)
+  (merge-pathnames "cert.pem" (dir-for domain)))
+
+(defun privkey-for (domain)
+  (merge-pathnames "privkey.pem" (dir-for domain)))

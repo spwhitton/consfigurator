@@ -693,7 +693,11 @@
                     (#:os        #:consfigurator.property.os))
   (:export #:installed
            #:agree-tos
-           #:certificate-obtained))
+           #:certificate-obtained
+           #:fullchain-for
+           #:chain-for
+           #:certificate-for
+           #:privkey-for))
 
 (defpackage :consfigurator.property.apache
   (:use #:cl #:consfigurator)
