@@ -64,11 +64,11 @@ properties."
    :no-change))
 
 (defprop restarted :posix (service)
-  (:desc "Attempt to restart ${service}")
+  (:desc #?"Attempt to restart ${service}")
   (:apply (service service "restart")))
 
 (defprop reloaded :posix (service)
-  (:desc "Attempt to reload ${service}")
+  (:desc #?"Attempt to reload ${service}")
   (:apply (service service "reload")))
 
 (define-function-property-combinator without-starting-services (&rest propapps)
