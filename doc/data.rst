@@ -24,6 +24,12 @@ other purposes.
   ``HOSTNAME`` (and usually nowhere else, except in the case of, e.g., a
   public key).  ``PATH`` must be absolute, not relative.
 
+- ``(_CONTEXT . ITEM)`` is an arbitrary prerequisite data context named
+  ``CONTEXT``; typically ``CONTEXT`` will be a network or grouping name,
+  rather than referring to a single host.  ``ITEM`` might be a path or some
+  other identifier.  Reserved for consfigs; will not be used by property
+  definitions included with Consfigurator.
+
 - ``("--lisp-system" . SYSTEM)`` means the data is Lisp code which, when
   loaded, defines the packages and symbols contained in the ASDF system
   ``SYSTEM``
@@ -43,9 +49,9 @@ other purposes.
 - ``("--luks-passphrase" . VOLUME-LABEL)`` means a LUKS passphrase for volume
   with label ``VOLUME-LABEL``.
 
-(Proposed convention: Except for the first item above, these reserved names
-should start with ``--`` and use ``--`` to separate parameter values within
-the string.  Hostnames cannot start with a hyphen.)
+(Proposed convention: Except for the first two items above, these reserved
+names should start with ``--`` and use ``--`` to separate parameter values
+within the string.  Hostnames cannot start with a hyphen.)
 
 Mechanics
 ---------
