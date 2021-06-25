@@ -31,6 +31,12 @@ keyword symbols.  The semantics of these attributes are documented here:
 - ``:HOSTNAME``: the host's hostname -- if the host has a domain name, then
   the FQDN, not just the part before the first dot
 
+- ``:ALIASES``: see ``NETWORK:ALIASES``
+
+- ``:IPV4``: the host's IPv4 addresses
+
+- ``:IPV6``: the host's IPv6 addresses
+
 - ``:DATA``: items of prerequisite data required by the host
 
 - ``:OS``: the operating system of the host

@@ -611,10 +611,13 @@
            #:search-configured))
 
 (defpackage :consfigurator.property.network
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file))
-  (:export #:static))
+  (:export #:aliases
+           #:ipv4
+           #:ipv6
+           #:static))
 
 (defpackage :consfigurator.property.libvirt
   (:use #:cl #:alexandria #:consfigurator)

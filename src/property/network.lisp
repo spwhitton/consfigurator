@@ -18,6 +18,25 @@
 (in-package :consfigurator.property.network)
 (named-readtables:in-readtable :consfigurator)
 
+(defprop aliases :posix (&rest aliases)
+  "Record other DNS names by which the host is known.  For example, a mail
+server might have aliases like imap.example.org and smtp.example.org, even
+though its hostname is neither 'imap' nor 'smtp'."
+  (:desc (format nil "Has alias~1{~#[es~;~;es~]~} ~:*~{~A~^, ~}" aliases))
+  (:hostattrs (apply #'pushnew-hostattrs
+                     :aliases (delete (get-hostname) (flatten aliases)
+                                      :test #'string=))))
+
+(defprop ipv4 :posix (&rest addresses)
+  "Record the host's IPv4 addresses."
+  (:desc (format nil "Has IPv4 ~{~A~^, ~}" addresses))
+  (:hostattrs (apply #'pushnew-hostattrs :ipv4 (flatten addresses))))
+
+(defprop ipv6 :posix (&rest addresses)
+  "Record the host's IPv6 addresses."
+  (:desc (format nil "Has IPv6 ~{~A~^, ~}" addresses))
+  (:hostattrs (apply #'pushnew-hostattrs :ipv6 (flatten addresses))))
+
 (defprop static :posix (interface address &optional gateway &rest options)
   "Configures an interface with a static IP address.
 OPTIONS is a list of even length of alternating keys and values."
