@@ -729,6 +729,22 @@
            #:disabled
            #:masked))
 
+(defpackage :consfigurator.property.firewalld
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:file         #:consfigurator.property.file)
+                    (#:apt          #:consfigurator.property.apt)
+                    (#:os           #:consfigurator.property.os))
+  (:export #:installed
+           #:service
+           #:has-zone
+           #:default-zone
+           #:zone-target
+           #:has-service
+           #:has-interface
+           #:masquerade
+           #:rich-rule
+           #:direct-rule))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
