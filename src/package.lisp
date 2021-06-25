@@ -710,6 +710,7 @@
                     (#:apt          #:consfigurator.property.apt)
                     (#:os           #:consfigurator.property.os)
                     (#:file         #:consfigurator.property.file)
+                    (#:network      #:consfigurator.property.network)
                     (#:lets-encrypt #:consfigurator.property.lets-encrypt))
   (:export #:installed
            #:reloaded
