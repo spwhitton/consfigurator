@@ -27,4 +27,5 @@ strings which will be shell-escaped and then concatenated.
 
 Keyword argument :ENV is a plist of environment variables to be set when
 running the command, using env(1)."
+  (:desc (escape-sh-command args))
   (:apply (apply #'run args)))
