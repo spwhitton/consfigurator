@@ -93,3 +93,12 @@ from URL, recursively delete it first.  If BRANCH, check out that branch."
   (installed)
   (%cloned url dest branch)
   (%pulled dest))
+
+(defprop repo-configured :posix (repo &rest pairs)
+  (:desc
+   (format nil "git repo at ~S has configuration ~{~A=~A~^, ~}" repo pairs))
+  (:check (loop for (k v) on pairs by #'cddr
+                always (string= v (stripln
+                                   (run :may-fail "git" "-C" repo "config" k)))))
+  (:apply (loop for (k v) on pairs by #'cddr
+                do (mrun "git" "-C" repo "config" k v))))

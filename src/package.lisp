@@ -533,7 +533,8 @@
   (:export #:installed
            #:snapshot-extracted
            #:cloned
-           #:pulled))
+           #:pulled
+           #:repo-configured))
 
 (defpackage :consfigurator.property.sshd
   (:use #:cl #:consfigurator)
