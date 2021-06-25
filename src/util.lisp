@@ -165,7 +165,9 @@ one solution is to convert your property to a :LISP property."
   "Like PATHNAME-NAME but include any file extension."
   (and (pathname-name pathname)
        (namestring
-        (enough-pathname pathname (pathname-directory-pathname pathname)))))
+        (if (pathname-directory pathname)
+            (enough-pathname pathname (pathname-directory-pathname pathname))
+            pathname))))
 
 (defun ensure-trailing-slash (namestring)
   (if (string-suffix-p namestring "/")
