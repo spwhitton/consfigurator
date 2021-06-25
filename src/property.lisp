@@ -64,7 +64,7 @@
       :posix))
 
 (defun propappargs (propapp)
-  (if (member :orig-args (cadr propapp))
+  (if (and (listp (cadr propapp)) (member :orig-args (cadr propapp)))
       (getf (cadr propapp) :orig-args)
       (cdr propapp)))
 
