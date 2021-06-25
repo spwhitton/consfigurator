@@ -216,9 +216,9 @@ one-dimensional collections of values."
   "Like UIOP:ESCAPE-SH-TOKEN, but also escape the empty string."
   (if (string= token "") (format s "\"\"") (uiop:escape-sh-token token s)))
 
-(defun escape-sh-command (token &optional s)
+(defun escape-sh-command (command &optional s)
   "Like UIOP:ESCAPE-SH-COMMAND, but also escape the empty string."
-  (uiop:escape-command token s 'escape-sh-token))
+  (uiop:escape-command command s 'escape-sh-token))
 
 (defun parse-username-from-id (output)
   "Where OUTPUT is the output of the id(1) command, extract the username."
