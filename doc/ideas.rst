@@ -35,6 +35,13 @@ Connections
   temporary name so that rsync can do an incremental update, and then rename
   the file to the new version.
 
+- It would sometimes be useful to have the SSH connection pass
+  ``-oHostName=<known IP address>`` when ``NETWORK:IPV4`` and/or
+  ``NETWORK:IPV6`` have been specified for the host, so that DNS propagation
+  is less likely to get in the way of configuring the host.  Some hosts' SSH
+  daemons might only be accessible over VPNs and the like, however, so it will
+  need to be easy to override this.
+
 Data sources
 ------------
 
