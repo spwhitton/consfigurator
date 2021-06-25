@@ -476,7 +476,8 @@ install an apt package but the host is FreeBSD.")
   "HOST value currently being preprocessed.
 Used by GET-HOSTATTRS to break infinite loops.")
 
-(defun get-hostattrs (k &optional (host *host*) &aux (host (ensure-host host)))
+(defun get-hostattrs
+    (k &optional host &aux (host (ensure-host (or host *host*))))
   "Retrieve the list of static informational attributes of type KEY.
 
 Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."
