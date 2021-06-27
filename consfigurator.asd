@@ -62,6 +62,7 @@
                (:file "src/property/apache")
                (:file "src/property/systemd")
                (:file "src/property/firewalld")
+               (:file "src/property/timezone")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
                (:file "src/connection/rehome")
