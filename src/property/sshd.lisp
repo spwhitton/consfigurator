@@ -64,10 +64,10 @@ The private key is obtained as an item of prerequisite data."
   (file:host-secret-uploaded (merge-pathnames (strcat "ssh_host_" type "_key")
                                               #P"/etc/ssh/")))
 
-(defun get-host-public-keys (host &key short-hostname)
+(defun get-host-public-keys (host &key short-hostname (aliases t))
   (let* ((host (preprocess-host host))
-         (hostname (get-hostname host)))
-    (cons (format nil "~A~:[~;,~A~]"
-                  hostname (and short-hostname (find #\. hostname))
-                  (car (split-string hostname :separator ".")))
+         (hostname (get-hostname host))
+         (short (and short-hostname (list (get-short-hostname host))))
+         (aliases (and aliases (get-hostattrs :aliases host))))
+    (cons (format nil "~{~A~^,~}" (cons hostname (append aliases short)))
           (mapcar #'cdr (get-hostattrs 'host-public-key host)))))

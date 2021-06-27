@@ -38,21 +38,26 @@
                    `(file:secret-uploaded ,iden1 ,dest)
                    `(file:host-secret-uploaded ,dest))))
 
-(defprop %update-known-hosts :posix (file host &key short-hostname)
+(defprop %update-known-hosts :posix (file host &key short-hostname (aliases t))
   (:apply
    (file:map-file-lines
     file
     (lambda (lines)
-      (loop with (identifier . keys)
-              = (sshd:get-host-public-keys host :short-hostname short-hostname)
+      (loop with host = (preprocess-host host)
+            with (identifier . keys)
+              = (sshd:get-host-public-keys
+                 host :aliases aliases :short-hostname short-hostname)
+            and hostname = (get-hostname host)
             for line in lines
-            for index = (position #\Space line)
-            for line-identifier = (subseq line 0 index)
-            and line-key = (subseq line (1+ index))
-            when (or (not (string= line-identifier identifier))
-                     (member line-key keys :test #'string=))
+            for comma = (position #\, line) and space = (position #\Space line)
+            for index = (if comma (min comma space) space)
+            for line-hostname = (subseq line 0 index)
+            and line-key = (subseq line (1+ space))
+            unless (string= line-hostname hostname)
               collect line into accum
-              and do (deletef keys line-key :test #'string=)
+            else if (member line-key keys :test #'string=)
+                   collect (format nil "~A ~A" identifier line-key) into accum
+                   and do (deletef keys line-key :test #'string=)
             finally
                (return
                  (nconc accum
@@ -60,34 +65,39 @@
                               collect (format nil "~A ~A" identifier key))))))))
   (:unapply
    (destructuring-bind (identifier . keys)
-       (sshd:get-host-public-keys host :short-hostname short-hostname)
+       (sshd:get-host-public-keys
+        host :aliases aliases :short-hostname short-hostname)
      (file:lacks-lines file
                        (loop for key in keys
                              collect (format nil "~A ~A" identifier key))))))
 
-(defproplist known-host :posix (host &key short-hostname)
+(defproplist known-host :posix (host &key short-hostname (aliases t))
   "Ensures that the SSH host keys of HOST are stored in ~/.ssh/known_hosts.
 If SHORT-HOSTNAME, include the part of HOST's hostname before the first dot as
 one of the hostnames identifying HOST.  Removes any other host keys
 identifying HOST, to simplify refreshing keys."
   (:desc #?"${(get-hostname host)} is known host to ssh client")
   (file:directory-exists ".ssh")
-  (%update-known-hosts ".ssh/known_hosts" host :short-hostname short-hostname))
+  (%update-known-hosts ".ssh/known_hosts" host
+                       :aliases aliases :short-hostname short-hostname))
 
-(defproplist globally-known-host :posix (host &key short-hostname)
+(defproplist globally-known-host :posix (host &key short-hostname (aliases t))
   "Ensures that SSH host keys of HOST are stored in /etc/ssh/ssh_known_hosts.
 If SHORT-HOSTNAME, include the part of HOST's hostname before the first dot as
 one of the hostnames identifying HOST.  Removes any other host keys
 identifying HOST, to simplify refreshing keys."
   (:desc #?"${(get-hostname host)} is globally known host to ssh client")
   (%update-known-hosts
-   "/etc/ssh/ssh_known_hosts" host :short-hostname short-hostname))
+   "/etc/ssh/ssh_known_hosts" host
+   :aliases aliases :short-hostname short-hostname))
 
-(defproplist parent-is-globally-known-host :posix (&key short-hostname)
+(defproplist parent-is-globally-known-host :posix
+    (&key short-hostname (aliases t))
   "Ensures that the SSH host keys of the parent host are stored in
 /etc/ssh/ssh_known_hosts; SHORT-HOSTNAME is as for SSH:GLOBALLY-KNOWN-HOST."
   (:desc "Parent host is globally known host to ssh client")
   (%update-known-hosts
    "/etc/ssh/ssh_known_hosts" (make-host :hostattrs
                                          (get-hostattrs :parent-hostattrs))
-   :short-hostname short-hostname))
+   :short-hostname short-hostname
+   :aliases aliases))
