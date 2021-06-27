@@ -21,6 +21,7 @@
 (defproplist configured :posix (timezone)
   "Set the system timezone.  TIMEZONE is a relative path under /usr/share/zoneinfo,
 e.g. \"Europe/London\"."
+  (:hostattrs (push-hostattrs 'timezone timezone))
   (os:etypecase
     (linux
      (file:symlinked :from "/etc/localtime"
@@ -29,3 +30,8 @@ e.g. \"Europe/London\"."
     (os:debianlike
      (on-change (file:has-content "/etc/timezone" (list timezone))
        (apt:reconfigured "tzdata")))))
+
+(defproplist configured-from-parent :posix ()
+  "Sets the system timezone to match the parent host's."
+  (configured (or (get-parent-hostattrs-car 'timezone)
+                  (failed-change "Parent has no known timezone"))))

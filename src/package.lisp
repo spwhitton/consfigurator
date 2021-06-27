@@ -751,7 +751,8 @@
   (:local-nicknames (#:file         #:consfigurator.property.file)
                     (#:apt          #:consfigurator.property.apt)
                     (#:os           #:consfigurator.property.os))
-  (:export #:configured))
+  (:export #:configured
+           #:configured-from-parent))
 
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
