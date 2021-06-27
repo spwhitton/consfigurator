@@ -27,5 +27,9 @@ strings which will be shell-escaped and then concatenated.
 
 Keyword argument :ENV is a plist of environment variables to be set when
 running the command, using env(1)."
-  (:desc (escape-sh-command args))
+  (:desc (loop for arg in args
+               if (stringp arg)
+                 collect (escape-sh-token arg) into accum
+               else collect (prin1-to-string arg) into accum
+               finally (return (format nil "~{~A~^ ~}" accum))))
   (:apply (apply #'run args)))
