@@ -246,6 +246,11 @@ after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
     (file:data-uploaded "--pgp-pubkey" (remove #\Space fingerprint) file)
     :unapply (file:does-not-exist file)))
 
+(defproplist no-pdiffs :posix ()
+  "Disable the use of PDiffs for machines with high bandwidth connections."
+  (file:exists-with-content "/etc/apt/apt.conf.d/20pdiffs"
+                            '("Acquire::PDiffs \"false\";")))
+
 
 ;;;; Pinning
 

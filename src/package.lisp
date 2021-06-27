@@ -394,7 +394,8 @@
            #:all-installed-p
            #:none-installed-p
            #:suites-available-pinned
-           #:pinned))
+           #:pinned
+           #:no-pdiffs))
 
 (defpackage :consfigurator.connection.sbcl
   (:use #:cl #:alexandria #:consfigurator)
