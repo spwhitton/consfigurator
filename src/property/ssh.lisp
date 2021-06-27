@@ -38,7 +38,8 @@
                    `(file:secret-uploaded ,iden1 ,dest)
                    `(file:host-secret-uploaded ,dest))))
 
-(defprop %update-known-hosts :posix (file host &key short-hostname (aliases t))
+(defprop %update-known-hosts :posix
+    (file host &key short-hostname (aliases t) (ips t) additional-names)
   (:apply
    (file:map-file-lines
     file
@@ -46,7 +47,8 @@
       (loop with host = (preprocess-host host)
             with (identifier . keys)
               = (sshd:get-host-public-keys
-                 host :aliases aliases :short-hostname short-hostname)
+                 host :aliases aliases :short-hostname short-hostname
+                 :ips ips :additional-names additional-names)
             and hostname = (get-hostname host)
             for line in lines
             for comma = (position #\, line) and space = (position #\Space line)
@@ -66,12 +68,14 @@
   (:unapply
    (destructuring-bind (identifier . keys)
        (sshd:get-host-public-keys
-        host :aliases aliases :short-hostname short-hostname)
+        host :aliases aliases :short-hostname short-hostname
+        :ips ips :additional-names additional-names)
      (file:lacks-lines file
                        (loop for key in keys
                              collect (format nil "~A ~A" identifier key))))))
 
-(defproplist known-host :posix (host &key short-hostname (aliases t))
+(defproplist known-host :posix (host &key short-hostname (aliases t)
+                                     (ips t) additional-names)
   "Ensures that the SSH host keys of HOST are stored in ~/.ssh/known_hosts.
 If SHORT-HOSTNAME, include the part of HOST's hostname before the first dot as
 one of the hostnames identifying HOST.  Removes any other host keys
@@ -79,9 +83,11 @@ identifying HOST, to simplify refreshing keys."
   (:desc #?"${(get-hostname host)} is known host to ssh client")
   (file:directory-exists ".ssh")
   (%update-known-hosts ".ssh/known_hosts" host
-                       :aliases aliases :short-hostname short-hostname))
+                       :aliases aliases :short-hostname short-hostname
+                       :ips ips :additional-names additional-names))
 
-(defproplist globally-known-host :posix (host &key short-hostname (aliases t))
+(defproplist globally-known-host :posix (host &key short-hostname (aliases t)
+                                              (ips t) additional-names)
   "Ensures that SSH host keys of HOST are stored in /etc/ssh/ssh_known_hosts.
 If SHORT-HOSTNAME, include the part of HOST's hostname before the first dot as
 one of the hostnames identifying HOST.  Removes any other host keys
@@ -89,10 +95,11 @@ identifying HOST, to simplify refreshing keys."
   (:desc #?"${(get-hostname host)} is globally known host to ssh client")
   (%update-known-hosts
    "/etc/ssh/ssh_known_hosts" host
-   :aliases aliases :short-hostname short-hostname))
+   :aliases aliases :short-hostname short-hostname
+   :ips ips :additional-names additional-names))
 
 (defproplist parent-is-globally-known-host :posix
-    (&key short-hostname (aliases t))
+    (&key short-hostname (aliases t) (ips t) additional-names)
   "Ensures that the SSH host keys of the parent host are stored in
 /etc/ssh/ssh_known_hosts; SHORT-HOSTNAME is as for SSH:GLOBALLY-KNOWN-HOST."
   (:desc "Parent host is globally known host to ssh client")
@@ -100,4 +107,4 @@ identifying HOST, to simplify refreshing keys."
    "/etc/ssh/ssh_known_hosts" (make-host :hostattrs
                                          (get-hostattrs :parent-hostattrs))
    :short-hostname short-hostname
-   :aliases aliases))
+   :aliases aliases :ips ips :additional-names additional-names))
