@@ -28,19 +28,31 @@ though its hostname is neither 'imap' nor 'smtp'."
                                       :test #'string=))))
 
 (defprop ipv4 :posix (&rest addresses)
-  "Record the host's IPv4 addresses."
-  (:desc (format nil "Has IPv4 ~{~A~^, ~}" addresses))
+  "Record the host's public Internet IPv4 addresses.
+
+If you need to record other addresses in hostattrs, such as on a LAN, write a
+similar property which pushes hostattrs identified by a non-keyword
+symbol (unless your consfig deals only in hosts without public IP addresses,
+in which case you can use this property)."
+  (:desc (format nil "Has public IPv4 ~{~A~^, ~}" addresses))
   (:hostattrs (apply #'pushnew-hostattrs :ipv4 (flatten addresses))))
 
 (defprop ipv6 :posix (&rest addresses)
-  "Record the host's IPv6 addresses."
-  (:desc (format nil "Has IPv6 ~{~A~^, ~}" addresses))
+  "Record the host's public Internet IPv6 addresses.
+
+If you need to record other addresses in hostattrs, such as on a LAN, write a
+similar property which pushes hostattrs identified by a non-keyword
+symbol (unless your consfig deals only in hosts without public IP addresses,
+in which case you can use this property)."
+  (:desc (format nil "Has public IPv6 ~{~A~^, ~}" addresses))
   (:hostattrs (apply #'pushnew-hostattrs :ipv6 (flatten addresses))))
 
 (defprop static :posix (interface address &optional gateway &rest options)
   "Configures an interface with a static IP address.
 OPTIONS is a list of even length of alternating keys and values."
   (:desc #?"Static interface ${interface} configured")
+  ;; We don't push ADDRESS as an :IPV4 hostattr because perhaps it is not an
+  ;; address on the public Internet.
   (:hostattrs (os:required 'os:debianlike))
   (:apply
    (when gateway

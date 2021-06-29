@@ -33,9 +33,9 @@ keyword symbols.  The semantics of these attributes are documented here:
 
 - ``:ALIASES``: see ``NETWORK:ALIASES``
 
-- ``:IPV4``: the host's IPv4 addresses
+- ``:IPV4``: the host's public IPv4 addresses
 
-- ``:IPV6``: the host's IPv6 addresses
+- ``:IPV6``: the host's public IPv6 addresses
 
 - ``:DATA``: items of prerequisite data required by the host
 
