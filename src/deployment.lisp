@@ -74,8 +74,7 @@ will not be discarded."
 (defmacro with-deployment-report (&rest forms)
   (with-gensyms (failures)
     `(let (,failures)
-       (handler-bind
-           ((failed-change (lambda (c) (setq ,failures t) (signal c))))
+       (handler-bind ((failed-change (lambda (c) (setq ,failures t))))
          (let ((result (progn ,@forms)))
            (inform
             t
