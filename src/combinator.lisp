@@ -147,10 +147,16 @@ apply the elements of REQUIREMENTS in reverse order."
               ;; without any way to distinguish them.  Perhaps we can use the
               ;; :TEST argument to RESTART-CASE such that only the
               ;; innermost(?) skip option appears.
-              (setq result (restart-case (if announce
-                                             (announce-propapp-apply propapp)
-                                             (propapp-apply propapp))
-                             (skip-property () 'failed-change)))
+              (setq result
+                    (restart-case (if announce
+                                      (announce-propapp-apply propapp)
+                                      (propapp-apply propapp))
+                      (skip-property (c)
+                        ;; Re-signal as a non-error, for notification purposes.
+                        (signal 'failed-change
+                                :format-control (simple-condition-format-control c)
+                                :format-arguments (simple-condition-format-arguments c))
+                        'failed-change)))
             (when (and (plusp (length buffer))
                        (or (> *consfigurator-debug-level* 1)
                            (not (eql result :no-change))))

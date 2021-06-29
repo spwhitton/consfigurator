@@ -100,11 +100,11 @@ for example, such that we don't see it."
            (princ (readfile output))
            (let ((exited (wifexited status)))
              (unless exited
-               (error
+               (failed-change
                 "Fork connection child did not exit normally, status #x~(~4,'0X~)"
                 status))
              (let ((exit-status (wexitstatus status)))
                (unless (< exit-status 2)
-                 (error
+                 (failed-change
                   "Fork connection child failed, exit code ~D" exit-status))
                (values nil (if (zerop status) :no-change nil))))))))))

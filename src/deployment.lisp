@@ -71,6 +71,23 @@ will not be discarded."
         :propspec (with-*host*-*consfig*
                     (make-propspec :propspec propspec-expression)))))
 
+(defmacro with-deployment-report (&rest forms)
+  (with-gensyms (failures)
+    `(let (,failures)
+       (handler-bind
+           ((failed-change (lambda (c) (setq ,failures t) (signal c))))
+         (let ((result (progn ,@forms)))
+           (inform
+            t
+            (cond
+              ((eql :no-change result)
+               "No changes were made.")
+              (,failures
+               "There were failures while attempting to apply some properties.")
+              (t
+               "Changes were made without any reported failures.")))
+           result)))))
+
 (defun deploy* (connections host &optional additional-properties)
   "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
 except possibly with the property application specification
@@ -80,8 +97,9 @@ This is the entry point to Consfigurator's primary loop.  Typically users use
 DEPLOY, DEPLOY-THESE, and the function definitions established by DEFDEPLOY,
 DEFDEPLOY-THESE, etc., rather than calling this function directly.  However,
 code which programmatically constructs deployments will need to call this."
-  (%consfigure (preprocess-connections connections)
-               (union-propspec-into-host host additional-properties)))
+  (with-deployment-report
+      (%consfigure (preprocess-connections connections)
+                   (union-propspec-into-host host additional-properties))))
 
 (defun deploy-these* (connections host properties)
   "Like DEPLOY*, but replace the properties of HOST with PROPERTIES.
@@ -91,8 +109,9 @@ properties, plus any set by PROPERTIES.  Static informational attributes set
 by PROPERTIES can override the host's usual static informational attributes,
 in the same way that later entries in the list of properties specified in
 DEFHOST forms can override earlier entries (see DEFHOST's docstring)."
-  (%consfigure (preprocess-connections connections)
-               (replace-propspec-into-host host properties)))
+  (with-deployment-report
+      (%consfigure (preprocess-connections connections)
+                   (replace-propspec-into-host host properties))))
 
 (defun continue-deploy* (connection remaining-connections)
   "Complete the work of an enclosing call to DEPLOY* or DEPLOY-THESE*.
