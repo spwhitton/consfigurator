@@ -107,4 +107,4 @@ for example, such that we don't see it."
                (unless (< exit-status 2)
                  (failed-change
                   "Fork connection child failed, exit code ~D" exit-status))
-               (values nil (if (zerop status) :no-change nil))))))))))
+               (values nil (and (zerop status) :no-change))))))))))
