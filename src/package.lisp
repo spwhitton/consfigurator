@@ -732,7 +732,8 @@
 
 (defpackage :consfigurator.property.firewalld
   (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file         #:consfigurator.property.file)
+  (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
+                    (#:file         #:consfigurator.property.file)
                     (#:apt          #:consfigurator.property.apt)
                     (#:os           #:consfigurator.property.os))
   (:export #:installed

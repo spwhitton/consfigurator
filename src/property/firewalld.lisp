@@ -31,11 +31,15 @@
   (os:etypecase
     (debianlike (apt:installed "firewalld"))))
 
+(defproplist %setxml :posix (type name xml)
+  (installed)
+  (on-change
+      (file:exists-with-content #?"/etc/firewalld/${type}/${name}.xml" xml)
+    (cmd:single "firewall-cmd" "--reload")))
+
 (defproplist service :posix (name xml)
   (:desc #?"firewalld knows service ${name}")
-  (installed)
-  (file:exists-with-content
-   (merge-pathnames (strcat name ".xml") #P"/etc/firewalld/services/") xml))
+  (%setxml "services" name xml))
 
 (defprop %firewall-cmd :posix (file warning &rest args)
   (:apply
