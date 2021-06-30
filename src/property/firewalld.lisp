@@ -18,28 +18,10 @@
 (in-package :consfigurator.property.firewalld)
 (named-readtables:in-readtable :consfigurator)
 
-;; Setting the whole XML for the zone means that firewall configuration has to
-;; be in one place in the consfig, which is awkward when we might want
-;; different properties to be able to interact with the firewall depending on
-;; whether or not they are applied.  So we take the approach of issuing single
-;; firewall-cmd(1) commands to set the permanent zone configuration.
-;;
-;; By contrast, for defining services, it should be fine to set the whole XML.
-
 (defproplist installed :posix ()
   (:desc "firewalld installed")
   (os:etypecase
     (debianlike (apt:installed "firewalld"))))
-
-(defproplist %setxml :posix (type name xml)
-  (installed)
-  (on-change
-      (file:exists-with-content #?"/etc/firewalld/${type}/${name}.xml" xml)
-    (cmd:single "firewall-cmd" "--reload")))
-
-(defproplist service :posix (name xml)
-  (:desc #?"firewalld knows service ${name}")
-  (%setxml "services" name xml))
 
 (defprop %firewall-cmd :posix (file warning &rest args)
   (:apply
@@ -63,19 +45,54 @@
          (mrun "firewall-cmd" "--reload"))
        result))))
 
+
+;;;; Setting contents of XML configuration files
+
+(defproplist %setxml :posix (type name xml)
+  (installed)
+  (on-change
+      (file:exists-with-content #?"/etc/firewalld/${type}/${name}.xml" xml)
+    (cmd:single "firewall-cmd" "--reload")))
+
+(defproplist service :posix (service xml)
+  (:desc #?"firewalld knows service ${service}")
+  (%setxml "services" service xml))
+
+(defproplist policy :posix (policy xml)
+  (:desc #?"firewalld has policy ${policy}")
+  (%setxml "policies" policy xml))
+
+(defproplist zone :posix (zone xml)
+  "Set the whole XML configuration for zone ZONE.
+
+In preference to using this property, it is usually best to incrementally
+build up the configuration for a zone using properties like
+FIREWALLD:ZONE-HAS-SERVICE, FIREWALLD:ZONE-HAS-INTERFACE etc..  Using this
+property forces most of your firewall configuration to be in a single place in
+your consfig, but it is typically more readable and flexible to have
+properties which set up the actual services and interfaces interact with the
+firewall configuration themselves, to render the things that those properties
+set up appropriately accessible and inaccessible.
+
+(By contrast, for defining services and policies we take the simpler approach
+of just setting the whole XML configuration, using FIREWALLD:SERVICE and
+FIREWALLD:POLICY.)"
+  (:desc #?"firewalld has zone configuration for ${zone}")
+  (%setxml "zones" zone xml))
+
+
+;;;; Incremental configuration of zones
+
 (defprop has-zone :posix (zone)
+  "Ensure that the zone ZONE exists.
+
+You will not usually need to call this property directly; it is applied by
+properties which add services, interfaces etc. to zones."
   (:desc #?"firewalld zone ${zone} exists")
   (:check (zerop (mrun :for-exit "firewall-cmd" "--permanent"
                        #?"--zone=${zone}" "--get-target")))
   (:apply (mrun "firewall-cmd" "--permanent" #?"--new-zone=${zone}"))
   (:unapply (mrun "firewall-cmd" "--permanent" #?"--delete-zone=${zone}")))
-
-(defproplist default-zone :posix (zone)
-  (:desc #?"firewalld default zone is ${zone}")
-  (installed)
-  (has-zone zone)
-  (%firewall-cmd "firewalld.conf" "ZONE_ALREADY_SET"
-                 #?"--set-default-zone=${zone}"))
 
 (defproplist zone-target :posix (zone target)
   (:desc #?"firewalld zone ${zone} has target ${target}")
@@ -86,20 +103,6 @@
   (has-zone zone)
   (%firewall-cmd #?"zones/${zone}.xml" nil "--permanent"
                  #?"--zone=${zone}" #?"--set-target=${target}"))
-
-(defproplist has-service :posix (zone service)
-  (:desc #?"firewalld zone ${zone} has service ${service}")
-  (:check (zerop (mrun :for-exit "firewall-cmd" "--permanent"
-                       #?"--zone=${zone}" #?"--query-service=${service}")))
-  (with-unapply
-    (installed)
-    (has-zone zone)
-    (%firewall-cmd #?"zones/${zone}.xml" "ALREADY_ENABLED"
-                   "--permanent" #?"--zone=${zone}"
-                   #?"--add-service=${service}")
-    :unapply (%firewall-cmd #?"zones/${zone}.xml" "NOT_ENABLED"
-                            "--permanent" #?"--zone=${zone}"
-                            #?"--remove-service=${service}")))
 
 (defprop %default-route-zoned :posix (zone)
   (:apply
@@ -136,7 +139,7 @@ only FIREWALLD:DEFAULT-ZONE."
     (has-zone zone)
     (%default-route-zoned zone)))
 
-(defproplist has-interface :posix (zone interface)
+(defproplist zone-has-interface :posix (zone interface)
   (:desc #?"firewalld zone ${zone} has interface ${interface}")
   (:check (zerop (mrun :for-exit "firewall-cmd" "--permanent"
                        #?"--zone=${zone}"
@@ -151,7 +154,21 @@ only FIREWALLD:DEFAULT-ZONE."
                             "--permanent" #?"--zone=${zone}"
                             #?"--remove-interface=${interface}")))
 
-(defproplist masquerade :posix (zone)
+(defproplist zone-has-service :posix (zone service)
+  (:desc #?"firewalld zone ${zone} has service ${service}")
+  (:check (zerop (mrun :for-exit "firewall-cmd" "--permanent"
+                       #?"--zone=${zone}" #?"--query-service=${service}")))
+  (with-unapply
+    (installed)
+    (has-zone zone)
+    (%firewall-cmd #?"zones/${zone}.xml" "ALREADY_ENABLED"
+                   "--permanent" #?"--zone=${zone}"
+                   #?"--add-service=${service}")
+    :unapply (%firewall-cmd #?"zones/${zone}.xml" "NOT_ENABLED"
+                            "--permanent" #?"--zone=${zone}"
+                            #?"--remove-service=${service}")))
+
+(defproplist zone-masquerade :posix (zone)
   (:desc #?"firewalld zone ${zone} has masquerade")
   (:check (zerop (mrun :for-exit "firewall-cmd" "--permanent"
                        #?"--zone=${zone}" "--query-masquerade")))
@@ -165,7 +182,7 @@ only FIREWALLD:DEFAULT-ZONE."
                             "--permanent"
                             #?"--zone=${zone}" "--remove-masquerade")))
 
-(defproplist rich-rule :posix (zone rule)
+(defproplist zone-rich-rule :posix (zone rule)
   (:desc #?"firewalld zone ${zone} has rich rule \"${rule}\"")
   (:check (zerop (mrun :for-exit "firewall-cmd"
                        "--permanent" #?"--zone=${zone}"
@@ -181,7 +198,10 @@ only FIREWALLD:DEFAULT-ZONE."
                    "--permanent" #?"--zone=${zone}"
                    (strcat "--remove-rich-rule=" (escape-sh-token rule)))))
 
-(defpropspec direct-rule :posix (&rest rule-args)
+;; Note that direct rules will be deprecated as of firewalld 1.0.0, as
+;; policies and rich rules should be able to cover all uses of direct rules.
+;;     <https://firewalld.org/2021/06/the-upcoming-1-0-0>
+(defpropspec zone-direct-rule :posix (&rest rule-args)
   (:desc #?"firewalld has direct rule \"@{rule-args}\"")
   (:check (zerop (mrun :for-exit "firewall-cmd"
                        "--permanent" "--direct" "--query-rule" rule-args)))
@@ -192,3 +212,13 @@ only FIREWALLD:DEFAULT-ZONE."
      :unapply
      (%firewall-cmd "direct.xml" "NOT_ENABLED"
                     "--permanent" "--direct" "--remove-rule" ,@rule-args)))
+
+
+;;;; Daemon configuration
+
+(defproplist default-zone :posix (zone)
+  (:desc #?"firewalld default zone is ${zone}")
+  (installed)
+  (has-zone zone)
+  (%firewall-cmd "firewalld.conf" "ZONE_ALREADY_SET"
+                 #?"--set-default-zone=${zone}"))

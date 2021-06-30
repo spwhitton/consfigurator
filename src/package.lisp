@@ -738,15 +738,17 @@
                     (#:os           #:consfigurator.property.os))
   (:export #:installed
            #:service
+           #:policy
+           #:zone
            #:has-zone
-           #:default-zone
            #:zone-target
-           #:has-service
            #:default-route-zoned-once
-           #:has-interface
-           #:masquerade
-           #:rich-rule
-           #:direct-rule))
+           #:zone-has-interface
+           #:zone-has-service
+           #:zone-masquerade
+           #:zone-rich-rule
+           #:zone-direct-rule
+           #:default-zone))
 
 (defpackage :consfigurator.property.timezone
   (:use #:cl #:consfigurator)
