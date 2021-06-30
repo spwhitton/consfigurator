@@ -101,6 +101,41 @@
                             "--permanent" #?"--zone=${zone}"
                             #?"--remove-service=${service}")))
 
+(defprop %default-route-zoned :posix (zone)
+  (:apply
+   (if-let ((default-route-interface
+             (loop for line in (runlines "ip" "route" "list" "scope" "global")
+                   when (string-prefix-p "default " line)
+                     return (fifth (words line)))))
+     (%firewall-cmd #?"zones/${zone}.xml" nil
+                    "--permanent" #?"--zone=${zone}"
+                    #?"--change-interface=${default-route-interface}")
+     (failed-change "Could not determine the interface of the default route."))))
+
+(defproplist default-route-zoned-once :posix (&optional (zone "public"))
+  "Bind the interface of the default route to zone ZONE, only if this property
+has not done that yet for at least one (INTERFACE . ZONE) pair.
+
+This property is intended for machines which have firewalld but do not use
+Network Manager, as is typical on Debian servers using firewalld.  On such
+machines firewalld will fail to add the primary network interface to any zone
+when the interface comes up before firewalld does.
+
+This property avoids the situation in which the primary network interface is
+not part of any zone by explicitly adding it to ZONE, determining the name of
+the interface by examining the current default route.  The property only adds
+an interface to a zone once, as the default route might later be changed
+temporarily by something like a VPN connection, and in such a case the
+firewall should not be reconfigured.
+
+Typically you will apply both this property and FIREWALLD:DEFAULT-ZONE,
+passing the same zone name to each.  If you have Network Manager, you need
+only FIREWALLD:DEFAULT-ZONE."
+  (with-flagfile "/etc/consfigurator/firewalld/default-route-zoned"
+    (installed)
+    (has-zone zone)
+    (%default-route-zoned zone)))
+
 (defproplist has-interface :posix (zone interface)
   (:desc #?"firewalld zone ${zone} has interface ${interface}")
   (:check (zerop (mrun :for-exit "firewall-cmd" "--permanent"

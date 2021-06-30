@@ -731,7 +731,7 @@
            #:masked))
 
 (defpackage :consfigurator.property.firewalld
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
                     (#:file         #:consfigurator.property.file)
                     (#:apt          #:consfigurator.property.apt)
@@ -742,6 +742,7 @@
            #:default-zone
            #:zone-target
            #:has-service
+           #:default-route-zoned-once
            #:has-interface
            #:masquerade
            #:rich-rule
