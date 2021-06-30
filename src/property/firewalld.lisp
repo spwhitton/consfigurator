@@ -59,7 +59,7 @@
                        (with-change-if-changes-file
                            ((merge-pathnames file #P"/etc/firewalld/")) (run))
                        (run))))
-       (when (eql result :no-change)
+       (unless (eql result :no-change)
          (mrun "firewall-cmd" "--reload"))
        result))))
 
