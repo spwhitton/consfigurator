@@ -20,27 +20,33 @@
 
 (defprop started :posix (service)
   (:desc #?"systemd service ${service} started")
-  (:apply (mrun "systemctl" "start" service)
-   :no-change))
+  (:check (zerop (mrun :for-exit "systemctl" "is-active" service)))
+  (:apply (mrun "systemctl" "start" service)))
 
 (defprop stopped :posix (service)
   (:desc #?"systemd service ${service} stopped")
-  (:apply (mrun "systemctl" "stop" service)
-   :no-change))
+  (:check (plusp (mrun :for-exit "systemctl" "is-active" service)))
+  (:apply (mrun "systemctl" "stop" service)))
 
 (defprop enabled :posix (service)
   (:desc #?"systemd service ${service} enabled")
-  (:apply (mrun "systemctl" "enable" service)
-   :no-change))
+  (:check (zerop (mrun :for-exit "systemctl" "is-enabled" service)))
+  (:apply (mrun "systemctl" "enable" service)))
 
 (defprop disabled :posix (service)
   (:desc #?"systemd service ${service} disabled")
-  (:apply (mrun "systemctl" "disable" service)
-   :no-change))
+  (:check
+   (let ((status (stripln (run :may-fail "systemctl" "is-enabled" service))))
+     (or (string-prefix-p "linked" status)
+         (string-prefix-p "masked" status)
+         (memstring=
+          status
+          '("static" "disabled" "generated" "transient" "indirect")))))
+  (:apply (mrun "systemctl" "disable" service)))
 
 (defprop masked :posix (service)
   (:desc #?"systemd service ${service} masked")
-  (:apply (mrun "systemctl" "mask" service)
-   :no-change)
-  (:unapply (mrun "systemctl" "unmask" service)
-   :no-change))
+  (:check (string-prefix-p "masked"
+                           (run :may-fail "systemctl" "is-enabled" service)))
+  (:apply (mrun "systemctl" "mask" service))
+  (:unapply (mrun "systemctl" "unmask" service)))
