@@ -266,6 +266,37 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
          (declare (ignore ,ignore) ,@declarations)
          ,@forms))))
 
+(defun parse-cidr (address-with-suffix)
+  (destructuring-bind (address cidr)
+      (split-string address-with-suffix :separator "/")
+    (unless cidr
+      (simple-program-error "~A is not in CIDR notation."
+                            address-with-suffix))
+    (values
+     address
+     (loop with cidr = (parse-integer cidr)
+           with type = (if (or (> cidr 32) (find #\: address)) 6 4)
+           with block-digits = (if (= type 4) 8 16)
+           repeat (if (= type 4) 4 8)
+           for digits = (min cidr block-digits)
+           do (decf cidr digits)
+           collect (parse-integer
+                    (with-output-to-string (s)
+                      (loop repeat digits do (princ #\1 s))
+                      (loop repeat (- block-digits digits) do (princ #\0 s)))
+                    :radix 2)
+             into accum
+           finally (return (if (= type 4)
+                               (format nil "~{~D~^.~}" accum)
+                               (with-output-to-string (s)
+                                 (loop for blocks on accum
+                                       if (> (car blocks) 0)
+                                         do (format s "~X" (car blocks))
+                                         and if (cdr blocks) do (princ #\: s)
+                                               end
+                                       else do (princ #\: s)
+                                               (loop-finish)))))))))
+
 
 ;;;; Progress & debug printing
 

@@ -86,6 +86,7 @@
            #:escape-sh-command
            #:defpackage-consfig
            #:lambda-ignoring-args
+           #:parse-cidr
 
            #:*consfigurator-debug-level*
            #:with-indented-inform
@@ -618,7 +619,9 @@
   (:export #:aliases
            #:ipv4
            #:ipv6
-           #:static))
+           #:clean-/etc/network/interfaces
+           #:static
+           #:preserve-static-once))
 
 (defpackage :consfigurator.property.libvirt
   (:use #:cl #:alexandria #:consfigurator)

@@ -47,6 +47,19 @@ in which case you can use this property)."
   (:desc (format nil "Has public IPv6 ~{~A~^, ~}" addresses))
   (:hostattrs (apply #'pushnew-hostattrs :ipv6 (flatten addresses))))
 
+(defproplist clean-/etc/network/interfaces :posix ()
+  "Empty /etc/network/interfaces in preparation for configuring interfaces using
+/etc/network/interfaces.d.  On fresh installs this property should not be
+necessary, but it is useful for removing configuration inserted by your VPS
+hosting provider, for example."
+  (:hostattrs (os:required 'os:debianlike))
+  (file:has-content "/etc/network/interfaces"
+    ;; This is the contents of the file on fresh Debian "bullseye" installs --
+    ;; the IPv4 loopback interface is no longer configured here.
+    '("# interfaces(5) file used by ifup(8) and ifdown(8)"
+      "# Include files from /etc/network/interfaces.d:"
+      "source /etc/network/interfaces.d/*")))
+
 (defprop static :posix (interface address &optional gateway &rest options)
   "Configures an interface with a static IP address.
 OPTIONS is a list of even length of alternating keys and values."
@@ -66,3 +79,45 @@ OPTIONS is a list of even length of alternating keys and values."
                     interface (if (find #\. address) "inet" "inet6"))
             (loop for (k v) on options by #'cddr
                   collect (format nil "	~A ~A" k v))))))
+
+;; Based on Propellor's Network.preserveStatic property.
+(defprop preserve-static-once :posix (&optional interface &rest options)
+  "Writes configuration to bring up INTERFACE, statically, with the IP addresses
+and routing configuration currently associated with the interface, assuming
+that INTERFACE has already been brought up by other means, such as DHCP.
+INTERFACE defaults to the interface of the default route.  This property does
+nothing if the interface configuration file already exists.  OPTIONS is a list
+of even length of alternating keys and values.
+
+IPv6 addresses are ignored, as it is assumed these use stateless configuration
+of some form, which is best implemented using a property which does not query
+the networking stack's current state like this one does."
+  (:hostattrs (os:required 'os:debianlike))
+  (:apply
+   (let* ((default
+            (loop for line in (runlines "ip" "route" "list" "scope" "global")
+                  when (string-prefix-p "default " line)
+                    return (words line)))
+          (interface (or interface (fifth default)))
+          (gateway (and (string= (fifth default) interface) (third default)))
+          (file (merge-pathnames (string->filename interface)
+                                 #P"/etc/network/interfaces.d/")))
+     (if (remote-exists-p file)
+         :no-change
+         (file:has-content file
+           (cons
+            (strcat "auto " interface)
+            (loop for line in (runlines "ip" "-o" "addr" "show" interface
+                                        "scope" "global")
+                  for fields = (words line)
+                  when (string= "inet" (third fields))
+                    collect (strcat "iface " interface " inet static")
+                    and nconc (multiple-value-bind (addr nm)
+                                  (parse-cidr (fourth fields))
+                                (list (strcat "	address " addr)
+                                      (strcat "	netmask " nm)))
+                    and if gateway collect (strcat "	gateway " gateway)
+                          end
+                    and nconc
+                        (loop for (k v) on options by #'cddr
+                              collect (format nil "	~A ~A" k v)))))))))
