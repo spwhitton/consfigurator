@@ -352,7 +352,8 @@
                     (#:file  #:consfigurator.property.file))
   (:export #:mounted
            #:unmounted-below
-           #:unmounted-below-and-removed))
+           #:unmounted-below-and-removed
+           #:all-mounts))
 
 (defpackage :consfigurator.property.service
   (:use #:cl #:alexandria #:consfigurator)

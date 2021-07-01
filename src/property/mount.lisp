@@ -66,16 +66,11 @@ this property will empty /dev, breaking all kinds of things."
      ;; /proc, and the second can't be removed until the bind mount is
      ;; removed.  (This situation arises because :CHROOT.FORK connections bind
      ;; mount the chroot on itself if it is not already a mount point.)
-     (let* ((dir (ensure-directory-pathname dir))
-            (all-mounts
-              (mapcar #'ensure-directory-pathname
-                      (runlines "findmnt" "-rn" "--output" "target")))
-            (mounts-below (remove-if-not (rcurry #'subpathp dir) all-mounts))
-            (sorted (sort mounts-below #'string< :key #'unix-namestring)))
-       (loop as next = (pop sorted)
-             while next
-             do (loop while (subpathp (car sorted) next) do (pop sorted))
-                (mrun "umount" "--recursive" next))))))
+     (loop with sorted = (all-mounts dir)
+           as next = (pop sorted)
+           while next
+           do (loop while (subpathp (car sorted) next) do (pop sorted))
+              (mrun "umount" "--recursive" next)))))
 
 (defproplist unmounted-below-and-removed :posix (dir)
   "Unmount anything mounted at or below DIR and recursively delete dir."
@@ -83,3 +78,14 @@ this property will empty /dev, breaking all kinds of things."
   (:check (not (remote-exists-p dir)))
   (unmounted-below dir)
   (cmd:single "rm" "-rf" dir))
+
+(defun all-mounts (&optional (below #P"/"))
+  "Retrieve all mountpoints below BELOW, ordered lexicographically.
+If BELOW is itself a mountpoint, it will be included as the first element.
+
+Uses findmnt(8), so Linux-specific."
+  (let* ((below (ensure-directory-pathname below))
+         (all-mounts (mapcar #'ensure-directory-pathname
+                             (runlines "findmnt" "-rn" "--output" "target")))
+         (mounts-below (remove-if-not (rcurry #'subpathp below) all-mounts)))
+    (sort mounts-below #'string< :key #'unix-namestring)))
