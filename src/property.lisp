@@ -405,13 +405,14 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   (loop while (and (listp (car forms)) (keywordp (caar forms)))
 	do (setf (getf slots (caar forms))
 		 `(lambda (plist)
-		    (destructuring-bind ,lambda (getf plist :orig-args)
-                      ,@(and (member (caar forms) '(:desc :hostattrs))
-                             `((declare
-                                (ignorable
-                                 ,@(ordinary-ll-variable-names
-                                    lambda :include-supplied-p t)))))
-		      ,@(cdr (pop forms))))))
+                    (with-*host*-*consfig*
+		      (destructuring-bind ,lambda (getf plist :orig-args)
+                        ,@(and (member (caar forms) '(:desc :hostattrs))
+                               `((declare
+                                  (ignorable
+                                   ,@(ordinary-ll-variable-names
+                                      lambda :include-supplied-p t)))))
+		        ,@(cdr (pop forms)))))))
   (unless (getf slots :hostattrs)
     (setq programmatic-warning nil))
   (setf (getf slots :hostattrs)
