@@ -140,7 +140,13 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
                              (hostattrs
                               (preprocess-host (shallow-copy-host host)))
                              :data)
-                 :propspec propspec))
+                 :propspec (make-propspec
+                            ;; Add the original PROPSPEC-SYSTEMS so that we
+                            ;; know that all the hostattrs are instantiable.
+                            :systems
+                            (union (propspec-systems propspec)
+                                   (propspec-systems (host-propspec host)))
+                            :propspec (propspec-props propspec))))
 
 (defmacro defhost (hostname (&key deploy) &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
