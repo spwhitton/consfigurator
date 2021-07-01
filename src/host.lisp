@@ -54,7 +54,8 @@
   (:method ((host host))
     host)
   (:method ((hostname string))
-    (make-host :hostattrs `(:hostname (,hostname)))))
+    (make-host :hostattrs `(:hostname (,hostname))
+               :propspec (make-propspec :systems nil))))
 
 (defmethod shallow-copy-host ((host host))
   (make-instance (type-of host)

@@ -237,7 +237,8 @@ for testing properties at the REPL.  See also EVALS."
                         (run-program '("id") :output :string)))
             (,hostname (hostname-f))
             (,host (or (symbol-value (find-symbol (string-upcase ,hostname)))
-                       (make-host :hostattrs `(:hostname (,,hostname))))))
+                       (make-host :hostattrs `(:hostname (,,hostname))
+                                  :propspec (make-propspec :systems nil)))))
        (deploy-these*
         `((:sudo :as ,(format nil "~A@~A" ,username ,hostname)))
         ,host

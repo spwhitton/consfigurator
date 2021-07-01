@@ -178,7 +178,7 @@ PRINT-OBJECT."))
   "Convert a property application specification expression into a property
 application specification proper by associating it with a list of ASDF
 systems."
-  (if (or systems-supplied-p (not propspec))
+  (if systems-supplied-p
       (make-instance 'unpreprocessed-propspec
                      :systems systems :propspec propspec)
       (make-instance 'unpreprocessed-propspec :propspec propspec)))
