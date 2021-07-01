@@ -26,7 +26,7 @@
    (if (test "-d" (merge-pathnames "debootstrap/"
                                    (ensure-directory-pathname root)))
        (progn (delete-remote-trees root) nil)
-       (remote-exists-p (merge-pathnames "usr/lib/os-release" root))))
+       (remote-exists-p (chroot-pathname "/usr/lib/os-release" root))))
   (:apply
    (destructuring-bind
        (&key (apt.proxy (get-hostattrs-car :apt.proxy host))
