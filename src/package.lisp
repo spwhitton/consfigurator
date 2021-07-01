@@ -636,7 +636,8 @@
            #:kvm-boots-chroot-for
            #:kvm-boots-chroot-for.
            #:kvm-boots-chroot
-           #:kvm-boots-chroot.))
+           #:kvm-boots-chroot.
+           #:virsh-get-columns))
 
 (defpackage :consfigurator.property.ccache
   (:use #:cl #:consfigurator)
