@@ -258,10 +258,12 @@ FLAGFILE exists, PROPAPPS are assumed to all be already applied."
                      (remote-exists-p flagfile))
             :apply (lambda-ignoring-args
                      (prog1 (propappapply propapp)
+                       (mrun "mkdir" "-p"
+                             (pathname-directory-pathname flagfile))
                        (mrun "touch" flagfile)))
             :unapply (lambda-ignoring-args
                        (prog1 (propappunapply propapp)
-                         (mrun "rm" flagfile)))
+                         (mrun "rm" "-f" flagfile)))
             :args (cdr propapp)))
 
 (define-function-property-combinator with-unapply (&rest propapps)
