@@ -355,6 +355,8 @@
            #:unmounted-below
            #:unmounted-below-and-removed
            #:all-mounts
+           #:*standard-linux-vfs*
+           #:*linux-efivars-vfs*
            #:assert-devtmpfs-udev-/dev))
 
 (defpackage :consfigurator.property.service
@@ -815,7 +817,8 @@
         #:consfigurator.connection.rehome
         #:consfigurator.connection.shell-wrap
 	#:cffi)
-  (:local-nicknames (#:disk      #:consfigurator.property.disk)))
+  (:local-nicknames (#:disk      #:consfigurator.property.disk)
+                    (#:mount     #:consfigurator.property.mount)))
 
 (defpackage :consfigurator.connection.setuid
   (:use #:cl

@@ -58,15 +58,6 @@ should be the mount point, without the chroot's root prefixed.")
   (dolist (mount (chroot-mounts connection))
     (mrun "umount" mount)))
 
-(defparameter *standard-chroot-mounts* '(
-("-t" "proc"     "-o" "nosuid,noexec,nodev"                "proc"   "/proc")
-("-t" "sysfs"    "-o" "nosuid,noexec,nodev,ro"             "sys"    "/sys")
-("-t" "devtmpfs" "-o" "mode=0755,nosuid"                   "udev"   "/dev")
-("-t" "devpts"   "-o" "mode=0620,gid=5,nosuid,noexec"      "devpts" "/dev/pts")
-("-t" "tmpfs"    "-o" "mode=1777,nosuid,nodev"             "shm"    "/dev/shm")
-("-t" "tmpfs"    "-o" "mode=1777,strictatime,nodev,nosuid" "tmp"    "/tmp")
-("--bind"                                                  "/run"   "/run")))
-
 (defmethod initialize-instance :after ((connection chroot-connection) &key)
   (when (string= "Linux" (stripln (run "uname")))
     (with-slots (into) connection
@@ -76,11 +67,10 @@ should be the mount point, without the chroot's root prefixed.")
         (chroot-mount connection "--bind" into "/"))
       ;; Now set up the usual bind mounts.  Help here from arch-chroot(8).
       (mount:assert-devtmpfs-udev-/dev)
-      (dolist (mount *standard-chroot-mounts*)
+      (dolist (mount mount:*standard-linux-vfs*)
         (apply #'chroot-mount connection mount))
       (when (remote-exists-p "/sys/firmware/efi/efivars")
-        (chroot-mount connection "-t" "efivarfs" "-o" "nosuid,noexec,nodev"
-                      "efivarfs" "/sys/firmware/efi/efivars")))))
+        (apply #'chroot-mount connection mount:*linux-efivars-vfs*)))))
 
 (defmethod propagate-connattr
     ((type (eql :opened-volumes)) connattr (connection chroot-connection))
