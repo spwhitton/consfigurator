@@ -33,7 +33,11 @@ Lisp. This can mean that prerequisite data gets extracted from encrypted
 stores and stored unencrypted under ~~/.cache, and as such is not
 recommended."))
   (unless (zerop (mrun :for-exit "command" "-v" "sbcl"))
-    (ignoring-hostattrs (sbcl-available)))
+    ;; If we're not the final hop then we don't know the OS of the host to
+    ;; which we're currently connected, so we can't apply SBCL-AVAILABLE.
+    (if remaining
+        (failed-change "sbcl not on PATH and don't know how to install.")
+        (ignoring-hostattrs (sbcl-available))))
   (let ((requirements (asdf-requirements-for-host-and-features
                        (safe-read-from-string
                         (run :input "(prin1 *features*)" *sbcl*)
