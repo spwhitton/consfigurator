@@ -354,7 +354,8 @@
   (:export #:mounted
            #:unmounted-below
            #:unmounted-below-and-removed
-           #:all-mounts))
+           #:all-mounts
+           #:assert-devtmpfs-udev-/dev))
 
 (defpackage :consfigurator.property.service
   (:use #:cl #:alexandria #:consfigurator)

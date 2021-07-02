@@ -89,3 +89,14 @@ Uses findmnt(8), so Linux-specific."
                              (runlines "findmnt" "-rn" "--output" "target")))
          (mounts-below (remove-if-not (rcurry #'subpathp below) all-mounts)))
     (sort mounts-below #'string< :key #'unix-namestring)))
+
+
+;;;; Utilities for :LISP properties
+
+(defun assert-devtmpfs-udev-/dev ()
+  "On a system with the Linux kernel, assert that /dev has fstype devtmpfs."
+  (unless (and (zerop (mrun :for-exit "mountpoint" "-q" "/dev"))
+               (string= "devtmpfs udev"
+                        (stripln (run "findmnt" "-nro" "fstype,source" "/dev"))))
+    (failed-change
+     "/dev is not udev devtmpfs; support for other kinds of /dev unimplemented.")))

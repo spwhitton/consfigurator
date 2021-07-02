@@ -75,6 +75,7 @@ should be the mount point, without the chroot's root prefixed.")
       (unless (zerop (mrun :for-exit "mountpoint" "-q" into))
         (chroot-mount connection "--bind" into "/"))
       ;; Now set up the usual bind mounts.  Help here from arch-chroot(8).
+      (mount:assert-devtmpfs-udev-/dev)
       (dolist (mount *standard-chroot-mounts*)
         (apply #'chroot-mount connection mount))
       (when (remote-exists-p "/sys/firmware/efi/efivars")
