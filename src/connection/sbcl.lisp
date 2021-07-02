@@ -19,8 +19,6 @@
 (named-readtables:in-readtable :consfigurator)
 
 (defproplist sbcl-available :posix ()
-  (:check
-   (zerop (mrun :for-exit "command" "-v" "sbcl")))
   (os:etypecase
     (debianlike (apt:installed "sbcl"))))
 
@@ -34,7 +32,8 @@
 Lisp. This can mean that prerequisite data gets extracted from encrypted
 stores and stored unencrypted under ~~/.cache, and as such is not
 recommended."))
-  (ignoring-hostattrs (sbcl-available))
+  (unless (zerop (mrun :for-exit "command" "-v" "sbcl"))
+    (ignoring-hostattrs (sbcl-available)))
   (let ((requirements (asdf-requirements-for-host-and-features
                        (safe-read-from-string
                         (run :input "(prin1 *features*)" *sbcl*)
