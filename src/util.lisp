@@ -422,8 +422,9 @@ of this macro."
   (with-gensyms (cancelled)
     `(let (,cancelled)
        (unwind-protect
-            (handler-bind ((in-child-process
-                             (lambda (c) (setq ,cancelled t) (signal c))))
+            (handler-bind ((in-child-process (lambda (c)
+                                               (declare (ignore c))
+                                               (setq ,cancelled t))))
               ,protected)
          (unless ,cancelled ,@cleanup)))))
 
