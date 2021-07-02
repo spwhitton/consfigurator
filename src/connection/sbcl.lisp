@@ -37,7 +37,7 @@ recommended."))
     ;; which we're currently connected, so we can't apply SBCL-AVAILABLE.
     (if remaining
         (failed-change "sbcl not on PATH and don't know how to install.")
-        (ignoring-hostattrs (sbcl-available))))
+        (sbcl-available)))
   (let ((requirements (asdf-requirements-for-host-and-features
                        (safe-read-from-string
                         (run :input "(prin1 *features*)" *sbcl*)
