@@ -361,8 +361,9 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
      ;; simplicity, particularly to avoid having to check whether the connattr
      ;; is set yet, because setting it requires working CONNECTION-RUN.
      (setq cmd (format nil "export HOME=~A; cd ~A; ~A"
-                       (escape-sh-token (unix-namestring
-                                         (get-connattr :remote-home)))
+                       (escape-sh-token (drop-trailing-slash
+                                         (unix-namestring
+                                          (get-connattr :remote-home))))
                        (escape-sh-token (unix-namestring (pwd)))
                        cmd))
      ,@forms))
