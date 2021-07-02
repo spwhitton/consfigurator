@@ -33,17 +33,17 @@ the mount is not actually active."
   "Unmount anything mounted at or below DIR.
 
 Not aware of shared subtrees, so you might need to use the --make-rslave
-option to mount(1) first.  For example, if you did 'mount --rbind /dev
+option to mount(8) first.  For example, if you did 'mount --rbind /dev
 chroot/dev' then unless you also execute 'mount --make-rslave chroot/dev',
 this property will empty /dev, breaking all kinds of things."
   (:desc #?"${dir} unmounted")
   (:hostattrs
-   ;; findmnt(1) & --recursive argument to umount(1) are from util-linux
+   ;; findmnt(8) & --recursive argument to umount(8) are from util-linux
    (os:required 'os:linux))
   (:apply
    (with-change-if-changes-file-content ("/proc/mounts")
      ;; We used to call --make-rslave as we worked through, but for mounts
-     ;; which were *not* made using the --rbind option to mount(1) or similar,
+     ;; which were *not* made using the --rbind option to mount(8) or similar,
      ;; doing that can can get us into a state where we can unmount everything
      ;; we can see under DIR but the kernel will still consider the block
      ;; device to be in use.  That's a bit much for this property to deal

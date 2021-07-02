@@ -18,7 +18,7 @@
 (in-package :consfigurator.property.fstab)
 (named-readtables:in-readtable :consfigurator)
 
-;;; Use of findmnt(1) makes much of this Linux-specific.
+;;; Use of findmnt(8) makes much of this Linux-specific.
 
 ;;;; Methods on volumes to get strings for fstab
 

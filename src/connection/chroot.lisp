@@ -61,7 +61,7 @@ should be the mount point, without the chroot's root prefixed.")
 (defmethod initialize-instance :after ((connection chroot-connection) &key)
   (when (string= "Linux" (stripln (run "uname")))
     (with-slots (into) connection
-      ;; Ensure the chroot itself is a mountpoint so that findmnt(1) works
+      ;; Ensure the chroot itself is a mountpoint so that findmnt(8) works
       ;; correctly within the chroot.
       (unless (zerop (mrun :for-exit "mountpoint" "-q" into))
         (chroot-mount connection "--bind" into "/"))
