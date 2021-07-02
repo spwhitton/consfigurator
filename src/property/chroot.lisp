@@ -46,12 +46,31 @@
        (nconcf args (list apt.mirror)))
      (apply #'run args))))
 
+(defprop %debootstrap-manually-installed :posix ()
+  (:check (zerop (mrun :for-exit "command" "-v" "debootstrap")))
+  (:apply
+   (failed-change "Don't know how to install debootstrap(8) manually.")))
+
 (defpropspec %os-bootstrapper-installed :posix (host)
-  (:desc (declare (ignore host)) "OS bootstrapper installed")
-  `(os:host-etypecase ,host
-     (debian
-      (os:etypecase
-        (debianlike (apt:installed "debootstrap" "qemu-user-static"))))))
+  (:desc "OS bootstrapper installed")
+  (let ((host (preprocess-host host)))
+    `(os:host-etypecase ,host
+       (debian
+        ;; Have %DEBOOTSTRAP-MANUALLY-INSTALLED like this to enable installing
+        ;; Debian on arbitrary unixes, where Consfigurator doesn't know how to
+        ;; install packages, but the user has manually ensured that
+        ;; debootstrap(8) is on PATH.  However, we don't have such an escape
+        ;; hatch for the case where the architectures do not match because
+        ;; ensuring that debootstrap(8) will be able to bootstrap a foreign
+        ;; arch is more involved.
+        (os:typecase
+          (debianlike (apt:installed "debootstrap"))
+          (t (%debootstrap-manually-installed)))
+        ,@(and (not (call-with-os
+                     #'os:supports-arch-p
+                     (os:linux-architecture (get-hostattrs-car :os host))))
+               '((os:etypecase
+                   (debianlike (apt:installed "qemu-user-static")))))))))
 
 (defpropspec %os-bootstrapped :posix (options root host)
   "Bootstrap OS into ROOT, e.g. with debootstrap(1)."
