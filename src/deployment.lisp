@@ -20,7 +20,21 @@
 
 ;;;; Deployments
 
-(defun %consfigure (connections host)
+(defparameter *at-end-functions* nil)
+
+(defun at-end (function)
+  "Request that FUNCTION be called at the end of the current (sub)deployment.
+Called by property :APPLY and :UNAPPLY subroutines.  FUNCTION will be passed a
+single argument representing whether or not the deployment made a change.
+
+Properties which call this are responsible for ensuring that the I/O performed
+by FUNCTION is compatible with the connection type.  This amounts to the
+following requirement: if FUNCTION performs I/O beyond what :POSIX property
+:APPLY subroutines are permitted to perform, the property calling AT-END to
+register FUNCTION must be declared to be a :LISP property."
+  (push (ensure-function function) *at-end-functions*))
+
+(defun %consfigure (connections host &key (collect-at-end t))
   "Consfigurator's primary loop, recursively binding *CONNECTION* and *HOST*.
 
 Assumes arguments to connections in CONNECTIONS have been both normalised and
@@ -29,7 +43,12 @@ preprocessed."
       ((apply-*host*-propspec ()
          (let ((propapp (eval-propspec (host-propspec *host*))))
            (assert-connection-supports (propapptype propapp))
-           (propappapply propapp)))
+           (if collect-at-end
+               (let (*at-end-functions*)
+                 (let ((result (propappapply propapp)))
+                   (dolist (function *at-end-functions* result)
+                     (funcall function result))))
+               (propappapply propapp))))
        (connect (connections)
          (destructuring-bind ((type . args) . remaining) connections
            ;; implementations of ESTABLISH-CONNECTION which call
@@ -53,7 +72,7 @@ preprocessed."
         (t
          (connect '((:local))))))))
 
-(defun consfigure (propspec-expression)
+(defun consfigure (propspec-expression &key collect-at-end)
   "Immediately preprocess and apply PROPSPEC-EXPRESSION in the context of the
 current target host and connection.  This function is provided for use by
 specialised property combinators.  It should not be used in property
@@ -69,7 +88,8 @@ will not be discarded."
    nil (make-host
         :hostattrs (hostattrs *host*)
         :propspec (with-*host*-*consfig*
-                    (make-propspec :propspec propspec-expression)))))
+                    (make-propspec :propspec propspec-expression)))
+   :collect-at-end collect-at-end))
 
 (defmacro with-deployment-report (&rest forms)
   (with-gensyms (failures)

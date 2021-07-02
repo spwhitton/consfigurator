@@ -218,6 +218,7 @@
            #:with-replace-hostattrs
 
            ;; deployment.lisp
+           #:at-end
            #:consfigure
            #:defdeploy
            #:defdeploy-these
@@ -575,6 +576,11 @@
                     (#:file      #:consfigurator.property.file))
   (:export #:available
            #:selected-for))
+
+(defpackage :consfigurator.property.reboot
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:container    #:consfigurator.property.container))
+  (:export #:rebooted-at-end))
 
 (defpackage :consfigurator.property.installer
   (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)

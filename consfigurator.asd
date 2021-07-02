@@ -47,6 +47,7 @@
                (:file "src/property/ssh")
                (:file "src/property/sshd")
                (:file "src/property/locale")
+               (:file "src/property/reboot")
                (:file "src/property/installer")
                (:file "src/property/grub")
                (:file "src/property/u-boot")
