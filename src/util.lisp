@@ -440,6 +440,29 @@ Should be called soon after fork(2) in child processes."
             (uiop:quit 2))))
      ,@forms))
 
+(defun posix-login-environment (logname home)
+  "Reset the environment after switching UID, or similar, in a :LISP connection.
+Does not currently establish a PAM session."
+  (let ((euid (foreign-funcall "geteuid" :int))
+        (maybe-preserve '("TERM")))
+    (when (zerop euid)
+      (push "SSH_AUTH_SOCK" maybe-preserve))
+    (let ((preserved (loop for var in maybe-preserve
+                           for val = (getenv var)
+                           when val collect var and collect val)))
+      (unless (zerop (foreign-funcall "clearenv" :int))
+        (failed-change "clearenv(3) failed!"))
+      (loop for (var val) on preserved by #'cddr do (setf (getenv var) val)))
+    (setf (getenv "HOME") (drop-trailing-slash (unix-namestring home))
+          (getenv "USER") logname
+          (getenv "LOGNAME") logname
+          (getenv "SHELL") "/bin/sh"
+          (getenv "PATH")
+          (if (zerop euid)
+              "/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
+              "/usr/local/bin:/bin:/usr/bin"))
+    (uiop:chdir home)))
+
 
 ;;;; Lisp data files
 
