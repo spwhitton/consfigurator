@@ -35,6 +35,13 @@ recommended."))
   (unless (zerop (mrun :for-exit "command" "-v" "sbcl"))
     ;; If we're not the final hop then we don't know the OS of the host to
     ;; which we're currently connected, so we can't apply SBCL-AVAILABLE.
+    ;;
+    ;; TODO In the case of INSTALLER:CLEANLY-INSTALLED-ONCE this code will
+    ;; have us trying to use apt to install sbcl on a Fedora host, say, upon
+    ;; the first connection, before Debian has been installed.  Perhaps we
+    ;; should just have some code which tries to install sbcl based on the
+    ;; package manager(s) it can find on PATH.  Could reuse that code for
+    ;; CHROOT::%DEBOOTSTRAP-MANUALLY-INSTALLED.
     (if remaining
         (failed-change "sbcl not on PATH and don't know how to install.")
         (sbcl-available)))

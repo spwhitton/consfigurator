@@ -22,6 +22,7 @@
                           #:ensure-directory-pathname
                           #:ensure-pathname
                           #:enough-pathname
+                          #:pathname-equal
                           #:subpathp
                           #:getenv
                           #:subdirectories
@@ -52,6 +53,7 @@
            #:ensure-directory-pathname
            #:ensure-pathname
            #:enough-pathname
+           #:pathname-equal
            #:subpathp
            #:getenv
            #:subdirectories
@@ -76,6 +78,7 @@
            #:plist-to-cmd-args
 	   #:with-local-temporary-directory
            #:pathname-file
+           #:directory-contents
            #:ensure-trailing-slash
            #:drop-trailing-slash
            #:quote-nonselfeval
@@ -87,6 +90,7 @@
            #:defpackage-consfig
            #:lambda-ignoring-args
            #:parse-cidr
+           #:system
 
            #:*consfigurator-debug-level*
            #:with-indented-inform
@@ -585,14 +589,18 @@
 (defpackage :consfigurator.property.installer
   (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
   (:local-nicknames (#:os        #:consfigurator.property.os)
+                    (#:cmd       #:consfigurator.property.cmd)
                     (#:file      #:consfigurator.property.file)
                     (#:chroot    #:consfigurator.property.chroot)
+                    (#:mount     #:consfigurator.property.mount)
                     (#:fstab     #:consfigurator.property.fstab)
+                    (#:reboot    #:consfigurator.property.reboot)
                     (#:crypttab  #:consfigurator.property.crypttab))
   (:export #:install-bootloader-propspec
            #:install-bootloader-binaries-propspec
            #:chroot-installed-to-volumes
-           #:bootloader-binaries-installed))
+           #:bootloader-binaries-installed
+           #:cleanly-installed-once))
 
 (defpackage :consfigurator.property.grub
   (:use #:cl #:alexandria #:consfigurator

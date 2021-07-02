@@ -169,6 +169,14 @@ one solution is to convert your property to a :LISP property."
             (enough-pathname pathname (pathname-directory-pathname pathname))
             pathname))))
 
+(defun directory-contents (pathname)
+  "Return the immediate contents of PATHNAME, a directory, without resolving
+symlinks.  Not suitable for use by :POSIX properties."
+  ;; On SBCL on Debian UIOP:*WILD-FILE-FOR-DIRECTORY* is #P"*.*".
+  (uiop:directory*
+   (merge-pathnames uiop:*wild-file-for-directory*
+                    (ensure-directory-pathname pathname))))
+
 (defun ensure-trailing-slash (namestring)
   (if (string-suffix-p namestring "/")
       namestring
@@ -296,6 +304,18 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
                                                end
                                        else do (princ #\: s)
                                                (loop-finish)))))))))
+
+(defun system (&rest args)
+  "Simple wrapper around system(3)."
+  (foreign-funcall
+   "system" :string (if (cdr args)
+                        (escape-sh-command
+                         (loop for arg in args
+                               if (pathnamep arg)
+                                 collect (unix-namestring arg)
+                               else collect arg))
+                        (car args))
+   :int))
 
 
 ;;;; Progress & debug printing
