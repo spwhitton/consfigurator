@@ -53,15 +53,13 @@
                                           :datadir datadir
                                           :connattrs `(:remote-uid ,uid
                                                        :remote-gid ,gid
+                                                       :remote-user ,to
                                                        :remote-home ,home))
                            remaining))))
 
 (defmethod post-fork ((connection setuid-connection))
-  ;; TODO Set up the new environment more systematically.  Perhaps look at how
-  ;; runuser(1) uses PAM to do this.
   (let ((uid (connection-connattr connection :remote-uid))
-        (gid (connection-connattr connection :remote-gid))
-        (home (connection-connattr connection :remote-home)))
+        (gid (connection-connattr connection :remote-gid)))
     (run-program (list "chown" "-R"
                        (format nil "~A:~A" uid gid)
                        (unix-namestring (slot-value connection 'datadir))))
@@ -69,5 +67,6 @@
       (error "setgid(2) failed!"))
     (unless (zerop (setuid uid))
       (error "setuid(2) failed!"))
-    (setf (getenv "HOME") (unix-namestring home))
-    (uiop:chdir home)))
+    (posix-login-environment
+     (connection-connattr connection :remote-user)
+     (connection-connattr connection :remote-home))))

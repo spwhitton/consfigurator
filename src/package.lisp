@@ -1,7 +1,7 @@
 (in-package :cl-user)
 
 (defpackage :consfigurator
-  (:use #:cl #:alexandria)
+  (:use #:cl #:alexandria #:cffi)
   (:local-nicknames (#:re #:cl-ppcre))
   (:shadowing-import-from #:uiop
                           #:strcat
@@ -100,6 +100,7 @@
 
            #:unwind-protect-in-parent
            #:cancel-unwind-protect-in-parent-cleanup
+           #:posix-login-environment
 
            ;; connection.lisp
            #:establish-connection
