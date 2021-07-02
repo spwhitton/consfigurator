@@ -28,6 +28,12 @@
     :documentation
     "Keyword whose name is Debian's name for this architecture, e.g. :AMD64")))
 
+(defprop linux :posix (architecture)
+  (:desc "Host kernel is Linux")
+  (:hostattrs (push-hostattrs :os (make-instance 'linux :arch architecture))))
+
+(define-print-object-for-structlike linux)
+
 (defclass debianlike (linux) ())
 
 (defclass debian (debianlike)
@@ -153,8 +159,10 @@ Used in property :HOSTATTRS subroutines."
 
 (defun supports-arch-p (os arch)
   "Can binaries of type ARCH run on OS?"
-  (cl:typecase os
-    (debian (or (eq (linux-architecture os) arch)
-                (member arch (assoc (linux-architecture os)
-                                    '((:amd64 :i386)
-                                      (:i386  :amd64))))))))
+  (let ((same (eq (linux-architecture os) arch)))
+    (cl:typecase os
+      (debian (or same
+                  (member arch (assoc (linux-architecture os)
+                                      '((:amd64 :i386)
+                                        (:i386  :amd64))))))
+      (linux same))))
