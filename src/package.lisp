@@ -622,7 +622,7 @@
            #:u-boot-installed-rockchip))
 
 (defpackage :consfigurator.property.hostname
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
                     (#:container #:consfigurator.property.container)
                     (#:file      #:consfigurator.property.file))

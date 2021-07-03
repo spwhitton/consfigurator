@@ -19,7 +19,9 @@
 (named-readtables:in-readtable :consfigurator)
 
 (defun domain (hostname)
-  (subseq hostname (min (length hostname) (1+ (position #\. hostname)))))
+  (if-let ((pos (position #\. hostname)))
+    (subseq hostname (min (length hostname) (1+ pos)))
+    ""))
 
 (defprop is :posix (hostname)
   "Specify that the hostname of this host is HOSTNAME.
