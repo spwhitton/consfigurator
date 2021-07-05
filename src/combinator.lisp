@@ -151,11 +151,8 @@ apply the elements of REQUIREMENTS in reverse order."
                     (restart-case (if announce
                                       (announce-propapp-apply propapp)
                                       (propapp-apply propapp))
-                      (skip-property (c)
-                        ;; Re-signal as a non-error, for notification purposes.
-                        (signal 'failed-change
-                                :format-control (simple-condition-format-control c)
-                                :format-arguments (simple-condition-format-arguments c))
+                      (skip-property ()
+                        (signal 'skipped-properties)
                         'failed-change)))
             (when (and (plusp (length buffer))
                        (or (> *consfigurator-debug-level* 1)

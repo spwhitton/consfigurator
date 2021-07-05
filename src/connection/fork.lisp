@@ -66,7 +66,7 @@ for example, such that we don't see it."
         (-1
          (error "fork(2) failed"))
         (0
-         (with-backtrace-and-exit-code-two
+         (with-backtrace-and-exit-code
            ;; Capture child stdout in case *STANDARD-OUTPUT* has been rebound
            ;; to somewhere else in the parent, e.g. by APPLY-AND-PRINT.  The
            ;; parent can then send the contents of the file named by OUTPUT to
@@ -89,10 +89,7 @@ for example, such that we don't see it."
              ;; (establish-connection :local)) here, but we need to kill off
              ;; the child afterwards, rather than returning to the child's
              ;; REPL or whatever else.
-             (uiop:quit
-              (if (eql :no-change (continue-deploy* connection remaining))
-                  0
-                  1)))))
+             (continue-deploy* connection remaining))))
         (t
          (multiple-value-bind (pid status) (waitpid child 0)
            (declare (ignore pid))
@@ -104,7 +101,8 @@ for example, such that we don't see it."
                 "Fork connection child did not exit normally, status #x~(~4,'0X~)"
                 status))
              (let ((exit-status (wexitstatus status)))
-               (unless (< exit-status 2)
-                 (failed-change
-                  "Fork connection child failed, exit code ~D" exit-status))
-               (values nil (and (zerop status) :no-change))))))))))
+               (return-exit
+                exit-status
+                :on-failure
+                (failed-change "Fork connection child failed, exit code ~D"
+                               exit-status))))))))))

@@ -107,7 +107,8 @@
 
            #:unwind-protect-in-parent
            #:cancel-unwind-protect-in-parent-cleanup
-           #:with-backtrace-and-exit-code-two
+           #:with-backtrace-and-exit-code
+           #:return-exit
            #:posix-login-environment
 
            ;; connection.lisp

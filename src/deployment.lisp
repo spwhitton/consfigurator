@@ -91,22 +91,6 @@ will not be discarded."
                     (make-propspec :propspec propspec-expression)))
    :collect-at-end collect-at-end))
 
-(defmacro with-deployment-report (&rest forms)
-  (with-gensyms (failures)
-    `(let (,failures)
-       (handler-bind ((failed-change (lambda (c) (setq ,failures t))))
-         (let ((result (progn ,@forms)))
-           (inform
-            t
-            (cond
-              ((eql :no-change result)
-               "No changes were made.")
-              (,failures
-               "There were failures while attempting to apply some properties.")
-              (t
-               "Changes were made without any reported failures.")))
-           result)))))
-
 (defun deploy* (connections host &optional additional-properties)
   "Execute the deployment which is defined by the pair (CONNECTIONS . HOST),
 except possibly with the property application specification

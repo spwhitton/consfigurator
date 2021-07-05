@@ -714,12 +714,8 @@ Preprocessing must occur in the root Lisp."))
                          finally (setq record accum)))
                  ;; Continue the deployment.
                  ,(wrap
-                   `(with-backtrace-and-exit-code-two
-                      (uiop:quit
-                       (if (eql :no-change
-                                (%consfigure ',remaining-connections ,*host*))
-                           0
-                           1)))))))
+                   `(with-backtrace-and-exit-code
+                      (%consfigure ',remaining-connections ,*host*))))))
         (handler-case
             (with-standard-io-syntax
               (let ((*allow-printing-passphrases* t))

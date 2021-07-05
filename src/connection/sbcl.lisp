@@ -56,13 +56,14 @@ recommended."))
     (multiple-value-bind (program forms)
         (continue-deploy*-program remaining requirements)
       (multiple-value-bind (out err exit) (run :may-fail :input program *sbcl*)
-        (inform t (if (< exit 2) "done." "failed.") :fresh-line nil)
+        (inform t (if (< exit 3) "done." "failed.") :fresh-line nil)
         (when-let ((lines (lines out)))
           (inform t "  Output was:" :fresh-line nil)
           (with-indented-inform (inform t lines)))
-        (unless (< exit 2)
-          ;; print FORMS not PROGRAM because latter might contain sudo passwords
-          (failed-change
-	   "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~S"
-           err forms))
-        (values nil (if (zerop exit) :no-change nil))))))
+        (return-exit
+         exit
+         ;; print FORMS not PROGRAM because latter might contain sudo passwords
+         :on-failure
+         (failed-change
+	  "~&Remote Lisp failed; stderr was:~%~%~A~&~%Program we sent:~%~%~S"
+          err forms))))))

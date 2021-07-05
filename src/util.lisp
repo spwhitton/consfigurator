@@ -453,13 +453,54 @@ of this macro."
 Should be called soon after fork(2) in child processes."
   (signal 'in-child-process))
 
-(defmacro with-backtrace-and-exit-code-two (&body forms)
-  `(handler-bind
-       ((serious-condition
-          (lambda (c)
-            (trivial-backtrace:print-backtrace c :output *error-output*)
-            (uiop:quit 2))))
-     ,@forms))
+(define-condition skipped-properties () ()
+  (:documentation
+   "There were failed changes, but instead of aborting, that particular property
+application was instead skipped over, either due to the semantics of a
+property combinator, or because the user elected to skip the property in the
+interactive debugger."))
+
+(defmacro with-deployment-report (&rest forms)
+  (with-gensyms (failures)
+    `(let* (,failures
+            (result (handler-bind ((skipped-properties (lambda (c)
+                                                         (declare (ignore c))
+                                                         (setq ,failures t))))
+                      ,@forms)))
+       (inform
+        t
+        (cond
+          ((eql :no-change result)
+           "No changes were made.")
+          (,failures
+           "There were failures while attempting to apply some properties.")
+          (t
+           "Changes were made without any reported failures."))))))
+
+(defmacro with-backtrace-and-exit-code (&body forms)
+  (with-gensyms (failures)
+    `(let* (,failures
+            (result (handler-bind ((serious-condition
+                                     (lambda (c)
+                                       (trivial-backtrace:print-backtrace
+                                        c :output *error-output*)
+                                       (uiop:quit 3)))
+                                   (skipped-properties (lambda (c)
+                                                         (declare (ignore c))
+                                                         (setq ,failures t))))
+                      ,@forms)))
+       (uiop:quit (cond ((eql :no-change result) 0)
+                        (,failures               2)
+                        (t                       1))))))
+
+(defmacro return-exit (exit &key on-failure)
+  `(values
+    nil
+    (case ,exit
+      (0                              :no-change)
+      (1                              nil)
+      (2 (signal 'skipped-properties) nil)
+      (t                              ,on-failure))))
 
 (defun posix-login-environment (logname home)
   "Reset the environment after switching UID, or similar, in a :LISP connection.
