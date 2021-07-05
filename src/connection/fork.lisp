@@ -58,51 +58,57 @@ for example, such that we don't see it."
   (upload-all-prerequisite-data
    :connection connection :upload-string-data nil)
   (with-remote-temporary-file (output)
-    (mapc #'force-output
-          (list *standard-output* *error-output* *debug-io* *terminal-io*))
-    (let ((child (fork)))
-      (case child
-        ;; note that SB-POSIX:FORK can only return >=0
-        (-1
-         (error "fork(2) failed"))
-        (0
-         (with-backtrace-and-exit-code
-           ;; Capture child stdout in case *STANDARD-OUTPUT* has been rebound
-           ;; to somewhere else in the parent, e.g. by APPLY-AND-PRINT.  The
-           ;; parent can then send the contents of the file named by OUTPUT to
-           ;; the correct stream.  We don't use pipe(2) because then we'd need
-           ;; implementation-specific code to bind streams to the FDs.
-           (with-open-file (*standard-output*
-                            output :direction :output :if-exists :append)
-             (mapc #'clear-input
-                   (list *standard-input* *debug-io* *terminal-io*))
-             (cancel-unwind-protect-in-parent-cleanup)
-             ;; While some kinds of data source will still work given certain
-             ;; subtypes of FORK-CONNECTION (e.g. if they've already cached
-             ;; the data in memory, or if it's also accessible to whomever we
-             ;; will SETUID to), others won't, so drop all registrations and
-             ;; rely on the call to UPLOAD-ALL-PREREQUISITE-DATA above.
-             (reset-data-sources)
-             (post-fork connection)
-             ;; It would be nice to reenter Consfigurator's primary loop by
-             ;; just calling (return-from establish-connection
-             ;; (establish-connection :local)) here, but we need to kill off
-             ;; the child afterwards, rather than returning to the child's
-             ;; REPL or whatever else.
-             (continue-deploy* connection remaining))))
-        (t
-         (multiple-value-bind (pid status) (waitpid child 0)
-           (declare (ignore pid))
-           (fresh-line)
-           (princ (readfile output))
-           (let ((exited (wifexited status)))
-             (unless exited
-               (failed-change
-                "Fork connection child did not exit normally, status #x~(~4,'0X~)"
-                status))
-             (let ((exit-status (wexitstatus status)))
-               (return-exit
-                exit-status
-                :on-failure
-                (failed-change "Fork connection child failed, exit code ~D"
-                               exit-status))))))))))
+    (with-remote-temporary-file (error)
+      (mapc #'force-output
+            (list *standard-output* *error-output* *debug-io* *terminal-io*))
+      (let ((child (fork)))
+        (case child
+          ;; note that SB-POSIX:FORK can only return >=0
+          (-1
+           (error "fork(2) failed"))
+          (0
+           (with-backtrace-and-exit-code
+             ;; Capture child stdout in case *STANDARD-OUTPUT* has been
+             ;; rebound to somewhere else in the parent, e.g. by
+             ;; APPLY-AND-PRINT.  The parent can then send the contents of the
+             ;; file named by OUTPUT to the correct stream.  Capture child
+             ;; stderr so that we can include it in FAILED-CHANGE condition;
+             ;; otherwise if we are within SEQPROPS, for example, stderr won't
+             ;; be made visible to the user.  We don't use pipe(2) because
+             ;; then we'd need implementation-specific code to bind streams to
+             ;; the FDs.
+             (with-open-file (*standard-output*
+                              output :direction :output :if-exists :append)
+               (with-open-file (*error-output*
+                                error :direction :output :if-exists :append)
+                 (mapc #'clear-input
+                       (list *standard-input* *debug-io* *terminal-io*))
+                 (cancel-unwind-protect-in-parent-cleanup)
+                 ;; While some kinds of data source will still work given
+                 ;; certain subtypes of FORK-CONNECTION (e.g. if they've
+                 ;; already cached the data in memory, or if it's also
+                 ;; accessible to whomever we will SETUID to), others won't,
+                 ;; so drop all registrations and rely on the call to
+                 ;; UPLOAD-ALL-PREREQUISITE-DATA above.
+                 (reset-data-sources)
+                 (post-fork connection)
+                 ;; It would be nice to reenter Consfigurator's primary loop
+                 ;; by just calling (return-from establish-connection
+                 ;; (establish-connection :local)) here, but we need to kill
+                 ;; off the child afterwards, rather than returning to the
+                 ;; child's REPL or whatever else.
+                 (continue-deploy* connection remaining)))))
+          (t
+           (multiple-value-bind (pid status) (waitpid child 0)
+             (declare (ignore pid))
+             (fresh-line)
+             (princ (readfile output))
+             (if (wifexited status)
+                 (return-exit
+                  (wexitstatus status)
+                  :on-failure (failed-change
+                               "~&Fork connection child failed; stderr was~%~%~A"
+                               (readfile error)))
+                 (failed-change
+                  "~&Fork connection child did not exit normally, status #x~(~4,'0X~)"
+                  status)))))))))
