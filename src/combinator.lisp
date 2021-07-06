@@ -124,7 +124,6 @@ apply the elements of REQUIREMENTS in reverse order."
     (labels ((propapp-apply (propapp)
                (if unapply (propappunapply propapp) (propappapply propapp)))
              (announce-propapp-apply (propapp)
-               (setf (fill-pointer buffer) 0)
                (with-output-to-string (*standard-output* buffer)
                  (with-indented-inform
                    (propapp-apply propapp)))))
@@ -159,6 +158,7 @@ apply the elements of REQUIREMENTS in reverse order."
                            (not (eql result :no-change))))
               (fresh-line)
               (princ buffer)))
+          (setf (fill-pointer buffer) 0)
           (when announce
             (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
                       (get-hostname) (propappdesc propapp)
