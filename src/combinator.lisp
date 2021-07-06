@@ -141,16 +141,15 @@ apply the elements of REQUIREMENTS in reverse order."
                                (not (get (car propapp) 'desc))))))
               result)
           (unwind-protect-in-parent
-              ;; TODO Nested combinators can mean that we establish this
-              ;; restart more than once, and they all appear in the debugger
-              ;; without any way to distinguish them.  Perhaps we can use the
-              ;; :TEST argument to RESTART-CASE such that only the
-              ;; innermost(?) skip option appears.
               (setq result
                     (restart-case (if announce
                                       (announce-propapp-apply propapp)
                                       (propapp-apply propapp))
                       (skip-property ()
+                        :report (lambda (s)
+                                  (format s "Skip (~{~S~^ ~})"
+                                          (cons (car propapp)
+                                                (propappargs propapp))))
                         (signal 'skipped-properties)
                         'failed-change)))
             (when (and (plusp (length buffer))
