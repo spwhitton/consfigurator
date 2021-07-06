@@ -198,7 +198,8 @@ Sample usage:
       (apt:installed \"linux-image-amd64\")
 
       (hostname:configured)
-      (network:static \"ens4\" \"192.168.122.31\" \"192.168.122.1\")
+      (network:static \"ens4\"
+       \"192.168.122.31\" \"192.168.122.1\" \"255.255.255.0\")
       (file:has-content \"/etc/resolv.conf\" \"...\")
 
       (sshd:installed)

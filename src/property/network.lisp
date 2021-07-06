@@ -60,7 +60,8 @@ hosting provider, for example."
       "# Include files from /etc/network/interfaces.d:"
       "source /etc/network/interfaces.d/*")))
 
-(defprop static :posix (interface address &optional gateway &rest options)
+(defprop static :posix
+    (interface address &optional gateway netmask &rest options)
   "Configures an interface with a static IP address.
 OPTIONS is a list of even length of alternating keys and values."
   (:desc #?"Static interface ${interface} configured")
@@ -70,6 +71,8 @@ OPTIONS is a list of even length of alternating keys and values."
   (:apply
    (when gateway
      (setq options (list* "gateway" gateway options)))
+   (when netmask
+     (setq options (list* "netmask" netmask options)))
    (setq options (list* "address" address options))
    (file:has-content
        (merge-pathnames (string->filename interface)
