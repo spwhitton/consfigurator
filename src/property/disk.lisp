@@ -721,15 +721,14 @@ MOUNT-BELOW specifies a pathname to prefix to mount points when opening
 FILESYSTEM volumes.  OPENED-VOLUMES specifies a symbol to which a list of all
 volumes that were opened will be bound, which can be used to do things like
 populate /etc/fstab and /etc/crypttab.  Do not modify this list."
-  (once-only (mount-below)
-    (let ((opened-volumes (or opened-volumes (gensym))))
-      `(let ((,opened-volumes (open-volumes-and-contents
-                               ,volumes
-                               ,@(and mount-below-supplied-p
-                                      `(:mount-below ,mount-below)))))
-         (unwind-protect (progn ,@forms)
-           (mrun "sync")
-           (mapc #'close-volume ,opened-volumes))))))
+  (let ((opened-volumes (or opened-volumes (gensym))))
+    `(let ((,opened-volumes (open-volumes-and-contents
+                             ,volumes
+                             ,@(and mount-below-supplied-p
+                                    `(:mount-below ,mount-below)))))
+       (unwind-protect (progn ,@forms)
+         (mrun "sync")
+         (mapc #'close-volume ,opened-volumes)))))
 
 (defmacro with-these-open-volumes
     ((volumes &key (mount-below nil mount-below-supplied-p)) &body propapps)
