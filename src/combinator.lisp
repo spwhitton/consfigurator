@@ -65,15 +65,32 @@ Usage notes:
                               (propappunapply (choose-propapp))))))
      (setf (get ',name 'inline-combinator) t)))
 
+(defun skip-property-restarts ()
+  (loop for restart in (compute-restarts)
+        when (eql 'skip-property (restart-name restart))
+          collect restart))
+
+;; There can be multiple SKIP-PROPERTY restarts established at once, and we
+;; need this handler to invoke the one established by WITH-SKIP-PROPERTY right
+;; after we establish this handler.
 (defmacro with-skip-failed-changes (&body forms)
-  `(handler-bind ((failed-change
-                    (lambda (c)
-                      (with-indented-inform
-                        (apply #'informat t
-                               (simple-condition-format-control c)
-                               (simple-condition-format-arguments c)))
-                      (invoke-restart 'skip-property))))
-     ,@forms))
+  (with-gensyms (old-restarts)
+    `(let ((,old-restarts (skip-property-restarts)))
+       (handler-bind ((failed-change
+                        (lambda (c)
+                          (with-indented-inform
+                            (apply #'informat t
+                                   (simple-condition-format-control c)
+                                   (simple-condition-format-arguments c)))
+                          ;; We can't just use NSET-DIFFERENCE and take the
+                          ;; LASTCAR because NSET-DIFFERENCE provides no
+                          ;; ordering guarantees.
+                          (loop with chosen
+                                for restart in (skip-property-restarts)
+                                unless (member restart ,old-restarts)
+                                  do (setq chosen restart)
+                                finally (invoke-restart chosen)))))
+         ,@forms))))
 
 ;; N.B. if PROPAPP appears in FORM then it will get evaluated more than once.
 (defmacro with-skip-property (propapp form)
