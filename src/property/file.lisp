@@ -155,10 +155,10 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
                         (ensure-pathname destination :want-absolute t))))
   (secret-uploaded (get-hostname) destination destination))
 
-(defproplist data-cache-purged :posix ()
+(defprop data-cache-purged :posix ()
   "Ensure that any prerequisite data cached in the remote home directory is removed."
   (:desc "Consfigurator data cache cleaned")
-  (directory-does-not-exist (get-remote-data-cache-dir)))
+  (:apply (directory-does-not-exist (get-remote-data-cache-dir))))
 
 (defprop regex-replaced-lines :posix (file regex replace)
   "Like s/REGEX/REPLACE/ on the lines of FILE.
