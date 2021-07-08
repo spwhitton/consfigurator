@@ -75,6 +75,17 @@ Usage notes:
                       (invoke-restart 'skip-property))))
      ,@forms))
 
+;; N.B. if PROPAPP appears in FORM then it will get evaluated more than once.
+(defmacro with-skip-property (propapp form)
+  (once-only (propapp)
+    `(restart-case ,form
+       (skip-property ()
+         :report (lambda (s)
+                   (format s "Skip (~{~S~^ ~})"
+                           (cons (car ,propapp) (propappargs ,propapp))))
+         (signal 'skipped-properties)
+         'failed-change))))
+
 (define-function-property-combinator eseqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
             :hostattrs (lambda () (mapc #'propappattrs propapps))
@@ -102,7 +113,9 @@ apply the elements of REQUIREMENTS in reverse order."
            (with-skip-failed-changes
              (let ((return-value :no-change))
                (dolist (propapp propapps return-value)
-                 (let ((result (funcall op propapp)))
+                 (let ((result
+                         (with-skip-property propapp (funcall op propapp))))
+                   (setq result (if (eql result 'failed-change) nil result))
                    (unless (eql result :no-change)
                      (setq return-value result))))))))
     (:retprop :type (collapse-types (mapcar #'propapptype propapps))
@@ -145,17 +158,10 @@ apply the elements of REQUIREMENTS in reverse order."
               ;; established further down the property call stack.
               (result 'failed-change))
           (unwind-protect-in-parent
-              (setq result
-                    (restart-case (if announce
-                                      (announce-propapp-apply propapp)
-                                      (propapp-apply propapp))
-                      (skip-property ()
-                        :report (lambda (s)
-                                  (format s "Skip (~{~S~^ ~})"
-                                          (cons (car propapp)
-                                                (propappargs propapp))))
-                        (signal 'skipped-properties)
-                        'failed-change)))
+              (with-skip-property propapp
+                (setq result (if announce
+                                 (announce-propapp-apply propapp)
+                                 (propapp-apply propapp))))
             (when (and (plusp (length buffer))
                        (or (> *consfigurator-debug-level* 1)
                            (not (eql result :no-change))))
