@@ -943,6 +943,111 @@ filesystems will be incrementally updated when other properties change."
        (consfigurator.property.installer:chroot-installed-to-volumes
         ,host ,chroot ,volumes))))
 
+(defprop %squashfsed :posix (chroot image &optional (compression "xz"))
+  (:apply
+   (file:does-not-exist image)
+   (with-remote-temporary-file (excludes)
+     (writefile excludes
+                (format nil "~@{~&~A~}" "/boot" "/proc" "/dev" "/sys" "/run"))
+     (run :inform "nice" "mksquashfs" chroot image
+          "-no-progress" "-comp" compression "-ef" excludes))))
+
+;; Based on live-wrapper, and some help from this guide:
+;;     <https://willhaley.com/blog/custom-debian-live-environment/>
+(defpropspec debian-live-iso-built :lisp (options image-pathname properties)
+  "Build a Debian Live hybrid ISO at IMAGE-PATHNAME for a host with properties
+PROPERTIES, which should specify, at a minimum, the operating system for the
+live system.  OPTIONS is a plist of keyword parameters:
+
+  - :CHROOT-OPTIONS -- passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+
+Currently only BIOS boot is implemented."
+  (:desc #?"Debian Live ISO built @ ${image-pathname}")
+  (destructuring-bind
+      (&key chroot-options
+       &aux (chroot (image-chroot image-pathname))
+         (iso-root (ensure-directory-pathname
+                    (strcat (unix-namestring image-pathname) ".cd")))
+         (isolinux (merge-pathnames "isolinux/" iso-root))
+         (squashfs (merge-pathnames "live/filesystem.squashfs" iso-root))
+         (host (make-host
+                :hostattrs '(:hostname ("debian"))
+                :propspec
+                (append-propspecs
+                 properties
+                 (make-propspec
+                  :propspec
+                  '(eseqprops
+                    (apt:installed "initramfs-tools" "linux-image-amd64"
+                     "live-boot" "task-laptop" "libnss-myhostname"
+                     "syslinux-common" "isolinux")
+                    (caches-cleaned))))))
+         (host-arch (os:linux-architecture (get-hostattrs-car :os host))))
+      options
+    (unless (member host-arch '(:amd64))
+      (inapplicable-property
+       "Architecture ~A of live host not supported." host-arch))
+    `(eseqprops
+      (apt:installed "squashfs-tools" "xorriso")
+      (file:directory-exists ,isolinux)
+      (file:containing-directory-exists ,squashfs)
+      (on-change (chroot:os-bootstrapped-for ,chroot-options ,chroot ,host)
+
+        (%squashfsed ,chroot ,squashfs)
+
+        ;; Copy the chroot's versions of bootloader binaries.
+        (file:is-copy-of ,(merge-pathnames "isolinux.bin" isolinux)
+                         ,(chroot-pathname "/usr/lib/ISOLINUX/isolinux.bin"
+                                           chroot))
+        ,@(loop for basename in '("ldlinux" "libcom32" "vesamenu" "libutil"
+                                  "libutil" "libmenu" "libgpl" "hdt")
+                for file = (strcat basename ".c32")
+                collect
+                `(file:is-copy-of
+                  ,(merge-pathnames file isolinux)
+                  ,(chroot-pathname
+                    (merge-pathnames file "/usr/lib/syslinux/modules/bios/")
+                    chroot)))
+
+        ;; Copy the targets of the symlinks in the root of the chroot.
+        (file:is-copy-of ,(merge-pathnames "live/vmlinuz" iso-root)
+                         ,(merge-pathnames "vmlinuz" chroot))
+        (file:is-copy-of ,(merge-pathnames "live/initrd.img" iso-root)
+                         ,(merge-pathnames "initrd.img" chroot))
+
+        (file:exists-with-content ,(merge-pathnames "isolinux.cfg" isolinux)
+          ("UI vesamenu.c32"
+           ""
+           "MENU TITLE Live Boot Menu"
+           "DEFAULT linux"
+           "TIMEOUT 600"
+           "MENU RESOLUTION 640 480"
+           ""
+           "LABEL linux"
+           "  MENU LABEL Debian Live [BIOS/ISOLINUX]"
+           "  MENU DEFAULT"
+           "  KERNEL /live/vmlinuz"
+           "  APPEND initrd=/live/initrd.img boot=live"
+           ""
+           "LABEL linux"
+           "  MENU LABEL Debian Live [BIOS/ISOLINUX] (nomodeset)"
+           "  MENU DEFAULT"
+           "  KERNEL /live/vmlinuz"
+           "  APPEND initrd=/live/initrd.img boot=live nomodeset"))
+
+        (cmd:single
+         :inform
+         "xorriso" "-as" "mkisofs" "-iso-level" "3" "-o" ,image-pathname
+         "-full-iso9660-filenames" "-volid" "DEBIAN_LIVE"
+         "-isohybrid-mbr" ,(chroot-pathname "/usr/lib/ISOLINUX/isohdpfx.bin"
+                                            chroot)
+
+         "-eltorito-boot" "isolinux/isolinux.bin"
+         "-no-emul-boot" "-boot-load-size" "4" "-boot-info-table"
+         "--eltorito-catalog" "isolinux/isolinux.cat"
+
+         ,iso-root)))))
+
 (defprop host-volumes-created :lisp ()
   "Recursively create the volumes as specified by DISK:HAS-VOLUMES.
 **THIS PROPERTY UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA,

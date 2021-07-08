@@ -37,7 +37,6 @@
                (:file "src/property/service")
                (:file "src/property/apt")
                (:file "src/property/chroot")
-               (:file "src/property/live-build")
                (:file "src/property/disk")
                (:file "src/property/fstab")
                (:file "src/property/crypttab")

@@ -443,21 +443,11 @@
            #:os-bootstrapped
            #:os-bootstrapped.))
 
-(defpackage :consfigurator.property.live-build
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:apt       #:consfigurator.property.apt)
-                    (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file)
-                    (#:mount     #:consfigurator.property.mount)
-                    (#:chroot    #:consfigurator.property.chroot))
-  (:export #:installed
-           #:image-built
-           #:image-built.))
-
 (defpackage :consfigurator.property.disk
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:re      #:cl-ppcre)
                     (#:chroot  #:consfigurator.property.chroot)
+                    (#:cmd     #:consfigurator.property.cmd)
                     (#:file    #:consfigurator.property.file)
                     (#:os      #:consfigurator.property.os)
                     (#:apt     #:consfigurator.property.apt))
@@ -509,6 +499,8 @@
            #:has-volumes
            #:caches-cleaned
            #:raw-image-built-for
+           #:debian-live-iso-built
+           #:debian-live-iso-built.
            #:host-volumes-created
            #:host-logical-volumes-exist
 
