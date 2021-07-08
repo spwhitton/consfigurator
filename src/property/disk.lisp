@@ -888,6 +888,10 @@ the LVM physical volumes corresponding to those volume groups."
      ;; Finally, create the volumes.
      (create-volumes-and-contents volumes))))
 
+(defun image-chroot (image-pathname)
+  (ensure-directory-pathname
+   (strcat (unix-namestring image-pathname) ".chroot")))
+
 (defpropspec raw-image-built-for :lisp
     (options host image-pathname &key rebuild)
   "Build a raw disk image for HOST at IMAGE-PATHNAME.
@@ -913,8 +917,7 @@ Unless REBUILD, the image will not be repartitioned even if the specification
 of the host's volumes changes, although the contents of the image's
 filesystems will be incrementally updated when other properties change."
   (:desc #?"Built image for ${(get-hostname host)} @ ${image-pathname}")
-  (let ((chroot (ensure-directory-pathname
-                 (strcat (unix-namestring image-pathname) ".chroot")))
+  (let ((chroot (image-chroot image-pathname))
         (volumes
           (loop
             with found
