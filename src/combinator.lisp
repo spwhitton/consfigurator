@@ -168,7 +168,8 @@ apply the elements of REQUIREMENTS in reverse order."
                           (:no-change     "ok")
                           ('failed-change "failed")
                           (t              "done")))))
-          (setf (fill-pointer buffer) 0)
+          (setf (fill-pointer buffer) 0
+                result (if (eql result 'failed-change) nil result))
           (unless (eql result :no-change)
             (setq return-value result)))))))
 
