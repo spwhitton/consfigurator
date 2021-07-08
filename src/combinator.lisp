@@ -139,7 +139,11 @@ apply the elements of REQUIREMENTS in reverse order."
                      (not (and (< *consfigurator-debug-level* 3)
                                (char= #\% (char (symbol-name (car propapp)) 0))
                                (not (get (car propapp) 'desc))))))
-              result)
+              ;; Initialise to FAILED-CHANGE here so that if there is a
+              ;; non-local exit from us we print "failed".  For example, if
+              ;; the user or a combinator invokes a SKIP-PROPERTY restart
+              ;; established further down the property call stack.
+              (result 'failed-change))
           (unwind-protect-in-parent
               (setq result
                     (restart-case (if announce
@@ -156,15 +160,15 @@ apply the elements of REQUIREMENTS in reverse order."
                        (or (> *consfigurator-debug-level* 1)
                            (not (eql result :no-change))))
               (fresh-line)
-              (princ buffer)))
+              (princ buffer))
+            (when announce
+              (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
+                        (get-hostname) (propappdesc propapp)
+                        (case result
+                          (:no-change     "ok")
+                          ('failed-change "failed")
+                          (t              "done")))))
           (setf (fill-pointer buffer) 0)
-          (when announce
-            (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
-                      (get-hostname) (propappdesc propapp)
-                      (case result
-                        (:no-change     "ok")
-                        ('failed-change "failed")
-                        (t              "done"))))
           (unless (eql result :no-change)
             (setq return-value result)))))))
 
