@@ -18,6 +18,8 @@
 (in-package :consfigurator.property.cmd)
 (named-readtables:in-readtable :consfigurator)
 
+;; The name of this property comes from the idea that we might want to add a
+;; property in this package to run a user-supplied shell script.
 (defprop single :posix (&rest args)
   "A property which can be applied by running a single shell command.  ARGS is
 either a single string specifying a shell-escaped command, or number of
