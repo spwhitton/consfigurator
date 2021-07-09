@@ -293,7 +293,8 @@ PROPERTIES, like DEPLOY-THESE."
   (:desc (declare (ignore connections host properties)) "Subdeployment")
   (:preprocess
    (list (preprocess-connections connections)
-         (preprocess-host (replace-propspec-into-host host properties))
+         (preprocess-host
+          (replace-propspec-into-host (ensure-host host) properties))
          nil))
   (:hostattrs
    (declare (ignore connections properties))
