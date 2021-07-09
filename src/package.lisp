@@ -203,6 +203,7 @@
            #:unapply
            #:desc
            #:on-change
+           #:on-apply-change
 	   #:as
            #:with-flagfile
            #:with-unapply
