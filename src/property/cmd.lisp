@@ -34,4 +34,4 @@ running the command, using env(1)."
                  collect (escape-sh-token arg) into accum
                else collect (prin1-to-string arg) into accum
                finally (return (format nil "~{~A~^ ~}" accum))))
-  (:apply (apply #'run args)))
+  (:apply (apply #'mrun args)))
