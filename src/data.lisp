@@ -407,7 +407,7 @@ Note that since prerequisite data sources are queried only in the root Lisp,
 but items of prerequisite data are never uploaded to the root Lisp, there is
 no risk of clashes between fresly generated files and cached copies of files."
   (let ((pn (apply #'data-pathname (get-local-data-cache-dir)
-		   (delete-if #'null (list iden1 iden2 version)))))
+		   (delete nil (list iden1 iden2 version)))))
     (ensure-directories-exist
      (if version pn (ensure-directory-pathname pn)))))
 

@@ -149,8 +149,7 @@ apply the elements of REQUIREMENTS in reverse order."
         (return-value :no-change)
         ;; Remove any null propapps because we don't want to print anything
         ;; for those, and applying them will do nothing.
-        (propapps
-          (remove-if #'null (if unapply (reverse propapps) propapps))))
+        (propapps (remove nil (if unapply (reverse propapps) propapps))))
     (labels ((propapp-apply (propapp)
                (if unapply (propappunapply propapp) (propappapply propapp)))
              (announce-propapp-apply (propapp)
