@@ -229,27 +229,27 @@ apply the elements of REQUIREMENTS in reverse order."
 (defmacro on-change (propapp &body on-change)
   "If applying PROPAPP makes a change, also apply each of of the propapps
 ON-CHANGE in order."
-  `(on-change* ,propapp ,@on-change))
+  `(on-change*
+    ,propapp
+    ,(if (cdr on-change) `(eseqprops ,@on-change) (car on-change))))
 
-(define-function-property-combinator on-change* (propapp &rest propapps)
-  (:retprop :type (collapse-types (propapptype propapp)
-                                  (mapcar #'propapptype propapps))
+(define-function-property-combinator on-change* (propapp on-change)
+  (:retprop :type
+            (collapse-types (propapptype propapp) (propapptype on-change))
             :desc (get (car propapp) 'desc)
             :hostattrs (lambda (&rest args)
                          (apply #'propattrs (car propapp) args)
-                         (mapc #'propappattrs propapps))
+                         (propappattrs on-change))
             :apply (lambda (&rest args)
                      (if (eql :no-change
                               (propappapply (cons (car propapp) args)))
                          :no-change
-                         (dolist (propapp propapps)
-                           (propappapply propapp))))
+                         (propappapply on-change)))
             :unapply (lambda (&rest args)
                        (if (eql :no-change
                                 (propappunapply (cons (car propapp) args)))
                            :no-change
-                           (dolist (propapp propapps)
-                             (propappapply propapp))))
+                           (propappapply on-change)))
             :args (cdr propapp)))
 
 (defmacro as (user &body properties)
