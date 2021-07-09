@@ -56,7 +56,11 @@ should be the mount point, without the chroot's root prefixed.")
 
 (defmethod connection-teardown :before ((connection chroot-connection))
   (dolist (mount (chroot-mounts connection))
-    (mrun "umount" mount)))
+    ;; There shouldn't be any processes left running in the chroot after we've
+    ;; finished deploying it, but it's quite easy to end up with things like
+    ;; gpg-agent holding on to /dev/null, for example, so for simplicity, do a
+    ;; lazy unmount.
+    (mrun "umount" "-l" mount)))
 
 (defmethod initialize-instance :after ((connection chroot-connection) &key)
   (when (string= "Linux" (stripln (run "uname")))
