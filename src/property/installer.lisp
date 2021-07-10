@@ -169,10 +169,24 @@ install a package providing /usr/sbin/grub-install, but it won't execute it."
              ;; etc.; avoid upsetting those.
              #P"/run/" #P"/tmp/"
              ;; Makes sense to keep /proc until we replace the running init.
-             #P"/proc/")))
+             #P"/proc/"))
+         efi-system-partition-mount-args)
      (flet ((preservedp (pathname)
               (member pathname preserved-directories :test #'pathname-equal)))
        (mount:assert-devtmpfs-udev-/dev)
+
+       ;; If there's an EFI system partition, we need to store knowledge of
+       ;; how to mount it so that we can restore the mount after doing the
+       ;; moves, so that installing an EFI bootloader is possible.  The user
+       ;; is responsible for adding an entry for the EFI system partition to
+       ;; the new system's fstab, but we are responsible for restoring
+       ;; knowledge of the partition to the kernel's mount table.
+       (when (zerop (mrun :for-exit "mountpoint" "-q" "/boot/efi"))
+         (destructuring-bind (type source options)
+             (words (stripln (run "findmnt" "-nro" "FSTYPE,SOURCE,OPTIONS"
+                                  "/boot/efi")))
+           (setq efi-system-partition-mount-args
+                 `("-t" ,type "-o" ,options ,source "/boot/efi"))))
 
        ;; We are not killing any processes, so lazily unmount everything
        ;; before trying to perform any renames.  (Present structure of this
@@ -228,14 +242,17 @@ install a package providing /usr/sbin/grub-install, but it won't execute it."
                                 #P"/root/.cache/consfigurator/"))))
        (posix-login-environment "root" "/root")
 
-       ;; Remount virtual filesystems that other properties we will apply
-       ;; might require (esp. relevant for installing bootloaders).
+       ;; Remount (mainly virtual) filesystems that other properties we will
+       ;; apply might require (esp. relevant for installing bootloaders).
        (dolist (mount mount:*standard-linux-vfs*)
          (unless (preservedp (ensure-directory-pathname (lastcar mount)))
            (apply #'system "mount" mount)))
        (when (and (not (preservedp #P"/sys/"))
                   (directory-exists-p "/sys/firmware/efi/efivars"))
-         (apply #'mrun "mount" mount:*linux-efivars-vfs*))))))
+         (apply #'mrun "mount" mount:*linux-efivars-vfs*))
+       (when efi-system-partition-mount-args
+         (ensure-directories-exist #P"/boot/efi/")
+         (apply #'mrun "mount" efi-system-partition-mount-args))))))
 
 (defproplist cleanly-installed-once :lisp
     (&optional options (original-os '(os:linux :amd64))
