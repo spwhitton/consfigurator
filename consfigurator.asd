@@ -63,6 +63,7 @@
                (:file "src/property/systemd")
                (:file "src/property/firewalld")
                (:file "src/property/timezone")
+               (:file "src/property/swap")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
                (:file "src/connection/rehome")

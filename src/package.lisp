@@ -775,6 +775,13 @@
   (:export #:configured
            #:configured-from-parent))
 
+(defpackage :consfigurator.property.swap
+  (:use #:cl #:consfigurator)
+  (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
+                    (#:fstab        #:consfigurator.property.fstab)
+                    (#:os           #:consfigurator.property.os))
+  (:export #:has-swap-file))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
