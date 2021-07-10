@@ -58,7 +58,7 @@ Other properties might fill it in."
   "vfat")
 
 (defmethod fs-mntops ((volume filesystem))
-  (or (mount-options volume) '("none")))
+  (or (mount-options volume) '("defaults")))
 
 (defmethod fs-freq ((volume filesystem))
   0)
