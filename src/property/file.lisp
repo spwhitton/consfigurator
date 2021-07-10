@@ -528,10 +528,19 @@ NO-SOURCE or \"PLACEHOLDER\", use the existing field value."
                 ;; beginning with '/' so that all filesystems are available
                 ;; before trying to mount to virtual targets like "swap".
                 ;; (STRING< already sorts like this but be explicit about it.)
+                ;;
+                ;; Treat comments and blank lines as equal to any other line
+                ;; and use STABLE-SORT to try to keep comments close to lines
+                ;; they describe.
                 (return
-                  (sort (nconc accum (hash-table-values pending))
-                        (lambda (a b)
-                          (or (and (char= #\/ (first-char a))
-                                   (not (char= #\/ (first-char b))))
-                              (string< a b)))
-                        :key (compose (curry #'nth target) #'words))))))))
+                  (stable-sort
+                   (nconc accum (hash-table-values pending))
+                   (lambda (a b)
+                     (and (plusp (length a)) (plusp (length b))
+                          (not (char= #\# (first-char a)))
+                          (not (char= #\# (first-char b)))
+                          (let ((a* (nth target (words a)))
+                                (b* (nth target (words b))))
+                            (or (and (char= #\/ (first-char a*))
+                                     (not (char= #\/ (first-char b*))))
+                                (string< a* b*))))))))))))
