@@ -519,4 +519,19 @@ NO-SOURCE or \"PLACEHOLDER\", use the existing field value."
              if entry
                collect it into accum and do (remhash line-target pending)
              else collect line into accum
-             finally (return (nconc accum (hash-table-values pending))))))))
+             finally
+                ;; Sort the lines lexicographically by the TARGETth field.
+                ;; This avoids problems of failing to mount because the
+                ;; filesystem containing the mount point is not mounted yet.
+                ;;
+                ;; Sort all targets beginning with '/' before all targets not
+                ;; beginning with '/' so that all filesystems are available
+                ;; before trying to mount to virtual targets like "swap".
+                ;; (STRING< already sorts like this but be explicit about it.)
+                (return
+                  (sort (nconc accum (hash-table-values pending))
+                        (lambda (a b)
+                          (or (and (char= #\/ (first-char a))
+                                   (not (char= #\/ (first-char b))))
+                              (string< a b)))
+                        :key (compose (curry #'nth target) #'words))))))))

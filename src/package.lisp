@@ -8,6 +8,7 @@
                           #:string-prefix-p
                           #:string-suffix-p
                           #:split-string
+                          #:first-char
                           #:last-char
                           #:run-program
                           #:read-file-string
@@ -39,6 +40,7 @@
            #:string-prefix-p
            #:string-suffix-p
            #:split-string
+           #:first-char
            #:last-char
            #:run-program
            #:read-file-string
