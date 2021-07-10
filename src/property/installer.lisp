@@ -314,7 +314,10 @@ whereas if you don't have that information, you would want something like
 Here are some other propapps you might want to attach to the application of
 this property with ON-CHANGE:
 
-    (file:is-copy-of \"/etc/fstab\" \"/old-os/etc/fstab\")
+    (fstab:entries-for-volumes
+     (disk:volumes
+       (mounted-ext4-filesystem :mount-point #P\"/\")
+       (partition (mounted-fat32-filesystem :mount-point #P\"/boot/efi/\"))))
     (file:is-copy-of \"/root/.ssh/authorized_keys\"
                      \"/old-os/root/.ssh/authorized_keys\")
     (mount:unmounted-below-and-removed \"/old-os\")
