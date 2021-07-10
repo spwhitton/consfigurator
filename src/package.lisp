@@ -594,6 +594,7 @@
            #:install-bootloader-binaries-propspec
            #:chroot-installed-to-volumes
            #:bootloader-binaries-installed
+           #:bootloaders-installed
            #:cleanly-installed-once))
 
 (defpackage :consfigurator.property.grub

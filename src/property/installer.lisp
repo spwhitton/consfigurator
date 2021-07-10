@@ -133,6 +133,15 @@ install a package providing /usr/sbin/grub-install, but it won't execute it."
        (return
          (if (cdr propspecs) (cons 'eseqprops propspecs) (car propspecs)))))
 
+(defpropspec bootloaders-installed :lisp (&key (running-on-target t))
+  "Install the host's bootloaders to its volumes.
+Intended to be attached to properties like INSTALLER:CLEANLY-INSTALLED-ONCE
+using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
+  (:desc "Bootloaders installed")
+  `(eseqprops
+    (bootloader-binaries-installed)
+    ,@(get-propspecs (get-hostattrs :volumes) running-on-target)))
+
 
 ;;;; Live replacement of GNU/Linux distributions
 
@@ -314,6 +323,7 @@ whereas if you don't have that information, you would want something like
 Here are some other propapps you might want to attach to the application of
 this property with ON-CHANGE:
 
+    (bootloaders-installed)
     (fstab:entries-for-volumes
      (disk:volumes
        (mounted-ext4-filesystem :mount-point #P\"/\")
@@ -323,7 +333,32 @@ this property with ON-CHANGE:
     (mount:unmounted-below-and-removed \"/old-os\")
 
 You will probably need to install a kernel, bootloader, sshd etc. in the list
-of properties subsequent to this one.
+of properties subsequent to this one.  A more complete example:
+
+    (os:debian-stable \"bullseye\" :amd64)
+    (disk:has-volumes
+     (physical-disk
+      :device-file #P\"/dev/sda\"
+      :boots-with '(grub:grub :target \"x86_64-efi\")))
+    (on-change (installer:cleanly-installed-once
+                nil '(os:debian-stable \"buster\" :amd64))
+      ;; Clear out the old OS's EFI system partition contents.
+      (file:directory-does-not-exist \"/boot/efi/EFI\")
+
+      (apt:installed \"linux-image-amd64\")
+      (installer:bootloaders-installed)
+
+      (fstab:entries-for-volumes
+       (disk:volumes
+         (mounted-ext4-filesystem :mount-point #P\"/\")
+         (partition
+          (mounted-fat32-filesystem :mount-point #P\"/boot/efi/\"))))
+
+      (file:is-copy-of \"/etc/resolv.conf\" \"/old-os/etc/resolv.conf\")
+      (mount:unmounted-below-and-removed \"/old-os\"))
+    (network:static ...)
+    (sshd:installed)
+    (swap:has-swap-file \"2G\")
 
 If the system is not freshly provisioned, you couldn't easily recover from the
 system becoming unbootable, or you have physical access to the machine, it is
