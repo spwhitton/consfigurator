@@ -73,6 +73,7 @@ should be the mount point, without the chroot's root prefixed.")
       (mount:assert-devtmpfs-udev-/dev)
       (dolist (mount mount:*standard-linux-vfs*)
         (apply #'chroot-mount connection mount))
+      (chroot-mount connection "--bind" "/run" "/run")
       (when (remote-exists-p "/sys/firmware/efi/efivars")
         (apply #'chroot-mount connection mount:*linux-efivars-vfs*)))))
 

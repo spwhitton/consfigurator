@@ -99,8 +99,7 @@ Uses findmnt(8), so Linux-specific."
 ("-t" "devtmpfs" "-o" "mode=0755,nosuid"                   "udev"   "/dev")
 ("-t" "devpts"   "-o" "mode=0620,gid=5,nosuid,noexec"      "devpts" "/dev/pts")
 ("-t" "tmpfs"    "-o" "mode=1777,nosuid,nodev"             "shm"    "/dev/shm")
-("-t" "tmpfs"    "-o" "mode=1777,strictatime,nodev,nosuid" "tmp"    "/tmp")
-("--bind"                                                  "/run"   "/run")))
+("-t" "tmpfs"    "-o" "mode=1777,strictatime,nodev,nosuid" "tmp"    "/tmp")))
 
 (defparameter *linux-efivars-vfs*
   '("-t" "efivarfs" "-o" "nosuid,noexec,nodev" "efivarfs"
