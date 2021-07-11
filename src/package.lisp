@@ -31,6 +31,7 @@
                           #:file-exists-p
 			  #:directory-exists-p
                           #:with-current-directory
+                          #:delete-empty-directory
 			  #:delete-directory-tree
                           #:safe-read-from-string
                           #:compile-file*
@@ -63,6 +64,7 @@
            #:file-exists-p
 	   #:directory-exists-p
            #:with-current-directory
+           #:delete-empty-directory
 	   #:delete-directory-tree
            #:safe-read-from-string
            #:compile-file*

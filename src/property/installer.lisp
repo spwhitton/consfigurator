@@ -174,19 +174,23 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
          (old-os
            (ensure-directories-exist (ensure-directory-pathname old-os)))
          (preserved-directories
-           '(;; These dirs can contain sockets, remote Lisp image output,
-             ;; etc.; avoid upsetting those.
-             #P"/run/" #P"/tmp/"
+           '(;; This can contain sockets, remote Lisp image output, etc.;
+             ;; avoid upsetting any of those.
+             #P"/tmp/"
              ;; Makes sense to keep /proc until we replace the running init,
              ;; and we want to retain all the systemd virtual filesystems
              ;; under /sys to avoid problems applying other properties.  Both
              ;; are empty directories right after debootstrap, so nothing to
              ;; copy out.
-             #P"/proc/" #P"/sys/"))
+             #P"/proc/" #P"/sys/"
+             ;; This we make use of below.
+             #P"/old-run/"))
          efi-system-partition-mount-args)
      (flet ((preservedp (pathname)
               (member pathname preserved-directories :test #'pathname-equal)))
        (mount:assert-devtmpfs-udev-/dev)
+       (unless (zerop (mrun :for-exit "mountpoint" "-q" "/run"))
+         (failed-change "/run is not a mount point; don't know what to do."))
 
        ;; If there's an EFI system partition, we need to store knowledge of
        ;; how to mount it so that we can restore the mount after doing the
@@ -200,6 +204,17 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
                                   "/boot/efi")))
            (setq efi-system-partition-mount-args
                  `("-t" ,type "-o" ,options ,source "/boot/efi"))))
+
+       ;; /run is tricky because we want to retain the contents of the tmpfs
+       ;; mounted there until reboot, for similar reasons to wanting to retain
+       ;; /tmp, but unlike /tmp, /proc and /sys, a freshly debootstrapped
+       ;; system contains a few things under /run and we would like to move
+       ;; these out of /new-os.  So we temporarily relocate the /run mount.
+       ;;
+       ;; If this causes problems we could reconsider -- there's usually a
+       ;; tmpfs mounted at /run, so those files underneath might not matter.
+       (mrun "mount" "--make-private" "/")
+       (system "mount" "--move" "/run" (ensure-directories-exist "/old-run/"))
 
        ;; We are not killing any processes, so lazily unmount everything
        ;; before trying to perform any renames.  (Present structure of this
@@ -239,6 +254,10 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
              (loop for (source . dest) in done do (rename-file dest source))
              (signal c))))
        (delete-directory-tree new-os :validate t)
+
+       ;; Restore /run and any submounts, like /run/lock.
+       (system "mount" "--move" "/old-run" "/run")
+       (delete-empty-directory "/old-run")
 
        ;; For the freshly bootstrapped OS let's assume that HOME is /root and
        ;; XDG_CACHE_HOME is /root/.cache; we do want to try to read the old
