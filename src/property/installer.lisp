@@ -177,8 +177,12 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
            '(;; These dirs can contain sockets, remote Lisp image output,
              ;; etc.; avoid upsetting those.
              #P"/run/" #P"/tmp/"
-             ;; Makes sense to keep /proc until we replace the running init.
-             #P"/proc/"))
+             ;; Makes sense to keep /proc until we replace the running init,
+             ;; and we want to retain all the systemd virtual filesystems
+             ;; under /sys to avoid problems applying other properties.  Both
+             ;; are empty directories right after debootstrap, so nothing to
+             ;; copy out.
+             #P"/proc/" #P"/sys/"))
          efi-system-partition-mount-args)
      (flet ((preservedp (pathname)
               (member pathname preserved-directories :test #'pathname-equal)))
@@ -256,9 +260,6 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
        (dolist (mount mount:*standard-linux-vfs*)
          (unless (preservedp (ensure-directory-pathname (lastcar mount)))
            (apply #'system "mount" mount)))
-       (when (and (not (preservedp #P"/sys/"))
-                  (directory-exists-p "/sys/firmware/efi/efivars"))
-         (apply #'mrun "mount" mount:*linux-efivars-vfs*))
        (when efi-system-partition-mount-args
          (ensure-directories-exist #P"/boot/efi/")
          (apply #'mrun "mount" efi-system-partition-mount-args))))))
