@@ -41,7 +41,30 @@
   (values))
 
 (defun lines (text)
-  (split-string (stripln text) :separator '(#\Newline #\Return)))
+  (with-input-from-string (stream text)
+    (let (bolp buffer)
+      (flet ((reset ()
+               (setq bolp t
+                     buffer (make-array 0 :fill-pointer 0
+                                          :element-type 'character))))
+        ;; Split on either <CR>, <LF> or <CR><LF>; <LF><CR> would mean split
+        ;; with a blank line in between.  Drop a single trailing blank line.
+        (loop initially (reset)
+              for char = (read-char stream nil nil)
+              if char
+                if (member char '(#\Return #\Newline) :test #'char=)
+                  collect buffer
+                  and do (reset)
+                         (when (char= char #\Return)
+                           (when-let ((next (peek-char nil stream nil nil)))
+                             (when (char= next #\Newline)
+                               (read-char stream))))
+                else do (setq bolp nil)
+                        (vector-push-extend char buffer)
+                end
+              else
+                unless bolp collect buffer end
+                and do (loop-finish))))))
 
 (defun unlines (lines)
   (format nil "~{~A~%~}" lines))
