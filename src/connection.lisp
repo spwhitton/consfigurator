@@ -444,6 +444,13 @@ expected."
 (defun test (&rest args)
   (zerop (apply #'mrun :for-exit "test" args)))
 
+(defun mountpointp (path)
+  "Is PATH a mount point?
+
+Uses mountpoint(1) from util-linux, so add a property requiring OS:LINUX or a
+subclass to the :HOSTATTRS subroutine of properties calling this."
+  (zerop (mrun :for-exit "mountpoint" "-q" path)))
+
 (defun delete-remote-trees (&rest paths)
   "Recursively delete each of PATHS."
   (mrun "rm" "-rf" paths))

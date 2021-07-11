@@ -142,6 +142,7 @@
            #:remote-file-stats
            #:remote-last-reboot
            #:remote-consfigurator-cache-pathname
+           #:mountpointp
            #:delete-remote-trees
            #:readfile
            #:writefile

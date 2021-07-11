@@ -109,7 +109,7 @@ After mounting /sys, mount this when /sys/firmware/efi/efivars exists.")
 
 (defun assert-devtmpfs-udev-/dev ()
   "On a system with the Linux kernel, assert that /dev has fstype devtmpfs."
-  (unless (and (zerop (mrun :for-exit "mountpoint" "-q" "/dev"))
+  (unless (and (mountpointp "/dev")
                (string= "devtmpfs udev"
                         (stripln (run "findmnt" "-nro" "fstype,source" "/dev"))))
     (failed-change

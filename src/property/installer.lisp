@@ -189,7 +189,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
      (flet ((preservedp (pathname)
               (member pathname preserved-directories :test #'pathname-equal)))
        (mount:assert-devtmpfs-udev-/dev)
-       (unless (zerop (mrun :for-exit "mountpoint" "-q" "/run"))
+       (unless (mountpointp "/run")
          (failed-change "/run is not a mount point; don't know what to do."))
 
        ;; If there's an EFI system partition, we need to store knowledge of
@@ -198,7 +198,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
        ;; is responsible for adding an entry for the EFI system partition to
        ;; the new system's fstab, but we are responsible for restoring
        ;; knowledge of the partition to the kernel's mount table.
-       (when (zerop (mrun :for-exit "mountpoint" "-q" "/boot/efi"))
+       (when (mountpointp "/boot/efi")
          (destructuring-bind (type source options)
              (words (stripln (run "findmnt" "-nro" "FSTYPE,SOURCE,OPTIONS"
                                   "/boot/efi")))
