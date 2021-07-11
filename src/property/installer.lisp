@@ -244,9 +244,10 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
                    (rename file (chroot-pathname file old-os))))
                (dolist (file (directory-contents new-os))
                  (let ((dest (in-chroot-pathname file new-os)))
-                   (unless (or (preservedp dest)
-                               (file-exists-p dest)
-                               (directory-exists-p dest))
+                   (unless (preservedp dest)
+                     (when (or (file-exists-p dest) (directory-exists-p dest))
+                       (failed-change
+                        "~A already exists in root directory." dest))
                      (rename file dest)))))
            (serious-condition (c)
              ;; Make a single attempt to undo the moves to increase the chance
