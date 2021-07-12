@@ -497,7 +497,15 @@ ENTRIES, using a simple merge procedure: existing lines of the file with the
 same value for the TARGETth field are updated to match the corresponding
 members of ENTRIES, except that if the SOURCEth field of the existing entry is
 not NO-SOURCE and the corresponding member of ENTRIES is STRING= to either
-NO-SOURCE or \"PLACEHOLDER\", use the existing field value."
+NO-SOURCE or \"PLACEHOLDER\", use the existing field value.
+
+Sort the lines to avoid certain possible failures.  For each pair of lines, if
+the TARGETth or the SOURCEth field of the first line is a path and a subpath
+of the TARGETth field of the second line, sort the second line earlier.
+Otherwise, try to avoid disturbing line order.  This avoids failures to mount
+because the filesystem containing the mount point is not mounted yet, and
+ensures that partitions containing things like swap files are mounted before
+an attempt is made to activate the swap, set up the bind mount, etc."
   (let ((unknown (list no-source "PLACEHOLDER"))
         (pending (make-hash-table :test #'equal)))
     (dolist (entry entries)
@@ -505,42 +513,36 @@ NO-SOURCE or \"PLACEHOLDER\", use the existing field value."
     (map-file-lines
      file
      (lambda (lines)
-       (loop for line in lines
-             for line-fields = (words line)
-             for line-source = (nth source line-fields)
-             and line-target = (nth target line-fields)
-             for entry = (when-let* ((entry (gethash line-target pending))
-                                     (fields (words entry)))
-                           (when (and (member (nth source fields)
-                                              unknown :test #'string=)
-                                      (not (string= line-source no-source)))
-                             (setf (nth source fields) line-source))
-                           (format nil "~{~A~^ ~}" fields))
-             if entry
-               collect it into accum and do (remhash line-target pending)
-             else collect line into accum
-             finally
-                ;; Sort the lines lexicographically by the TARGETth field.
-                ;; This avoids problems of failing to mount because the
-                ;; filesystem containing the mount point is not mounted yet.
-                ;;
-                ;; Sort all targets beginning with '/' before all targets not
-                ;; beginning with '/' so that all filesystems are available
-                ;; before trying to mount to virtual targets like "swap".
-                ;; (STRING< already sorts like this but be explicit about it.)
-                ;;
-                ;; Treat comments and blank lines as equal to any other line
-                ;; and use STABLE-SORT to try to keep comments close to lines
-                ;; they describe.
-                (return
-                  (stable-sort
-                   (nconc accum (hash-table-values pending))
-                   (lambda (a b)
-                     (and (plusp (length a)) (plusp (length b))
-                          (not (char= #\# (first-char a)))
-                          (not (char= #\# (first-char b)))
-                          (let ((a* (nth target (words a)))
-                                (b* (nth target (words b))))
-                            (or (and (char= #\/ (first-char a*))
-                                     (not (char= #\/ (first-char b*))))
-                                (string< a* b*))))))))))))
+       (stable-sort
+        (loop for line in lines
+              for line-fields = (words line)
+              for line-source = (nth source line-fields)
+              and line-target = (nth target line-fields)
+              for entry = (when-let* ((entry (gethash line-target pending))
+                                      (fields (words entry)))
+                            (when (and (member (nth source fields)
+                                               unknown :test #'string=)
+                                       (not (string= line-source no-source)))
+                              (setf (nth source fields) line-source))
+                            (format nil "~{~A~^ ~}" fields))
+              if entry
+                collect it into accum and do (remhash line-target pending)
+              else collect line into accum
+              finally (return (nconc accum (hash-table-values pending))))
+        (lambda (a b)
+          (flet ((subpathp (x y)
+                   (and (plusp (length x)) (plusp (length y))
+                        (char= #\/ (first-char x) (first-char y))
+                        (subpathp (ensure-pathname x)
+                                  (ensure-directory-pathname y)))))
+            (and
+             ;; If either line is blank treat as equal.
+             (plusp (length a)) (plusp (length b))
+             ;; If either line is a comment treat as equal.
+             (not (char= #\# (first-char a))) (not (char= #\# (first-char b)))
+             ;; Now compare the TARGETth and SOURCEth fields of B to the
+             ;; TARGETth field of A.
+             (let ((a (words a)) (b (words b)))
+               (let ((a-target (nth target a)))
+                 (or (subpathp (nth target b) a-target)
+                     (subpathp (nth source b) a-target))))))))))))
