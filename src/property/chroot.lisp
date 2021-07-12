@@ -40,6 +40,13 @@
                       (os:debian-suite os)
                       root)))
        options
+
+     ;; In the case where the chroot arch is not equal to the host arch, we
+     ;; could execute arch-test(1) here to confirm the architecture is
+     ;; executable by the running kernel; we'd add arch-test alongside
+     ;; qemu-user-static in %OS-BOOTSTRAPPER-INSTALLED.  Or possibly we only
+     ;; try to execute arch-test(1) when we find it's already on PATH.
+
      (when apt.proxy
        (setq args (list* :env (list :http_proxy apt.proxy) args)))
      (when apt.mirror
