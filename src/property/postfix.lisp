@@ -31,8 +31,9 @@
   "Set key--value pairs in /etc/postfix/main.cf."
   (:desc (format nil "Postfix main.cf configured ~{~A=~A~^, ~}" pairs))
   (:apply
-   (or (eql :no-change
+   (if (eql :no-change
             (apply #'file:contains-conf-equals "/etc/postfix/main.cf" pairs))
+       :no-change
        (reloaded))))
 
 (define-function-property-combinator mapped-file
@@ -45,7 +46,8 @@ defaults to the first argument to propapp."
             :hostattrs (get (car propapp) 'hostattrs)
             :apply (lambda (&rest args)
                      (when-let ((f (get (car propapp) 'papply)))
-                       (or (eql :no-change (apply f args))
+                       (if (eql :no-change (apply f args))
+                           :no-change
                            (mrun "postmap" file))))
             :unapply
             (lambda (&rest args)
