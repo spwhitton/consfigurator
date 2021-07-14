@@ -81,7 +81,8 @@ Typically used with the ON-CHANGE combinator."
   (:apply
    (assert-euid-root)
    (run
-    :input (loop for triple in triples collect #?"${package} @{triple}")
+    :input (unlines
+            (loop for triple in triples collect #?"${package} @{triple}"))
     "debconf-set-selections")
    (run :env +noninteractive-env+ "dpkg-reconfigure" "-fnone" package)))
 
