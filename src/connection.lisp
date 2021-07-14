@@ -286,7 +286,7 @@ which will be cleaned up when BODY is finished."
         ;; writeable by its owner, POSIX doesn't require this, so set a umask.
         (connection-run
          connection
-         #?"umask 077; echo 'mkstemp(${template})' | m4 2>/dev/null || mktemp '${template}'"
+#?"umask 077; echo 'mkstemp(${template})' 2>/dev/null | m4 2>/dev/null || mktemp '${template}'"
          nil)
       (let ((lines (lines out)))
         (if (and (zerop exit) lines)
