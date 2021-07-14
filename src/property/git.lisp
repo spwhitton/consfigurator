@@ -47,7 +47,7 @@ available version of the snapshot is present on the remote system."
    (file:directory-exists directory)
    (with-remote-current-directory (directory)
      (mrun :input (get-data-stream "--git-snapshot" snapshot-name)
-           "tar" "xfz" "-")))
+           "tar" (if (zerop (get-connattr :remote-uid)) "oxfz" "xfz") "-")))
   (:unapply
    (declare (ignore replace))
    (delete-remote-trees dest)))
