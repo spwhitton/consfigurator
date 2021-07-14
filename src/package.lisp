@@ -552,7 +552,8 @@
   (:local-nicknames (#:re        #:cl-ppcre)
                     (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file)
-                    (#:apt       #:consfigurator.property.apt))
+                    (#:apt       #:consfigurator.property.apt)
+                    (#:service   #:consfigurator.property.service))
   (:export #:installed
            #:configured
            #:no-passwords

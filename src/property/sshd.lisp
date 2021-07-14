@@ -30,7 +30,10 @@
   "Set key--value pairs in /etc/ssh/sshd_config."
   (:desc (format nil "sshd configured ~{~A ~A~^, ~}" pairs))
   (:apply
-   (apply #'file:contains-conf-space "/etc/ssh/sshd_config" pairs)))
+   (if (eql :no-change
+            (apply #'file:contains-conf-space "/etc/ssh/sshd_config" pairs))
+       :no-change
+       (service:reloaded "sshd"))))
 
 (defprop no-passwords :posix ()
   "Configure SSH to disallow password logins.
