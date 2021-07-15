@@ -129,16 +129,13 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
    (containing-directory-exists destination)
    (maybe-writefile-data destination iden1 iden2)))
 
-(defprop host-data-uploaded :posix
+(defproplist host-data-uploaded :posix
     (destination
      ;; Require an absolute path because we don't know the remote home
      ;; directory at hostattrs time, so can't resolve it ourselves.
      &aux (destination (unix-namestring
                         (ensure-pathname destination :want-absolute t))))
-  (:hostattrs
-   (require-data (get-hostname) destination))
-  (:apply
-   (data-uploaded (get-hostname) destination destination)))
+  (data-uploaded (get-hostname) destination destination))
 
 (defprop secret-uploaded :posix (iden1 iden2 destination)
   (:hostattrs
