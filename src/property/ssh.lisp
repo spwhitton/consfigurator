@@ -28,10 +28,15 @@
   (:unapply
    (apply #'file:lacks-lines ".ssh/authorized_keys" keys)))
 
-(defpropspec has-user-key :posix
-    (type public-key
-          &key (dest (merge-pathnames (strcat "id_" type) #P".ssh/")) iden1)
-  "Installs an SSH keypair to DEST, which defaults to ~/.ssh/id_TYPE{,.pub}."
+(defpropspec has-user-key :posix (dest public-key &key iden1)
+  "Installs an SSH keypair to DEST and DEST.pub."
+  ;; The original version of this property took a key type argument and
+  ;; defaulted DEST to ~/.ssh/id_TYPE, but FILE:HOST-SECRET-UPLOADED requires
+  ;; an absolute path because the remote HOME is not known at :HOSTATTRS time,
+  ;; and the same applies here, so the caller must supply DEST.  In the
+  ;; FILE:SECRET-UPLOADED branch we could use a relative path, but we should
+  ;; not use an identical relative path for both IDEN2 and the destination
+  ;; when IDEN1 is a hostname, which it might be.
   `(eseqprops (file:exists-with-content
                ,(strcat (unix-namestring dest) ".pub") ,public-key)
               ,(if iden1
