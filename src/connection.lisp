@@ -289,7 +289,7 @@ which will be cleaned up when BODY is finished."
 #?"umask 077; echo 'mkstemp(${template})' 2>/dev/null | m4 2>/dev/null || mktemp '${template}'"
          nil)
       (let ((lines (lines out)))
-        (if (and (zerop exit) lines)
+        (if (and (zerop exit) lines (plusp (length (car lines))))
             (car lines)
             (error 'run-failed
                    :cmd "(attempt to make a temporary file on remote)"
