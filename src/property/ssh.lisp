@@ -40,7 +40,7 @@
   `(eseqprops (file:exists-with-content
                ,(strcat (unix-namestring dest) ".pub") ,public-key)
               ,(if iden1
-                   `(file:secret-uploaded ,iden1 ,dest)
+                   `(file:secret-uploaded ,iden1 ,dest ,dest)
                    `(file:host-secret-uploaded ,dest))))
 
 (defprop %update-known-hosts :posix
