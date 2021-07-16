@@ -98,6 +98,9 @@ To take advantage of the piuparts and autopkgtest support, add to your
   (destructuring-bind
       (&key (use-ccache t) chroot-options
        &aux
+         (chroot-options (if (member :variant chroot-options)
+                             chroot-options
+                             (list* :variant "buildd" chroot-options)))
          (chroot
           (ensure-pathname
            (format nil "~A-~A" suite arch)
