@@ -186,17 +186,17 @@ only FIREWALLD:DEFAULT-ZONE."
   (:desc #?"firewalld zone ${zone} has rich rule \"${rule}\"")
   (:check (zerop (mrun :for-exit "firewall-cmd"
                        "--permanent" #?"--zone=${zone}"
-                       (strcat "--query-rich-rule=" (escape-sh-token rule)))))
+                       (strcat "--query-rich-rule=" rule))))
   (with-unapply
     (installed)
     (has-zone zone)
     (%firewall-cmd #?"zones/${zone}.xml" "ALREADY_ENABLED"
                    "--permanent" #?"--zone=${zone}"
-                   (strcat "--add-rich-rule=" (escape-sh-token rule)))
+                   (strcat "--add-rich-rule=" rule))
     :unapply
     (%firewall-cmd #?"zones/${zone}.xml" "NOT_ENABLED"
                    "--permanent" #?"--zone=${zone}"
-                   (strcat "--remove-rich-rule=" (escape-sh-token rule)))))
+                   (strcat "--remove-rich-rule=" rule))))
 
 ;; Note that direct rules will be deprecated as of firewalld 1.0.0, as
 ;; policies and rich rules should be able to cover all uses of direct rules.
