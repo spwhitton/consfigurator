@@ -340,6 +340,57 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
                         (car args))
    :int))
 
+(define-constant +alphanum+
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+  :test #'string=)
+
+(defun mkfifo ()
+  "Use mkfifo(3) to create a named pipe with a mkstemp(3)-like name."
+  (let* ((dir (drop-trailing-slash (or (getenv "TMPDIR") "/tmp")))
+         (dir-ls (run-program
+                  `("env" "LANG=C" "ls" "-nd" ,dir) :output :string))
+         (prefix (strcat dir "/tmp.")))
+    (unless (and (char= #\d (char dir-ls 0))
+                 (char-equal #\t (char dir-ls 9))
+                 (zerop (parse-integer (caddr (split-string dir-ls)))))
+      (error "~A is not a root-owned dir with the sticky bit set." dir))
+    (flet ((mktemp ()
+             ;; We need to generate a temporary name.  We don't have to worry
+             ;; about race conditions as mkfifo(3) will fail if the file
+             ;; already exists.
+             (loop with result = (make-string (+ 6 (length prefix)))
+                     initially (setf (subseq result 0 (length prefix)) prefix)
+                   for i from (length prefix) below (length result)
+                   do (setf (char result i)
+                            (char +alphanum+ (random #.(length +alphanum+))))
+                   finally (return result)))
+           (mkfifo (temp)
+             (handler-case
+                 (progn
+                   #+sbcl (sb-posix:mkfifo temp #o600)
+                   #-(or sbcl)
+                   (unless (zerop
+                            (foreign-funcall
+                             "mkfifo" :string temp :unsigned-int #o600 :int))
+                     (error "mkfifo(3) failed!"))
+                   t)
+               (serious-condition (c)
+                 (if (or (file-exists-p temp) (directory-exists-p temp))
+                     nil
+                     (signal c))))))
+      (loop with *random-state* = (make-random-state t)
+            repeat 3 for temp = (mktemp)
+            when (mkfifo temp) return (pathname temp)))))
+
+(defmacro with-mkfifos ((&rest mkfifos) &body forms)
+  `(let ,(loop for mkfifo in mkfifos collect `(,mkfifo (mkfifo)))
+     (unwind-protect (progn ,@forms)
+       ,@(loop for mkfifo in mkfifos collect `(delete-file ,mkfifo)))))
+
+(defun write-to-mkfifo (object fifo)
+  (with-standard-io-syntax
+    (write object :stream fifo) (terpri fifo) (finish-output fifo)))
+
 
 ;;;; Progress & debug printing
 
