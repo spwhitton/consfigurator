@@ -284,6 +284,8 @@
            #:passphrase
            #:make-passphrase
            #:get-data-protected-string
+
+           ;; image.lisp
            #:asdf-requirements-for-host-and-features
            #:request-asdf-requirements
            #:continue-deploy*-program))

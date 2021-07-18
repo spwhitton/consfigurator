@@ -27,6 +27,7 @@
                (:file "src/deployment")
                (:file "src/connection/local")
                (:file "src/data")
+               (:file "src/image")
                (:file "src/property/cmd")
                (:file "src/property/file")
                (:file "src/property/etc-default")
