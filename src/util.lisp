@@ -219,7 +219,7 @@ symlinks.  Not suitable for use by :POSIX properties."
   "Define an implementation of PRINT-OBJECT for objects which are simple
 one-dimensional collections of values."
   `(defmethod print-object ((object ,class) stream)
-     (if *print-readably*
+     (if (and *print-readably* *read-eval*)
          (format
           stream "#.~S"
           `(make-instance
