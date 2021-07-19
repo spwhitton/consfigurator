@@ -173,11 +173,10 @@ apply the elements of REQUIREMENTS in reverse order."
               ;; the user or a combinator invokes a SKIP-PROPERTY restart
               ;; established further down the property call stack.
               (result 'failed-change))
-          (unwind-protect-in-parent
-              (with-skip-property propapp
-                (setq result (if announce
-                                 (announce-propapp-apply propapp)
-                                 (propapp-apply propapp))))
+          (unwind-protect (with-skip-property propapp
+                            (setq result (if announce
+                                             (announce-propapp-apply propapp)
+                                             (propapp-apply propapp))))
             (when (and (plusp (length buffer))
                        (or (> *consfigurator-debug-level* 1)
                            (not (eql result :no-change))))

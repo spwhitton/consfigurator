@@ -507,31 +507,6 @@ previous output."
 
 ;;;; Forking utilities
 
-(define-condition in-child-process () ())
-
-(defmacro unwind-protect-in-parent (protected &body cleanup)
-  "Like UNWIND-PROTECT, but with a mechanism to cancel the execution of CLEANUP
-in child processes resulting from calls to fork(2) during the execution of
-PROTECTED.  This means that CLEANUP won't get executed on both sides of the
-fork, but only in the parent.
-
-For this to work, after fork(2), the child process must call
-CANCEL-UNWIND-PROTECT-IN-PARENT-CLEANUP, which will affect all enclosing uses
-of this macro."
-  (with-gensyms (cancelled)
-    `(let (,cancelled)
-       (unwind-protect
-            (handler-bind ((in-child-process (lambda (c)
-                                               (declare (ignore c))
-                                               (setq ,cancelled t))))
-              ,protected)
-         (unless ,cancelled ,@cleanup)))))
-
-(defun cancel-unwind-protect-in-parent-cleanup ()
-  "Cancel the CLEANUP forms in all enclosing uses of UNWIND-PROTECT-IN-PARENT.
-Should be called soon after fork(2) in child processes."
-  (signal 'in-child-process))
-
 ;;; Use only implementation-specific fork, waitpid etc. calls to avoid thread
 ;;; woes.  Things like chroot(2) and setuid(2), however, should be okay.
 
@@ -653,7 +628,7 @@ Does not currently establish a PAM session."
     `(let* ((,before (and (file-exists-p ,file) (read-file-string ,file)))
             (,data (and ,before (plusp (length ,before))
                         (safe-read-from-string ,before))))
-       (unwind-protect-in-parent (progn ,@forms)
+       (unwind-protect (progn ,@forms)
          (with-open-file
              (stream ,file :direction :output :if-exists :supersede)
            (with-standard-io-syntax

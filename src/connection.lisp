@@ -264,8 +264,7 @@ which will be cleaned up when BODY is finished."
     `(let ((,file (mktemp ,@(and directory-supplied-p
                                  `(:directory ,directory))
                           :connection ,connection)))
-       (unwind-protect-in-parent
-            (progn ,@body)
+       (unwind-protect (progn ,@body)
          (connection-run ,connection
                          (format nil "rm -f ~A" (escape-sh-token ,file))
                          nil)))))

@@ -759,7 +759,7 @@ must not be modified."
                       (apply #'open-volumes-and-contents
                              `(,volumes ,@(and mount-below-supplied-p
                                                `(:mount-below ,mount-below)))))
-       (unwind-protect-in-parent (propappapply propapp)
+       (unwind-protect (propappapply propapp)
          (mrun "sync")
          (mapc #'close-volume (get-connattr :opened-volumes)))))
    :args (cdr propapp)))

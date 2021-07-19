@@ -88,10 +88,9 @@ properties."
                     ;; past.  (SLEEP 1) is only approximately one second so
                     ;; check that it's actually been a second.
                     (loop do (sleep 1) until (> (get-universal-time) before))
-                    (unwind-protect-in-parent
-                         (with-preserve-hostattrs
-                           (push-hostattrs :no-services t)
-                           (propappapply propapp))
+                    (unwind-protect (with-preserve-hostattrs
+                                      (push-hostattrs :no-services t)
+                                      (propappapply propapp))
                       (if already-exists
                           ;; Check whether some property we applied set the
                           ;; contents of /usr/sbin/policy-rc.d, in which case

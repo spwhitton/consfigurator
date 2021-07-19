@@ -57,7 +57,7 @@ preprocessed."
            (multiple-value-bind (*connection* return)
                (apply #'establish-connection type remaining args)
              (if *connection*
-                 (unwind-protect-in-parent
+                 (unwind-protect
                      (if remaining (connect remaining) (apply-*host*-propspec))
                    (connection-teardown *connection*))
                  return)))))

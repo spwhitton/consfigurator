@@ -127,7 +127,7 @@ should be the mount point, without the chroot's root prefixed.")
             (ensure-pathname
              (stripln (subseq datadir-inside 1))
              :defaults into* :ensure-absolute t :ensure-directory t))
-      (unwind-protect-in-parent (continue-connection connection remaining)
+      (unwind-protect (continue-connection connection remaining)
         (connection-teardown connection)))))
 
 (defmethod post-fork ((connection chroot.fork-connection))

@@ -158,13 +158,13 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
 ;;; Another option would be a new SERVICES:WITHOUT-STARTING-SERVICES-UNTIL-END
 ;;; which would disable starting services and push the cleanup forms inside
 ;;; the definition of SERVICES:WITHOUT-STARTING-SERVICES to *AT-END-FUNCTIONS*
-;;; in a closure.  We'd also want %CONSFIGURE to use UNWIND-PROTECT-IN-PARENT
-;;; to ensure that the AT-END functions get run even when there's a nonlocal
-;;; exit from %CONSFIGURE's call to PROPAPPAPPLY; perhaps we could pass a
-;;; second argument to the AT-END functions indicating whether there was a
-;;; non-local transfer of control.  REBOOT:REBOOTED-AT-END might only reboot
-;;; when there was a normal return from PROPAPPAPPLY, whereas the cleanup
-;;; forms from SERVICES:WITHOUT-STARTING-SERVICES would always be evaluated.
+;;; in a closure.  We'd also want %CONSFIGURE to use UNWIND-PROTECT to ensure
+;;; that the AT-END functions get run even when there's a nonlocal exit from
+;;; %CONSFIGURE's call to PROPAPPAPPLY; perhaps we could pass a second
+;;; argument to the AT-END functions indicating whether there was a non-local
+;;; transfer of control.  REBOOT:REBOOTED-AT-END might only reboot when there
+;;; was a normal return from PROPAPPAPPLY, whereas the cleanup forms from
+;;; SERVICES:WITHOUT-STARTING-SERVICES would always be evaluated.
 
 (defprop %root-filesystems-flipped :lisp (new-os old-os)
   (:hostattrs (os:required 'os:linux))
