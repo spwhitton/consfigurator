@@ -210,6 +210,12 @@ symlinks.  Not suitable for use by :POSIX properties."
       (subseq namestring 0 (1- (length namestring)))
       namestring))
 
+(defun reinit-structlike (class &rest slots)
+  (loop with object = (allocate-instance (find-class class))
+        for (slot-name slot-value) on slots by #'cddr
+        do (setf (slot-value object slot-name) slot-value)
+        finally (return (reinitialize-instance object))))
+
 (defmacro quote-nonselfeval (x)
   (once-only (x)
     `(if (member (type-of ,x) '(cons symbol))
@@ -222,14 +228,13 @@ one-dimensional collections of values."
      (if (and *print-readably* *read-eval*)
          (format
           stream "#.~S"
-          `(make-instance
+          `(reinit-structlike
             ',(type-of object)
             ;; Call CLASS-OF so that subclasses of CLASS are handled too.
             ,@(loop for slot in (closer-mop:class-slots (class-of object))
-                    for initargs = (closer-mop:slot-definition-initargs slot)
-                    and slot-name = (closer-mop:slot-definition-name slot)
+                    for slot-name = (closer-mop:slot-definition-name slot)
                     when (slot-boundp object slot-name)
-                      collect (car initargs)
+                      collect `',slot-name
                       and collect (quote-nonselfeval
                                    (slot-value object slot-name)))))
          (call-next-method))
