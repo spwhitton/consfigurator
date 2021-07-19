@@ -112,7 +112,8 @@ starting services in the chroot, and set up access to parent hostattrs."
   (:desc #?"Subdeployment of ${root}")
   (consfigurator:deploys
    `((:chroot :into ,root))
-   (%make-child-host (replace-propspec-into-host host properties))))
+   (%make-child-host
+    (replace-propspec-into-host (ensure-host host) properties))))
 
 (defproplist os-bootstrapped-for :lisp
     (options root host &optional additional-properties
