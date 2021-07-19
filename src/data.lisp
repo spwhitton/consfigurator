@@ -330,19 +330,12 @@ new versions of data, to avoid them piling up."))
     ((connection connection) (k (eql 'cached-data)))
   (make-hash-table :test #'equal))
 
-(defun upload-all-prerequisite-data
-    (&key (upload-string-data t) (connection *connection*))
+(defun upload-all-prerequisite-data (&optional (connection *connection*))
   "Upload all prerequisite data required by the current deployment to the remote
 cache of the current connection hop, or to the remote cache of CONNECTION.
 
-If UPLOAD-STRING-DATA is false, don't upload items of string data, but
-retrieve them from data sources and keep in memory.  This is for connection
-types which will do something like fork after calling this function.
-
 This is called by implementations of ESTABLISH-CONNECTION which call
 CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
-  ;; Retrieving & keeping in memory refers to how %GET-DATA stores items of
-  ;; string data in *STRING-DATA*.
   (flet ((record-cached-data (iden1 iden2 version)
            (let ((*connection* connection))
              (setf (gethash (cons iden1 iden2) (get-connattr 'cached-data))
@@ -366,11 +359,9 @@ CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
                   (or (not highest-remote-version)
                       (version> highest-local-version highest-remote-version)))
             do (let ((data (funcall thunk)))
-                 (when (or upload-string-data
-                           (not (subtypep (type-of data) 'string-data)))
-                   (connection-clear-data-cache connection iden1 iden2)
-                   (connection-upload connection data)
-                   (record-cached-data iden1 iden2 (data-version data))))
+                 (connection-clear-data-cache connection iden1 iden2)
+                 (connection-upload connection data)
+                 (record-cached-data iden1 iden2 (data-version data)))
           else if highest-remote-version
                  do (informat 3 "~&Not uploading ~S | ~S ver ~S as remote has ~S"
                               iden1 iden2

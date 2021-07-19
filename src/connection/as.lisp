@@ -30,8 +30,6 @@ whether it is possible to establish a :SETUID connection.
 Note that both these connection types require root."
   ;; An alternative to :SU would be :SUDO or runuser(1), but :SU is more
   ;; portable.
-  (establish-connection (if (and (lisp-connection-p)
-                                 (can-setuid)
-                                 (can-probably-fork))
+  (establish-connection (if (and (lisp-connection-p) (can-setuid))
                             :setuid :su)
                         remaining :to to))

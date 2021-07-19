@@ -69,6 +69,8 @@ For an example of usage, see the :SUDO connection type."))
     :initform nil
     :documentation "This connection's connection attributes.")))
 
+(define-print-object-for-structlike connection)
+
 (defclass lisp-connection (connection) ())
 
 (defclass posix-connection (connection) ())

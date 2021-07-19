@@ -532,6 +532,47 @@ of this macro."
 Should be called soon after fork(2) in child processes."
   (signal 'in-child-process))
 
+;;; Use only implementation-specific fork, waitpid etc. calls to avoid thread
+;;; woes.  Things like chroot(2) and setuid(2), however, should be okay.
+
+(defun fork ()
+  ;; Normalise any other implementations such that we signal an error if
+  ;; fork(2) returns -1, so caller doesn't have to check for that.
+  #+sbcl (sb-posix:fork))
+
+(defun waitpid (pid options)
+  ;; Normalise any other implementations such that we always return (values
+  ;; PID EXIT-STATUS), as SB-POSIX:WAITPID does.
+  #+sbcl (sb-posix:waitpid pid options))
+
+(defun wifexited (status)
+  #+sbcl (sb-posix:wifexited status))
+
+(defun wexitstatus (status)
+  #+sbcl (sb-posix:wexitstatus status))
+
+(defun setsid ()
+  #+sbcl (sb-posix:setsid))
+
+(defun umask (mode)
+  #+sbcl (sb-posix:umask mode))
+
+(defmacro forked-progn (child-pid child-form &body parent-forms)
+  (with-gensyms (retval)
+    `(progn
+       #-(or sbcl) (error "Don't know how to safely fork(2) in this Lisp.")
+       (mapc-open-output-streams
+        #'force-output
+        *standard-output* *error-output* *debug-io* *terminal-io*)
+       (let ((,retval (fork)))
+         (if (zerop ,retval)
+             ;; We leave it to the caller to appropriately call CLOSE or
+             ;; CLEAR-INPUT on input streams shared with the parent, because
+             ;; at least SBCL's CLEAR-INPUT clears the OS buffer as well as
+             ;; Lisp's, potentially denying data to both sides of the fork.
+             ,child-form
+             (let ((,child-pid ,retval)) ,@parent-forms))))))
+
 (define-condition skipped-properties () ()
   (:documentation
    "There were failed changes, but instead of aborting, that particular property
@@ -617,3 +658,32 @@ Does not currently establish a PAM session."
              (stream ,file :direction :output :if-exists :supersede)
            (with-standard-io-syntax
              (prin1 ,data stream)))))))
+
+
+;;;; Streams
+
+(defun stream->input-stream (stream)
+  (etypecase stream
+    (synonym-stream (stream->input-stream
+                     (symbol-value (synonym-stream-symbol stream))))
+    (two-way-stream (two-way-stream-input-stream stream))
+    (stream (and (input-stream-p stream) stream))))
+
+(defun mapc-open-input-streams (function &rest streams)
+  (dolist (stream streams streams)
+    (when-let ((input-stream (stream->input-stream stream)))
+      (when (open-stream-p input-stream)
+        (funcall function input-stream)))))
+
+(defun stream->output-stream (stream)
+  (etypecase stream
+    (synonym-stream (stream->output-stream
+                     (symbol-value (synonym-stream-symbol stream))))
+    (two-way-stream (two-way-stream-output-stream stream))
+    (stream (and (output-stream-p stream) stream))))
+
+(defun mapc-open-output-streams (function &rest streams)
+  (dolist (stream streams streams)
+    (when-let ((output-stream (stream->output-stream stream)))
+      (when (open-stream-p output-stream)
+        (funcall function output-stream)))))

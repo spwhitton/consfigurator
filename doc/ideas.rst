@@ -61,10 +61,11 @@ Core
 - A CONCURRENTLY combinator for property application specifications, which
   means to apply each of the enclosed properties in parallel.  Particularly
   useful surrounding a set of DEPLOYS applications, to concurrently deploy a
-  number of hosts.  We use ``WITH-CURRENT-DIRECTORY`` in various places, so we
-  may not be able to do this using threads.  But if we want to do it with lots
-  of forking, then practically speaking usage of this combinator will be
-  restricted to connection chains which start up remote Lisp images.
+  number of hosts.  Now that we don't call fork(2) while executing
+  deployments, we ought to be able to do this using threads, and so it can
+  work in the root Lisp too.  However, we still use ``WITH-CURRENT-DIRECTORY``
+  in various places.  Perhaps that macro could be changed to only affect RUN,
+  MRUN etc. for the sake of enabling multithreading.
 
 - It might be useful to have a restart for the case where an attempt is made
   to apply a list of properties containing some ``:LISP`` properties with a

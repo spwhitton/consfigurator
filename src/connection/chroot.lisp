@@ -24,9 +24,7 @@
   (zerop (foreign-funcall "geteuid" :int)))
 
 (defmethod establish-connection ((type (eql :chroot)) remaining &key into)
-  (establish-connection (if (and (lisp-connection-p)
-                                 (can-chroot)
-                                 (can-probably-fork))
+  (establish-connection (if (and (lisp-connection-p) (can-chroot))
                             :chroot.fork
                             :chroot.shell)
                         remaining

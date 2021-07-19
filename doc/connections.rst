@@ -112,22 +112,17 @@ in that saved image.  Typically a ``:SUDO`` connection hop is used before hops
 which start up remote Lisp images, so these issues will not arise for most
 users.
 
-``:CHROOT.FORK``
-~~~~~~~~~~~~~~~~
+Connections which fork: ``:CHROOT.FORK``, ``:SETUID``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Since forking is typically only possible when it is not the case that multiple
-threads are running, it is better to avoid using this connection type as the
-first hop, i.e., directly out of the root Lisp (this is not much of a
-restriction, since typically the root Lisp is running under a uid which cannot
-use the ``chroot(2)`` system call anyway).  More generally, you should avoid
-using this connection type within a Lisp image which might try to execute
-other deployments in parallel.  Typical usage would be something like::
+These connection types cannot be used as the first hop, i.e., directly out of
+the root Lisp.  This is because they must call fork(2), and Consfigurator only
+makes this system call in contexts in which there shouldn't ever be more than
+one thread (excluding Lisp implementation finaliser threads and the like).
+The root Lisp is not such a context, because it is often multithreaded due to
+the use of SLIME.  This is, however, not much of a restriction, because
+typically the root Lisp is running under a UID which cannot use system calls
+like chroot(2) and setuid(2) anyway.  Thus, typical usage on localhost would
+be something like::
 
   (deploy (:sudo :sbcl (:chroot.fork :into "...")) ...)
-
-In some situations you might want to have a connection chain which effectively
-uses a connection type like ``:SBCL`` twice in a row, so that the first Lisp
-image can execute deployments in parallel while the second forks into the
-chroot (typically by having a ``DEPLOYS`` property with connection type
-``:SBCL`` as one of the properties applied by a deployment whose connection
-chain itself ends with ``:SBCL``).

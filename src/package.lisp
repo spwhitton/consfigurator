@@ -33,6 +33,9 @@
                           #:with-current-directory
                           #:delete-empty-directory
 			  #:delete-directory-tree
+                          #:with-safe-io-syntax
+                          #:read-file-form
+                          #:safe-read-file-form
                           #:safe-read-from-string
                           #:compile-file*
                           #:compile-file-pathname*)
@@ -66,6 +69,9 @@
            #:with-current-directory
            #:delete-empty-directory
 	   #:delete-directory-tree
+           #:with-safe-io-syntax
+           #:read-file-form
+           #:safe-read-file-form
            #:safe-read-from-string
            #:compile-file*
            #:compile-file-pathname*
@@ -286,6 +292,8 @@
            #:get-data-protected-string
 
            ;; image.lisp
+           #:eval-in-grandchild
+           #:dump-consfigurator-in-grandchild
            #:asdf-requirements-for-host-and-features
            #:request-asdf-requirements
            #:continue-deploy*-program))
