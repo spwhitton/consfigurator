@@ -555,7 +555,7 @@ application was instead skipped over, either due to the semantics of a
 property combinator, or because the user elected to skip the property in the
 interactive debugger."))
 
-(defmacro with-deployment-report (&rest forms)
+(defmacro with-deployment-report (&body forms)
   (with-gensyms (failures)
     `(let* (,failures
             (result (handler-bind ((skipped-properties (lambda (c)
