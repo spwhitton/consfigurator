@@ -76,3 +76,32 @@ The output of the cronjob will be mailed only if the job exits nonzero."
   (:desc #?"Cronned ${desc}, niced and ioniced")
   (system-job desc when user (format nil "nice ionice -c 3 sh -c ~A"
                                      (escape-sh-token shell-command))))
+
+(defproplist runs-consfigurator :lisp (when)
+  "Re-execute the most recent deployment that included an application of this
+property, or of IMAGE-DUMPED with no arguments, using CRON:NICE-SYSTEM-JOB.
+
+This can be useful to ensure that your system remains in a consistent state
+between manual deployments, and to ensure the timely application of properties
+modified by the PERIODIC:AT-MOST combinator.
+
+For hosts to which this property is applied, mixing usage of DEPLOY and
+DEPLOY-THESE (or HOSTDEPLOY and HOSTDEPLOY-THESE, etc.) can lead to some
+inconsistent situations.  For example, suppose you
+
+    (hostdeploy foo.example.org (additional-property))
+
+and then later
+
+    (hostdeploy-these foo.example.org (unapply (additional-property)).
+
+As neither CRON:RUNS-CONFIGURATOR nor IMAGE-DUMPED with no arguments was
+applied since ADDITIONAL-PROPERTY was unapplied, the executable invoked by the
+CRON:RUNS-CONFIGURATOR cronjob will try to apply ADDITIONAL-PROPERTY again.
+One straightforward way to reduce the incidence of this sort of problem would
+be to refrain from using the ADDITIONAL-PROPERTIES argument to DEPLOY,
+HOSTDEPLOY etc."
+  (image-dumped)
+  (nice-system-job
+   "consfigurator" when "root"
+   "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/images/latest"))

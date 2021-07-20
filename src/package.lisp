@@ -19,6 +19,7 @@
                           #:unix-namestring
                           #:pathname-directory-pathname
                           #:pathname-parent-directory-pathname
+                          #:resolve-symlinks
                           #:with-temporary-file
                           #:ensure-directory-pathname
                           #:ensure-pathname
@@ -55,6 +56,7 @@
            #:unix-namestring
            #:pathname-directory-pathname
            #:pathname-parent-directory-pathname
+           #:resolve-symlinks
            #:with-temporary-file
            #:ensure-directory-pathname
            #:ensure-pathname
@@ -292,6 +294,7 @@
            ;; image.lisp
            #:eval-in-grandchild
            #:dump-consfigurator-in-grandchild
+           #:image-dumped
            #:asdf-requirements-for-host-and-features
            #:request-asdf-requirements
            #:continue-deploy*-program))
@@ -723,7 +726,8 @@
                     (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file))
   (:export #:system-job
-           #:nice-system-job))
+           #:nice-system-job
+           #:runs-consfigurator))
 
 (defpackage :consfigurator.property.lets-encrypt
   (:use #:cl #:alexandria #:consfigurator)

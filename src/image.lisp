@@ -119,6 +119,39 @@ directory containing FILENAME is locked down."
     (unless (zerop exit)
       (failed-change "~&Failed to dump image; stderr was ~%~%~A" err))))
 
+(defprop image-dumped :lisp (&optional filename form (always form))
+  "Dump an executable image to FILENAME which will evaluate FORM, which must be
+evaluable using only definitions established statically by your consfig, or in
+one of the ASDF systems upon which your consfig depends.
+
+If FILENAME is nil then use ~/.cache/consfigurator/images/latest, and if FORM
+is nil then use one which will execute the current deployment.  Unless ALWAYS,
+skip dumping an executable image when we can detect that the deployment is
+already running from FILENAME."
+  (:desc (if form
+             (format nil "Dumped image to evaluate ~S" form)
+             "Dumped image to execute current deployment"))
+  (:apply
+   (let ((file (or filename (ensure-directories-exist
+                             (ensure-pathname
+                              (strcat (or (getenv "XDG_CACHE_HOME")
+                                          (strcat (getenv "HOME") "/.cache"))
+                                      "/consfigurator/images/latest"))))))
+     (unless (and (not always)
+                  (eql :linux (uiop:operating-system))
+                  (pathname-equal file (resolve-symlinks "/proc/self/exe")))
+       (unless filename
+         (mrun "chmod" "0700" (pathname-directory-pathname file)))
+       (if form
+           (dump-consfigurator-in-grandchild file form)
+           (dump-consfigurator-in-grandchild file))))
+   ;; Return :NO-CHANGE, though we can't detect whether a change was actually
+   ;; made: it depends on whether the definitions determining the evaluation
+   ;; of FORM, or the definition of this host established by the consfig, was
+   ;; or were meaningfully altered since the last deployment which applied
+   ;; this property with the same arguments.
+   :no-change))
+
 (defmacro with-fork-control (&body forms &aux (fork-control (gensym)))
   `(let ((,fork-control (mkfifo)))
      (forked-progn child

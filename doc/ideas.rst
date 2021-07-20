@@ -12,14 +12,6 @@ Properties
 Connections
 -----------
 
-- :SBCL could (fork and) SAVE-LISP-AND-DIE.  That way, we have something that
-  a cronjob can call to re-run the deployment to ensure that all properties
-  remain applied.  Need to think about how the property which sets up the
-  cronjob will be specified in consfigs -- does it make sense to allow passing
-  in arbitrary deployments, or do we only allow re-running exactly the same
-  thing?  If the former, the saved image will need to take some sort of
-  command line input telling it what arguments to pass to DEPLOY*.
-
 - Basic infrastructure for connections which work with just input and output
   streams connected to an interactive POSIX sh somewhere, like TRAMP, and
   probably using ``base64 -d`` for WRITEFILE.  Probably the basic connection
