@@ -721,13 +721,15 @@
 
 (defpackage :consfigurator.property.cron
   (:use #:cl #:consfigurator)
-  (:local-nicknames (#:service   #:consfigurator.property.service)
+  (:local-nicknames (#:re        #:cl-ppcre)
+                    (#:service   #:consfigurator.property.service)
                     (#:apt       #:consfigurator.property.apt)
                     (#:os        #:consfigurator.property.os)
                     (#:file      #:consfigurator.property.file))
   (:export #:system-job
            #:nice-system-job
-           #:runs-consfigurator))
+           #:runs-consfigurator
+           #:user-crontab))
 
 (defpackage :consfigurator.property.lets-encrypt
   (:use #:cl #:alexandria #:consfigurator)

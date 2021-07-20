@@ -105,3 +105,39 @@ HOSTDEPLOY etc."
   (nice-system-job
    "consfigurator" when "root"
    "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/images/latest"))
+
+(defprop user-crontab :posix (env &rest jobs)
+  "Set the contents of the current user's crontab.  ENV is like the ENV argument
+to RUN/MRUN, except that the environment variables will be set at the top of
+the generated crontab.  Each of JOBS is a line for the body of the crontab.
+In both ENV and JOBS, the string \"$HOME\" is replaced with the remote home
+directory."
+  ;; We set the contents of the whole file rather than providing properties to
+  ;; specify individual jobs, because then it is straightforward to
+  ;; incrementally develop jobs without having to unapply old versions first.
+  (:desc "Crontab populated")
+  (:apply
+   (unless (member :path env)
+     (setq env
+           (list*
+            :path
+            (if (zerop (get-connattr :remote-uid))
+                "/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
+                "/usr/local/bin:/bin:/usr/bin")
+            env)))
+   (let* ((home (drop-trailing-slash
+                 (unix-namestring (get-connattr :remote-home))))
+          (old (runlines :may-fail "crontab" "-l"))
+          (new
+            (mapcar
+             (lambda (line) (re:regex-replace-all #?/\$HOME/ line home))
+             (nconc
+              (list "# Automatically updated by Consfigurator; do not edit" "")
+              (loop for (k v) on env by #'cddr
+                    collect (strcat (symbol-name k) "=" v))
+              (list "")
+              jobs))))
+     (if (tree-equal old new :test #'string=)
+         :no-change
+         (mrun :input (unlines new)
+               "crontab" "-u" (get-connattr :remote-user) "-")))))
