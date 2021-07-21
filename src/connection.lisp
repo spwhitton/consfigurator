@@ -277,20 +277,44 @@ which will be cleaned up when BODY is finished."
                         "tmp.XXXXXX" (ensure-directory-pathname directory)))
                       "'${TMPDIR:-/tmp}'/tmp.XXXXXX")))
     (multiple-value-bind (out exit)
-        ;; mktemp(1) is not POSIX; the only POSIX way is this M4 way,
-        ;; apparently, but even though m4(1) is POSIX it seems like it could
-        ;; often be absent, so have a fallback.  It would be better to avoid
-        ;; passing any arguments to mktemp(1) as these may differ on different
-        ;; platforms, but hopefully just a template is okay.
+        ;; mktemp(1) is not POSIX; the only POSIX sh technique at the time of
+        ;; writing is to use m4(1)'s mkstemp macro.  However, m4 is sometimes
+        ;; not present, so fall back to mktemp(1).  Hopefully passing the
+        ;; template as the only command line option to mktemp(1) is portable.
+        ;;
+        ;; Although POSIX.1-2017 says that if m4(1) fails to create a
+        ;; temporary file it should exit nonzero, many m4(1) implementations
+        ;; just write to stderr and exit zero.  So we examine the stderr, and
+        ;; if there is any, exit nonzero ourselves.
         ;;
         ;; While GNU M4 mkstemp makes the temporary file at most readable and
         ;; writeable by its owner, POSIX doesn't require this, so set a umask.
         (connection-run
          connection
-#?"umask 077; echo 'mkstemp(${template})' 2>/dev/null | m4 2>/dev/null || mktemp '${template}'"
+         #?"umask 077
+if command -v m4 >/dev/null; then
+    if tmpf=\$(exec 3>&1
+        if err=\$(echo 'mkstemp(${template})' | m4 2>&1 1>&3); then
+            case $err in
+                ?*) printf >&2 \"%s\\n\" \"$err\"; exit 1 ;;
+                *)  exit 0 ;;
+            esac
+        else
+            case $err in
+                ?*) printf >&2 \"%s\\n\" \"$err\" ;;
+            esac
+            exit 1
+        fi); then
+        echo $tmpf
+    else
+        exit 1;
+    fi
+else
+    mktemp '${template}'
+fi"
          nil)
       (let ((lines (lines out)))
-        (if (and (zerop exit) lines (plusp (length (car lines))))
+        (if (and (zerop exit) lines)
             (car lines)
             (error 'run-failed
                    :cmd "(attempt to make a temporary file on remote)"
