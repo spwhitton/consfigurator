@@ -35,7 +35,7 @@
                           #:delete-empty-directory
 			  #:delete-directory-tree
                           #:with-safe-io-syntax
-                          #:read-file-form
+                          #:slurp-stream-form
                           #:safe-read-file-form
                           #:safe-read-from-string
                           #:compile-file*
@@ -72,7 +72,7 @@
            #:delete-empty-directory
 	   #:delete-directory-tree
            #:with-safe-io-syntax
-           #:read-file-form
+           #:slurp-stream-form
            #:safe-read-file-form
            #:safe-read-from-string
            #:compile-file*

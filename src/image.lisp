@@ -46,7 +46,7 @@
 
 (defparameter *fork-control* nil)
 
-(defmacro with-fork-request (request (out err exit) &body forms)
+(defmacro with-fork-request (prerequest request (out err exit) &body forms)
   (with-gensyms (input output)
     `(progn
        (unless (lisp-connection-p)
@@ -62,7 +62,8 @@
          (write-to-mkfifo (cons ,input ,output) *fork-control*)
          (with-open-file (,input ,input :direction :output :if-exists :append
                                         :element-type 'character)
-           (write-to-mkfifo ,request ,input))
+           (write-to-mkfifo ,prerequest ,input)
+           (write-to-mkfifo ,request    ,input))
          (destructuring-bind (,out ,err ,exit)
              (safe-read-file-form ,output :element-type 'character)
            ,@forms)))))
@@ -73,20 +74,25 @@
 ;;; carry over *HOST*, *CONNECTION* and *CONSFIGURATOR-DEBUG-LEVEL*, and in
 ;;; the latter case we do not carry over any of these by default.
 
-(defmacro eval-in-grandchild (request (out err exit) &body forms)
-  "Evaluate REQUEST, a readably printable Lisp form, in a grandchild process.
-REQUEST must be evaluable using only definitions established statically by
-your consfig, or in one of the ASDF systems upon which your consfig depends.
-Then bind OUT, ERR and EXIT to the stdout, stderr and exit code of that
-process, respectively, and evaluate FORMS."
-  `(with-fork-request
-       `(let ((*host* ,*host*)
-              (*connection* ,*connection*)
-              (*no-data-sources* t)
-              (*consfigurator-debug-level* ,*consfigurator-debug-level*))
-          ,,request)
-       (,out ,err ,exit)
-     ,@forms))
+(defmacro eval-in-grandchild (prerequest request (out err exit) &body forms)
+  "Evaluate PREREQUEST and REQUEST, both readably printable Lisp forms, in a
+grandchild process.  PREREQUEST and REQUEST must be evaluable using only
+definitions established statically by your consfig, or in one of the ASDF
+systems upon which your consfig depends.  Then bind OUT, ERR and EXIT to the
+stdout, stderr and exit code of that process, respectively, and evaluate
+FORMS.
+
+PREREQUEST will be evaluated before the grandchild calls fork(2) to establish
+its own infrastructure for subsequent uses of this macro, and REQUEST after.
+Thus, PREREQUEST must not start up any threads."
+  (flet ((wrap (form)
+           ``(let ((*host* ,*host*)
+                   (*connection* ,*connection*)
+                   (*no-data-sources* t)
+                   (*consfigurator-debug-level* ,*consfigurator-debug-level*))
+               ,,form)))
+    `(with-fork-request ,(wrap prerequest) ,(wrap request) (,out ,err ,exit)
+       ,@forms)))
 
 (defun dump-consfigurator (filename form)
   (umask #o077)
@@ -114,7 +120,7 @@ The process which performs the dump will have its umask set to #o077, but
 implementation-specific image dumping code might undo this (SBCL, for example,
 changes the mode of the file to #o755).  You might want to ensure that the
 directory containing FILENAME is locked down."
-  (with-fork-request `(dump-consfigurator ,filename ',form) (out err exit)
+  (with-fork-request nil `(dump-consfigurator ,filename ',form) (out err exit)
     (declare (ignore out))
     (unless (zerop exit)
       (failed-change "~&Failed to dump image; stderr was ~%~%~A" err))))
@@ -238,9 +244,14 @@ already running from FILENAME."
           (with-open-file (*error-output* err :direction :output
                                               :if-exists :append
                                               :element-type 'character)
-            (with-fork-control
-              (eval (with-standard-io-syntax
-                      (read-file-form input :element-type 'character)))))))
+            ;; Try to ensure that the new fork control child does not end up
+            ;; with the actual request in its memory.
+            (with-open-file (input input :element-type 'character)
+              (flet ((eval-input ()
+                       (eval
+                        (with-standard-io-syntax (slurp-stream-form input)))))
+                (eval-input)
+                (with-fork-control (eval-input)))))))
     (unwind-protect
          (with-open-file (out out :element-type 'character)
            (with-open-file (err err :element-type 'character)

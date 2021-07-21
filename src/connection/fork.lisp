@@ -26,9 +26,8 @@
 
 (defmethod continue-connection ((connection fork-connection) remaining)
   (upload-all-prerequisite-data connection)
-  (eval-in-grandchild `(progn (post-fork ,connection)
-                              (continue-deploy* ,connection ',remaining))
-      (out err exit)
+  (eval-in-grandchild `(post-fork ,connection)
+      `(continue-deploy* ,connection ',remaining) (out err exit)
     (fresh-line)
     (princ out)
     (return-exit
