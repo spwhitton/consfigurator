@@ -26,6 +26,9 @@
   #+sbcl      (sb-posix:setgid gid)
   #-(or sbcl) (foreign-funcall "setgid" :unsigned-int uid :int))
 
+(defun initgroups (user gid)
+  (foreign-funcall "initgroups" :string user :unsigned-int gid :int))
+
 (defclass setuid-connection (rehome-connection fork-connection) ())
 
 (defmethod establish-connection ((type (eql :setuid)) remaining &key to)
@@ -59,14 +62,17 @@
 
 (defmethod post-fork ((connection setuid-connection))
   (let ((uid (connection-connattr connection :remote-uid))
-        (gid (connection-connattr connection :remote-gid)))
+        (gid (connection-connattr connection :remote-gid))
+        (user (connection-connattr connection :remote-user)))
     (run-program (list "chown" "-R"
                        (format nil "~A:~A" uid gid)
                        (unix-namestring (slot-value connection 'datadir))))
+    ;; We are privileged, so this sets the real, effective and saved IDs.
     (unless (zerop (setgid gid))
       (error "setgid(2) failed!"))
+    (unless (zerop (initgroups user gid))
+      (error "initgroups(3) failed!"))
     (unless (zerop (setuid uid))
       (error "setuid(2) failed!"))
     (posix-login-environment
-     (connection-connattr connection :remote-user)
-     (connection-connattr connection :remote-home))))
+     user (connection-connattr connection :remote-home))))
