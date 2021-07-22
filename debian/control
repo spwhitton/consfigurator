@@ -18,6 +18,7 @@ Build-Depends:
  python3-sphinx,
  sbcl,
  sphinx-common,
+ python3-sphinx-rtd-theme,
  texinfo,
 Standards-Version: 4.5.1
 Homepage: https://spwhitton.name/tech/code/consfigurator/
