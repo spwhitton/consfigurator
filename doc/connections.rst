@@ -97,7 +97,9 @@ Consfigurator sends your sudo password on stdin, so if the assumption that a
 password is required is violated, your sudo password will end up in the stdin
 to whatever command is being run using sudo.  There is no facility for
 directly passing in a passphrase; you must use ``:AS`` to obtain passwords
-from sources of prerequisite data.
+from sources of prerequisite data.  The passphrase will be written to a
+private temporary file which is deleted when the ``:SUDO`` connection is torn
+down.
 
 If any connection types which start up remote Lisp images occur before a
 ``:SUDO`` entry in your connection chain, ``ESTABLISH-CONNECTION`` will need
