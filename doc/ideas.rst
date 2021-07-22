@@ -34,14 +34,6 @@ Connections
   daemons might only be accessible over VPNs and the like, however, so it will
   need to be easy to override this.
 
-Data sources
-------------
-
-- It might be useful to have a data source which can just provide a single
-  item of data when registered.  Then in your consfig you can just register
-  this data source to make a particular file you have on your system available
-  to deployments.
-
 Core
 ----
 
