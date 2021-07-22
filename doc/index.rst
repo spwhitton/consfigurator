@@ -8,6 +8,7 @@ Consfigurator user's manual
    introduction
    installation
    tutorial/disk_image
+   tutorial/os_installation
    connections
    properties
    hosts
