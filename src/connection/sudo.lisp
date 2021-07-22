@@ -35,6 +35,22 @@
                      (get-data-protected-string
                       (strcat "--user-passwd--" host) user)))))
 
+;; With sudo -S, we must ensure that sudo's stdin is a pipe, not a file,
+;; because otherwise the program sudo invokes may rewind(stdin) and read the
+;; password, intentionally or otherwise.  And UIOP:RUN-PROGRAM empties input
+;; streams into temporary files, so there is the potential for this to happen
+;; when using :SUDO to apply properties to localhost.  Other connection types
+;; might work similarly.
+;;
+;; The simplest way to handle this would be to just put 'cat |' at the
+;; beginning of the shell command we construct, but that relies on cat(1) not
+;; calling rewind(stdin) either.  So we write the password input out to a
+;; temporary file ourselves, and use cat(1) to concatenate that file with the
+;; actual input.
+
+(defclass sudo-connection (shell-wrap-connection)
+  ((password-file :initarg :password-file)))
+
 (defmethod establish-connection ((type (eql :sudo))
                                  remaining
                                  &key
@@ -42,56 +58,41 @@
                                    password)
   (declare (ignore remaining))
   (informat 1 "~&Establishing sudo connection to ~A" user)
-  (make-instance 'sudo-connection
-                 :connattrs `(:remote-user ,user)
-                 ;; we'll send the password followed by ^M, then the real
-                 ;; stdin.  use CODE-CHAR in this way so that we can be sure
-                 ;; ASCII ^M is what will get emitted.
-                 :password (and password
-                                (make-passphrase
-                                 (strcat (passphrase password)
-                                         (string (code-char 13)))))))
+  (make-instance
+   'sudo-connection
+   :connattrs `(:remote-user ,user)
+   :password-file (and password
+                       (let ((file (mktemp)))
+                         ;; We'll send the password followed by ^M, then the
+                         ;; real stdin.  Use CODE-CHAR in this way so that we
+                         ;; can be sure ASCII ^M is what will get emitted.
+                         (writefile file (strcat (passphrase password)
+                                                 (string (code-char 13)))
+                                    :mode #o600)
+                         file))))
 
-(defclass sudo-connection (shell-wrap-connection)
-  ((password :initarg :password)))
+(defmethod connection-teardown :after ((connection sudo-connection))
+  (when-let ((file (slot-value connection 'password-file)))
+    (delete-remote-trees file)))
 
-(defmethod get-sudo-password ((connection sudo-connection))
-  (let ((value (slot-value connection 'password)))
-    (and value (passphrase value))))
-
-(defmethod connection-shell-wrap ((connection sudo-connection) cmd)
-  ;; Wrap in sh -c so that it is more likely we are either asked for a
-  ;; password for all our commands or not asked for one for any.
-  ;;
-  ;; Preserve SSH_AUTH_SOCK for root to enable this sort of workflow: deploy
-  ;; laptop using (:SUDO :SBCL) and then DEFHOST for laptop contains (DEPLOYS
-  ;; ((:SSH :TO "root")) ...) to deploy a VM running on the laptop.
-  ;;
-  ;; This only works for sudoing to root because only the superuser can access
-  ;; the socket (and was always able to, so we're not granting new access
-  ;; which may be unwanted).
-  (let ((user (connection-connattr connection :remote-user)))
-    (format
-     nil
-"sudo -HkS --prompt=\"\" ~:[~;--preserve-env=SSH_AUTH_SOCK ~]--user=~A sh -c ~A"
-     (string= user "root") user (escape-sh-token cmd))))
-
-(defmethod connection-run ((c sudo-connection) cmd (input null))
-  (call-next-method c cmd (get-sudo-password c)))
-
-(defmethod connection-run ((c sudo-connection) cmd (input string))
-  (call-next-method c cmd (strcat (get-sudo-password c) input)))
-
-(defmethod connection-run ((connection sudo-connection) cmd (input stream))
-  (call-next-method connection
-                    cmd
-                    (if-let ((password (get-sudo-password connection)))
-                      (make-concatenated-stream
-                       (if (subtypep (stream-element-type input) 'character)
-                           (make-string-input-stream password)
-                           (babel-streams:make-in-memory-input-stream
-                            (babel:string-to-octets
-                             password :encoding :UTF-8)
-                            :element-type (stream-element-type input)))
-                       input)
-                      input)))
+(defmethod connection-run ((connection sudo-connection) cmd input)
+  (let* ((file (slot-value connection 'password-file))
+         (user (connection-connattr connection :remote-user))
+         (prefix (if file
+                     (format nil "cat ~A - | sudo -HkS --prompt=\"\""
+                             (escape-sh-token file))
+                     "sudo -Hkn")))
+    ;; Wrap in sh -c so that it is more likely we are either asked for a
+    ;; password for all our commands or not asked for one for any.
+    ;;
+    ;; Preserve SSH_AUTH_SOCK for root to enable this sort of workflow: deploy
+    ;; laptop using (:SUDO :SBCL) and then DEFHOST for laptop contains
+    ;; (DEPLOYS ((:SSH :TO "root")) ...) to deploy a VM running on the laptop.
+    ;;
+    ;; This only works for sudoing to root because only the superuser can
+    ;; access the socket (and was always able to, so we're not granting new
+    ;; access which may be unwanted).
+    (mrun :may-fail :input input
+          (format nil
+                  "~A ~:[~;--preserve-env=SSH_AUTH_SOCK ~]--user=~A sh -c ~A"
+                  prefix (string= user "root") user (escape-sh-token cmd)))))

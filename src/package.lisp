@@ -121,6 +121,7 @@
            #:run
            #:mrun
            #:with-remote-temporary-file
+           #:mktemp
            #:with-remote-current-directory
            #:run-failed
            #:runlines
