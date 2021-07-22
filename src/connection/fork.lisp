@@ -28,8 +28,7 @@
   (upload-all-prerequisite-data connection)
   (eval-in-grandchild `(post-fork ,connection)
       `(continue-deploy* ,connection ',remaining) (out err exit)
-    (fresh-line)
-    (princ out)
+    (inform t (lines out))
     (return-exit
      exit
      :on-failure (failed-change
