@@ -67,12 +67,12 @@
     (run-program (list "chown" "-R"
                        (format nil "~A:~A" uid gid)
                        (unix-namestring (slot-value connection 'datadir))))
+    (posix-login-environment
+     user (connection-connattr connection :remote-home))
     ;; We are privileged, so this sets the real, effective and saved IDs.
     (unless (zerop (setgid gid))
       (error "setgid(2) failed!"))
     (unless (zerop (initgroups user gid))
       (error "initgroups(3) failed!"))
     (unless (zerop (setuid uid))
-      (error "setuid(2) failed!"))
-    (posix-login-environment
-     user (connection-connattr connection :remote-home))))
+      (error "setuid(2) failed!"))))
