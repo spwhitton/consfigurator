@@ -21,7 +21,7 @@
 ;; currently we only check whether we're root, but, for example, on Linux, we
 ;; might have a CAP_* which lets us chroot as non-root
 (defun can-chroot ()
-  (zerop (foreign-funcall "geteuid" :int)))
+  (zerop (foreign-funcall "geteuid" :unsigned-int)))
 
 (defmethod establish-connection ((type (eql :chroot)) remaining &key into)
   (establish-connection (if (and (lisp-connection-p)
@@ -113,7 +113,8 @@ should be the mount point, without the chroot's root prefixed.")
     (rehome-connection chroot-connection fork-connection) ())
 
 (defmethod establish-connection ((type (eql :chroot.fork)) remaining &key into)
-  (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
+  (unless (and (lisp-connection-p)
+               (zerop (foreign-funcall "geteuid" :unsigned-int)))
     (error "~&Forking into a chroot requires a Lisp image running as root"))
   (informat 1 "~&Forking into chroot at ~A" into)
   (let* ((into* (ensure-directory-pathname into))
