@@ -85,13 +85,17 @@ FORMS.
 PREREQUEST will be evaluated before the grandchild calls fork(2) to establish
 its own infrastructure for subsequent uses of this macro, and REQUEST after.
 Thus, PREREQUEST must not start up any threads."
-  (flet ((wrap (form)
+  (flet ((wrap (&rest forms)
            ``(let ((*host* ,*host*)
                    (*connection* ,*connection*)
                    (*no-data-sources* t)
                    (*consfigurator-debug-level* ,*consfigurator-debug-level*))
-               ,,form)))
-    `(with-fork-request ,(wrap prerequest) ,(wrap request) (,out ,err ,exit)
+               ,,@forms)))
+    `(with-fork-request
+         ,(wrap '`(posix-login-environment
+                   ,(get-connattr :remote-user) ,(get-connattr :remote-home))
+                prerequest)
+         ,(wrap request) (,out ,err ,exit)
        ,@forms)))
 
 (defun dump-consfigurator (filename form)
