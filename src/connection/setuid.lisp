@@ -48,8 +48,10 @@
            (datadir
              (ensure-directory-pathname
               (stripln
-               ;; su(1) is not POSIX but very likely to be present
-               ;; TODO however, this use of su(1) uses a non-portable -c argument
+               ;; su(1) is not POSIX but very likely to be present.  Note that
+               ;; the -c argument here is to the user's login shell, not the
+               ;; -c argument to su(1) on, e.g., FreeBSD.  So should be fairly
+               ;; portable.
                (mrun
                 "su" to "-c"
                 "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))

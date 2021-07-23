@@ -31,7 +31,7 @@ The output of the cronjob will be mailed only if the job exits nonzero."
   (:hostattrs
    ;; /etc/cron.* is Debian-specific.  Also, we rely on runuser(1), which is
    ;; Linux-specific.  This is done because su(1) for non-interactive usage
-   ;; has some pitfalls, and the command line argument '-c' is not portable.
+   ;; has some pitfalls.
    (os:required 'os:debianlike))
   (let* ((times (not (keywordp when)))
          (dir (ensure-directory-pathname

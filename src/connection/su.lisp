@@ -28,7 +28,8 @@
 (defclass su-connection (shell-wrap-connection)
   ((user :initarg :user)))
 
-;; TODO -c is not portable to other su implementations.
+;; Note that the -c here is an argument to the user's login shell, not the -c
+;; argument to su(1) on, e.g., FreeBSD.  So this should be fairly portable.
 (defmethod connection-shell-wrap ((connection su-connection) cmd)
   (format nil "su ~A -c ~A"
           (escape-sh-token (slot-value connection 'user))
