@@ -273,6 +273,8 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
          (when (directory-exists-p source)
            (rename-file source (ensure-directories-exist
                                 #P"/root/.cache/consfigurator/"))))
+       (setf (get-connattr :remote-user) "root")
+       (setf (get-connattr :remote-home) "/root")
        (posix-login-environment "root" "/root")
 
        ;; Remount (mainly virtual) filesystems that other properties we will
