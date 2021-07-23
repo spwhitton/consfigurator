@@ -600,7 +600,7 @@ interactive debugger."))
 (defun posix-login-environment (logname home)
   "Reset the environment after switching UID, or similar, in a :LISP connection.
 Does not currently establish a PAM session."
-  (let ((euid (foreign-funcall "geteuid" :int))
+  (let ((euid (foreign-funcall "geteuid" :unsigned-int))
         (maybe-preserve '("TERM")))
     (when (zerop euid)
       (push "SSH_AUTH_SOCK" maybe-preserve))

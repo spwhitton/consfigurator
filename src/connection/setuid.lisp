@@ -32,7 +32,8 @@
 (defclass setuid-connection (rehome-connection fork-connection) ())
 
 (defmethod establish-connection ((type (eql :setuid)) remaining &key to)
-  (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
+  (unless (and (lisp-connection-p)
+               (zerop (foreign-funcall "geteuid" :unsigned-int)))
     (error "~&SETUIDing requires a Lisp image running as root"))
   (informat 1 "~&SETUIDing to ~A" to)
   (multiple-value-bind (match groups)
