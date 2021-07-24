@@ -457,7 +457,7 @@ Preprocessing must occur in the root Lisp."))
                            *error-output*
                            "~&Failed to compile and/or load:~%~A~&~%Compile and/or load output:~%~%~A"
                            c string)
-                          (uiop:quit 2)))
+                          (uiop:quit 3)))
                       (when (>= *consfigurator-debug-level* 3)
                         (format t "~&~A" string))))
                  ;; Delete old FASLs.  With SBCL they are megabytes in size.
