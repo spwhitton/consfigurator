@@ -6,7 +6,7 @@ Installation
 Debian and Debian derivatives
 -----------------------------
 
-The most recent tagged release of Consfigurator is included in `Debian
+The most recent tagged release of Consfigurator is usually included in `Debian
 unstable`_, and the .deb there should work fine on Debian stable and testing,
 and derivatives like Ubuntu.  After adding an apt source for unstable, if
 necessary, ``apt-get install cl-consfigurator/unstable``.
