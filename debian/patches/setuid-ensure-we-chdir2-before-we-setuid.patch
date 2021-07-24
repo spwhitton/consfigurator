@@ -1,0 +1,28 @@
+From: Sean Whitton <spwhitton@spwhitton.name>
+Date: Fri, 23 Jul 2021 08:43:06 -0700
+X-Dgit-Generated: 0.8.0-2 927cdd896fd1a4d64691d50a90cdd11ce7d675f9
+Subject: :SETUID: ensure we chdir(2) before we setuid(2)
+
+Signed-off-by: Sean Whitton <spwhitton@spwhitton.name>
+(cherry picked from commit ae2f8d30cbcd82126de7daeb4b94dd05d5b46f01)
+
+---
+
+--- consfigurator-0.8.0.orig/src/connection/setuid.lisp
++++ consfigurator-0.8.0/src/connection/setuid.lisp
+@@ -67,12 +67,12 @@
+     (run-program (list "chown" "-R"
+                        (format nil "~A:~A" uid gid)
+                        (unix-namestring (slot-value connection 'datadir))))
++    (posix-login-environment
++     user (connection-connattr connection :remote-home))
+     ;; We are privileged, so this sets the real, effective and saved IDs.
+     (unless (zerop (setgid gid))
+       (error "setgid(2) failed!"))
+     (unless (zerop (initgroups user gid))
+       (error "initgroups(3) failed!"))
+     (unless (zerop (setuid uid))
+-      (error "setuid(2) failed!"))
+-    (posix-login-environment
+-     user (connection-connattr connection :remote-home))))
++      (error "setuid(2) failed!"))))

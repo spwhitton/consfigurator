@@ -1,0 +1,65 @@
+From: Sean Whitton <spwhitton@spwhitton.name>
+Date: Fri, 23 Jul 2021 11:37:25 -0700
+X-Dgit-Generated: 0.8.0-2 4719c2966d0ddb4cfa6855aacfc6a4774c18bd70
+Subject: return type in FOREIGN-FUNCALL of geteuid(2) is unsigned
+
+Signed-off-by: Sean Whitton <spwhitton@spwhitton.name>
+(cherry picked from commit 885b9f3f762cdf18ff358509fd8838f8222b43ba)
+
+---
+
+--- consfigurator-0.8.0.orig/src/connection/as.lisp
++++ consfigurator-0.8.0/src/connection/as.lisp
+@@ -21,7 +21,7 @@
+ ;; currently we only check whether we're root, but, for example, on Linux, we
+ ;; might have a CAP_* which lets us setuid as non-root
+ (defun can-setuid ()
+-  (zerop (foreign-funcall "geteuid" :int)))
++  (zerop (foreign-funcall "geteuid" :unsigned-int)))
+ 
+ (defmethod establish-connection ((type (eql :as)) remaining &key to)
+   "Establish a :SETUID or :SU connection to another user account, depending on
+--- consfigurator-0.8.0.orig/src/connection/chroot.lisp
++++ consfigurator-0.8.0/src/connection/chroot.lisp
+@@ -21,7 +21,7 @@
+ ;; currently we only check whether we're root, but, for example, on Linux, we
+ ;; might have a CAP_* which lets us chroot as non-root
+ (defun can-chroot ()
+-  (zerop (foreign-funcall "geteuid" :int)))
++  (zerop (foreign-funcall "geteuid" :unsigned-int)))
+ 
+ (defmethod establish-connection ((type (eql :chroot)) remaining &key into)
+   (establish-connection (if (and (lisp-connection-p)
+@@ -113,7 +113,8 @@ should be the mount point, without the c
+     (rehome-connection chroot-connection fork-connection) ())
+ 
+ (defmethod establish-connection ((type (eql :chroot.fork)) remaining &key into)
+-  (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
++  (unless (and (lisp-connection-p)
++               (zerop (foreign-funcall "geteuid" :unsigned-int)))
+     (error "~&Forking into a chroot requires a Lisp image running as root"))
+   (informat 1 "~&Forking into chroot at ~A" into)
+   (let* ((into* (ensure-directory-pathname into))
+--- consfigurator-0.8.0.orig/src/connection/setuid.lisp
++++ consfigurator-0.8.0/src/connection/setuid.lisp
+@@ -32,7 +32,8 @@
+ (defclass setuid-connection (rehome-connection fork-connection) ())
+ 
+ (defmethod establish-connection ((type (eql :setuid)) remaining &key to)
+-  (unless (and (lisp-connection-p) (zerop (foreign-funcall "geteuid" :int)))
++  (unless (and (lisp-connection-p)
++               (zerop (foreign-funcall "geteuid" :unsigned-int)))
+     (error "~&SETUIDing requires a Lisp image running as root"))
+   (informat 1 "~&SETUIDing to ~A" to)
+   (multiple-value-bind (match groups)
+--- consfigurator-0.8.0.orig/src/util.lisp
++++ consfigurator-0.8.0/src/util.lisp
+@@ -390,7 +390,7 @@ Should be called soon after fork(2) in c
+ (defun posix-login-environment (logname home)
+   "Reset the environment after switching UID, or similar, in a :LISP connection.
+ Does not currently establish a PAM session."
+-  (let ((euid (foreign-funcall "geteuid" :int))
++  (let ((euid (foreign-funcall "geteuid" :unsigned-int))
+         (maybe-preserve '("TERM")))
+     (when (zerop euid)
+       (push "SSH_AUTH_SOCK" maybe-preserve))

@@ -1,0 +1,5 @@
+add-posix-login-environment-and-use-in-s.patch
+setuid-connection-also-call-initgroups3.patch
+sudo-ensure-that-stdin-is-a-pipe-never-a.patch
+setuid-ensure-we-chdir2-before-we-setuid.patch
+return-type-in-foreign-funcall-of-geteui.patch

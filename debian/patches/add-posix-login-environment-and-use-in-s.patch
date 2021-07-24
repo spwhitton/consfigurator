@@ -1,0 +1,90 @@
+From: Sean Whitton <spwhitton@spwhitton.name>
+Date: Thu, 1 Jul 2021 23:08:58 -0700
+X-Dgit-Generated: 0.8.0-2 eb33733e65326f771822f1f4b767f47382eb4914
+Subject: add POSIX-LOGIN-ENVIRONMENT and use in :SETUID connection
+
+Signed-off-by: Sean Whitton <spwhitton@spwhitton.name>
+(cherry picked from commit 60d2ca122ee7dc29fc66b4364bcf79f5a7041b64)
+
+---
+
+--- consfigurator-0.8.0.orig/src/connection/setuid.lisp
++++ consfigurator-0.8.0/src/connection/setuid.lisp
+@@ -53,15 +53,13 @@
+                                           :datadir datadir
+                                           :connattrs `(:remote-uid ,uid
+                                                        :remote-gid ,gid
++                                                       :remote-user ,to
+                                                        :remote-home ,home))
+                            remaining))))
+ 
+ (defmethod post-fork ((connection setuid-connection))
+-  ;; TODO Set up the new environment more systematically.  Perhaps look at how
+-  ;; runuser(1) uses PAM to do this.
+   (let ((uid (connection-connattr connection :remote-uid))
+-        (gid (connection-connattr connection :remote-gid))
+-        (home (connection-connattr connection :remote-home)))
++        (gid (connection-connattr connection :remote-gid)))
+     (run-program (list "chown" "-R"
+                        (format nil "~A:~A" uid gid)
+                        (unix-namestring (slot-value connection 'datadir))))
+@@ -69,5 +67,6 @@
+       (error "setgid(2) failed!"))
+     (unless (zerop (setuid uid))
+       (error "setuid(2) failed!"))
+-    (setf (getenv "HOME") (unix-namestring home))
+-    (uiop:chdir home)))
++    (posix-login-environment
++     (connection-connattr connection :remote-user)
++     (connection-connattr connection :remote-home))))
+--- consfigurator-0.8.0.orig/src/package.lisp
++++ consfigurator-0.8.0/src/package.lisp
+@@ -1,7 +1,7 @@
+ (in-package :cl-user)
+ 
+ (defpackage :consfigurator
+-  (:use #:cl #:alexandria)
++  (:use #:cl #:alexandria #:cffi)
+   (:local-nicknames (#:re #:cl-ppcre))
+   (:shadowing-import-from #:uiop
+                           #:strcat
+@@ -100,6 +100,7 @@
+ 
+            #:unwind-protect-in-parent
+            #:cancel-unwind-protect-in-parent-cleanup
++           #:posix-login-environment
+ 
+            ;; connection.lisp
+            #:establish-connection
+--- consfigurator-0.8.0.orig/src/util.lisp
++++ consfigurator-0.8.0/src/util.lisp
+@@ -387,6 +387,29 @@ of this macro."
+ Should be called soon after fork(2) in child processes."
+   (signal 'in-child-process))
+ 
++(defun posix-login-environment (logname home)
++  "Reset the environment after switching UID, or similar, in a :LISP connection.
++Does not currently establish a PAM session."
++  (let ((euid (foreign-funcall "geteuid" :int))
++        (maybe-preserve '("TERM")))
++    (when (zerop euid)
++      (push "SSH_AUTH_SOCK" maybe-preserve))
++    (let ((preserved (loop for var in maybe-preserve
++                           for val = (getenv var)
++                           when val collect var and collect val)))
++      (unless (zerop (foreign-funcall "clearenv" :int))
++        (failed-change "clearenv(3) failed!"))
++      (loop for (var val) on preserved by #'cddr do (setf (getenv var) val)))
++    (setf (getenv "HOME") (drop-trailing-slash (unix-namestring home))
++          (getenv "USER") logname
++          (getenv "LOGNAME") logname
++          (getenv "SHELL") "/bin/sh"
++          (getenv "PATH")
++          (if (zerop euid)
++              "/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
++              "/usr/local/bin:/bin:/usr/bin"))
++    (uiop:chdir home)))
++
+ 
+ ;;;; Lisp data files
+ 

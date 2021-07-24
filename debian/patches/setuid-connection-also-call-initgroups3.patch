@@ -1,0 +1,43 @@
+From: Sean Whitton <spwhitton@spwhitton.name>
+Date: Wed, 21 Jul 2021 13:55:12 -0700
+X-Dgit-Generated: 0.8.0-2 07827bd9141d96ef89d05ba7f2596242ef0b6e27
+Subject: :SETUID connection: also call initgroups(3)
+
+Signed-off-by: Sean Whitton <spwhitton@spwhitton.name>
+(cherry picked from commit 052f5d522473f10fe46fd431b372de54f7a53e62)
+
+---
+
+--- consfigurator-0.8.0.orig/src/connection/setuid.lisp
++++ consfigurator-0.8.0/src/connection/setuid.lisp
+@@ -26,6 +26,9 @@
+   #+sbcl      (sb-posix:setgid gid)
+   #-(or sbcl) (foreign-funcall "setgid" :unsigned-int uid :int))
+ 
++(defun initgroups (user gid)
++  (foreign-funcall "initgroups" :string user :unsigned-int gid :int))
++
+ (defclass setuid-connection (rehome-connection fork-connection) ())
+ 
+ (defmethod establish-connection ((type (eql :setuid)) remaining &key to)
+@@ -59,14 +62,17 @@
+ 
+ (defmethod post-fork ((connection setuid-connection))
+   (let ((uid (connection-connattr connection :remote-uid))
+-        (gid (connection-connattr connection :remote-gid)))
++        (gid (connection-connattr connection :remote-gid))
++        (user (connection-connattr connection :remote-user)))
+     (run-program (list "chown" "-R"
+                        (format nil "~A:~A" uid gid)
+                        (unix-namestring (slot-value connection 'datadir))))
++    ;; We are privileged, so this sets the real, effective and saved IDs.
+     (unless (zerop (setgid gid))
+       (error "setgid(2) failed!"))
++    (unless (zerop (initgroups user gid))
++      (error "initgroups(3) failed!"))
+     (unless (zerop (setuid uid))
+       (error "setuid(2) failed!"))
+     (posix-login-environment
+-     (connection-connattr connection :remote-user)
+-     (connection-connattr connection :remote-home))))
++     user (connection-connattr connection :remote-home))))
