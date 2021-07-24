@@ -134,7 +134,7 @@ directory."
              (nconc
               (list "# Automatically updated by Consfigurator; do not edit" "")
               (loop for (k v) on env by #'cddr
-                    collect (strcat (symbol-name k) "=" v))
+                    collect (strcat (string-upcase (symbol-name k)) "=" v))
               (list "")
               jobs))))
      (if (tree-equal old new :test #'string=)

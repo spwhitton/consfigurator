@@ -365,7 +365,8 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
      (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
      (loop while env
            collect (format nil "~A=~A"
-                           (symbol-name (pop env)) (escape-sh-token (pop env)))
+                           (string-upcase (symbol-name (pop env)))
+                           (escape-sh-token (pop env)))
              into accum
            finally
               (when accum
