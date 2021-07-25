@@ -125,6 +125,10 @@
            #:return-exit
            #:posix-login-environment
 
+           #:define-error-retval-cfun
+
+           #:chroot
+
            ;; connection.lisp
            #:establish-connection
            #:continue-connection

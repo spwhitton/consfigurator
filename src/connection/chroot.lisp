@@ -120,10 +120,7 @@ should be the mount point, without the chroot's root prefixed.")
       (connection-teardown connection))))
 
 (defmethod post-fork ((connection chroot.fork-connection))
-  (with-slots (into) connection
-    (unless (zerop
-             (foreign-funcall "chroot" :string (unix-namestring into) :int))
-      (error "chroot(2) failed!")))
+  (chroot (unix-namestring (slot-value connection 'into)))
   (let ((home (connection-connattr connection :remote-home)))
     (setf (getenv "HOME") (unix-namestring home))
     ;; chdir, else our current working directory is a pointer to something

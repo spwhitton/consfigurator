@@ -584,8 +584,7 @@ Does not currently establish a PAM session."
     (let ((preserved (loop for var in maybe-preserve
                            for val = (getenv var)
                            when val collect var and collect val)))
-      (unless (zerop (foreign-funcall "clearenv" :int))
-        (failed-change "clearenv(3) failed!"))
+      (clearenv)
       (loop for (var val) on preserved by #'cddr do (setf (getenv var) val)))
     (setf (getenv "HOME") (drop-trailing-slash (unix-namestring home))
           (getenv "USER") logname
@@ -596,6 +595,40 @@ Does not currently establish a PAM session."
               "/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
               "/usr/local/bin:/bin:/usr/bin"))
     (uiop:chdir home)))
+
+
+;;;; System and libc calls which can fail
+
+;;; Osicat has an implementation of this but it's not exported.  However, we
+;;; are able to instantiate Osicat's POSIX-ERROR to simplify errno handling.
+
+(defmacro define-error-retval-cfun
+    ((&key (errno t) (failure-val -1)) &body defcfun-args)
+  (let ((defun (etypecase (car defcfun-args)
+                 (string (intern (string-upcase (car defcfun-args))))
+                 (list (cadar defcfun-args))))
+        (cfun (etypecase (car defcfun-args)
+                (string (car defcfun-args))
+                (list (caar defcfun-args)))))
+    `(defun ,defun ,(loop for arg in (cddr defcfun-args) collect (car arg))
+       ,@(and (eql errno :zero) '((nix:set-errno 0)))
+       (let ((result (foreign-funcall
+                      ,cfun
+                      ,@(loop for arg in (cddr defcfun-args)
+                              collect (cadr arg) collect (car arg))
+                      ,(cadr defcfun-args))))
+         (if ,(if (eql errno :zero)
+                  `(and (= ,failure-val result) (not (zerop (nix:get-errno))))
+                  `(= ,failure-val result))
+             (nix:posix-error ,(and errno '(nix:get-errno)) nil ',defun)
+             result)))))
+
+
+;;;; Miscellaneous system functions
+
+(define-error-retval-cfun () "clearenv" :int)
+
+(define-error-retval-cfun () "chroot" :int (path :string))
 
 
 ;;;; Lisp data files
