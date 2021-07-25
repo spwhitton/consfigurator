@@ -85,7 +85,18 @@
            #:compile-file-pathname*
 
            ;; libc.lisp
+           #:uid_t
+
+           #:+CLONE_NEWCGROUP+
+           #:+CLONE_NEWIPC+
+           #:+CLONE_NEWNET+
            #:+CLONE_NEWNS+
+           #:+CLONE_NEWPID+
+           #:+CLONE_NEWTIME+
+           #:+CLONE_NEWUSER+
+           #:+CLONE_NEWUTS+
+
+           #:+NS_GET_OWNER_UID+
 
            ;; util.lisp
            #:multiple-value-mapcan
@@ -136,6 +147,9 @@
 
            #:chroot
            #:unshare
+
+           #:mapc-open-input-streams
+           #:mapc-open-output-streams
 
            ;; connection.lisp
            #:establish-connection
@@ -319,6 +333,7 @@
 
            ;; image.lisp
            #:eval-in-grandchild
+           #:eval-in-reinvoked
            #:dump-consfigurator-in-grandchild
            #:wrong-execution-context-for-image-dump
            #:image-dumped
@@ -389,6 +404,11 @@
            #:+CAP-CHECKPOINT-RESTORE+
 
            #:capability-p))
+
+(defpackage :consfigurator.util.linux-namespace
+  (:use #:cl #:consfigurator #:consfigurator.util.posix1e #:cffi)
+  (:export #:setgroups-p
+           #:get-userns-owner))
 
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)
@@ -935,7 +955,8 @@
 (defpackage :consfigurator.connection.fork
   (:use #:cl #:alexandria #:consfigurator #:consfigurator.connection.local)
   (:export #:fork-connection
-           #:post-fork))
+           #:post-fork
+           #:init-hooks-connection))
 
 (defpackage :consfigurator.connection.rehome
   (:use #:cl #:consfigurator #:consfigurator.connection.fork)
@@ -987,6 +1008,15 @@
 	#:cffi)
   (:local-nicknames (#:re   #:cl-ppcre)
 		    (#:user #:consfigurator.property.user)))
+
+(defpackage :consfigurator.connection.linux-namespace
+  (:use #:cl
+        #:anaphora
+        #:alexandria
+        #:consfigurator
+        #:consfigurator.util.linux-namespace
+        #:consfigurator.connection.fork
+        #:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:alexandria #:consfigurator))

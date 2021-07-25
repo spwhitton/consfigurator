@@ -84,9 +84,10 @@ Dumping and reinvoking Lisp
 ---------------------------
 
 Remote Lisp images can dump executable images of themselves using the
-IMAGE-DUMPED property.  However, there are some limitations to how this
-feature can be used that are connected with changing execution context in the
-way that connection types like :CHROOT.FORK and :SETUID do.
+IMAGE-DUMPED property, and some connection types work by dumping and then
+immediately reinvoking Lisp.  However, there are some limitations to how these
+features can be used that are connected with changing execution context, in the
+way that :CHROOT.FORK, :SETUID, and the Linux namespace-entering connections do.
 
 Firstly, for at least some Lisp implementations, the build of Lisp that's
 running must be accessible via the filesystem in order for it to be possible

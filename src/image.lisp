@@ -74,6 +74,13 @@
 ;;; carry over *HOST*, *CONNECTION* and *CONSFIGURATOR-DEBUG-LEVEL*, and in
 ;;; the latter case we do not carry over any of these by default.
 
+(defun wrap-grandchild-request (&rest forms)
+  ``(let ((*host* ,*host*)
+          (*connection* ,*connection*)
+          (*no-data-sources* t)
+          (*consfigurator-debug-level* ,*consfigurator-debug-level*))
+      ,,@forms))
+
 (defmacro eval-in-grandchild (prerequest request (out err exit) &body forms)
   "Evaluate PREREQUEST and REQUEST, both readably printable Lisp forms, in a
 grandchild process.  PREREQUEST and REQUEST must be evaluable using only
@@ -85,20 +92,15 @@ FORMS.
 PREREQUEST will be evaluated before the grandchild calls fork(2) to establish
 its own infrastructure for subsequent uses of this macro, and REQUEST after.
 Thus, PREREQUEST must not start up any threads."
-  (flet ((wrap (&rest forms)
-           ``(let ((*host* ,*host*)
-                   (*connection* ,*connection*)
-                   (*no-data-sources* t)
-                   (*consfigurator-debug-level* ,*consfigurator-debug-level*))
-               ,,@forms)))
-    `(with-fork-request
-         ,(wrap '`(posix-login-environment
-                   ,(get-connattr :remote-uid)
-                   ,(get-connattr :remote-user)
-                   ,(get-connattr :remote-home))
-                prerequest)
-         ,(wrap request) (,out ,err ,exit)
-       ,@forms)))
+  `(with-fork-request
+       ,(wrap-grandchild-request
+         '`(posix-login-environment
+            ,(get-connattr :remote-uid)
+            ,(get-connattr :remote-user)
+            ,(get-connattr :remote-home))
+         prerequest)
+       ,(wrap-grandchild-request request) (,out ,err ,exit)
+     ,@forms))
 
 #+sbcl (defvar *sbcl-core-cksum* (local-cksum sb-ext:*core-pathname*))
 #+sbcl (defvar *sbcl-runtime-cksum* (local-cksum sb-ext:*runtime-pathname*))
@@ -142,6 +144,34 @@ Thus, PREREQUEST must not start up any threads."
     (declare (ignore out))
     (unless (zerop exit)
       (failed-change "~&Failed to dump image; stderr was ~%~%~A" err))))
+
+(defmacro eval-in-reinvoked (prerequest request (out err exit) &body forms)
+  "In a grandchild process, evaluate PREREQUEST, dump an executable image, and
+immediately reinvoke that image to evaluate REQUEST.  PREREQUEST and REQUEST
+must be evaluable using only definitions established statically by your
+consfig, or in one of the ASDF systems upon which your consfig depends.  Then
+bind OUT, ERR and EXIT to the stdout, stderr and exit code of that process,
+respectively, and evaluate FORMS."
+  (with-gensyms (tempdir)
+    ;; Create a temporary directory which will be readable only by the present
+    ;; user, because of how SBCL overrides the umask when dumping an image.
+    ;; Don't want to use ~/.cache/consfigurator/images because want to write
+    ;; to a tmpfs/ramdisk if possible.
+    `(with-local-temporary-directory (,tempdir)
+       (let ((file (merge-pathnames "image" ,tempdir)))
+         (%dump-consfigurator-in-grandchild
+          file ,(wrap-grandchild-request prerequest)
+          ;; Try to ensure that the new fork control child does not end up
+          ;; with the actual request in its memory.
+          '(with-backtrace-and-exit-code
+            (with-fork-control (eval (with-standard-io-syntax (read))))))
+         (nix:chmod file #o700)         ; ensure it's executable
+         (multiple-value-bind (,out ,err ,exit)
+             (run :may-fail :input (with-standard-io-syntax
+                                     (write-to-string
+                                      ,(wrap-grandchild-request request)))
+                  file)
+           ,@forms)))))
 
 (defun dump-consfigurator-in-grandchild
     (filename &optional (form `(let ((*no-data-sources* t)

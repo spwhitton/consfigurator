@@ -139,3 +139,33 @@ like chroot(2) and setuid(2) anyway.  Thus, typical usage on localhost would
 be something like::
 
   (deploy (:sudo :sbcl (:chroot.fork :into "...")) ...)
+
+Connections which use setns(2) to enter containers
+--------------------------------------------------
+
+When the current connection is a Lisp-type connection, connection types which
+enter Linux containers, such as ``:SYSTEMD-MACHINED``, invoke the setns(2)
+system call directly.  The implementation of this is the connection type
+``CONSFIGURATOR.CONNECTION.LINUX-NAMESPACE::SETNS``.  The implementation of
+the ``POST-FORK`` generic for that connection type is structured similarly to
+the nsenter(1) command from util-linux.  This has the advantage that
+``CONSFIGURATOR.CONNECTION.LINUX-NAMESPACE::SETNS`` should be reusable for
+implementing connection types which enter other kinds of Linux container; the
+container runtime-specific code is limited to determining the PID of the
+container's leading process.  However, there are some security implications to
+this approach.
+
+Firstly, the current implementation does not join the control group of the
+container's leading process, and thus the Consfigurator process running inside
+the container is not subject to resource limits applied to the container.  It
+might be possible for a process in the container to exploit this to escape its
+resource limits.
+
+Secondly, we do not attempt to enter the LSM security context of the
+container, such as the container's SELinux execution context or AppArmor
+profile.  This is because LSM usage is container runtime-specific.  In the
+case of unprivileged containers which make use of user namespaces, however,
+failing to enter the LSM security context typically does not breach container
+security.  For such containers, employment of an LSM serves as an extra layer
+of protection against kernel exploits, not as part of the enforcement of the
+container's basic security model.

@@ -598,10 +598,10 @@ interactive debugger."))
       (2 (signal 'skipped-properties) nil)
       (t                              ,on-failure))))
 
-(defun posix-login-environment (uid logname home)
+(defun posix-login-environment (&optional uid logname home)
   "Reset the environment after switching UID, or similar, in a :LISP connection.
 Does not currently establish a PAM session."
-  (let ((rootp (zerop uid))
+  (let ((rootp (zerop (or uid (nix:geteuid))))
         (maybe-preserve '("TERM")))
     (when rootp
       (push "SSH_AUTH_SOCK" maybe-preserve))
@@ -610,15 +610,16 @@ Does not currently establish a PAM session."
                            when val collect var and collect val)))
       (clearenv)
       (loop for (var val) on preserved by #'cddr do (setf (getenv var) val)))
-    (setf (getenv "HOME") (drop-trailing-slash (unix-namestring home))
-          (getenv "USER") logname
-          (getenv "LOGNAME") logname
-          (getenv "SHELL") "/bin/sh"
+    (when logname
+      (setf (getenv "USER") logname (getenv "LOGNAME") logname))
+    (when home
+      (setf (getenv "HOME") (drop-trailing-slash (unix-namestring home)))
+      (uiop:chdir home))
+    (setf (getenv "SHELL") "/bin/sh"
           (getenv "PATH")
           (if rootp
               "/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
-              "/usr/local/bin:/bin:/usr/bin"))
-    (uiop:chdir home)))
+              "/usr/local/bin:/bin:/usr/bin"))))
 
 
 ;;;; System and libc calls which can fail
