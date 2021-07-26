@@ -290,26 +290,20 @@ Called by connection types which start up remote Lisp images."
         (requirements (make-instance 'asdf-requirements)))
     (with-slots (asdf-requirements) requirements
       (dolist (system (propspec-systems (host-propspec *host*)))
+        ;; This call to ASDF:REQUIRED-COMPONENTS seems to get us everything,
+        ;; but see the warning in the comment attached to the call to
+        ;; ASDF:REQUIRED-COMPONENTS in the (defmethod component-depends-on ((o
+        ;; gather-operation) (s system))) implementation in ASDF's source.
         (dolist (requirement
-                 ;; This call to ASDF:REQUIRED-COMPONENTS is based on one in
-                 ;; the definition of the ASDF:COMPONENT-DEPENDS-ON generic
-                 ;; for ((o gather-operation) (s system)).  We use
-                 ;; ASDF:COMPILE-OP as the :KEEP-OPERATION because
-                 ;; ASDF::BASIC-COMPILE-OP is not exported, so this won't work
-                 ;; for certain exotic systems.  See the comment in ASDF source.
-                 ;;
-                 ;; TODO Can we detect when this won't work and fail, possibly
-                 ;; falling back to ASDF:MONOLITHIC-CONCATENATE-SOURCE-OP?
                  (asdf:required-components
                   (asdf:find-system system)
-                  :other-systems t :component-type 'asdf:system
-                  :keep-component 'asdf:system :goal-operation 'asdf:load-op
-                  :keep-operation 'asdf:compile-op))
-          ;; Handle UIOP specially because it comes with ASDF.
-          (unless (string= "uiop" (asdf:component-name requirement))
-            ;; What we really want instead of PUSHNEW here is a proper
-            ;; topological sort.
-            (pushnew requirement asdf-requirements))))
+                  :other-systems t :keep-component 'asdf:system
+                  :goal-operation 'asdf:monolithic-compile-bundle-op))
+          (let ((name (asdf:component-name requirement)))
+            ;; Handle UIOP specially because it comes with ASDF.
+            (unless
+                (memstring= (asdf:primary-system-name name) '("asdf" "uiop"))
+              (pushnew requirement asdf-requirements)))))
       (nreversef asdf-requirements))
     requirements))
 
@@ -325,67 +319,57 @@ Called by connection types which start up remote Lisp images.")
           when (and (subtypep type 'asdf:system)
                     (not (subtypep type 'asdf:require-system)))
             do (require-data "--lisp-system"
-                             (asdf:component-name requirement)))))
+                             (asdf:primary-system-name requirement)))))
 
 (defgeneric asdf-requirements-load-form (asdf-requirements)
   (:documentation
-   "Return form to (compile and) load each of the Lisp systems specified in
+   "Return form to unpack and load each of the Lisp systems specified in
 ASDF-REQUIREMENTS, after having uploaded those Lisp systems using
 UPLOAD-ALL-PREREQUISITE-DATA.")
   (:method ((asdf-requirements asdf-requirements))
-    ;; As soon as we recompile something, we have to recompile everything else
-    ;; following it in the list, because macro definitions may have changed.
-    `(let* (recompile
-            (file (merge-pathnames "consfigurator/fasls"
-                                   (ensure-directory-pathname
-                                    (or (getenv "XDG_CACHE_HOME")
-                                        (strcat (getenv "HOME") "/.cache")))))
-            (record (with-open-file (stream file :if-does-not-exist nil)
-                      (and stream (safe-read-from-string
-                                   (slurp-stream-string stream))))))
-       (unwind-protect
-            (progn
-              ,@(loop
-                  with table = (get-connattr 'cached-data)
-                  for requirement
-                    in (slot-value asdf-requirements 'asdf-requirements)
-                  for name = (asdf:component-name requirement)
-                  collect
-                  (etypecase requirement
-                    (asdf:require-system `(require ,name))
-                    (asdf:system
-                     (let ((source
-                             (gethash (cons "--lisp-system" name) table)))
-                       (unless source
-                         (error "Somehow Lisp system ~A was not uploaded."
-                                name))
-                       ;; Using COMPILE-FILE-PATHNAME* like this has the
-                       ;; advantage that, for example, SBCL will save the FASL
-                       ;; somewhere from which only the same version of SBCL
-                       ;; will try to load FASLs.
-                       `(let ((fasl (compile-file-pathname* ,source)))
-                          (if (and (file-exists-p fasl) (not recompile))
-                              (load fasl)
-                              ;; The concatenated source of at least
-                              ;; Alexandria won't compile unless it's loaded
-                              ;; first.  This means we compile every library
-                              ;; that's changed since the last deploy twice,
-                              ;; which is not ideal.  One possible improvement
-                              ;; would be to maintain a list of systems known
-                              ;; not to have this problem, such as
-                              ;; Consfigurator, and switch the order of the
-                              ;; LOAD and COMPILE-FILE* here for those.
-                              (let ((pair (assoc ,source record)))
-                                (load ,source)
-                                (or (compile-file* ,source)
-                                    (error "Failed to compile ~S" ,source))
-                                (if pair
-                                    (rplacd pair fasl)
-                                    (setq record (acons ,source fasl record)))
-                                (setq recompile t)))))))))
-         (with-open-file (stream file :direction :output :if-exists :supersede)
-           (with-standard-io-syntax
-             (prin1 record stream)))))))
+    `(progn
+       (let* ((cache (ensure-directory-pathname
+                      (or (getenv "XDG_CONFIG_HOME")
+                          (strcat (getenv "HOME") "/.cache"))))
+              (dest (ensure-directories-exist
+                     (merge-pathnames "consfigurator/systems/" cache)))
+              (file (merge-pathnames
+                     "consfigurator/extracted-systems" cache))
+              (record (and (file-exists-p file)
+                           (safe-read-file-form file))))
+         (unwind-protect
+              (with-current-directory (dest)
+                ,@(loop
+                    for (iden1 . system) being the hash-keys
+                      in (get-connattr 'cached-data) using (hash-value tarball)
+                    for version = (parse-integer (pathname-name tarball))
+                    and system* = (ensure-directory-pathname system)
+                    when (string= "--lisp-system" iden1)
+                      collect
+                    `(let ((pair (assoc ,system record :test #'string=)))
+                       (unless (and pair (>= (cdr pair) ,version))
+                         (when (directory-exists-p ,system*)
+                           (delete-directory-tree
+                            ,system*
+                            :validate
+                            (lambda (dir)
+                              (and (relative-pathname-p dir)
+                                   (not (search ".." (unix-namestring dir)))))))
+                         (run-program
+                          (list "tar" "-C" (ensure-directories-exist
+                                            ,(unix-namestring system*))
+                                "-xzf" ,(unix-namestring tarball)))
+                         (if pair
+                             (rplacd pair ,version)
+                             (setq record (acons ,system ,version record)))))))
+           (with-open-file (stream file :direction :output
+                                        :if-exists :supersede)
+             (with-standard-io-syntax (prin1 record stream))))
+         (asdf:clear-source-registry)
+         (asdf:initialize-source-registry
+          `(:source-registry (:tree ,dest) :ignore-inherited-configuration)))
+       ,@(loop for system in (propspec-systems (host-propspec *host*))
+               collect `(asdf:load-system ,system)))))
 
 (defgeneric continue-deploy*-program (remaining-connections asdf-requirements)
   (:documentation
@@ -460,18 +444,6 @@ Preprocessing must occur in the root Lisp."))
                           (uiop:quit 3)))
                       (when (>= *consfigurator-debug-level* 3)
                         (format t "~&~A" string))))
-                 ;; Delete old FASLs.  With SBCL they are megabytes in size.
-                 (with-lisp-data-file
-                     (record (merge-pathnames
-                              "consfigurator/fasls"
-                              (ensure-directory-pathname
-                               (or (getenv "XDG_CACHE_HOME")
-                                   (strcat (getenv "HOME") "/.cache")))))
-                   (loop for cell in record
-                         if (file-exists-p (car cell))
-                           collect cell into accum
-                         else do (ignore-errors (delete-file (cdr cell)))
-                         finally (setq record accum)))
                  ;; Continue the deployment.  The READ indirection is to try
                  ;; to ensure that the fork control child does not end up with
                  ;; information about the deployment in its memory.

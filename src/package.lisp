@@ -26,6 +26,7 @@
                           #:enough-pathname
                           #:pathname-equal
                           #:subpathp
+                          #:relative-pathname-p
                           #:getenv
                           #:subdirectories
                           #:directory-files
@@ -63,6 +64,7 @@
            #:enough-pathname
            #:pathname-equal
            #:subpathp
+           #:relative-pathname-p
            #:getenv
            #:subdirectories
            #:directory-files
@@ -867,7 +869,7 @@
 		    (#:user #:consfigurator.property.user)))
 
 (defpackage :consfigurator.data.asdf
-  (:use #:cl #:consfigurator))
+  (:use #:cl #:alexandria #:consfigurator))
 
 (defpackage :consfigurator.data.pgp
   (:use #:cl #:consfigurator #:alexandria)
