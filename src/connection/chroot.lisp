@@ -21,7 +21,7 @@
 ;; currently we only check whether we're root, but, for example, on Linux, we
 ;; might have a CAP_* which lets us chroot as non-root
 (defun can-chroot ()
-  (zerop (foreign-funcall "geteuid" :unsigned-int)))
+  (zerop (nix:geteuid)))
 
 (defmethod establish-connection ((type (eql :chroot)) remaining &key into)
   (establish-connection (if (and (lisp-connection-p) (can-chroot))
@@ -97,16 +97,11 @@ should be the mount point, without the chroot's root prefixed.")
 
 ;;;; :CHROOT.FORK
 
-(defun chroot (path)
-  #+sbcl      (sb-posix:chroot path)
-  #-(or sbcl) (foreign-funcall "chroot" :string path :int))
-
 (defclass chroot.fork-connection
     (rehome-connection chroot-connection fork-connection) ())
 
 (defmethod establish-connection ((type (eql :chroot.fork)) remaining &key into)
-  (unless (and (lisp-connection-p)
-               (zerop (foreign-funcall "geteuid" :unsigned-int)))
+  (unless (and (lisp-connection-p) (zerop (nix:geteuid)))
     (error "~&Forking into a chroot requires a Lisp image running as root"))
   (informat 1 "~&Forking into chroot at ~A" into)
   (let* ((into (ensure-pathname into :want-absolute t :ensure-directory t))
@@ -125,8 +120,10 @@ should be the mount point, without the chroot's root prefixed.")
       (connection-teardown connection))))
 
 (defmethod post-fork ((connection chroot.fork-connection))
-  (unless (zerop (chroot (slot-value connection 'into)))
-    (error "chroot(2) failed!"))
+  (with-slots (into) connection
+    (unless (zerop
+             (foreign-funcall "chroot" :string (unix-namestring into) :int))
+      (error "chroot(2) failed!")))
   (let ((home (connection-connattr connection :remote-home)))
     (setf (getenv "HOME") (unix-namestring home))
     ;; chdir, else our current working directory is a pointer to something

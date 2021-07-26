@@ -370,15 +370,7 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
                             (char +alphanum+ (random #.(length +alphanum+))))
                    finally (return result)))
            (mkfifo (temp)
-             (handler-case
-                 (progn
-                   #+sbcl (sb-posix:mkfifo temp #o600)
-                   #-(or sbcl)
-                   (unless (zerop
-                            (foreign-funcall
-                             "mkfifo" :string temp :unsigned-int #o600 :int))
-                     (error "mkfifo(3) failed!"))
-                   t)
+             (handler-case (nix:mkfifo temp #o600)
                (serious-condition (c)
                  (if (or (file-exists-p temp) (directory-exists-p temp))
                      nil
@@ -507,30 +499,15 @@ previous output."
 
 ;;;; Forking utilities
 
-;;; Use only implementation-specific fork, waitpid etc. calls to avoid thread
-;;; woes.  Things like chroot(2) and setuid(2), however, should be okay.
+;;; Use implementation-specific fork(2) wrapper, and never fork(2) itself, to
+;;; allow the implementation to handle things like finaliser threads.  For all
+;;; other syscalls/libc & POSIX macros like WIFEXITED, use CFFI, via Osicat
+;;; when there's a wrapper available, for portability.
 
 (defun fork ()
   ;; Normalise any other implementations such that we signal an error if
   ;; fork(2) returns -1, so caller doesn't have to check for that.
   #+sbcl (sb-posix:fork))
-
-(defun waitpid (pid options)
-  ;; Normalise any other implementations such that we always return (values
-  ;; PID EXIT-STATUS), as SB-POSIX:WAITPID does.
-  #+sbcl (sb-posix:waitpid pid options))
-
-(defun wifexited (status)
-  #+sbcl (sb-posix:wifexited status))
-
-(defun wexitstatus (status)
-  #+sbcl (sb-posix:wexitstatus status))
-
-(defun setsid ()
-  #+sbcl (sb-posix:setsid))
-
-(defun umask (mode)
-  #+sbcl (sb-posix:umask mode))
 
 (defmacro forked-progn (child-pid child-form &body parent-forms)
   (with-gensyms (retval)
@@ -600,9 +577,9 @@ interactive debugger."))
 (defun posix-login-environment (logname home)
   "Reset the environment after switching UID, or similar, in a :LISP connection.
 Does not currently establish a PAM session."
-  (let ((euid (foreign-funcall "geteuid" :unsigned-int))
+  (let ((rootp (zerop (nix:geteuid)))
         (maybe-preserve '("TERM")))
-    (when (zerop euid)
+    (when rootp
       (push "SSH_AUTH_SOCK" maybe-preserve))
     (let ((preserved (loop for var in maybe-preserve
                            for val = (getenv var)
@@ -615,7 +592,7 @@ Does not currently establish a PAM session."
           (getenv "LOGNAME") logname
           (getenv "SHELL") "/bin/sh"
           (getenv "PATH")
-          (if (zerop euid)
+          (if rootp
               "/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
               "/usr/local/bin:/bin:/usr/bin"))
     (uiop:chdir home)))

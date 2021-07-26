@@ -57,7 +57,7 @@
   (with-remote-temporary-file
       (temp :connection connection
             :directory (pathname-directory-pathname path))
-    (run-program `("chmod" ,(format nil "~O" mode) ,temp))
+    (nix:chmod temp mode)
     (etypecase content
       (string
        (with-open-file (stream temp :direction :output :if-exists :supersede)

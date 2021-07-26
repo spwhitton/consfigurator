@@ -18,22 +18,10 @@
 (in-package :consfigurator.connection.setuid)
 (named-readtables:in-readtable :consfigurator)
 
-(defun setuid (uid)
-  #+sbcl      (sb-posix:setuid uid)
-  #-(or sbcl) (foreign-funcall "setuid" :unsigned-int uid :int))
-
-(defun setgid (gid)
-  #+sbcl      (sb-posix:setgid gid)
-  #-(or sbcl) (foreign-funcall "setgid" :unsigned-int uid :int))
-
-(defun initgroups (user gid)
-  (foreign-funcall "initgroups" :string user :unsigned-int gid :int))
-
 (defclass setuid-connection (rehome-connection fork-connection) ())
 
 (defmethod establish-connection ((type (eql :setuid)) remaining &key to)
-  (unless (and (lisp-connection-p)
-               (zerop (foreign-funcall "geteuid" :unsigned-int)))
+  (unless (and (lisp-connection-p) (zerop (nix:geteuid)))
     (error "~&SETUIDing requires a Lisp image running as root"))
   (informat 1 "~&SETUIDing to ~A" to)
   (multiple-value-bind (match groups)
@@ -72,9 +60,4 @@
     (posix-login-environment
      user (connection-connattr connection :remote-home))
     ;; We are privileged, so this sets the real, effective and saved IDs.
-    (unless (zerop (setgid gid))
-      (error "setgid(2) failed!"))
-    (unless (zerop (initgroups user gid))
-      (error "initgroups(3) failed!"))
-    (unless (zerop (setuid uid))
-      (error "setuid(2) failed!"))))
+    (nix:setgid gid) (nix:initgroups user gid) (nix:setuid uid)))

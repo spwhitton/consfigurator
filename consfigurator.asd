@@ -13,6 +13,7 @@
                #:cl-interpol
                #:named-readtables
                #:cffi
+               #:osicat
                (:feature :sbcl (:require #:sb-posix))
                #:closer-mop
                #:agnostic-lizard

@@ -99,7 +99,7 @@ Thus, PREREQUEST must not start up any threads."
        ,@forms)))
 
 (defun dump-consfigurator (filename form)
-  (umask #o077)
+  (nix:umask #o077)
   (uiop:register-image-restore-hook (lambda () (eval form)) nil)
   (uiop:dump-image filename :executable t))
 
@@ -150,7 +150,7 @@ already running from FILENAME."
                   (eql :linux (uiop:operating-system))
                   (pathname-equal file (resolve-symlinks "/proc/self/exe")))
        (unless filename
-         (mrun "chmod" "0700" (pathname-directory-pathname file)))
+         (nix:chmod #o700 (unix-namestring (pathname-directory-pathname file))))
        (if form
            (dump-consfigurator-in-grandchild file form)
            (dump-consfigurator-in-grandchild file))))
@@ -183,7 +183,7 @@ already running from FILENAME."
                    #'force-output
                    *standard-output* *error-output* *debug-io* *terminal-io*)
                when (zerop (fork))
-                 do (setsid)
+                 do (nix:setsid)
                     (close ,fork-control)
                     (handle-fork-request input output)
                     (uiop:quit))
@@ -197,8 +197,9 @@ already running from FILENAME."
          (delete-file ,fork-control)
          (unwind-protect (progn ,@forms)
            (close *fork-control*)
-           (let ((status (nth-value 1 (waitpid child 0))))
-             (unless (and (wifexited status) (zerop (wexitstatus status)))
+           (let ((status (nth-value 1 (nix:waitpid child))))
+             (unless
+                 (and (nix:WIFEXITED status) (zerop (nix:WEXITSTATUS status)))
                (error "Fork control child did not exit zero."))))))))
 
 ;; IPC security considerations
@@ -258,8 +259,8 @@ already running from FILENAME."
     (unwind-protect
          (with-open-file (out out :element-type 'character)
            (with-open-file (err err :element-type 'character)
-             (let ((status (nth-value 1 (waitpid child 0))))
-               (unless (wifexited status)
+             (let ((status (nth-value 1 (nix:waitpid child))))
+               (unless (nix:WIFEXITED status)
                  (failed-change
                   "~&Grandchild process did not exit normally, status #x~(~4,'0X~)."
                   status))
@@ -268,7 +269,7 @@ already running from FILENAME."
                                               :element-type 'character)
                  (write-to-mkfifo (list (slurp-stream-string out)
                                         (slurp-stream-string err)
-                                        (wexitstatus status))
+                                        (nix:WEXITSTATUS status))
                                   output)))))
       (delete-file out) (delete-file err))))
 

@@ -1,7 +1,7 @@
 consfigurator (0.11.0-1) UNRELEASED; urgency=medium
 
   * New upstream release.
-  * Add dep and build-dep on cl-anaphora.
+  * Add deps and build-deps on cl-anaphora and cl-osicat.
 
  -- Sean Whitton <spwhitton@spwhitton.name>  Sat, 04 Sep 2021 15:42:01 -0700
 

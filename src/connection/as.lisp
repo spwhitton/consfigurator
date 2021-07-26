@@ -21,7 +21,7 @@
 ;; currently we only check whether we're root, but, for example, on Linux, we
 ;; might have a CAP_* which lets us setuid as non-root
 (defun can-setuid ()
-  (zerop (foreign-funcall "geteuid" :unsigned-int)))
+  (zerop (nix:geteuid)))
 
 (defmethod establish-connection ((type (eql :as)) remaining &key to)
   "Establish a :SETUID or :SU connection to another user account, depending on

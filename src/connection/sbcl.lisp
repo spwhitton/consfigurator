@@ -20,7 +20,7 @@
 
 (defproplist sbcl-available :posix ()
   (os:etypecase
-    (debianlike (apt:installed "sbcl"))))
+    (debianlike (apt:installed "sbcl" "build-essential"))))
 
 (defparameter *sbcl* '("sbcl" "--noinform" "--noprint"
                        "--disable-debugger" "--no-sysinit" "--no-userinit"))
