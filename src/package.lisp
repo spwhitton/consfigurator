@@ -813,7 +813,7 @@
   (:export #:shell-wrap-connection #:connection-shell-wrap))
 
 (defpackage :consfigurator.connection.fork
-  (:use #:cl #:consfigurator #:consfigurator.connection.local)
+  (:use #:cl #:alexandria #:consfigurator #:consfigurator.connection.local)
   (:export #:fork-connection
            #:post-fork
 	   #:can-probably-fork))
