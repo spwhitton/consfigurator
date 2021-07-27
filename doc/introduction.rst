@@ -294,6 +294,10 @@ Portability and stability
   author on implementations other than SBCL, so testing and portability
   patches are welcome.
 
+- Lisp implementations which will run on the hosts you wish to configure must
+  expose some mechanism for safely calling fork(2), like ``SB-POSIX:FORK`` in
+  the case of SBCL.  The root Lisp does not need to fork(2).
+
 - Little attempt is made by the author to support systems other than Debian
   GNU/Linux, but again, portability patches are welcome, and the design of
   Consfigurator should enable supporting other systems.
