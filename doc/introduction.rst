@@ -6,10 +6,7 @@ Introduction
 Try it out / quick start
 ------------------------
 
-1. Install Consfigurator (:ref:`Installation`) and ensure that some
-   implementation of ssh-askpass_ is available.
-
-.. ssh-askpass_: https://manpages.debian.org/buster/ssh-askpass/ssh-askpass.1.en.html
+1. Install Consfigurator (:ref:`Installation`).
 
 2. Create a new directory ``consfig`` somewhere where ASDF will pick it up,
    such as ``~/common-lisp/consfig``.
@@ -41,12 +38,7 @@ Try it out / quick start
         (in-consfig "com.example.consfig")
 	(named-readtables:in-readtable :consfigurator)
 
-	(try-register-data-source :ssh-askpass :iden1-re "^--user-passwd--" :iden2-re "")
-
-	(defparameter my-substitution "substititions")
-
-        (defhost athena.example.com
-	    (:deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :sbcl))
+        (defhost athena.example.com (:deploy ((:ssh :user "root") :sbcl))
           "Web and file server."
 	  (os:debian-stable "buster" :amd64)
 
@@ -67,9 +59,9 @@ Try it out / quick start
 	  ;;   (gnupg:public-key-imported "8DC2 487E 51AB DD90 B5C4  753F 0F56 D055 3B6D 411B"))
 
 	  (file:has-content "/etc/foo"
-	    #?{Here is my file content.
-	You can use ${my-substitution} thanks to CL-INTERPOL.
-	And it's multiline.  CL-HEREDOC is also available; useful for shell scripts.})
+	    "Here is my file content.
+	It's multiline.  CL-INTERPOL and CL-HEREDOC are also available; the
+	latter is particularly useful for shell scripts.})
 	  (file:has-content "/etc/bar" '("or" "specify" "a" "list" "of" "lines""))
 	  (file:contains-lines "/etc/some.conf" '("FOO=bar")) ; preserve rest of file contents
 
@@ -85,18 +77,17 @@ Try it out / quick start
 	    (apt:uses-parent-proxy) ; use the apt-cacher-ng set up outside chroot
 	    (apt:uses-parent-mirrors))) ; use the apt mirror set up above
 
-    Here, "spwhitton" is my username on athena; we have to tell Consfigurator
-    what user it will be when it tries to sudo, so it knows whose password it
-    needs.  If you have passwordless sudo access configured, you can skip the
-    ``:AS`` keyword parameter and its argument.
+    This assumes that you have your SSH agent etc. set up such that you can
+    ssh to root on athena without having to type a password into ssh's stdin.
+    You should also enable SSH connection sharing.
 
 5. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
    prompt.  Evaluate ``(asdf:load-system "com.example.consfig")``, then
    ``(in-package :com.example.consfig)`` (or ``C-c ~`` in Emacs).
 
 6. You should now be able to evaluate ``(athena.example.com)`` to deploy
-   properties to athena, using the connection chain of SSH, sudo and then
-   handing over to a remote Lisp image.
+   properties to athena, using the connection chain of SSH and then handing
+   over to a remote Lisp image.
 
 Other things to try
 ~~~~~~~~~~~~~~~~~~~
