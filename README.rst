@@ -3,38 +3,39 @@ Introduction
 
 Consfigurator is a system for declarative configuration management using
 Common Lisp.  You can use it to configure hosts as root, deploy services as
-unprivileged users, build and deploy containers, and produce disc images.
+unprivileged users, build and deploy containers, install operating systems,
+produce disc images, and more.  Some key advantages:
 
-Consfigurator's design gives you a great deal of flexibility about how to
-control the hosts you want to configure.  If there is a command you can run
-which will obtain input and output streams attached to an interactive POSIX sh
-running on the target host/container, then with a little glue code, you can
-use much of Consfigurator's functionality to configure that host/container.
-But if it is possible to get an implementation of Common Lisp started up on
-the host, then Configurator can transparently execute your deployment code
-over on the remote side, rather than exchanging information via POSIX sh.
-This lets you use the full power of Common Lisp to deploy your configuration.
+- Apply configuration by transparently starting up another Lisp image on the
+  machine to be configured, so that you can use the full power of Common Lisp
+  to inspect and control the host.
 
-Configurator has convenient abstractions for combining these different ways to
-execute your configuration on hosts with different ways of connecting to them.
-Connections can be arbitrarily nested.  For example, to combine SSHing to a
-Debian machine as an unprivileged user, using sudo to become root, and then
-starting up a Lisp image to execute your deployment code, you would just
-evaluate::
+- Also define properties of hosts in a more restricted language, ``:POSIX``
+  properties, to configure machines, containers and user accounts where you
+  can't install Lisp.  These properties can be applied using just an SSH or
+  serial connection, but they can also be applied by remote Lisp images,
+  enabling code reuse.
 
-  (deploy (:ssh (:sudo :as "spwhitton@athena.example.com") :sbcl) athena.example.com)
+- Flexibly chain and nest methods of connecting to hosts.  For example, you
+  could have Consfigurator SSH to a host, sudo to root, start up Lisp, use the
+  setns(2) system call to enter a Linux container, and then deploy a service.
+  Secrets, and other prerequisite data, are properly passed along.
+
+- Combine declarative semantics for defining hosts and services with a
+  multiparadigmatic general-purpose programming language that won't get in
+  your way.
 
 Declarative configuration management systems like Consfigurator and Propellor_
 share a number of goals with projects like the `GNU Guix System`_ and
 `NixOS`_.  However, tools like Consfigurator and Propellor try to layer the
-power of declarative and reproducible configuration on top of traditional,
-battle-tested unix system administration infrastructure like apt, dpkg, yum,
-and distro package archives, rather than seeking to replace any of those.
-Let's get as much as we can out of all that existing distro policy-compliant
-work!
+power of declarative and reproducible configuration semantics on top of
+traditional, battle-tested UNIX system administration infrastructure like
+distro package managers, package archives and daemon configuration mechanisms,
+rather than seeking to replace any of those.  Let's get as much as we can out
+of all that existing distro policy-compliant work!
 
-*Some features described in the foregoing are not yet implemented, but
-Consfigurator's design permits them to be.*
+*Most of the features described above are implemented; a few are works in
+progress.*
 
 .. _Propellor: https://propellor.branchable.com/
 .. _GNU Guix System: https://guix.gnu.org/
