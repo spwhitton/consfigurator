@@ -469,7 +469,17 @@ properties, or data sources which return objects referencing existing files."
 			      :version (caddr triple))))
 
 (defun get-local-data-cache-dir ()
-  (merge-pathnames "consfigurator/data/" (uiop:xdg-cache-home)))
+  (merge-pathnames
+   "data/"
+   ;; A combinator like WITH-HOMEDIR might have temporarily set the HOME
+   ;; and/or XDG_CACHE_HOME environment variables, so use a cached value if we
+   ;; can find one.
+   (or (loop for conn = *connection* then (connection-parent conn)
+             while conn
+             when (subtypep (type-of conn) 'lisp-connection)
+               return (connection-connattr conn :consfigurator-cache))
+       (connection-connattr
+        (establish-connection :local nil) :consfigurator-cache))))
 
 
 ;;;; Passphrases

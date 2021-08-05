@@ -22,42 +22,36 @@
 ;;; finaliser thread: we must be truly single-threaded in order to enter a
 ;;; different user namespace.  If we can't use it then we fall back to a
 ;;; POSIX-type connection into the container.  In the latter situation the
-;;; user could follow the :SYSTEMD-MACHINED connection with a connection type
-;;; which starts up a remote Lisp image within the container.  This will be
-;;; significantly slower, so if there is more than one container it will
-;;; probably be worth arranging for the use of 'SETNS.
+;;; user could follow the :SYSTEMD-MACHINED/:LXC/etc. connection with a
+;;; connection type which starts up a remote Lisp image within the container.
+;;; This will be significantly slower, so if there is more than one container
+;;; it will probably be worth arranging for the use of 'SETNS.
+;;;
+;;; For containers which can be launched only by root, like systemd-nspawn, we
+;;; use nsenter(1) for the POSIX-type connection into them.  For containers
+;;; owned by non-root, however, we use container-specific commands like
+;;; lxc-unpriv-attach(1).  This is because nsenter(1) with --all can fail with
+;;; permission errors depending on which namespaces are had in common inside
+;;; and outside of the container.  For example, if the container has the same
+;;; time namespace, nsenter(1) will fail to re-enter it because the non-root
+;;; user lacks CAP_SYS_ADMIN for the user namespace owning that time
+;;; namespace.  'SETNS handles this case by ignoring EPERM in the second pass.
 ;;;
 ;;; An alternative to calling setns(2) ourselves, in the Lisp-type connection
 ;;; case, might be to dump an image, write it to a temporary file within the
 ;;; container using WITH-REMOTE-TEMPORARY-FILE & nsenter(1), and then reinvoke
-;;; the image, again using nsenter(1).  This would be more portable with
-;;; respect to Lisp implementations.  However, it would run into the problems
-;;; described in "Dumping and reinvoking Lisp" in pitfalls.rst.  With the
-;;; current approach, shared library dependencies need be available only
-;;; outside the container, and then after entering the container they will
-;;; still be usable.
-
-(defmethod establish-connection
-    ((type (eql :systemd-machined)) remaining &key name uid gid)
-  (establish-connection
-   #+sbcl (if (lisp-connection-p) 'setns :nsenter) #-sbcl :nsenter remaining
-   :pid (or (loop for line in (runlines "machinectl" "show" name)
-                  when (string-prefix-p "Leader=" line)
-                    return (subseq line 7))
-            (error "Could not determine PID for machine ~A." name))
-   :uid uid :gid gid))
-
-
-;;;; :NSENTER
-
-(defmethod establish-connection
-    ((type (eql :nsenter)) remaining &key pid uid gid)
-  (declare (ignore remaining))
-  (informat 1 "~&Entering namespaces of PID ~D with nsenter(1)" pid)
-  (make-instance 'nsenter-connection :pid pid :uid uid :gid gid))
+;;; the image, again using nsenter(1), or using lxc-unpriv-attach(1), etc.
+;;; This would be more portable with respect to Lisp implementations.
+;;; However, it would run into the problems described in "Dumping and
+;;; reinvoking Lisp" in pitfalls.rst.  With the current approach, shared
+;;; library dependencies need be available only outside the container, and
+;;; then after entering the container they will still be usable.
 
 (defclass linux-namespace-connection ()
-  ((pid :type integer :initarg :pid
+  ((name :type string :initarg :name
+         :documentation
+         "The name of the container as output by commands like lxc-ls(1).")
+   (pid :type integer :initarg :pid
         :initform (simple-program-error "Must supply namespace leader PID.")
         :documentation
         "A PID of a process which is already within all of the namespaces.")
@@ -79,6 +73,9 @@
         (when (plusp (length entry))
           (push entry env))))))
 
+
+;;;; :NSENTER
+
 (defclass nsenter-connection
     (linux-namespace-connection shell-wrap-connection) ())
 
@@ -88,6 +85,101 @@
      nil
      "nsenter ~@[-S ~D ~]~@[-G ~D ~]-at ~D env -i ~{~A~^ ~} sh -c ~A"
      uid gid pid (mapcar #'escape-sh-token env) (escape-sh-token cmd))))
+
+(defmethod establish-connection
+    ((type (eql :nsenter)) remaining &key name pid uid gid)
+  (declare (ignore remaining))
+  (informat 1 "~&Entering namespaces of PID ~D with nsenter(1)" pid)
+  (make-instance 'nsenter-connection :name name :pid pid :uid uid :gid gid))
+
+(defmethod establish-connection
+    ((type (eql :systemd-machined)) remaining &key name uid gid)
+  (let ((type #+sbcl (if (lisp-connection-p) 'setns :nsenter) #-sbcl :nsenter)
+        (pid (or (loop for line in (runlines "machinectl" "show" name)
+                       when (string-prefix-p "Leader=" line)
+                         return (subseq line 7))
+                 (error "Could not determine PID for container ~A." name))))
+    (apply #'establish-connection type remaining
+           :name name :pid pid :uid uid :gid gid
+           (and (eql 'setns type) '(:posix-type nsenter-connection)))))
+
+
+;;;; :LXC-UNPRIV-ATTACH
+
+(defclass lxc-unpriv-attach-connection
+    (linux-namespace-connection shell-wrap-connection)
+  ((owner :initarg :owner :initform nil)
+   (owner-uid :initarg :owner-uid :initform nil)))
+
+(defmethod initialize-instance :after
+    ((connection lxc-unpriv-attach-connection) &key)
+  (with-slots (owner owner-uid) connection
+    (when owner (setf owner-uid (user:passwd-entry 2 owner)))))
+
+(defmethod connection-shell-wrap
+    ((connection lxc-unpriv-attach-connection) cmd)
+  (with-slots (owner owner-uid name uid gid env) connection
+    ;; Here we reimplement lxc-unpriv-attach(1) in order to pass --quiet to
+    ;; systemd-run(1), else we get extra output on stderr.
+    (let ((args `("systemd-run" "--scope" "--quiet" "-p" "Delegate=yes"
+                  "/usr/bin/lxc-attach" "-n" ,name "--clear-env"
+                  ,@(loop for env in env collect "--set-var" collect env)
+                  ,@(and uid `("-u" ,(write-to-string uid)))
+                  ,@(and gid `("-g" ,(write-to-string gid)))
+                  "--" "sh" "-c" ,cmd)))
+      (if (and owner (not (string= owner (get-connattr :remote-user))))
+          (with-connattrs (:remote-uid owner-uid)
+            (list* "runuser" "-u" owner "--" (apply #'systemd--user args)))
+          (apply #'systemd--user args)))))
+
+(defmethod establish-connection
+    ((type (eql :lxc-unpriv-attach)) remaining &key owner name pid uid gid)
+  (declare (ignore remaining))
+  (informat 1 "~&Entering namespaces of PID ~D with lxc-unpriv-attach(1)" pid)
+  (make-instance 'lxc-unpriv-attach-connection
+                 :owner owner :name name :pid pid :uid uid :gid gid))
+
+(defmethod establish-connection
+    ((type (eql :lxc)) remaining
+     &key owner (name (and (not remaining) (get-hostname))) uid gid)
+  "Attach to the LXC named NAME and owned by OWNER, defaulting to the current
+user.  Switch to UID and GID inside the LXC.
+
+When the previously established connection hop is a Lisp-type connection, this
+connection type will dump and reinvoke Lisp.  Thus, connections established
+since the Lisp image was started up but before this one must not have rendered
+the original ~/.cache/common-lisp/ unreadable, or the reinvoked image will
+fail to start.  For example,
+
+    (:ssh :sbcl (:lxc :name \"foo\"))
+
+and
+
+    ((:ssh :user \"root\") :sbcl (:lxc :owner \"user\" :name \"foo\"))
+
+will work but
+
+    ((:ssh :user \"root\") :sbcl (:setuid :to \"user\") (:lxc :name \"foo\"))
+
+will not.  See \"Dumping and reinvoking Lisp\" in the \"Pitfalls and
+limitations\" section of the Consfigurator manual.
+
+When the current connection is a Lisp-type connection, this internally uses
+setns(2) to enter the container.  See \"Connections which use setns(2) to
+enter containers\" in the Consfigurator manual for security implications."
+  (let ((type #+sbcl (if (lisp-connection-p) 'setns :lxc-unpriv-attach)
+              #-sbcl :lxc-unpriv-attach)
+        (pid (loop
+               for (lxc pid)
+                 in (mapcar #'words (cdr (lxc:lxc-ls owner "-1fFNAME,PID")))
+               when (string= lxc name)
+                 return pid
+               finally
+                  (error "Could not determine PID for container ~A." name))))
+    (apply #'establish-connection type remaining
+           :owner owner :name name :pid pid :uid uid :gid gid
+           (and (eql 'setns type)
+                '(:posix-type lxc-unpriv-attach-connection)))))
 
 
 ;;;; 'SETNS
@@ -100,7 +192,8 @@
 ;;; type like :SYSTEMD-MACHINED, we mirror these semantics in our 'SETNS.
 #+sbcl
 (defmethod establish-connection
-    ((type (eql 'setns)) remaining &key pid uid gid)
+    ((type (eql 'setns)) remaining
+     &rest args &key pid posix-type &allow-other-keys)
   "Use setns(2) to enter the Linux namespaces of process PID.  Additionally,
 
 - If PID has a distinct user namespace and we have permission to setgroups(2)
@@ -133,7 +226,7 @@ setgroups(2) in either the starting user namespace or the target user
 namespace, in each case either due to a lack of privilege or because
 setgroups(2) is denied in the namespace."
   (informat 1 "~&Reassociating to Linux namespaces of PID ~D" pid)
-  (alet (make-instance 'nsenter-connection :pid pid :uid uid :gid gid)
+  (alet (apply #'make-instance posix-type (remove-from-plist args :posix-type))
     (upload-all-prerequisite-data it)
     (change-class it 'setns-connection)
     (continue-connection it remaining)))

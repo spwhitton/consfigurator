@@ -144,11 +144,11 @@ Connections which use setns(2) to enter containers
 --------------------------------------------------
 
 When the current connection is a Lisp-type connection, connection types which
-enter Linux containers, such as ``:SYSTEMD-MACHINED``, invoke the setns(2)
-system call directly.  The implementation of this is the connection type
-``CONSFIGURATOR.CONNECTION.LINUX-NAMESPACE::SETNS``.  The implementation of
-the ``POST-FORK`` generic for that connection type is structured similarly to
-the nsenter(1) command from util-linux.  This has the advantage that
+enter Linux containers, such as ``:LXC`` and ``:SYSTEMD-MACHINED``, invoke the
+setns(2) system call directly.  The implementation of this is the connection
+type ``CONSFIGURATOR.CONNECTION.LINUX-NAMESPACE::SETNS``.  The implementation
+of the ``POST-FORK`` generic for that connection type is structured similarly
+to the nsenter(1) command from util-linux.  This has the advantage that
 ``CONSFIGURATOR.CONNECTION.LINUX-NAMESPACE::SETNS`` should be reusable for
 implementing connection types which enter other kinds of Linux container; the
 container runtime-specific code is limited to determining the PID of the

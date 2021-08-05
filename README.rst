@@ -34,9 +34,6 @@ distro package managers, package archives and daemon configuration mechanisms,
 rather than seeking to replace any of those.  Let's get as much as we can out
 of all that existing distro policy-compliant work!
 
-*Most of the features described above are implemented; a few are works in
-progress.*
-
 .. _Propellor: https://propellor.branchable.com/
 .. _GNU Guix System: https://guix.gnu.org/
 .. _NixOS: https://nixos.org/

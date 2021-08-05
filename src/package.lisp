@@ -86,6 +86,7 @@
 
            ;; libc.lisp
            #:uid_t
+           #:gid_t
 
            #:+CLONE_NEWCGROUP+
            #:+CLONE_NEWIPC+
@@ -259,6 +260,7 @@
 	   #:as
            #:with-flagfile
            #:with-unapply
+           #:with-homedir
 
            ;; host.lisp
            #:host
@@ -406,8 +408,16 @@
            #:capability-p))
 
 (defpackage :consfigurator.util.linux-namespace
-  (:use #:cl #:consfigurator #:consfigurator.util.posix1e #:cffi)
-  (:export #:setgroups-p
+  (:use #:cl
+        #:anaphora
+        #:alexandria
+        #:consfigurator
+        #:consfigurator.util.posix1e
+        #:cffi)
+  (:export #:get-ids-offset
+           #:reduce-id-maps
+           #:shift-ids
+           #:setgroups-p
            #:get-userns-owner))
 
 (defpackage :consfigurator.property.cmd
@@ -944,12 +954,38 @@
                     (#:os           #:consfigurator.property.os))
   (:export #:has-swap-file))
 
+(defpackage :consfigurator.property.lxc
+  (:use #:cl
+        #:anaphora
+        #:alexandria
+        #:consfigurator
+        #:consfigurator.util.linux-namespace
+        #:cffi)
+  (:local-nicknames (#:file         #:consfigurator.property.file)
+                    (#:apt          #:consfigurator.property.apt)
+                    (#:os           #:consfigurator.property.os)
+                    (#:service      #:consfigurator.property.service)
+                    (#:chroot       #:consfigurator.property.chroot)
+                    (#:user         #:consfigurator.property.user)
+                    (#:systemd      #:consfigurator.property.systemd))
+  (:export #:installed
+           #:user-container-started
+           #:when-user-container-running
+           #:user-containers-autostart
+           #:usernet-usable-by
+           #:user-container-for
+           #:user-container-for.
+           #:user-container
+           #:user-container.
+
+           #:lxc-ls))
+
 (defpackage :consfigurator.connection.local
   (:use #:cl #:consfigurator #:alexandria)
   (:export #:local-connection))
 
 (defpackage :consfigurator.connection.shell-wrap
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:alexandria #:consfigurator)
   (:export #:shell-wrap-connection #:connection-shell-wrap))
 
 (defpackage :consfigurator.connection.fork
@@ -1016,7 +1052,9 @@
         #:consfigurator
         #:consfigurator.util.linux-namespace
         #:consfigurator.connection.fork
-        #:consfigurator.connection.shell-wrap))
+        #:consfigurator.connection.shell-wrap)
+  (:local-nicknames (#:user #:consfigurator.property.user)
+                    (#:lxc  #:consfigurator.property.lxc)))
 
 (defpackage :consfigurator.data.asdf
   (:use #:cl #:alexandria #:consfigurator))

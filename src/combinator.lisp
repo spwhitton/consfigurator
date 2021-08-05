@@ -360,3 +360,34 @@ an :UNAPPLY subroutine for a property which works by calling other properties."
                   :unapply (lambda-ignoring-args
                              (propappapply unapply-propapp)))
         apply-propapp)))
+
+(defmacro with-homedir ((&key user dir) &body propapps)
+  "Apply PROPAPPS with a different home and initial working directory, either
+DIR or the home directory of USER."
+  (when (and user dir)
+    (simple-program-error
+     "WITH-HOMEDIR: Both USER and DIR arguments supplied."))
+  `(with-homedir* ,user ,dir
+     ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))))
+
+(define-function-property-combinator with-homedir* (user dir propapp)
+  (flet ((change (f)
+           ;; Ensure the :CONSFIGURATOR-CACHE connattr is populated because
+           ;; determining it may look at HOME.  In particular, we want to
+           ;; avoid looking in the new HOME for cached data to upload.
+           (when (lisp-connection-p) (get-connattr :consfigurator-cache))
+           (let ((new (or dir (stripln (run (strcat "echo ~" user))))))
+             (with-connattrs (:remote-home new)
+               (with-remote-current-directory (new)
+                 (if (lisp-connection-p)
+                     (let ((orig (getenv "HOME")))
+                       (setf (getenv "HOME") new)
+                       (unwind-protect (funcall f propapp)
+                         (setf (getenv "HOME") orig)))
+                     (funcall f propapp)))))))
+    (:retprop :type (propapptype propapp)
+              :desc (get (car propapp) 'desc)
+              :hostattrs (get (car propapp) 'hostattrs)
+              :apply (lambda-ignoring-args (change #'propappapply))
+              :unapply (lambda-ignoring-args (change #'propappunapply))
+              :args (cdr propapp))))

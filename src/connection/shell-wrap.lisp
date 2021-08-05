@@ -23,7 +23,8 @@
 (defgeneric connection-shell-wrap (connection cmd))
 
 (defmethod connection-run ((c shell-wrap-connection) cmd input)
-  (mrun :may-fail :input input (connection-shell-wrap c cmd)))
+  (apply #'mrun :may-fail :input input
+         (ensure-cons (connection-shell-wrap c cmd))))
 
 (defun %readfile (c path &optional delete)
   (multiple-value-bind (out exit)

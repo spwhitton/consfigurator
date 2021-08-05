@@ -3,6 +3,7 @@
 (include "unistd.h")
 
 (ctype uid_t "uid_t")
+(ctype gid_t "gid_t")
 
 #+linux
 (progn

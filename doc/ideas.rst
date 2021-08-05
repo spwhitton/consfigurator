@@ -52,8 +52,9 @@ Core
   number of hosts.  Now that we don't call fork(2) while executing
   deployments, we ought to be able to do this using threads, and so it can
   work in the root Lisp too.  However, we still use ``WITH-CURRENT-DIRECTORY``
-  in various places.  Perhaps that macro could be changed to only affect RUN,
-  MRUN etc. for the sake of enabling multithreading.
+  in various places, and temporarily set HOME in ``WITH-HOMEDIR``.  Perhaps
+  ``WITH-CURRENT-DIRECTORY`` could be changed to only affect RUN, MRUN
+  etc. for the sake of enabling multithreading.
 
 - It might be useful to have a restart for the case where an attempt is made
   to apply a list of properties containing some ``:LISP`` properties with a

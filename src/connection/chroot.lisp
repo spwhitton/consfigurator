@@ -100,7 +100,9 @@ should be the mount point, without the chroot's root prefixed.")
   (unless (and (lisp-connection-p) (zerop (nix:geteuid)))
     (error "~&Forking into a chroot requires a Lisp image running as root"))
   (informat 1 "~&Forking into chroot at ~A" into)
-  (let* ((into (ensure-pathname into :want-absolute t :ensure-directory t))
+  (let* ((into (ensure-pathname into
+				:defaults (uiop:getcwd)
+				:ensure-absolute t :ensure-directory t))
          (connection (make-instance 'shell-chroot-connection :into into)))
     ;; Populate the CONSFIGURATOR::ID and :REMOTE-HOME connattrs correctly to
     ;; ensure they don't get bogus values when this connection object is used
