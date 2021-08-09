@@ -669,6 +669,7 @@
            #:default-network-autostarted
            #:defined
            #:started
+           #:destroyed
            #:when-started
            #:kvm-boots-chroot-for
            #:kvm-boots-chroot-for.

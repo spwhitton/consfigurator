@@ -101,6 +101,12 @@ is a HOST value, start the libvirt domain whose name is HOST's hostname.)"
   (:check (host-domain-started-p host))
   (:apply (mrun "virsh" "start" (get-hostname host))))
 
+(defprop destroyed :posix (host)
+  "Ensure the libvirt domain for the host designated by HOST is destroyed."
+  (:desc #?"libvirt domain ${(get-hostname host)} destroyed")
+  (:check (not (host-domain-started-p host)))
+  (:apply (mrun "virsh" "destroy" (get-hostname host))))
+
 (defmacro when-started (host &body propapps)
   "Apply PROPAPPS only when the libvirt domain for the host designated by HOST
 is already running.
@@ -258,37 +264,43 @@ your preferred VM networking setup and corresponding DEPLOYS propapp."
                                  "/etc/initramfs-tools/modules" "virtiofs"))
                  (cmd:single "update-initramfs" "-u"))))))))
       options
-    `(eseqprops
-      (installed)
-      (file:contains-conf-equals "/etc/libvirt/qemu.conf"
-                                 "memory_backing_dir" #?'"/dev/shm"')
-      ,@(if always-deploys
-            `((chroot:os-bootstrapped-for
-               ,chroot-options ,chroot ,host ,additional-properties)
-              ;; Create the flagfile anyway in case ALWAYS-DEPLOYS is
-              ;; changed t->nil right after this deploy.
-              (file:has-content ,flagfile ""))
-            `((with-flagfile ,flagfile
-                (chroot:os-bootstrapped-for
-                 ,chroot-options ,chroot ,host ,additional-properties))))
-      (defined ,host*
-          ,(format nil "--vcpus=~D" vcpus) ,(format nil "--memory=~D" memory)
-        "--filesystem"
-        ,(format
-          nil
+    `(with-unapply
+       (installed)
+       (file:contains-conf-equals "/etc/libvirt/qemu.conf"
+                                  "memory_backing_dir" #?'"/dev/shm"')
+       ,@(if always-deploys
+             `((chroot:os-bootstrapped-for
+                ,chroot-options ,chroot ,host ,additional-properties)
+               ;; Create the flagfile anyway in case ALWAYS-DEPLOYS is
+               ;; changed t->nil right after this deploy.
+               (file:has-content ,flagfile ""))
+             `((with-flagfile ,flagfile
+                 (chroot:os-bootstrapped-for
+                  ,chroot-options ,chroot ,host ,additional-properties))))
+       (defined ,host*
+           ,(format nil "--vcpus=~D" vcpus) ,(format nil "--memory=~D" memory)
+         "--filesystem"
+         ,(format
+           nil
 "type=mount,accessmode=passthrough,driver.type=virtiofs,source.dir=~A,target.dir=rootfs"
-          chroot)
-        "--boot"
-        ,(format
-          nil
+           chroot)
+         "--boot"
+         ,(format
+           nil
 "kernel=~A,initrd=~A,kernel_args=\"root=rootfs rootfstype=virtiofs rw~:[~; ~:*~A~]\""
-          (ensure-pathname kernel :defaults chroot :ensure-absolute t)
-          (ensure-pathname initrd :defaults chroot :ensure-absolute t)
-          append)
-        "--memorybacking=access.mode=shared"
-        ,@(and autostart '("--autostart"))
-        ,@virt-options)
-      ,@(and autostart `((started ,host))))))
+           (ensure-pathname kernel :defaults chroot :ensure-absolute t)
+           (ensure-pathname initrd :defaults chroot :ensure-absolute t)
+           append)
+         "--memorybacking=access.mode=shared"
+         ,@(and autostart '("--autostart"))
+         ,@virt-options)
+       ,@(and autostart `((started ,host)))
+       :unapply
+       (destroyed ,host*)
+       (unapply (defined ,host*))
+       (unapply (with-flagfile ,flagfile
+                  (chroot:os-bootstrapped-for
+                   ,chroot-options ,chroot ,host ,additional-properties))))))
 
 (defproplist kvm-boots-chroot :lisp (options properties)
   "Like LIBVIRT:KVM-BOOTS-CHROOT-FOR but define a new host using PROPERTIES."
