@@ -353,11 +353,11 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
   "Use mkfifo(3) to create a named pipe with a mkstemp(3)-like name."
   (let* ((dir (drop-trailing-slash (or (getenv "TMPDIR") "/tmp")))
          (dir-ls (run-program
-                  `("env" "LANG=C" "ls" "-nd" ,dir) :output :string))
+                  `("env" "LANG=C" "ls" "-lnd" ,dir) :output :string))
          (prefix (strcat dir "/tmp.")))
     (unless (and (char= #\d (char dir-ls 0))
                  (char-equal #\t (char dir-ls 9))
-                 (zerop (parse-integer (caddr (split-string dir-ls)))))
+                 (zerop (parse-integer (caddr (words dir-ls)))))
       (error "~A is not a root-owned dir with the sticky bit set." dir))
     (flet ((mktemp ()
              ;; We need to generate a temporary name.  We don't have to worry
