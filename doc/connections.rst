@@ -114,6 +114,17 @@ in that saved image.  Typically a ``:SUDO`` connection hop is used before hops
 which start up remote Lisp images, so these issues will not arise for most
 users.
 
+``:SETUID``
+~~~~~~~~~~~
+
+As this connection type subclasses FORK-CONNECTION, it shouldn't leak
+root-accessible secrets to a process running under the unprivileged UID.
+However, when using the :AS connection type, the unprivileged process will
+have access to all the hostattrs of the host.  Potentially, something like
+ptrace(2) could be used to extract those.  But hostattrs should not normally
+contain any secrets, and at least on Linux, the unprivileged process will not
+be ptraceable because it was once privileged.
+
 Connections which fork: ``:CHROOT.FORK``, ``:SETUID``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
