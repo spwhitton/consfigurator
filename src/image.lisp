@@ -226,11 +226,18 @@ already running from FILENAME."
 ;; time we would have created another grandchild; then we can send the request
 ;; on stdin.  That would mean writing ~75MB out to disk every time we start up
 ;; a remote Lisp image and every time we establish a further FORK-CONNECTION,
-;; however.  If we took this approach, then we'd have implementation-specific
-;; dumping code but the code to reinvoke the dumped images would be fully
-;; portable.  In place of :SETUID connections we might runuser(1) the image,
-;; which would have the advantage of getting us a fresh PAM session, although
-;; it would mean making the executable readable by the target user.
+;; however, though perhaps we could arrange to avoid dumping an executable if
+;; we know that we aren't going to need to reinvoke it, by having connection
+;; types push hostattrs.
+;;
+;; If we took this approach, then we'd have implementation-specific dumping
+;; code, but the code to reinvoke the dumped images would be fully portable --
+;; so perhaps we would want to always begin by dumping an image to a temporary
+;; file (which wouldn't require forking), and then we immediately reinvoke it
+;; to perform the deployment using implementation-agnostic code.  In place of
+;; :SETUID connections we might runuser(1) the image, which would have the
+;; advantage of getting us a fresh PAM session, although it would mean making
+;; the executable readable by the target user.
 (defun handle-fork-request (input output &aux (out (mkfifo)) (err (mkfifo)))
   (forked-progn child
       (with-backtrace-and-exit-code
