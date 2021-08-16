@@ -45,7 +45,7 @@ refuses to proceed if root has no authorized_keys."
    (unless (and (remote-exists-p ".ssh/authorized_keys")
                 (plusp (length (readfile ".ssh/authorized_keys"))))
      (failed-change "root has no authorized_keys"))
-   (configured "PermitRootLogin" "without-password"
+   (configured "PermitRootLogin" "prohibit-password"
                "PasswordAuthentication" "no")))
 
 
