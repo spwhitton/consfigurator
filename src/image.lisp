@@ -438,7 +438,9 @@ Preprocessing must occur in the root Lisp."))
                       (handler-case
                           (with-output-to-string (stream string)
                             (let ((*error-output* stream)
-                                  (*standard-output* stream))
+                                  (*standard-output* stream)
+                                  (*debug-io*
+                                    (make-two-way-stream *debug-io* stream)))
                               ,(asdf-requirements-load-form
                                 asdf-requirements)))
                         (serious-condition (c)
