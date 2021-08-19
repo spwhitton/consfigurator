@@ -24,31 +24,27 @@
   (unless (and (lisp-connection-p) (zerop (nix:geteuid)))
     (error "~&SETUIDing requires a Lisp image running as root"))
   (informat 1 "~&SETUIDing to ~A" to)
-  (multiple-value-bind (match groups)
-      (re:scan-to-strings #?/uid=([0-9]+).+gid=([0-9]+)/ (run "id" to))
-    (unless match
-      (error "Could not determine UID and GID of ~A" to))
-    (let* ((uid (parse-integer (elt groups 0)))
-           (gid (parse-integer (elt groups 1)))
-           (home
-             ;; tilde expansion is POSIX
-             (ensure-directory-pathname (stripln (run (strcat "echo ~" to)))))
-           (xdg-cache-home
-             (ensure-directory-pathname
-              (stripln
-               ;; su(1) is not POSIX but very likely to be present.  Note that
-               ;; the -c argument here is to the user's login shell, not the
-               ;; -c argument to su(1) on, e.g., FreeBSD.  So should be fairly
-               ;; portable.
-               (mrun "su" to "-c" "echo ${XDG_CACHE_HOME:-$HOME/.cache}")))))
-      (continue-connection
-       (make-instance
-        'setuid-connection
-        :datadir (merge-pathnames "consfigurator/data/" xdg-cache-home)
-        :connattrs `(:remote-uid ,uid :remote-gid ,gid
-                     :remote-user ,to :remote-home ,home
-                     :XDG-CACHE-HOME ,xdg-cache-home))
-       remaining))))
+  (let* ((ent (osicat:user-info to))
+	 (xdg-cache-home
+           (ensure-directory-pathname
+            (stripln
+             ;; su(1) is not POSIX but very likely to be present.  Note that
+             ;; the -c argument here is to the user's login shell, not the -c
+             ;; argument to su(1) on, e.g., FreeBSD.  So should be fairly
+             ;; portable.
+             (mrun "su" (cdr (assoc :name ent))
+		   "-c" "echo ${XDG_CACHE_HOME:-$HOME/.cache}")))))
+    (continue-connection
+     (make-instance
+      'setuid-connection
+      :datadir (merge-pathnames "consfigurator/data/" xdg-cache-home)
+      :connattrs `(:remote-uid ,(cdr (assoc :user-id ent))
+                   :remote-gid ,(cdr (assoc :group-id ent))
+                   :remote-user ,(cdr (assoc :name ent))
+                   :remote-home ,(ensure-directory-pathname
+                                  (cdr (assoc :home ent)))
+                   :XDG-CACHE-HOME ,xdg-cache-home))
+     remaining)))
 
 (defmethod post-fork ((connection setuid-connection))
   (let ((uid (connection-connattr connection :remote-uid))
