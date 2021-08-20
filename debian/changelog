@@ -1,11 +1,11 @@
-consfigurator (0.9.0-1) UNRELEASED; urgency=medium
+consfigurator (0.9.1-1) unstable; urgency=medium
 
   * New upstream release.
   * Replace dep and build-dep cl-trivial-macroexpand-all -> cl-agnostic-lizard.
   * Add build-dep on python3-sphinx-rtd-theme.
   * Update copyright years.
 
- -- Sean Whitton <spwhitton@spwhitton.name>  Sat, 24 Jul 2021 15:35:13 -0700
+ -- Sean Whitton <spwhitton@spwhitton.name>  Fri, 20 Aug 2021 10:55:35 -0700
 
 consfigurator (0.8.0-2) unstable; urgency=high
 
