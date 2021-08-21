@@ -481,6 +481,11 @@ subclass to the :HOSTATTRS subroutine of properties calling this."
   "Recursively delete each of PATHS."
   (mrun "rm" "-rf" paths))
 
+(defun empty-remote-directory (directory)
+  "Recursively delete the contents of DIRECTORY, but not DIRECTORY itself."
+  (let ((d (escape-sh-token (drop-trailing-slash (unix-namestring directory)))))
+    (mrun (format nil "rm -rf -- ~A/* ~A/.[!.]* ~A/..?*" d d d))))
+
 (defun remote-exists-p (&rest paths)
   "Does each of PATHS exists?
 PATH may be any kind of file, including directories."

@@ -153,6 +153,7 @@
            #:remote-consfigurator-cache-pathname
            #:mountpointp
            #:delete-remote-trees
+           #:empty-remote-directory
            #:readfile
            #:writefile
            #:get-connattr

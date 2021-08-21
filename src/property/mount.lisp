@@ -76,12 +76,18 @@ this property will empty /dev, breaking all kinds of things."
            do (loop while (subpathp (car sorted) next) do (pop sorted))
               (mrun "umount" "--recursive" next)))))
 
-(defproplist unmounted-below-and-removed :posix (dir)
-  "Unmount anything mounted at or below DIR and recursively delete dir."
-  (:desc #?"${dir} unmounted and removed")
-  (:check (not (remote-exists-p dir)))
-  (unmounted-below dir)
-  (cmd:single "rm" "-rf" dir))
+(defprop unmounted-below-and-removed :posix (dir)
+  "Unmount anything mounted below DIR, recursively delete the contents of DIR,
+and unless DIR is itself a mount point, also remove DIR."
+  (:desc #?"${dir} unmounted below and emptied/removed")
+  (:hostattrs (os:required 'os:linux))
+  (:check (or (not (remote-exists-p dir))
+              (and (mountpointp dir)
+                   (null (runlines "find" dir "-not" "-path" dir)))))
+  (:apply (ignoring-hostattrs (unmounted-below dir :and-at nil))
+          (if (mountpointp dir)
+              (empty-remote-directory dir)
+              (delete-remote-trees dir))))
 
 (defun all-mounts (&optional (below #P"/"))
   "Retrieve all mountpoints below BELOW, ordered lexicographically.
