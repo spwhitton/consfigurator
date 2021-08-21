@@ -29,8 +29,8 @@ the mount is not actually active."
           (file:directory-exists target)
           (mrun "mount" target)))
 
-(defprop unmounted-below :posix (dir)
-  "Unmount anything mounted at or below DIR.
+(defprop unmounted-below :posix (dir &key (and-at t))
+  "Unmount anything mounted below DIR, and when AND-AT, anything mounted at DIR.
 
 Not aware of shared subtrees, so you might need to use the --make-rslave
 option to mount(8) first.  For example, if you did 'mount --rbind /dev
@@ -66,7 +66,11 @@ this property will empty /dev, breaking all kinds of things."
      ;; /proc, and the second can't be removed until the bind mount is
      ;; removed.  (This situation arises because :CHROOT.FORK connections bind
      ;; mount the chroot on itself if it is not already a mount point.)
-     (loop with sorted = (all-mounts dir)
+     (loop with sorted
+             = (if and-at
+                   (all-mounts dir)
+                   (delete (ensure-directory-pathname dir) (all-mounts dir)
+                           :test #'pathname-equal))
            as next = (pop sorted)
            while next
            do (loop while (subpathp (car sorted) next) do (pop sorted))
