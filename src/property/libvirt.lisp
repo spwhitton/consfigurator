@@ -259,6 +259,7 @@ your preferred VM networking setup and corresponding DEPLOYS propapp."
             :propspec
             '(os:etypecase
               (debianlike
+               (apt:installed "initramfs-tools")
                (on-change (desc "virtiofs module added to initramfs"
                                 (file:contains-lines
                                  "/etc/initramfs-tools/modules" "virtiofs"))
