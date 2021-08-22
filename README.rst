@@ -10,11 +10,11 @@ produce disc images, and more.  Some key advantages:
   machine to be configured, so that you can use the full power of Common Lisp
   to inspect and control the host.
 
-- Also define properties of hosts in a more restricted language, ``:POSIX``
-  properties, to configure machines, containers and user accounts where you
-  can't install Lisp.  These properties can be applied using just an SSH or
-  serial connection, but they can also be applied by remote Lisp images,
-  enabling code reuse.
+- Also define properties of hosts in a more restricted language, that of
+  ``:POSIX`` properties, to configure machines, containers and user accounts
+  where you can't install Lisp.  These properties can be applied using just an
+  SSH or serial connection, but they can also be applied by remote Lisp
+  images, enabling code reuse.
 
 - Flexibly chain and nest methods of connecting to hosts.  For example, you
   could have Consfigurator SSH to a host, sudo to root, start up Lisp, use the
