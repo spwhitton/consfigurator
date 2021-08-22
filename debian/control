@@ -59,7 +59,7 @@ Description: Lisp declarative configuration management system
     to inspect and control the host.
  .
   * Also define properties of hosts in a more restricted language, that of
-    ``:POSIX`` properties, to configure machines, containers and user accounts
+    :POSIX properties, to configure machines, containers and user accounts
     where you can't install Lisp.  These properties can be applied using just
     an SSH or serial connection, but they can also be applied by remote Lisp
     images, enabling code reuse.
