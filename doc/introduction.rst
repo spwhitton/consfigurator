@@ -79,7 +79,7 @@ Try it out / quick start
 
     This assumes that you have your SSH agent etc. set up such that you can
     ssh to root on athena without having to type a password into ssh's stdin.
-    You should also enable SSH connection sharing.
+    You should also enable SSH connection sharing, including ``ControlPersist``.
 
 5. Get a Lisp REPL started up -- ``M-x slime`` in Emacs or ``sbcl`` at a shell
    prompt.  Evaluate ``(asdf:load-system "com.example.consfig")``, then

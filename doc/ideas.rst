@@ -34,6 +34,10 @@ Connections
   daemons might only be accessible over VPNs and the like, however, so it will
   need to be easy to override this.
 
+- Perhaps ``:SSH`` ought to enable connection sharing (including
+  ``ControlPersist``) on the user's behalf, rather than relying on users
+  adding this to ``~/.ssh/config``.
+
 Core
 ----
 
