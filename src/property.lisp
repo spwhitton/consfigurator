@@ -512,19 +512,24 @@ Called by property :HOSTATTRS subroutines."
   (setf (getf (slot-value *host* 'hostattrs) k)
         (append vs (get-hostattrs k))))
 
-(defun pushnew-hostattrs (k &rest vs)
-  "Push new static informational attributes VS of type KEY.
+(defun pushnew-hostattr (k v &key (test #'equal))
+  "Push new static informational attribute V of type K.
+TEST is passed on to PUSHNEW.  Called by property :HOSTATTRS subroutines."
+  (pushnew-hostattrs k (list v) :test test))
 
-Called by property :HOSTATTRS subroutines."
+(defun pushnew-hostattrs (k vs &key (test #'equal))
+  "Push new static informational attributes VS of type K.
+VS is a list of items.  TEST is passed on to PUSHNEW.  Called by property
+:HOSTATTRS subroutines."
   (dolist (v (reverse vs))
-    (pushnew v (getf (slot-value *host* 'hostattrs) k))))
+    (pushnew v (getf (slot-value *host* 'hostattrs) k) :test test)))
 
 (defun require-data (iden1 iden2)
-  "Wrapper around PUSH-HOSTATTRS to indicate that a piece of prerequisite data
+  "Wrapper around PUSHNEW-HOSTATTR to indicate that a piece of prerequisite data
 is needed to deploy a property.
 
 Called by property :HOSTATTRS subroutines."
-  (pushnew-hostattrs :data (cons iden1 iden2)))
+  (pushnew-hostattr :data (cons iden1 iden2)))
 
 (defun get-hostname (&optional (host *host*))
   "Get the hostname of HOST, defaulting to the host to which properties are

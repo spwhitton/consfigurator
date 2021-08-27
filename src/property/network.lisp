@@ -23,9 +23,9 @@
 server might have aliases like imap.example.org and smtp.example.org, even
 though its hostname is neither 'imap' nor 'smtp'."
   (:desc (format nil "Has alias~1{~#[es~;~;es~]~} ~:*~{~A~^, ~}" aliases))
-  (:hostattrs (apply #'pushnew-hostattrs
-                     :aliases (delete (get-hostname) (flatten aliases)
-                                      :test #'string=))))
+  (:hostattrs
+   (pushnew-hostattrs
+    :aliases (delete (get-hostname) (flatten aliases) :test #'string=))))
 
 (defprop ipv4 :posix (&rest addresses)
   "Record the host's public Internet IPv4 addresses.
@@ -35,7 +35,7 @@ similar property which pushes hostattrs identified by a non-keyword
 symbol (unless your consfig deals only in hosts without public IP addresses,
 in which case you can use this property)."
   (:desc (format nil "Has public IPv4 ~{~A~^, ~}" addresses))
-  (:hostattrs (apply #'pushnew-hostattrs :ipv4 (flatten addresses))))
+  (:hostattrs (pushnew-hostattrs :ipv4 (flatten addresses))))
 
 (defprop ipv6 :posix (&rest addresses)
   "Record the host's public Internet IPv6 addresses.
@@ -45,7 +45,7 @@ similar property which pushes hostattrs identified by a non-keyword
 symbol (unless your consfig deals only in hosts without public IP addresses,
 in which case you can use this property)."
   (:desc (format nil "Has public IPv6 ~{~A~^, ~}" addresses))
-  (:hostattrs (apply #'pushnew-hostattrs :ipv6 (flatten addresses))))
+  (:hostattrs (pushnew-hostattrs :ipv6 (flatten addresses))))
 
 (defproplist clean-/etc/network/interfaces :posix ()
   "Empty /etc/network/interfaces in preparation for configuring interfaces using

@@ -181,6 +181,7 @@
            #:get-parent-hostattrs
            #:get-parent-hostattrs-car
            #:push-hostattrs
+           #:pushnew-hostattr
            #:pushnew-hostattrs
            #:get-hostname
            #:get-short-hostname

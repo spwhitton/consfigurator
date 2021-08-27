@@ -163,7 +163,7 @@ only upgrade Debian stable."
 (defprop mirror :posix (uri)
   (:desc #?"${uri} apt mirror selected")
   (:hostattrs
-   (pushnew-hostattrs :apt.mirror uri)))
+   (pushnew-hostattr :apt.mirror uri)))
 
 (defpropspec uses-parent-mirrors :posix ()
   (:desc #?"Uses parent's apt mirror(s), if any")
@@ -175,7 +175,7 @@ only upgrade Debian stable."
 (defprop proxy :posix (uri)
   (:desc #?"${uri} apt proxy selected")
   (:hostattrs
-   (pushnew-hostattrs :apt.proxy uri))
+   (pushnew-hostattr :apt.proxy uri))
   (:apply
    (file:has-content "/etc/apt/apt.conf.d/20proxy"
                      (format nil "Acquire::HTTP::Proxy \"~A\";~%" uri))))
