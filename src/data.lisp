@@ -342,15 +342,16 @@ CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
                    (remote-data-pathname iden1 iden2 version)))))
     (loop with *data-sources* = (cons (register-data-source :asdf)
                                       *data-sources*)
+          with remote-cached
+            = (sort-prerequisite-data-cache
+               (get-remote-cached-prerequisite-data connection))
 
           for (iden1 . iden2) in (get-hostattrs :data)
           for highest-remote-version
             = (caddar (remove-if-not (lambda (c)
                                        (and (string= (first c) iden1)
                                             (string= (second c) iden2)))
-                                     (sort-prerequisite-data-cache
-                                      (get-remote-cached-prerequisite-data
-                                       connection))))
+                                     remote-cached))
           for (thunk highest-local-version)
             = (handler-case (multiple-value-list (%get-data iden1 iden2))
                 (missing-data () nil))
