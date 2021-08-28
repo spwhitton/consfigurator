@@ -142,11 +142,10 @@ already running from FILENAME."
              (format nil "Dumped image to evaluate ~S" form)
              "Dumped image to execute current deployment"))
   (:apply
-   (let ((file (or filename (ensure-directories-exist
-                             (ensure-pathname
-                              (strcat (or (getenv "XDG_CACHE_HOME")
-                                          (strcat (getenv "HOME") "/.cache"))
-                                      "/consfigurator/images/latest"))))))
+   (let ((file (or filename
+                   (ensure-directories-exist
+                    (merge-pathnames "consfigurator/images/latest"
+                                     (get-connattr :XDG-CACHE-HOME))))))
      (unless (and (not always)
                   (eql :linux (uiop:operating-system))
                   (pathname-equal file (resolve-symlinks "/proc/self/exe")))

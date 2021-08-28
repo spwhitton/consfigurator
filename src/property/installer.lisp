@@ -265,16 +265,15 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
        ;; OS's actual XDG_CACHE_HOME.  Move cache & update environment.
        (let ((source
                (chroot-pathname
-                (merge-pathnames "consfigurator/"
-                                 (ensure-directory-pathname
-                                  (or (getenv "XDG_CACHE_HOME")
-                                      (strcat (getenv "HOME") "/.cache/"))))
+                (merge-pathnames
+                 "consfigurator/" (get-connattr :XDG-CACHE-HOME))
                 old-os)))
          (when (directory-exists-p source)
            (rename-file source (ensure-directories-exist
                                 #P"/root/.cache/consfigurator/"))))
-       (setf (get-connattr :remote-user) "root")
-       (setf (get-connattr :remote-home) "/root")
+       (setf (get-connattr :remote-user) "root"
+             (get-connattr :remote-home) "/root"
+             (get-connattr :XDG-CACHE-HOME) #P"/root/.cache/")
        (posix-login-environment "root" "/root")
 
        ;; Remount (mainly virtual) filesystems that other properties we will

@@ -227,6 +227,12 @@ login(1)).  Tilde expansion works correctly."
         (failed-change "Failed to determine remote home directory.")
         (ensure-directory-pathname (stripln home)))))
 
+(defmethod connection-connattr
+    ((connection connection) (k (eql :XDG-CACHE-HOME)))
+  (ensure-directory-pathname
+   (stripln
+    (connection-run connection "echo ${XDG_CACHE_HOME:-$HOME/.cache}" nil))))
+
 
 ;;;; Functions to access the slots of the current connection
 
@@ -556,7 +562,7 @@ specification of POSIX ls(1))."
 
 (defun remote-consfigurator-cache-pathname (path)
   (merge-pathnames
-   path (car (runlines "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/"))))
+   path (merge-pathnames "consfigurator/" (get-connattr :XDG-CACHE-HOME))))
 
 (defun readfile (path)
   (connection-readfile

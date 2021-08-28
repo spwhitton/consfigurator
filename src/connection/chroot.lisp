@@ -110,26 +110,20 @@ should be the mount point, without the chroot's root prefixed.")
                (zerop (foreign-funcall "geteuid" :unsigned-int)))
     (error "~&Forking into a chroot requires a Lisp image running as root"))
   (informat 1 "~&Forking into chroot at ~A" into)
-  (let* ((into* (ensure-directory-pathname into))
-         (connection (make-instance 'shell-chroot-connection :into into*)))
-    ;; This has the side effect of populating the CONSFIGURATOR::ID and
-    ;; :REMOTE-HOME connattrs correctly, so that they don't get bogus values
-    ;; when this connection object is used in UPLOAD-ALL-PREREQUISITE-DATA.
-    (multiple-value-bind (datadir-inside exit)
-        (connection-run
-         connection
-         (format nil "echo ${XDG_CACHE_HOME:-~A/.cache}/consfigurator/data/"
-                 (connection-connattr connection :remote-home))
-         nil)
-      (unless (zerop exit)
-        (error "Failed to determine datadir inside chroot."))
-      (setq connection (change-class connection 'chroot.fork-connection))
-      (setf (slot-value connection 'datadir)
-            (ensure-pathname
-             (stripln (subseq datadir-inside 1))
-             :defaults into* :ensure-absolute t :ensure-directory t))
-      (unwind-protect (continue-connection connection remaining)
-        (connection-teardown connection)))))
+  (let* ((into (ensure-pathname into :want-absolute t :ensure-directory t))
+         (connection (make-instance 'shell-chroot-connection :into into)))
+    ;; Populate the CONSFIGURATOR::ID and :REMOTE-HOME connattrs correctly to
+    ;; ensure they don't get bogus values when this connection object is used
+    ;; in UPLOAD-ALL-PREREQUISITE-DATA.
+    (connection-connattr connection :remote-home)
+    ;; Obtain & cache XDG_CACHE_HOME inside the chroot, and compute DATADIR.
+    (let ((xdg-cache-home (connection-connattr connection :XDG-CACHE-HOME)))
+      (setf connection (change-class connection 'chroot.fork-connection)
+            (slot-value connection 'datadir)
+            (merge-pathnames
+             "consfigurator/data/" (chroot-pathname xdg-cache-home into))))
+    (unwind-protect (continue-connection connection remaining)
+      (connection-teardown connection))))
 
 (defmethod post-fork ((connection chroot.fork-connection))
   (unless (zerop (chroot (slot-value connection 'into)))

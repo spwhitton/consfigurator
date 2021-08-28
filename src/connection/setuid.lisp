@@ -45,23 +45,22 @@
            (home
              ;; tilde expansion is POSIX
              (ensure-directory-pathname (stripln (run (strcat "echo ~" to)))))
-           (datadir
+           (xdg-cache-home
              (ensure-directory-pathname
               (stripln
                ;; su(1) is not POSIX but very likely to be present.  Note that
                ;; the -c argument here is to the user's login shell, not the
                ;; -c argument to su(1) on, e.g., FreeBSD.  So should be fairly
                ;; portable.
-               (mrun
-                "su" to "-c"
-                "echo ${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/data/")))))
-      (continue-connection (make-instance 'setuid-connection
-                                          :datadir datadir
-                                          :connattrs `(:remote-uid ,uid
-                                                       :remote-gid ,gid
-                                                       :remote-user ,to
-                                                       :remote-home ,home))
-                           remaining))))
+               (mrun "su" to "-c" "echo ${XDG_CACHE_HOME:-$HOME/.cache}")))))
+      (continue-connection
+       (make-instance
+        'setuid-connection
+        :datadir (merge-pathnames "consfigurator/data/" xdg-cache-home)
+        :connattrs `(:remote-uid ,uid :remote-gid ,gid
+                     :remote-user ,to :remote-home ,home
+                     :XDG-CACHE-HOME ,xdg-cache-home))
+       remaining))))
 
 (defmethod post-fork ((connection setuid-connection))
   (let ((uid (connection-connattr connection :remote-uid))

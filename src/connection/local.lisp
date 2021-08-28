@@ -66,3 +66,8 @@ root Lisp is running on, as the root Lisp's uid."))
                                       :element-type type)
            (copy-stream-to-stream content stream :element-type type)))))
     (run-program `("mv" ,temp ,path))))
+
+(defmethod connection-connattr
+    ((connection local-connection) (k (eql :XDG-CACHE-HOME)))
+  (ensure-directory-pathname (or (getenv "XDG_CACHE_HOME")
+                                 (strcat (getenv "HOME") "/.cache"))))
