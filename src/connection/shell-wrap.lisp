@@ -45,21 +45,18 @@
                                  path
                                  content
                                  mode)
-  (with-remote-temporary-file
-      (temp :connection conn :directory (pathname-directory-pathname path))
-    ;; TODO do we want a CONNECTION-ERROR condition to tidy this up?
-    (multiple-value-bind (out exit)
-        (connection-run conn
-                        (format nil "chmod ~O ~A" mode
-                                (escape-sh-token temp))
-                        nil)
-      (unless (zerop exit) (error "Failed to chmod ~A: ~A" temp out)))
-    (multiple-value-bind (out exit)
-        (connection-run conn #?"cat >${temp}" content)
-      (unless (zerop exit) (error "Failed to write ~A: ~A" temp out)))
-    (multiple-value-bind (out exit)
-        (connection-run
-         conn
-         #?"mv ${(escape-sh-token temp)} ${(escape-sh-token (unix-namestring path))}"
-         nil)
-      (unless (zerop exit) (error "Failed to write ~A: ~A" path out)))))
+  (let ((cmd
+          (format
+           nil "set -e
+tmpf=$(~A)
+trap \"rm -f '$tmpf'\" EXIT HUP KILL TERM INT
+chmod ~O \"$tmpf\"
+cat >\"$tmpf\"
+mv \"$tmpf\" ~A"
+           (mkstemp-cmd
+            (merge-pathnames "tmp.XXXXXX" (pathname-directory-pathname path)))
+           mode
+           (escape-sh-token (unix-namestring path)))))
+    (multiple-value-bind (out exit) (connection-run conn cmd content)
+      (unless (zerop exit)
+        (error "Failed to write ~A: ~A" path out)))))
