@@ -45,6 +45,9 @@ root Lisp is running on, as the root Lisp's uid."))
 (defmethod connection-readfile ((connection local-connection) path)
   (read-file-string path))
 
+(defmethod connection-readfile-and-remove ((connection local-connection) path)
+  (prog1 (read-file-string path) (delete-file path)))
+
 (defmethod connection-writefile ((connection local-connection)
                                  path
                                  content

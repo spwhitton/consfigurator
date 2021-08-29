@@ -25,11 +25,21 @@
 (defmethod connection-run ((c shell-wrap-connection) cmd input)
   (mrun :may-fail :input input (connection-shell-wrap c cmd)))
 
-(defmethod connection-readfile ((c shell-wrap-connection) path)
+(defun %readfile (c path &optional delete)
   (multiple-value-bind (out exit)
-      (let ((path (escape-sh-token path)))
-        (connection-run c #?"test -r ${path} && cat ${path}" nil))
-    (if (zerop exit) out (error "File ~S not readable" path))))
+      (let* ((path (escape-sh-token path))
+             (base #?"test -r ${path} && cat ${path}")
+             (cmd (if delete (strcat base #?"&& rm ${path}") base)))
+        (connection-run c cmd nil))
+    (if (zerop exit)
+        out
+        (error "Could not read~:[~; and/or remove~] ~S" delete path))))
+
+(defmethod connection-readfile ((c shell-wrap-connection) path)
+  (%readfile c path))
+
+(defmethod connection-readfile-and-remove ((c shell-wrap-connection) path)
+  (%readfile c path t))
 
 (defmethod connection-writefile ((conn shell-wrap-connection)
                                  path

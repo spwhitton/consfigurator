@@ -134,6 +134,7 @@
            #:lisp-connection-p
            #:connection-run
            #:connection-readfile
+           #:connection-readfile-and-remove
            #:connection-writefile
            #:connection-teardown
            #:connection-connattr

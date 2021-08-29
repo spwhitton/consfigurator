@@ -106,6 +106,23 @@ error condition just because EXIT is non-zero."))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
+(defgeneric connection-readfile-and-remove (connection path)
+  (:documentation "As READFILE and then delete the file.
+
+For some connection types, when latency is high, combining these two
+operations is noticeably faster than doing one after the other.  For every use
+of RUN we read and delete the file containing the command's stdout, so the
+time savings add up."))
+
+(defmethod connection-readfile-and-remove
+    :around ((connection connection) path)
+  (let ((*connection* (slot-value connection 'parent)))
+    (call-next-method)))
+
+(defmethod connection-readfile-and-remove ((connection connection) path)
+  (prog1 (connection-readfile connection path)
+    (connection-run connection (strcat "rm " (escape-sh-token path)) nil)))
+
 ;; only functional difference between WRITEFILE and UPLOAD is what args they
 ;; take: a string vs. a path.  for a given connection type, they may have same
 ;; or different implementations.
@@ -430,17 +447,26 @@ Keyword arguments accepted:
 Returns command's stdout, stderr and exit code, unless :FOR-EXIT, in which
 case return only the exit code."
   (%process-run-args
-    (with-remote-temporary-file (stdout)
-      (setq cmd (format nil "( ~A ) >~A" cmd stdout))
-      (informat 4 "~&RUN ~A" cmd)
-      (multiple-value-bind (err exit)
-          (connection-run *connection* cmd input)
-        (let ((out (readfile stdout)))
-          (when inform (informat 1 "~&    % ~A~%~{    ~A~%~}" cmd (lines out)))
-          (if (or may-fail (= exit 0))
-              (if for-exit exit (values out err exit))
-              (error 'run-failed
-                     :cmd cmd :stdout out :stderr err :exit-code exit)))))))
+    (let ((stdout (mktemp)))
+      (handler-bind
+          ((serious-condition
+             (lambda (c)
+               (declare (ignore c))
+               (connection-run
+                *connection*
+                (format nil "rm -f ~A" (escape-sh-token stdout))
+                nil))))
+        (setq cmd (format nil "( ~A ) >~A" cmd stdout))
+        (informat 4 "~&RUN ~A" cmd)
+        (multiple-value-bind (err exit)
+            (connection-run *connection* cmd input)
+          (let ((out (connection-readfile-and-remove *connection* stdout)))
+            (when inform
+              (informat 1 "~&    % ~A~%~{    ~A~%~}" cmd (lines out)))
+            (if (or may-fail (= exit 0))
+                (if for-exit exit (values out err exit))
+                (error 'run-failed
+                       :cmd cmd :stdout out :stderr err :exit-code exit))))))))
 
 (defun mrun (&rest args)
   "Like RUN but don't separate stdout and stderr (\"m\" for \"merged\"; note
