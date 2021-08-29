@@ -292,53 +292,52 @@ which will be cleaned up when BODY is finished."
                          (format nil "rm -f ~A" (escape-sh-token ,file))
                          nil)))))
 
+(defun mkstemp-cmd (&optional template
+                    &aux (template (or (unix-namestring template)
+                                       "'${TMPDIR:-/tmp}'/tmp.XXXXXX")))
+  ;; mktemp(1) is not POSIX; the only POSIX sh technique at the time of
+  ;; writing is to use m4(1)'s mkstemp macro.  However, m4 is sometimes not
+  ;; present, so fall back to mktemp(1).  Hopefully passing the template as
+  ;; the only command line option to mktemp(1) is portable.
+  ;;
+  ;; Although POSIX.1-2017 says that if m4(1) fails to create a temporary file
+  ;; it should exit nonzero, many m4(1) implementations just write to stderr
+  ;; and exit zero.  So we examine the stderr, and if there is any, exit
+  ;; nonzero ourselves.
+  ;;
+  ;; We apply the same stderr handling to mktemp(1), exiting if we see
+  ;; anything on stderr, as a simple way to ensure that non-fatal
+  ;; errors/warnings are not captured as the path to the temporary file.
+  ;;
+  ;; While GNU M4 mkstemp makes the temporary file at most readable and
+  ;; writeable by its owner, POSIX doesn't require this, so set a umask.
+  #?"umask 077
+exec 3>&1
+if err=\$(if command -v m4 >/dev/null; then
+              echo 'mkstemp(${template})' | m4 2>&1 1>&3
+          else
+              mktemp '${template}' 2>&1 1>&3
+          fi); then
+    case $err in
+        ?*) printf >&2 \"%s\\n\" \"$err\"; exit 1 ;;
+        *)  exit 0 ;;
+    esac
+else
+    case $err in
+        ?*) printf >&2 \"%s\\n\" \"$err\" ;;
+    esac
+    exit 1
+fi")
+
 (defun mktemp (&key (connection *connection*) directory)
   "Make a temporary file on the remote side, in DIRECTORY, defaulting to /tmp."
-  (let ((template (if directory
-                      (unix-namestring
-                       (merge-pathnames
-                        "tmp.XXXXXX" (ensure-directory-pathname directory)))
-                      "'${TMPDIR:-/tmp}'/tmp.XXXXXX")))
-    (multiple-value-bind (out exit)
-        ;; mktemp(1) is not POSIX; the only POSIX sh technique at the time of
-        ;; writing is to use m4(1)'s mkstemp macro.  However, m4 is sometimes
-        ;; not present, so fall back to mktemp(1).  Hopefully passing the
-        ;; template as the only command line option to mktemp(1) is portable.
-        ;;
-        ;; Although POSIX.1-2017 says that if m4(1) fails to create a
-        ;; temporary file it should exit nonzero, many m4(1) implementations
-        ;; just write to stderr and exit zero.  So we examine the stderr, and
-        ;; if there is any, exit nonzero ourselves.
-        ;;
-        ;; We apply the same stderr handling to mktemp(1), exiting if we see
-        ;; anything on stderr, as a simple way to ensure that non-fatal
-        ;; errors/warnings are not captured as the path to the temporary file.
-        ;;
-        ;; While GNU M4 mkstemp makes the temporary file at most readable and
-        ;; writeable by its owner, POSIX doesn't require this, so set a umask.
-        (connection-run
-         connection
-         #?"if tmpf=\$(umask 077; exec 3>&1
-    if err=\$(if command -v m4 >/dev/null; then
-                  echo 'mkstemp(${template})' | m4 2>&1 1>&3
-              else
-                  mktemp '${template}' 2>&1 1>&3
-              fi); then
-        case $err in
-            ?*) printf >&2 \"%s\\n\" \"$err\"; exit 1 ;;
-            *)  exit 0 ;;
-        esac
-    else
-        case $err in
-            ?*) printf >&2 \"%s\\n\" \"$err\" ;;
-        esac
-        exit 1
-    fi); then
-    echo $tmpf
-else
-    exit 1;
-fi"
-         nil)
+  (let ((cmd (format
+              nil "if tmpf=$(~A); then echo \"$tmpf\"; else exit 1; fi"
+              (mkstemp-cmd
+               (and directory
+                    (merge-pathnames
+                     "tmp.XXXXXX" (ensure-directory-pathname directory)))))))
+    (multiple-value-bind (out exit) (connection-run connection cmd nil)
       (let ((lines (lines out)))
         (if (and (zerop exit) lines)
             (car lines)

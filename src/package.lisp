@@ -143,6 +143,7 @@
            #:run
            #:mrun
            #:with-remote-temporary-file
+           #:mkstemp-cmd
            #:mktemp
            #:with-remote-current-directory
            #:run-failed
