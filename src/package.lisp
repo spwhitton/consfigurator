@@ -32,6 +32,7 @@
                           #:directory-files
                           #:file-exists-p
 			  #:directory-exists-p
+                          #:rename-file-overwriting-target
                           #:with-current-directory
                           #:delete-empty-directory
 			  #:delete-directory-tree
@@ -70,6 +71,7 @@
            #:directory-files
            #:file-exists-p
 	   #:directory-exists-p
+           #:rename-file-overwriting-target
            #:with-current-directory
            #:delete-empty-directory
 	   #:delete-directory-tree

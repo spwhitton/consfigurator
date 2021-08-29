@@ -68,7 +68,17 @@
                                       :if-exists :supersede
                                       :element-type type)
            (copy-stream-to-stream content stream :element-type type)))))
-    (run-program `("mv" ,temp ,path))))
+    ;; TEMP's pathname will always have a PATHNAME-TYPE which is the random
+    ;; string of characters suffixed to make the filename unique.  If PATH
+    ;; doesn't have a file extension then the merging behaviour of RENAME-FILE
+    ;; will add the random suffix as the file type of the rename destination.
+    ;; So we make two new pathnames.
+    (flet ((detype-pathname (pn)
+             (make-pathname
+              :defaults uiop:*nil-pathname* :type :unspecific
+              :name (pathname-file pn) :directory (pathname-directory pn))))
+      (rename-file-overwriting-target
+       (detype-pathname temp) (detype-pathname path)))))
 
 (defmethod connection-connattr
     ((connection local-connection) (k (eql :XDG-CACHE-HOME)))
