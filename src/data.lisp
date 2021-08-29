@@ -470,9 +470,7 @@ properties, or data sources which return objects referencing existing files."
 			      :version (caddr triple))))
 
 (defun get-local-data-cache-dir ()
-  (ensure-directory-pathname
-   (strcat (or (getenv "XDG_CACHE_HOME") (strcat (getenv "HOME") "/.cache"))
-           "/consfigurator/data")))
+  (merge-pathnames "consfigurator/data/" (uiop:xdg-cache-home)))
 
 
 ;;;; Passphrases

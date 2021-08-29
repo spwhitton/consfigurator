@@ -72,5 +72,4 @@
 
 (defmethod connection-connattr
     ((connection local-connection) (k (eql :XDG-CACHE-HOME)))
-  (ensure-directory-pathname (or (getenv "XDG_CACHE_HOME")
-                                 (strcat (getenv "HOME") "/.cache"))))
+  (uiop:xdg-cache-home))

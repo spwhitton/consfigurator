@@ -327,9 +327,7 @@ ASDF-REQUIREMENTS, after having uploaded those Lisp systems using
 UPLOAD-ALL-PREREQUISITE-DATA.")
   (:method ((asdf-requirements asdf-requirements))
     `(progn
-       (let* ((cache (ensure-directory-pathname
-                      (or (getenv "XDG_CACHE_HOME")
-                          (strcat (getenv "HOME") "/.cache"))))
+       (let* ((cache (uiop:xdg-cache-home))
               (dest (ensure-directories-exist
                      (merge-pathnames "consfigurator/systems/" cache)))
               (file (merge-pathnames

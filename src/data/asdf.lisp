@@ -29,9 +29,7 @@
 (defun get-path-to-system-tarball (iden1 system)
   (let* ((tarball (merge-pathnames
                    (strcat "consfigurator/systems/" system ".tar.gz")
-                   (ensure-directory-pathname
-                    (or (getenv "XDG_CACHE_HOME")
-                        (strcat (getenv "HOME") "/.cache")))))
+                   (uiop:xdg-cache-home)))
          (tarball-write-date
            (and (file-exists-p tarball) (file-write-date tarball))))
     (multiple-value-bind (version files) (system-version-files system)
