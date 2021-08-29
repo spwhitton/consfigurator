@@ -447,7 +447,8 @@ Keyword arguments accepted:
 Returns command's stdout, stderr and exit code, unless :FOR-EXIT, in which
 case return only the exit code."
   (%process-run-args
-    (let ((stdout (mktemp)))
+    (let* ((stdout (mktemp))
+           (wrapped (format nil "( ~A ) >~A" cmd stdout)))
       (handler-bind
           ((serious-condition
              (lambda (c)
@@ -456,17 +457,20 @@ case return only the exit code."
                 *connection*
                 (format nil "rm -f ~A" (escape-sh-token stdout))
                 nil))))
-        (setq cmd (format nil "( ~A ) >~A" cmd stdout))
-        (informat 4 "~&RUN ~A" cmd)
+        (informat 4 "~&RUN ~A"
+                  (if (> *consfigurator-debug-level* 4) wrapped cmd))
         (multiple-value-bind (err exit)
-            (connection-run *connection* cmd input)
+            (connection-run *connection* wrapped input)
           (let ((out (connection-readfile-and-remove *connection* stdout)))
             (when inform
-              (informat 1 "~&    % ~A~%~{    ~A~%~}" cmd (lines out)))
+              (informat 1 "~&    % ~A~%~{    ~A~%~}"
+                        (if (> *consfigurator-debug-level* 4) wrapped cmd)
+                        (lines out)))
             (if (or may-fail (= exit 0))
                 (if for-exit exit (values out err exit))
                 (error 'run-failed
-                       :cmd cmd :stdout out :stderr err :exit-code exit))))))))
+                       :cmd (if (> *consfigurator-debug-level* 4) wrapped cmd)
+                       :stdout out :stderr err :exit-code exit))))))))
 
 (defun mrun (&rest args)
   "Like RUN but don't separate stdout and stderr (\"m\" for \"merged\"; note
