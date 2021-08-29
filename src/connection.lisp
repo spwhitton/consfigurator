@@ -310,30 +310,33 @@ which will be cleaned up when BODY is finished."
         ;; just write to stderr and exit zero.  So we examine the stderr, and
         ;; if there is any, exit nonzero ourselves.
         ;;
+        ;; We apply the same stderr handling to mktemp(1), exiting if we see
+        ;; anything on stderr, as a simple way to ensure that non-fatal
+        ;; errors/warnings are not captured as the path to the temporary file.
+        ;;
         ;; While GNU M4 mkstemp makes the temporary file at most readable and
         ;; writeable by its owner, POSIX doesn't require this, so set a umask.
         (connection-run
          connection
-         #?"umask 077
-if command -v m4 >/dev/null; then
-    if tmpf=\$(exec 3>&1
-        if err=\$(echo 'mkstemp(${template})' | m4 2>&1 1>&3); then
-            case $err in
-                ?*) printf >&2 \"%s\\n\" \"$err\"; exit 1 ;;
-                *)  exit 0 ;;
-            esac
-        else
-            case $err in
-                ?*) printf >&2 \"%s\\n\" \"$err\" ;;
-            esac
-            exit 1
-        fi); then
-        echo $tmpf
+         #?"if tmpf=\$(umask 077; exec 3>&1
+    if err=\$(if command -v m4 >/dev/null; then
+                  echo 'mkstemp(${template})' | m4 2>&1 1>&3
+              else
+                  mktemp '${template}' 2>&1 1>&3
+              fi); then
+        case $err in
+            ?*) printf >&2 \"%s\\n\" \"$err\"; exit 1 ;;
+            *)  exit 0 ;;
+        esac
     else
-        exit 1;
-    fi
+        case $err in
+            ?*) printf >&2 \"%s\\n\" \"$err\" ;;
+        esac
+        exit 1
+    fi); then
+    echo $tmpf
 else
-    mktemp '${template}'
+    exit 1;
 fi"
          nil)
       (let ((lines (lines out)))
