@@ -449,20 +449,25 @@ Keyword arguments accepted:
 Returns command's stdout, stderr and exit code, unless :FOR-EXIT, in which
 case return only the exit code."
   (%process-run-args
-    (let* ((stdout (mktemp))
-           (wrapped (format nil "( ~A ) >~A" cmd stdout)))
+    (let (stdout
+          (wrapped
+            (format
+             nil "tmpf=$(~A) && printf \"%s\\n\" \"$tmpf\" && (~A) >\"$tmpf\""
+             (load-time-value (mkstemp-cmd) t) cmd)))
       (handler-bind
           ((serious-condition
              (lambda (c)
                (declare (ignore c))
-               (connection-run
-                *connection*
-                (format nil "rm -f ~A" (escape-sh-token stdout))
-                nil))))
+               (when stdout
+                 (connection-run
+                  *connection*
+                  (format nil "rm -f ~A" (escape-sh-token stdout))
+                  nil)))))
         (informat 4 "~&RUN ~A"
                   (if (> *consfigurator-debug-level* 4) wrapped cmd))
         (multiple-value-bind (err exit)
             (connection-run *connection* wrapped input)
+          (setq err (lines err) stdout (car err) err (unlines (cdr err)))
           (let ((out (connection-readfile-and-remove *connection* stdout)))
             (when inform
               (informat 1 "~&    % ~A~%~{    ~A~%~}"
