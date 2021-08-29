@@ -23,8 +23,8 @@
 
 (defclass local-connection (lisp-connection)
   ()
-  (:documentation "The root deployment: applying properties to the machine the
-root Lisp is running on, as the root Lisp's uid."))
+  (:documentation
+   "Applying properties to the machine Lisp is running on, as Lisp's uid."))
 
 (defmethod connection-run ((c local-connection) cmd (s stream))
   ;; see https://gitlab.common-lisp.net/asdf/asdf/-/issues/59
