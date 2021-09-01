@@ -268,14 +268,14 @@ through unmodified, so supplied-p information is preserved."
                 (cons ',name (cdr ,whole)))))))))
 
 (defmacro define-property-defining-macro
-    (mname (typev lambdav slotsv formsv) &body mbody)
+    (mname (typev lambdav slotsv formsv &optional (namev (gensym))) &body mbody)
   "Define macro MNAME which be used to define properties, and which works by
 parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
   (multiple-value-bind (mforms mdeclarations mdocstring)
       (parse-body mbody :documentation t)
     (declare (ignore mdeclarations))
-    (with-gensyms (name body declarations)
-      `(defmacro ,mname (,name ,typev ,lambdav &body ,body)
+    (with-gensyms (body declarations)
+      `(defmacro ,mname (,namev ,typev ,lambdav &body ,body)
          ,@(and mdocstring `(,mdocstring))
          (let ((programmatic-warning t)
                (,slotsv (list :type ,typev :lambda `',,lambdav)))
@@ -289,10 +289,10 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
 					  (cdar ,declarations)))))
                `(progn
                   (eval-when (:compile-toplevel :load-toplevel :execute)
-                    (record-known-property ',,name))
-                  (store-indentation-info-for-emacs ',,name ',,lambdav ,indent)
-                  (setprop ',,name ,@,slotsv)
-                  (define-dotted-property-macro ,,name ,,lambdav)
+                    (record-known-property ',,namev))
+                  (store-indentation-info-for-emacs ',,namev ',,lambdav ,indent)
+                  (setprop ',,namev ,@,slotsv)
+                  (define-dotted-property-macro ,,namev ,,lambdav)
                   ;; Now prepare a DEFUN for the property, to enable calling
                   ;; it programmatically within the :APPLY and :UNAPPLY
                   ;; routines of other properties.  This can lead to clearer
@@ -300,15 +300,15 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
                   ;; things like installing packages.
                   ,@(and
                      (getf ,slotsv :apply)
-                     `((defun-with-args ,,name args ,,lambdav
+                     `((defun-with-args ,,namev args ,,lambdav
                          ;; Properties with :HOSTATTRS subroutines which set
                          ;; new hostattrs should not be used programmatically
                          ;; in this way, so issue a warning.
                          ,@(and programmatic-warning
                                 (getf ,slotsv :hostattrs)
                                 `((warn 'programmatic-apply-hostattrs
-                                        :property ',,name)))
-                         (consfigure (cons ',,name args)))))))))))))
+                                        :property ',,namev)))
+                         (consfigure (cons ',,namev args)))))))))))))
 
 (define-condition programmatic-apply-hostattrs (warning)
   ((property :initarg :property))
@@ -332,24 +332,24 @@ subroutine does not push any new hostattrs."
 
 ;; supported ways to write properties are DEFPROP, DEFPROPSPEC and DEFPROPLIST
 
-(define-property-defining-macro defprop (type lambda slots forms)
+(define-property-defining-macro defprop (type lambda slots forms name)
   "Define a property by providing code for its subroutines."
   (loop for form in forms
         if (keywordp (car form))
           do (setf (getf slots (car form)) (cdr form)))
   (loop for kw in '(:desc :preprocess :hostattrs :check :apply :unapply)
         do (if-let ((slot (getf slots kw)))
-             (setf (getf slots kw)
-                   ;; TODO wrap a BLOCK around ,@slot with the property name,
-                   ;; so we can return from it
-                   `(lambda ,lambda
-                      ,@(and (member kw '(:desc :hostattrs))
-                             `((declare
-                                (ignorable
-                                 ,@(ordinary-ll-variable-names
-                                    (ordinary-ll-without-&aux lambda)
-                                    :include-supplied-p t)))))
-                      ,@slot)))))
+             (multiple-value-bind (forms declarations) (parse-body slot)
+               (setf (getf slots kw)
+                     `(lambda ,lambda
+                        ,@(and (member kw '(:desc :hostattrs))
+                               `((declare
+                                  (ignorable
+                                   ,@(ordinary-ll-variable-names
+                                      (ordinary-ll-without-&aux lambda)
+                                      :include-supplied-p t)))))
+                        ,@declarations
+                        (block ,name ,@forms)))))))
 
 (define-property-defining-macro defpropspec (type lambda slots forms)
   "Define a property which constructs, evaluates and applies a propspec.
