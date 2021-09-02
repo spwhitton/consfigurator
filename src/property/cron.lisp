@@ -100,7 +100,10 @@ applied since ADDITIONAL-PROPERTY was unapplied, the executable invoked by the
 CRON:RUNS-CONFIGURATOR cronjob will try to apply ADDITIONAL-PROPERTY again.
 One straightforward way to reduce the incidence of this sort of problem would
 be to refrain from using the ADDITIONAL-PROPERTIES argument to DEPLOY,
-HOSTDEPLOY etc."
+HOSTDEPLOY etc.
+
+If you're using SBCL, you may wish to apply this property within
+ESEQPROPS-UNTIL; see the docstring of IMAGE-DUMPED."
   (image-dumped)
   (nice-system-job
    "consfigurator" when "root"

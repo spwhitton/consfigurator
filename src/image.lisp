@@ -98,10 +98,37 @@ Thus, PREREQUEST must not start up any threads."
          ,(wrap request) (,out ,err ,exit)
        ,@forms)))
 
-(defun dump-consfigurator (filename form)
-  (nix:umask #o077)
-  (uiop:register-image-restore-hook (lambda () (eval form)) nil)
-  (uiop:dump-image filename :executable t))
+#+sbcl (defvar *sbcl-core-cksum* (local-cksum sb-ext:*core-pathname*))
+#+sbcl (defvar *sbcl-runtime-cksum* (local-cksum sb-ext:*runtime-pathname*))
+
+(defvar *us*
+  #+sbcl sb-ext:*core-pathname*
+  #+(and linux (not sbcl)) (resolve-symlinks "/proc/self/exe"))
+
+(define-simple-error no-runtime-for-image-dump (aborted-change)
+  "Cannot dump image because same build of Lisp not available via filesystem.")
+
+(defun %dump-consfigurator-in-grandchild (filename pre-dump form)
+  #+sbcl
+  (unless (and (not (pathname-equal filename *us*))
+               (file-exists-p sb-ext:*core-pathname*)
+               (file-exists-p sb-ext:*runtime-pathname*)
+               ;; As SBCL does not expose the build-id, use two checksums.
+               (= *sbcl-core-cksum*
+                  (local-cksum sb-ext:*core-pathname*))
+               (= *sbcl-runtime-cksum*
+                  (local-cksum sb-ext:*runtime-pathname*)))
+    (no-runtime-for-image-dump
+     "Couldn't dump executable image because same SBCL build unavailable."))
+  (with-fork-request nil
+      `(progn ,pre-dump
+              (nix:umask #o077)
+              (uiop:register-image-restore-hook (lambda () (eval ',form)) nil)
+              (uiop:dump-image ,filename :executable t))
+      (out err exit)
+    (declare (ignore out))
+    (unless (zerop exit)
+      (failed-change "~&Failed to dump image; stderr was ~%~%~A" err))))
 
 (defun dump-consfigurator-in-grandchild
     (filename &optional (form `(let ((*no-data-sources* t)
@@ -124,10 +151,7 @@ The process which performs the dump will have its umask set to #o077, but
 implementation-specific image dumping code might undo this (SBCL, for example,
 changes the mode of the file to #o755).  You might want to ensure that the
 directory containing FILENAME is locked down."
-  (with-fork-request nil `(dump-consfigurator ,filename ',form) (out err exit)
-    (declare (ignore out))
-    (unless (zerop exit)
-      (failed-change "~&Failed to dump image; stderr was ~%~%~A" err))))
+  (%dump-consfigurator-in-grandchild filename nil form))
 
 (defprop image-dumped :lisp (&optional filename form (always form))
   "Dump an executable image to FILENAME which will evaluate FORM, which must be
@@ -137,7 +161,31 @@ one of the ASDF systems upon which your consfig depends.
 If FILENAME is nil then use ~/.cache/consfigurator/images/latest, and if FORM
 is nil then use one which will execute the current deployment.  Unless ALWAYS,
 skip dumping an executable image when we can detect that the deployment is
-already running from FILENAME."
+already running from FILENAME.
+
+When the Lisp implementation is SBCL, applying this property will fail unless
+the same build of SBCL that's running is accessible via the filesystem.  A
+common situation in which this problem arises is when Consfigurator has forked
+into a chroot: unless the chroot has exactly the same operating system release
+as the parent host and SBCL has already been installed within the chroot, the
+requisite build of SBCL won't be accessible via the filesystem.
+
+In such a situation you might like to quietly skip dumping an image.  For
+example, if you're preparing a disk image, successfully dumping an image is
+probably not needed for the image to be bootable.  After installing the disk
+image and starting up the target machine, you can connect to it directly and
+DEPLOY/HOSTDEPLOY all its properties again, at which point the image dump can
+succeed.
+
+To support this, when the Lisp implementation is SBCL, the current connection
+is a FORK-CONNECTION, and the same build of SBCL is not found to be accessible
+via the filesytem, this property signals NO-RUNTIME-FOR-IMAGE-DUMP.  You can
+then quietly skip over this property by applying it like this:
+
+    (eseqprops-until 'no-runtime-for-image-dump
+     (image-dumped)
+     ;; ... properties depending on a successful image dump ...
+     )"
   (:desc (if form
              (format nil "Dumped image to evaluate ~S" form)
              "Dumped image to execute current deployment"))
@@ -146,11 +194,22 @@ already running from FILENAME."
                    (ensure-directories-exist
                     (merge-pathnames "consfigurator/images/latest"
                                      (get-connattr :XDG_CACHE_HOME))))))
-     (unless (and (not always)
-                  (eql :linux (uiop:operating-system))
-                  (pathname-equal file (resolve-symlinks "/proc/self/exe")))
-       (unless filename
-         (nix:chmod (unix-namestring (pathname-directory-pathname file)) #o700))
+     (when (and (not always) (pathname-equal file *us*))
+       (return-from image-dumped :no-change))
+     (unless filename
+       (nix:chmod (unix-namestring (pathname-directory-pathname file)) #o700))
+     (handler-bind
+         ((no-runtime-for-image-dump
+            (lambda (error)
+              (unless (subtypep
+                       (class-of *connection*)
+                       'consfigurator.connection.fork:fork-connection)
+                ;; If we're *not* in the case described in the docstring, just
+                ;; signal a regular ABORTED-CHANGE, because this situation
+                ;; probably indicates a consfig problem which should not just
+                ;; be quietly skipped over.
+                (apply #'aborted-change (simple-condition-format-control error)
+                       (simple-condition-format-arguments error))))))
        (if form
            (dump-consfigurator-in-grandchild file form)
            (dump-consfigurator-in-grandchild file))))

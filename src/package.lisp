@@ -313,6 +313,7 @@
            ;; image.lisp
            #:eval-in-grandchild
            #:dump-consfigurator-in-grandchild
+           #:no-runtime-for-image-dump
            #:image-dumped
            #:asdf-requirements-for-host-and-features
            #:request-asdf-requirements

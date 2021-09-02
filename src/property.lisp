@@ -604,6 +604,12 @@ PATH already has the specified CONTENT and MODE."
 (defun cksum (file)
   (parse-integer (car (split-string (run "cksum" file)))))
 
+(defun local-cksum (file)
+  (parse-integer
+   (car
+    (split-string
+     (run-program `("cksum" ,(unix-namestring file)) :output :string)))))
+
 ;; this is a safe parse of ls(1) output given its POSIX specification
 (defun ls-cksum (file)
   (when-let* ((ls (ignore-errors
