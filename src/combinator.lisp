@@ -124,64 +124,68 @@ apply the elements of REQUIREMENTS in reverse order."
                        (with-skip-failed-changes
                          (apply-and-print propapps t t)))))
 
-(defun apply-and-print (propapps &optional unapply silent)
-  (let ((buffer (make-array '(0) :element-type 'character
-			         :fill-pointer 0 :adjustable t))
-        (return-value :no-change)
-        ;; Remove any null propapps because we don't want to print anything
-        ;; for those, and applying them will do nothing.
-        (propapps (remove nil (if unapply (reverse propapps) propapps))))
-    (labels ((propapp-apply (propapp)
-               (if unapply (propappunapply propapp) (propappapply propapp)))
-             (announce-propapp-apply (propapp)
-               (with-output-to-string (*standard-output* buffer)
-                 (with-indented-inform
-                   (propapp-apply propapp)))))
-      (dolist (propapp propapps return-value)
-        (let ((announce
-                (and (not silent)
-                     (or (> *consfigurator-debug-level* 2)
-                         (not (get (get (car propapp) 'combinator)
-                                   'inline-combinator)))
-                     ;; We don't announce properties whose names begin with
-                     ;; '%' and which have no description; these are typically
-                     ;; DEFPROPs which exist only for use within a
-                     ;; DEFPROPLIST/DEFPROPSPEC defining an exported property.
-                     (not (and (< *consfigurator-debug-level* 3)
-                               (char= #\% (char (symbol-name (car propapp)) 0))
-                               (not (get (car propapp) 'desc))))))
-              ;; Initialise to FAILED-CHANGE here so that if there is a
-              ;; non-local exit from us we print "failed".  For example, if
-              ;; the user or a combinator invokes a SKIP-PROPERTY restart
-              ;; established further down the property call stack.
-              (result 'failed-change))
-          (unwind-protect
-               (restart-case (setq result (if announce
-                                              (announce-propapp-apply propapp)
-                                              (propapp-apply propapp)))
-                 (skip-property ()
-                   :report (lambda (s)
-                             (format s "Skip (~{~S~^ ~})"
-                                     (cons (car propapp) (propappargs propapp))))
-                   (signal 'skipped-properties)
-                   'failed-change))
-            (when (and (plusp (length buffer))
-                       (or silent
-                           (> *consfigurator-debug-level* 1)
-                           (not (eql result :no-change))))
-              (fresh-line)
-              (princ buffer))
-            (when announce
-              (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
-                        (get-hostname) (propappdesc propapp)
-                        (case result
-                          (:no-change     "ok")
-                          ('failed-change "failed")
-                          (t              "done")))))
-          (setf (fill-pointer buffer) 0
-                result (if (eql result 'failed-change) nil result))
-          (unless (eql result :no-change)
-            (setq return-value result)))))))
+(defun apply-and-print
+    (propapps &optional unapply silent
+     &aux
+       (buffer (make-array
+                '(0) :element-type 'character :fill-pointer 0 :adjustable t))
+       (return-value :no-change)
+       ;; Remove any null propapps because we don't want to print anything for
+       ;; those, and applying them will do nothing.
+       (propapps (remove nil (if unapply (reverse propapps) propapps))))
+  (dolist (propapp propapps return-value)
+    (let* ((combinator (get (car propapp) 'combinator))
+           (announce
+             (and (not silent)
+                  (or (> *consfigurator-debug-level* 2)
+                      (not (get combinator 'inline-combinator)))
+                  ;; We don't announce properties whose names begin with '%'
+                  ;; and which have no description; these are typically
+                  ;; DEFPROPs which exist only for use within a
+                  ;; DEFPROPLIST/DEFPROPSPEC defining an exported property.
+                  (not (and (< *consfigurator-debug-level* 3)
+                            (char= #\% (char (symbol-name (car propapp)) 0))
+                            (not (get (car propapp) 'desc)))))))
+      (flet ((accumulate (result)
+               (unless (eql result :no-change) (setq return-value result)))
+             (post-apply (status)
+               (when propapp
+                 (when (and (plusp (length buffer))
+                            (or silent
+                                (> *consfigurator-debug-level* 1)
+                                (not (string= status "ok"))))
+                   (fresh-line)
+                   (princ buffer))
+                 (when announce
+                   (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
+                             (get-hostname) (propappdesc propapp) status))
+                 ;; Ensure POST-APPLY called exactly once for each propapp.
+                 (setq propapp nil))))
+        (unwind-protect
+             (restart-case
+                 (alet (if announce
+                           (with-output-to-string (*standard-output* buffer)
+                             (with-indented-inform
+                               (if unapply
+                                   (propappunapply propapp)
+                                   (propappapply propapp))))
+                           (if unapply
+                               (propappunapply propapp)
+                               (propappapply propapp)))
+                   (accumulate it)
+                   (post-apply (if (eql it :no-change) "ok" "done")))
+               (skip-property ()
+                 :report (lambda (s)
+                           (format s "Skip (~{~S~^ ~})"
+                                   (cons (car propapp)
+                                         (propappargs propapp))))
+                 (signal 'skipped-properties)
+                 (post-apply "failed")
+                 (accumulate nil)))
+          ;; Ensure we print out the buffer contents if due to a non-local
+          ;; exit neither of the other calls to POST-APPLY have been made.
+          (post-apply "failed"))
+        (setf (fill-pointer buffer) 0)))))
 
 (define-function-property-combinator unapply (propapp)
   (destructuring-bind (psym . args) propapp
