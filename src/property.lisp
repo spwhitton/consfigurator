@@ -473,7 +473,7 @@ other than constant values and propapps to property combinators."
 
 ;;;; hostattrs in property subroutines
 
-(define-simple-error inapplicable-property
+(define-simple-error inapplicable-property ()
   "Signal, in a :HOSTATTRS subroutine, that the host's hostattrs indicate that
 this property cannot be applied to this host.  E.g. the property will try to
 install an apt package but the host is FreeBSD.")
@@ -553,9 +553,17 @@ Called by property subroutines."
 
 ;;;; :APPLY subroutines
 
-(define-simple-error failed-change
+(define-simple-error failed-change ()
   "Signal problems with the connection and errors while actually attempting to
 apply or unapply properties.")
+
+(define-simple-error aborted-change (failed-change)
+  "Like FAILED-CHANGE, except the attempt to apply or unapply the property has
+failed before any changes have been made to the system.  Signalled when a
+property is able to determine that it cannot be applied/unapplied by examining
+the actual state of the host but without making any changes.
+
+Not to be confused with INAPPLICABLE-PROPERTY.")
 
 (defun maybe-writefile-string (path content &key (mode nil mode-supplied-p))
   "Wrapper around WRITEFILE which returns :NO-CHANGE and avoids writing PATH if

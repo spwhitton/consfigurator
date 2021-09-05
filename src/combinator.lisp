@@ -65,32 +65,37 @@ Usage notes:
                               (propappunapply (choose-propapp))))))
      (setf (get ',name 'inline-combinator) t)))
 
-(defun skip-property-restarts ()
-  (loop for restart in (compute-restarts)
-        when (eql 'skip-property (restart-name restart))
-          collect restart))
-
-;; There can be multiple SKIP-PROPERTY restarts established at once, and we
-;; need this handler to invoke the one established right after we establish
-;; this handler.
-(defmacro with-skip-failed-changes (&body forms)
-  (with-gensyms (old-restarts)
-    `(let ((,old-restarts (skip-property-restarts)))
-       (handler-bind ((failed-change
-                        (lambda (c)
-                          (with-indented-inform
-                            (apply #'informat t
-                                   (simple-condition-format-control c)
-                                   (simple-condition-format-arguments c)))
-                          ;; We can't just use NSET-DIFFERENCE and take the
-                          ;; LASTCAR because NSET-DIFFERENCE provides no
-                          ;; ordering guarantees.
-                          (loop with chosen
-                                for restart in (skip-property-restarts)
-                                unless (member restart ,old-restarts)
-                                  do (setq chosen restart)
-                                finally (invoke-restart chosen)))))
-         ,@forms))))
+;; There can be multiple SKIP-* restarts with the same name established at
+;; once, and we need this handler to invoke one of the four established by the
+;; call to APPLY-AND-PRINT right after we establish this handler.
+(defmacro with-skip-failed-changes
+    ((&key (condition ''failed-change) (restart ''skip-property)) &body forms)
+  (once-only (condition restart)
+    (with-gensyms (old-restarts)
+      `(let* ((,old-restarts
+                (loop for restart
+                        in (compute-restarts (make-condition ,condition))
+                      when (eql (restart-name restart) ,restart)
+                        collect restart)))
+         (handler-bind
+             ((failed-change
+                (lambda (c)
+                  (when (subtypep (type-of c) ,condition)
+                    (with-indented-inform
+                      (apply #'informat t
+                             (simple-condition-format-control c)
+                             (simple-condition-format-arguments c)))
+                    ;; We can't just use NSET-DIFFERENCE and take the
+                    ;; LASTCAR because NSET-DIFFERENCE provides no ordering
+                    ;; guarantees.
+                    (loop with chosen and old-restarts = ,old-restarts
+                          for restart in (compute-restarts c)
+                          if (eql restart (car old-restarts))
+                            do (pop old-restarts)
+                          else if (eql (restart-name restart) ,restart)
+                                 do (setq chosen restart)
+                          finally (invoke-restart chosen))))))
+           ,@forms)))))
 
 (define-function-property-combinator eseqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
@@ -98,14 +103,28 @@ Usage notes:
             :apply (lambda () (apply-and-print propapps))
             :unapply (lambda () (apply-and-print propapps t))))
 
+(define-function-property-combinator eseqprops-until (condition &rest propapps)
+  "Like ESEQPROPS, but if CONDITION is signalled, handle it simply by skipping
+remaining elements of PROPAPPS.  CONDITION must subtype FAILED-CHANGE."
+  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
+            :hostattrs (lambda () (mapc #'propappattrs propapps))
+            :apply (lambda ()
+                     (with-skip-failed-changes (:condition condition
+                                                :restart 'skip-sequence)
+                       (apply-and-print propapps)))
+            :unapply (lambda ()
+                       (with-skip-failed-changes (:condition condition
+                                                  :restart 'skip-sequence)
+                         (apply-and-print propapps t)))))
+
 (define-function-property-combinator seqprops (&rest propapps)
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
             :hostattrs (lambda () (mapc #'propappattrs propapps))
             :apply (lambda ()
-                     (with-skip-failed-changes
+                     (with-skip-failed-changes ()
                        (apply-and-print propapps)))
             :unapply (lambda ()
-                       (with-skip-failed-changes
+                       (with-skip-failed-changes ()
                          (apply-and-print propapps t)))))
 
 (defmacro with-requirements (propapp &body requirements)
@@ -118,10 +137,10 @@ apply the elements of REQUIREMENTS in reverse order."
   (:retprop :type (collapse-types (mapcar #'propapptype propapps))
             :hostattrs (lambda () (mapc #'propappattrs propapps))
             :apply (lambda ()
-                     (with-skip-failed-changes
+                     (with-skip-failed-changes ()
                        (apply-and-print propapps nil t)))
             :unapply (lambda ()
-                       (with-skip-failed-changes
+                       (with-skip-failed-changes ()
                          (apply-and-print propapps t t)))))
 
 (defun apply-and-print
@@ -160,8 +179,21 @@ apply the elements of REQUIREMENTS in reverse order."
                    (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
                              (get-hostname) (propappdesc propapp) status))
                  ;; Ensure POST-APPLY called exactly once for each propapp.
-                 (setq propapp nil))))
+                 (setq propapp nil)))
+
+             (test (c) (subtypep (type-of c) 'aborted-change))
+             (ntest (c) (not (subtypep (type-of c) 'aborted-change)))
+
+             (pareport (s)
+               (format s "Skip (~{~S~^ ~})"
+                       (cons (car propapp) (propappargs propapp))))
+             (seqreport (s)
+               (format s "Skip remainder of sequence containing (~{~S~^ ~})"
+                       (cons (car propapp) (propappargs propapp)))))
         (unwind-protect
+             ;; Establish restarts to be invoked by WITH-SKIP-FAILED-CHANGES
+             ;; or possibly interactively by the user.  There are two of each
+             ;; because we want to handle ABORTED-CHANGE specially.
              (restart-case
                  (alet (if announce
                            (with-output-to-string (*standard-output* buffer)
@@ -174,14 +206,25 @@ apply the elements of REQUIREMENTS in reverse order."
                                (propappapply propapp)))
                    (accumulate it)
                    (post-apply (if (eql it :no-change) "ok" "done")))
-               (skip-property ()
-                 :report (lambda (s)
-                           (format s "Skip (~{~S~^ ~})"
-                                   (cons (car propapp)
-                                         (propappargs propapp))))
-                 (signal 'skipped-properties)
-                 (post-apply "failed")
-                 (accumulate nil)))
+               ;; Standard restarts for skipping over sequence entries.
+               (skip-property () :test ntest :report pareport
+                 (signal 'skipped-properties) (post-apply "failed")
+                 (accumulate nil))
+               (skip-property () :test test :report pareport
+                 (signal 'skipped-properties) (post-apply "failed")
+                 (accumulate :no-change))
+               ;; Special restarts for the whole sequence which return from
+               ;; the enclosing DOLIST based on the kind of error.  If
+               ;; ABORTED-CHANGE, we assume that applying the current propapp
+               ;; made no change, so we return a value indicating whether
+               ;; properties earlier in PROPAPPS made a change.  Otherwise, we
+               ;; assume that some change was made.
+               (skip-sequence () :test ntest :report seqreport
+                 (signal 'skipped-properties) (post-apply "failed")
+                 (return))
+               (skip-sequence () :test test :report seqreport
+                 (signal 'skipped-properties) (post-apply "failed")
+                 (return return-value)))
           ;; Ensure we print out the buffer contents if due to a non-local
           ;; exit neither of the other calls to POST-APPLY have been made.
           (post-apply "failed"))

@@ -149,9 +149,9 @@ supported."
            (nreversef ,argsym)
            ,@forms)))))
 
-(defmacro define-simple-error (name &optional docstring)
+(defmacro define-simple-error (name &optional parent-types docstring)
   `(progn
-     (define-condition ,name (simple-error) ()
+     (define-condition ,name (,@parent-types simple-error) ()
        ,@(and docstring `((:documentation ,docstring))))
      (defun ,name (message &rest args)
        ,@(and docstring `(,docstring))

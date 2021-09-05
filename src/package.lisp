@@ -195,6 +195,7 @@
            #:get-short-hostname
            #:require-data
            #:failed-change
+           #:aborted-change
            #:assert-euid-root
            #:assert-connection-supports
            #:maybe-writefile-string
@@ -222,6 +223,7 @@
            #:define-choosing-property-combinator
            #:seqprops
            #:eseqprops
+           #:eseqprops-until
            #:with-requirements
            #:silent-seqprops
            #:unapply
