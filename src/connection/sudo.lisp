@@ -62,14 +62,13 @@
    'sudo-connection
    :connattrs `(:remote-user ,user)
    :password-file (and password
-                       (let ((file (mktemp)))
+                       (aprog1 (mktemp)
                          ;; We'll send the password followed by ^M, then the
                          ;; real stdin.  Use CODE-CHAR in this way so that we
                          ;; can be sure ASCII ^M is what will get emitted.
-                         (writefile file (strcat (passphrase password)
-                                                 (string (code-char 13)))
-                                    :mode #o600)
-                         file))))
+                         (writefile it (strcat (passphrase password)
+                                               (string (code-char 13)))
+                                    :mode #o600)))))
 
 (defmethod connection-teardown :after ((connection sudo-connection))
   (when-let ((file (slot-value connection 'password-file)))

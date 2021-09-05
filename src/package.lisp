@@ -1,7 +1,7 @@
 (in-package :cl-user)
 
 (defpackage :consfigurator
-  (:use #:cl #:alexandria #:cffi)
+  (:use #:cl #:anaphora #:alexandria #:cffi)
   (:local-nicknames (#:re #:cl-ppcre))
   (:shadowing-import-from #:uiop
                           #:strcat
@@ -470,7 +470,7 @@
            #:os-bootstrapped.))
 
 (defpackage :consfigurator.property.disk
-  (:use #:cl #:alexandria #:consfigurator)
+  (:use #:cl #:anaphora #:alexandria #:consfigurator)
   (:local-nicknames (#:re      #:cl-ppcre)
                     (#:chroot  #:consfigurator.property.chroot)
                     (#:cmd     #:consfigurator.property.cmd)
@@ -534,7 +534,11 @@
            #:volumes))
 
 (defpackage :consfigurator.property.fstab
-  (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
+  (:use #:cl
+        #:anaphora
+        #:alexandria
+        #:consfigurator
+        #:consfigurator.property.disk)
   (:local-nicknames (#:os    #:consfigurator.property.os)
                     (#:file  #:consfigurator.property.file))
   (:export #:volume->entry
@@ -543,7 +547,11 @@
            #:entries-for-opened-volumes))
 
 (defpackage :consfigurator.property.crypttab
-  (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
+  (:use #:cl
+        #:anaphora
+        #:alexandria
+        #:consfigurator
+        #:consfigurator.property.disk)
   (:local-nicknames (#:re    #:cl-ppcre)
                     (#:os    #:consfigurator.property.os)
                     (#:file  #:consfigurator.property.file))
@@ -779,7 +787,7 @@
            #:masked))
 
 (defpackage :consfigurator.property.firewalld
-  (:use #:cl #:alexandria #:consfigurator)
+  (:use #:cl #:anaphora #:alexandria #:consfigurator)
   (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
                     (#:file         #:consfigurator.property.file)
                     (#:apt          #:consfigurator.property.apt)
@@ -841,12 +849,14 @@
 (defpackage :consfigurator.connection.ssh
   (:use #:cl
         #:consfigurator
+        #:anaphora
         #:alexandria
         #:consfigurator.connection.shell-wrap))
 
 (defpackage :consfigurator.connection.sudo
   (:use #:cl
         #:consfigurator
+        #:anaphora
         #:alexandria
         #:consfigurator.connection.shell-wrap))
 
@@ -857,6 +867,7 @@
 
 (defpackage :consfigurator.connection.chroot
   (:use #:cl
+        #:anaphora
         #:alexandria
 	#:consfigurator
 	#:consfigurator.connection.fork

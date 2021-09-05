@@ -70,9 +70,8 @@ except that if the second field of the existing entry is not \"none\" and the
 corresponding member of ENTRIES is \"none\" or \"PLACEHOLDER\", use the
 existing field value."
   (:desc
-   (let ((devices
-           (loop for entry in entries collect (car (split-string entry)))))
-     (format nil "crypttab entr~@P for ~{~A~^, ~}" (length devices) devices)))
+   (alet (loop for entry in entries collect (car (split-string entry)))
+     (format nil "crypttab entr~@P for ~{~A~^, ~}" (length it) it)))
   (:apply (file:update-unix-table #P"/etc/crypttab" 1 0 entries)))
 
 (defprop entries-for-opened-volumes :posix ()

@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Sean Whitton <spwhitton@spwhitton.name>
 Build-Depends:
  cl-alexandria,
+ cl-anaphora,
  cl-babel,
  cl-cffi,
  cl-heredoc,
@@ -30,6 +31,7 @@ Package: cl-consfigurator
 Architecture: all
 Depends:
  cl-alexandria,
+ cl-anaphora,
  cl-babel,
  cl-cffi,
  cl-heredoc,

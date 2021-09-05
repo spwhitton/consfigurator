@@ -201,10 +201,9 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
        (informat 3 "~&Obtaining ~S | ~S from a data source" iden1 iden2)
        (values
         (lambda ()
-          (let ((from-source-data (funcall (cdr from-source))))
-            (when (subtypep (type-of from-source-data) 'string-data)
-              (setf (gethash idenpair *string-data*) from-source-data))
-            from-source-data))
+          (aprog1 (funcall (cdr from-source))
+            (when (subtypep (type-of it) 'string-data)
+              (setf (gethash idenpair *string-data*) it))))
         from-source-version))
       ((and local-cached
             (or (not from-source) (version>= local-cached-version

@@ -4,7 +4,8 @@
   :author "Sean Whitton <spwhitton@spwhitton.name>"
   :licence "GPL-3+"
   :serial t
-  :depends-on (#:alexandria
+  :depends-on (#:anaphora
+               #:alexandria
                #:babel
                #:babel-streams
                #:cl-ppcre

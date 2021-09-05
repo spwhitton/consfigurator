@@ -81,10 +81,9 @@ should be the mount point, without the chroot's root prefixed.")
           when (and (subtypep (type-of volume) 'disk:filesystem)
                     (slot-boundp volume 'disk:mount-point)
                     (subpathp (disk:mount-point volume) into))
-            collect (let ((copy (disk:copy-volume-and-contents volume)))
-                      (setf (disk:mount-point copy)
-                            (in-chroot-pathname (disk:mount-point copy) into))
-                      copy)
+            collect (aprog1 (disk:copy-volume-and-contents volume)
+                      (setf (disk:mount-point it)
+                            (in-chroot-pathname (disk:mount-point it) into)))
           else collect volume)))
 
 (defmethod propagate-connattr

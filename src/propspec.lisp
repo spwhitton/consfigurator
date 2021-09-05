@@ -76,9 +76,8 @@ manual."
                 (lambda (form env &aux (c (and (listp form) (car form))))
                   (declare (ignore env))
                   (cond ((and c (isprop c))
-                         (let ((gensym (gensym)))
-                           (push (cons gensym form) replaced-propapps)
-                           gensym))
+                         (aprog1 (gensym)
+                           (push (cons it form) replaced-propapps)))
                         ;; We also look for any symbols without function or
                         ;; property definitions occurring in function call
                         ;; positions.  These could potentially be properties

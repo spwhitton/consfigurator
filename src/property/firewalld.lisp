@@ -37,13 +37,12 @@
    (flet ((run ()
             (let ((output (mrun "firewall-cmd" args)))
               (and warning (search warning output) :no-change))))
-     (let ((result (if file
-                       (with-change-if-changes-file
-                           ((merge-pathnames file #P"/etc/firewalld/")) (run))
-                       (run))))
-       (unless (eql result :no-change)
-         (mrun "firewall-cmd" "--reload"))
-       result))))
+     (aprog1 (if file
+                 (with-change-if-changes-file
+                     ((merge-pathnames file #P"/etc/firewalld/")) (run))
+                 (run))
+       (unless (eql it :no-change)
+         (mrun "firewall-cmd" "--reload"))))))
 
 
 ;;;; Setting contents of XML configuration files

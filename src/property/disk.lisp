@@ -925,10 +925,9 @@ filesystems will be incrementally updated when other properties change."
             if (and physical-disk-p (not found)
                     (slot-boundp volume 'volume-contents))
               do (setq found t)
-              and collect (let ((copy (copy-volume-and-contents volume)))
-                            (change-class copy 'raw-disk-image)
-                            (setf (image-file copy) image-pathname)
-                            copy)
+              and collect (aprog1 (copy-volume-and-contents volume)
+                            (change-class it 'raw-disk-image)
+                            (setf (image-file it) image-pathname))
             else unless physical-disk-p
                    collect volume
             finally

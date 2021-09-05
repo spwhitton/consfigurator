@@ -105,10 +105,9 @@
 
 (defun propapply (prop &rest args)
   (with-some-errors-are-failed-change
-    (let ((check (get prop 'check)))
-      (if (and check (apply check args))
-          :no-change
-          (apply (get prop 'papply (constantly :no-change)) args)))))
+    (if (aand (get prop 'check) (apply it args))
+        :no-change
+        (apply (get prop 'papply (constantly :no-change)) args))))
 
 (defun propappapply (propapp)
   (if propapp
@@ -452,18 +451,17 @@ You will usually be able to use DEFPROPLIST instead of DEFPROPSPEC.  However,
 sometimes you will need to fall back on DEFPROPSPEC.  For example, an
 unevaluated property application specification cannot express passing values
 other than constant values and propapps to property combinators."
-  (let ((propspec
-          (loop for remaining on properties
-                for car = (car remaining)
-                if (or (stringp car)
-                       (and (listp car)
-                            (member (car car)
-                                    '(:desc :check :hostattrs declare))))
-                  collect car into begin
-                else
-                  return (nreverse
-                          (cons `(props eseqprops ,@remaining) begin)))))
-    `(defpropspec ,name ,type ,lambda ,@propspec)))
+  (alet (loop for remaining on properties
+              for car = (car remaining)
+              if (or (stringp car)
+                     (and (listp car)
+                          (member (car car)
+                                  '(:desc :check :hostattrs declare))))
+                collect car into begin
+              else
+                return (nreverse
+                        (cons `(props eseqprops ,@remaining) begin)))
+    `(defpropspec ,name ,type ,lambda ,@it)))
 
 
 ;;;; hostattrs in property subroutines
