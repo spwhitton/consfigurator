@@ -76,6 +76,8 @@ Example usage:
     (apt:mirror \"...\")
     (sbuild:usable-by \"spwhitton\")
     (schroot:overlays-in-tmpfs)
+    (periodic:at-most :monthly \"sbuild sid schroot rebuilt\"
+      (unapply (sbuild:built. nil (os:debian-unstable :amd64))))
     (sbuild:built. nil
       (os:debian-unstable :amd64)
       (sbuild:standard-debian-schroot)
