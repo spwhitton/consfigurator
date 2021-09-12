@@ -320,6 +320,7 @@
            #:exists-with-content
            #:contains-lines
            #:lacks-lines
+           #:lacks-lines-matching
            #:has-mode
            #:has-ownership
            #:does-not-exist

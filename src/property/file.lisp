@@ -78,6 +78,17 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
     path
     (curry #'remove-if (lambda (l) (member l lines :test #'string=))))))
 
+(defprop lacks-lines-matching :posix (path &rest patterns)
+  "If there is a file a PATH, ensure it does not contain any lines matching
+any of the regular expressions PATTERNS."
+  (:apply
+   (let ((scanners (mapcar #'re:create-scanner patterns)))
+     (map-file-lines
+      path (lambda (lines)
+             (loop for line in lines
+                   unless (loop for s in scanners thereis (re:scan s line))
+                     collect line))))))
+
 (defprop has-mode :posix (path mode)
   "Ensure that a file has a particular numeric mode."
   (:desc (format nil "~A has mode ~O" path mode))
