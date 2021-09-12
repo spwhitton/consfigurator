@@ -150,7 +150,7 @@ already running from FILENAME."
                   (eql :linux (uiop:operating-system))
                   (pathname-equal file (resolve-symlinks "/proc/self/exe")))
        (unless filename
-         (nix:chmod #o700 (unix-namestring (pathname-directory-pathname file))))
+         (nix:chmod (unix-namestring (pathname-directory-pathname file)) #o700))
        (if form
            (dump-consfigurator-in-grandchild file form)
            (dump-consfigurator-in-grandchild file))))
