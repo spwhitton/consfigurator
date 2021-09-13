@@ -17,6 +17,7 @@ Build-Depends:
  cl-agnostic-lizard,
  debhelper-compat (= 13),
  dh-elpa,
+ libacl1-dev,
  python3-sphinx,
  sbcl,
  sphinx-common,
@@ -44,6 +45,7 @@ Depends:
  cl-trivial-backtrace,
  cl-agnostic-lizard,
  emacsen-common,
+ libacl1-dev,
  ${misc:Depends},
 Recommends:
  emacs,

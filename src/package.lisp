@@ -316,6 +316,25 @@
            #:request-asdf-requirements
            #:continue-deploy*-program))
 
+(defpackage :consfigurator.util.posix1e
+  (:use #:cl #:alexandria #:consfigurator #:cffi)
+  (:export #:acl_type_t
+           #:acl_entry_t
+           #:+ACL-USER+
+           #:+ACL-GROUP+
+           #:+ACL-TYPE-ACCESS+
+           #:+ACL-TYPE-DEFAULT+
+           #:+ACL-NEXT-ENTRY+
+           #:+ACL-FIRST-ENTRY+
+
+           #:with-acl-free
+           #:acl-get-file
+           #:acl-set-file
+           #:acl-get-entry
+           #:acl-get-tag-type
+           #:acl-get-qualifier
+           #:acl-set-qualifier))
+
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)
   (:export #:single))

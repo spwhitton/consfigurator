@@ -1,3 +1,10 @@
+consfigurator (0.11.1-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+  * Add dep and build-dep on libacl1-dev.
+
+ -- Sean Whitton <spwhitton@spwhitton.name>  Thu, 21 Oct 2021 13:25:09 -0700
+
 consfigurator (0.11.0-1) unstable; urgency=medium
 
   * New upstream release.

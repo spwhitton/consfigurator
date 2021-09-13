@@ -4,6 +4,7 @@
   :author "Sean Whitton <spwhitton@spwhitton.name>"
   :licence "GPL-3+"
   :serial t
+  :defsystem-depends-on (#:cffi-grovel)
   :depends-on (#:anaphora
                #:alexandria
                #:babel
@@ -20,7 +21,9 @@
                #:trivial-backtrace)
   :components ((:file "src/package")
                (:file "src/reader")
+               (:cffi-grovel-file "src/libacl")
                (:file "src/util")
+               (:file "src/util/posix1e")
                (:file "src/connection")
                (:file "src/property")
                (:file "src/propspec")

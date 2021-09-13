@@ -18,7 +18,8 @@
 (in-package :consfigurator.property.package)
 (named-readtables:in-readtable :consfigurator)
 
-(defparameter *consfigurator-system-dependencies* '(:apt "build-essential"))
+(defparameter *consfigurator-system-dependencies*
+  '(:apt ("build-essential" "libacl1-dev")))
 
 (defgeneric %command (package-manager)
   (:documentation

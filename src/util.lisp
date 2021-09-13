@@ -605,11 +605,19 @@ Does not currently establish a PAM session."
 (defmacro define-error-retval-cfun
     ((&key (errno t) (failure-val -1)) &body defcfun-args)
   (let ((defun (etypecase (car defcfun-args)
-                 (string (intern (string-upcase (car defcfun-args))))
+                 (string
+                  (translate-name-from-foreign (car defcfun-args) '*package*))
                  (list (cadar defcfun-args))))
         (cfun (etypecase (car defcfun-args)
                 (string (car defcfun-args))
-                (list (caar defcfun-args)))))
+                (list (caar defcfun-args))))
+        (failure-val-check
+          (once-only (failure-val)
+            `(cond ((numberp ,failure-val) (= ,failure-val result))
+                   ((pointerp ,failure-val) (pointer-eq ,failure-val result))
+                   (t (simple-program-error
+                       "Don't know how to compare function return value with ~S."
+                       ,failure-val))))))
     `(defun ,defun ,(loop for arg in (cddr defcfun-args) collect (car arg))
        ,@(and (eql errno :zero) '((nix:set-errno 0)))
        (let ((result (foreign-funcall
@@ -618,8 +626,8 @@ Does not currently establish a PAM session."
                               collect (cadr arg) collect (car arg))
                       ,(cadr defcfun-args))))
          (if ,(if (eql errno :zero)
-                  `(and (= ,failure-val result) (not (zerop (nix:get-errno))))
-                  `(= ,failure-val result))
+                  `(and ,failure-val-check (not (zerop (nix:get-errno))))
+                  failure-val-check)
              (nix:posix-error ,(and errno '(nix:get-errno)) nil ',defun)
              result)))))
 
