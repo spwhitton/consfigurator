@@ -52,7 +52,8 @@
         (user (connection-connattr connection :remote-user)))
     (run-program (list "chown" "-R"
                        (format nil "~A:~A" uid gid)
-                       (unix-namestring (slot-value connection 'datadir))))
+                       (unix-namestring (ensure-directories-exist
+                                         (slot-value connection 'datadir)))))
     (posix-login-environment
      user (connection-connattr connection :remote-home))
     ;; We are privileged, so this sets the real, effective and saved IDs.
