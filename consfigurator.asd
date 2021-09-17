@@ -39,6 +39,7 @@
                (:file "src/property/mount")
                (:file "src/property/service")
                (:file "src/property/apt")
+               (:file "src/property/package")
                (:file "src/property/chroot")
                (:file "src/property/disk")
                (:file "src/property/fstab")

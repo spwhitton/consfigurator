@@ -91,6 +91,7 @@
            #:noop
            #:symbol-named
            #:memstring=
+           #:define-simple-error
            #:plist-to-cmd-args
 	   #:with-local-temporary-directory
            #:pathname-file
@@ -443,10 +444,17 @@
            #:pinned
            #:no-pdiffs))
 
+(defpackage :consfigurator.property.package
+  (:use #:cl #:alexandria #:consfigurator)
+  (:local-nicknames (#:apt #:consfigurator.property.apt))
+  (:export #:*consfigurator-system-dependencies*
+           #:package-manager-not-found
+           #:installed))
+
 (defpackage :consfigurator.connection.sbcl
   (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:os  #:consfigurator.property.os)
-                    (#:apt #:consfigurator.property.apt)))
+  (:local-nicknames (#:os      #:consfigurator.property.os)
+                    (#:package #:consfigurator.property.package)))
 
 (defpackage :consfigurator.property.user
   (:use #:cl #:consfigurator)
@@ -466,6 +474,7 @@
   (:local-nicknames (#:service   #:consfigurator.property.service)
                     (#:apt       #:consfigurator.property.apt)
                     (#:os        #:consfigurator.property.os)
+                    (#:package   #:consfigurator.property.package)
                     (#:container #:consfigurator.property.container)
                     (#:mount     #:consfigurator.property.mount)
                     (#:file      #:consfigurator.property.file))

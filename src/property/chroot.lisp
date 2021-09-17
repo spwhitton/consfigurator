@@ -53,26 +53,25 @@
        (nconcf args (list apt.mirror)))
      (apply #'run args))))
 
-(defprop %debootstrap-manually-installed :posix ()
+(defproplist %debootstrap-manually-installed :posix ()
+  ;; Accept any debootstrap we find on path to enable installing Debian on
+  ;; arbitrary unixes, where Consfigurator does not know how to install
+  ;; packages, but the user has manually installed debootstrap(8).
   (:check (remote-executable-find "debootstrap"))
-  (:apply
-   (failed-change "Don't know how to install debootstrap(8) manually.")))
+  (package:installed nil '(:apt ("debootstrap"))))
 
 (defpropspec %os-bootstrapper-installed :posix (host)
   (:desc "OS bootstrapper installed")
   (let ((host (preprocess-host host)))
     `(os:host-etypecase ,host
        (debian
-        ;; Have %DEBOOTSTRAP-MANUALLY-INSTALLED like this to enable installing
-        ;; Debian on arbitrary unixes, where Consfigurator doesn't know how to
-        ;; install packages, but the user has manually ensured that
-        ;; debootstrap(8) is on PATH.  However, we don't have such an escape
-        ;; hatch for the case where the architectures do not match because
-        ;; ensuring that debootstrap(8) will be able to bootstrap a foreign
-        ;; arch is more involved.
         (os:typecase
           (debianlike (apt:installed "debootstrap"))
           (t (%debootstrap-manually-installed)))
+        ;; Don't have an escape hatch like the :CHECK subroutine of
+        ;; %DEBOOTSTRAP-MANUALLY-INSTALLED for the case where the
+        ;; architectures do not match because ensuring that debootstrap(8)
+        ;; will be able to bootstrap a foreign arch is more involved.
         ,@(and (not (call-with-os
                      #'os:supports-arch-p
                      (os:linux-architecture (get-hostattrs-car :os host))))
