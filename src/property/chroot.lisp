@@ -54,7 +54,7 @@
      (apply #'run args))))
 
 (defprop %debootstrap-manually-installed :posix ()
-  (:check (zerop (mrun :for-exit "command" "-v" "debootstrap")))
+  (:check (remote-executable-find "debootstrap"))
   (:apply
    (failed-change "Don't know how to install debootstrap(8) manually.")))
 

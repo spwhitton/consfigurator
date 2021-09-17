@@ -601,6 +601,9 @@ specification of POSIX ls(1))."
   (merge-pathnames
    path (merge-pathnames "consfigurator/" (get-connattr :XDG-CACHE-HOME))))
 
+(defun remote-executable-find (executable)
+  (zerop (mrun :for-exit "command" "-v" executable)))
+
 (defun readfile (path)
   (connection-readfile
    *connection*
