@@ -331,7 +331,11 @@ subroutine, muffle warnings about calling a property with a :HOSTATTRS
 subroutine programmatically.  Use this only when you know that the :HOSTATTRS
 subroutine does not push any new hostattrs."
   (unless
-      (and (listp form) (or (not (fboundp (car form))) (isprop (car form))))
+      (and (listp form) (or (not (fboundp (car form)))
+                            (isprop (car form))
+                            (and (listp (cadr form))
+                                 (eql 'function (caadr form))
+                                 (isprop (cadadr form)))))
     (simple-program-error "~A is not a programmatic call to a property." form))
   `(handler-bind ((programmatic-apply-hostattrs #'muffle-warning))
      ,form))
