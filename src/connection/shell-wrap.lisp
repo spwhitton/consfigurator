@@ -29,7 +29,7 @@
   (multiple-value-bind (out exit)
       (let* ((path (escape-sh-token path))
              (base #?"test -r ${path} && cat ${path}")
-             (cmd (if delete (strcat base #?"&& rm ${path}") base)))
+             (cmd (if delete (strcat base #?" && rm ${path}") base)))
         (connection-run c cmd nil))
     (if (zerop exit)
         out
