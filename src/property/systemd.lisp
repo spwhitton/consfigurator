@@ -18,38 +18,44 @@
 (in-package :consfigurator.property.systemd)
 (named-readtables:in-readtable :consfigurator)
 
-(defprop started :posix (service)
+(defun systemctl (fn user &rest args &aux (args (cons "systemctl" args)))
+  (apply fn (if user (apply #'systemd--user args) args)))
+
+(defprop started :posix (service &optional user)
   (:desc #?"systemd service ${service} started")
-  (:check (zerop (mrun :for-exit "systemctl" "is-active" service)))
-  (:apply (mrun "systemctl" "start" service)))
+  (:check (zerop (systemctl #'mrun user :for-exit "is-active" service)))
+  (:apply (systemctl #'mrun user "start" service)))
 
-(defprop stopped :posix (service)
+(defprop stopped :posix (service &optional user)
   (:desc #?"systemd service ${service} stopped")
-  (:check (plusp (mrun :for-exit "systemctl" "is-active" service)))
-  (:apply (mrun "systemctl" "stop" service)))
+  (:check (plusp (systemctl #'mrun user :for-exit "is-active" service)))
+  (:apply (systemctl #'mrun user "stop" service)))
 
-(defprop enabled :posix (service)
+(defprop enabled :posix (service &optional user)
   (:desc #?"systemd service ${service} enabled")
-  (:check (zerop (mrun :for-exit "systemctl" "is-enabled" service)))
-  (:apply (mrun "systemctl" "enable" service)))
+  (:check (zerop (systemctl #'mrun user :for-exit "is-enabled" service)))
+  (:apply (systemctl #'mrun user "enable" service)))
 
-(defprop disabled :posix (service)
+(defprop disabled :posix (service &optional user)
   (:desc #?"systemd service ${service} disabled")
   (:check
-   (let ((status (stripln (run :may-fail "systemctl" "is-enabled" service))))
+   (let ((status
+           (stripln
+            (systemctl #'run user :may-fail "is-enabled" service))))
      (or (string-prefix-p "linked" status)
          (string-prefix-p "masked" status)
          (memstring=
-          status
-          '("static" "disabled" "generated" "transient" "indirect")))))
-  (:apply (mrun "systemctl" "disable" service)))
+          status '("static" "disabled" "generated" "transient" "indirect")))))
+  (:apply (systemctl #'mrun user "disable" service)))
 
-(defprop masked :posix (service)
+(defprop masked :posix (service &optional user)
   (:desc #?"systemd service ${service} masked")
-  (:check (string-prefix-p "masked"
-                           (run :may-fail "systemctl" "is-enabled" service)))
-  (:apply (mrun "systemctl" "mask" service))
-  (:unapply (mrun "systemctl" "unmask" service)))
+  (:check
+   (string-prefix-p
+    "masked"
+    (systemctl #'run user :may-fail "is-enabled" service)))
+  (:apply (systemctl #'mrun user "mask" service))
+  (:unapply (systemctl #'mrun user "unmask" service)))
 
 (defprop lingering-enabled :posix (user)
   (:desc #?"User lingering enable for ${user}")

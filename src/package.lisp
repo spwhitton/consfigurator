@@ -98,6 +98,7 @@
            #:memstring=
            #:define-simple-error
            #:plist-to-cmd-args
+           #:systemd--user
 	   #:with-local-temporary-directory
            #:pathname-file
            #:directory-contents
@@ -822,7 +823,7 @@
            #:https-vhost))
 
 (defpackage :consfigurator.property.systemd
-  (:use #:cl #:consfigurator)
+  (:use #:cl #:consfigurator #:anaphora)
   (:export #:started
            #:stopped
            #:enabled

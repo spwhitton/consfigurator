@@ -171,6 +171,30 @@ supported."
   (doplist (k v plist args)
            (push (strcat "--" (string-downcase (symbol-name k)) "=" v) args)))
 
+(defun systemd--user (&rest args)
+  "Where ARGS are args to RUN or MRUN for an invocation of a systemd command
+which can take \"--user\", insert the \"--user\" parameter, and modify or
+insert an :ENV parameter so that the call is more likely to succeed."
+  (loop with xrd = (format nil "/run/user/~D" (get-connattr :remote-uid))
+        with dsba = (format nil "unix:path=~A/bus" xrd)
+        with arg-done and env-done while args
+        as next = (pop args) collect next into accum
+        if (and (not arg-done) (stringp next))
+          collect "--user" into accum and do (setq arg-done t)
+        if (eql :env next)
+          collect (aprog1 (copy-list (pop args))
+                    (setf (getf it :XDG_RUNTIME_DIR) xrd
+                          (getf it :DBUS_SESSION_BUS_ADDRESS) dsba
+                          env-done t))
+            into accum
+        if (eql :input next)
+          collect (pop args)
+        finally (return (if env-done
+                            accum
+                            (list* :env `(:XDG_RUNTIME_DIR ,xrd
+                                          :DBUS_SESSION_BUS_ADDRESS ,dsba)
+                                   accum)))))
+
 (defmacro with-local-temporary-directory ((dir) &body forms)
   "Execute FORMS with a local temporary directory's pathname in DIR.
 Currently assumes GNU mktemp(1).
