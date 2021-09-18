@@ -50,3 +50,9 @@
                            (run :may-fail "systemctl" "is-enabled" service)))
   (:apply (mrun "systemctl" "mask" service))
   (:unapply (mrun "systemctl" "unmask" service)))
+
+(defprop lingering-enabled :posix (user)
+  (:desc #?"User lingering enable for ${user}")
+  (:check (memstring= "Linger=yes" (runlines "loginctl" "show-user" user)))
+  (:apply (mrun "loginctl" "enable-linger" user))
+  (:unapply (mrun "loginctl" "disable-linger" user)))

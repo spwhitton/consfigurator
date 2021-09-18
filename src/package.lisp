@@ -785,7 +785,8 @@
            #:stopped
            #:enabled
            #:disabled
-           #:masked))
+           #:masked
+           #:lingering-enabled))
 
 (defpackage :consfigurator.property.firewalld
   (:use #:cl #:anaphora #:alexandria #:consfigurator)
