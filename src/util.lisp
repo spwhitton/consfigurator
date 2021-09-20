@@ -175,9 +175,9 @@ supported."
   "Execute FORMS with a local temporary directory's pathname in DIR.
 Currently assumes GNU mktemp(1).
 
-There is no WITH-REMOTE-TEMPORARY-DIRECTORY because POSIX doesn't have a way
-to create temporary directories.  If you need a remote temporary directory,
-one solution is to convert your property to a :LISP property."
+There is no WITH-REMOTE-TEMPORARY-DIRECTORY because POSIX doesn't include a
+shell utility to create temporary directories.  If you need a remote temporary
+directory, one solution is to convert your property to a :LISP property."
   `(let ((,dir (ensure-directory-pathname
 		(stripln
 		 (run-program "umask 077; mktemp -d" :output :string)))))
