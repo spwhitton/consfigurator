@@ -22,7 +22,8 @@
 
 (defgeneric post-fork (connection)
   (:documentation
-   "Code to execute after forking but before calling CONTINUE-DEPLOY*."))
+   "Code to execute after forking/reinvoking but before calling CONTINUE-DEPLOY*.
+Must not start up any threads."))
 
 (defmethod continue-connection ((connection fork-connection) remaining)
   (upload-all-prerequisite-data connection)
