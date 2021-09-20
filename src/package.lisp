@@ -834,8 +834,7 @@
 (defpackage :consfigurator.connection.fork
   (:use #:cl #:alexandria #:consfigurator #:consfigurator.connection.local)
   (:export #:fork-connection
-           #:post-fork
-	   #:can-probably-fork))
+           #:post-fork))
 
 (defpackage :consfigurator.connection.rehome
   (:use #:cl #:consfigurator #:consfigurator.connection.fork)
