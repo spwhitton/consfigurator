@@ -51,8 +51,12 @@ recommended."))
                        (safe-read-from-string
                         (run :input "(prin1 *features*)" *sbcl*)
                         :package :cl-user))))
-    (request-asdf-requirements requirements)
-    (upload-all-prerequisite-data)
+    ;; Don't preserve the ASDF requirements :DATA hostattrs because they are
+    ;; valid only for this hop, not necessarily beyond here.  For example, if
+    ;; we have a connection chain like (:ssh :sbcl (:lxc :name ...)) then we
+    ;; don't want to upload all the ASDF systems into the container.
+    (with-preserve-hostattrs
+      (request-asdf-requirements requirements) (upload-all-prerequisite-data))
     (inform t "Waiting for remote Lisp to exit, this may take some time ... ")
     (force-output)
     (multiple-value-bind (program forms)
