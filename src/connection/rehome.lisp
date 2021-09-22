@@ -26,6 +26,10 @@
   (:documentation
    "A connection which works by switching to a new HOME on the same host."))
 
+(defmethod continue-connection
+    :before ((connection rehome-connection) remaining)
+    (upload-all-prerequisite-data connection))
+
 (defmethod connection-upload ((connection rehome-connection) (data file-data))
   (with-slots (iden1 iden2 data-version) data
     (let ((inside (data-pathname

@@ -26,7 +26,6 @@
 Must not start up any threads."))
 
 (defmethod continue-connection ((connection fork-connection) remaining)
-  (upload-all-prerequisite-data connection)
   (eval-in-grandchild `(post-fork ,connection)
       `(continue-deploy* ,connection ',remaining) (out err exit)
     (when-let ((lines (lines out)))
