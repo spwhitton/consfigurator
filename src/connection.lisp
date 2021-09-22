@@ -246,9 +246,11 @@ login(1)).  Tilde expansion works correctly."
 
 (defmethod connection-connattr
     ((connection connection) (k (eql :XDG-CACHE-HOME)))
-  (ensure-directory-pathname
-   (stripln
-    (connection-run connection "echo ${XDG_CACHE_HOME:-$HOME/.cache}" nil))))
+  (let ((env (stripln (connection-run connection "echo $XDG_CACHE_HOME" nil))))
+    (if (plusp (length env))
+        (ensure-directory-pathname env)
+        (merge-pathnames ".cache/"
+                         (connection-connattr connection :remote-home)))))
 
 
 ;;;; Functions to access the slots of the current connection
