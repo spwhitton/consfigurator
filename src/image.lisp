@@ -44,7 +44,7 @@
 ;;;
 ;;; We use named pipes for the IPC to minimise implementation-specific code.
 
-(defparameter *fork-control* nil)
+(defvar *fork-control* nil)
 
 (defmacro with-fork-request (prerequest request (out err exit) &body forms)
   (with-gensyms (input output)
