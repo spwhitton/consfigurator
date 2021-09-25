@@ -66,7 +66,7 @@ single-threaded context for the execution of POST-FORK."))
               ((serious-condition
                  (lambda (c)
                    (trivial-backtrace:print-backtrace c :output *error-output*)
-                   (uiop:quit 3))))
+                   (uiop:quit 1))))
             ;; Handle the finaliser thread in older SBCL, before the change in
             ;; 2.1.8 to call *INIT-HOOKS* before starting system threads.
             #+consfigurator.connection.fork::older-sbcl

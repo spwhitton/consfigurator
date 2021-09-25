@@ -565,7 +565,7 @@ Preprocessing must occur in the root Lisp."))
                            *error-output*
                            "~&Failed to compile and/or load:~%~A~&~%Compile and/or load output:~%~%~A"
                            c string)
-                          (uiop:quit 3)))
+                          (uiop:quit 1)))
                       (when (>= *consfigurator-debug-level* 3)
                         (format t "~&~A" string))))
                  ;; Continue the deployment.  The READ indirection is to try

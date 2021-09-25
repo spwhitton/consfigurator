@@ -580,23 +580,23 @@ interactive debugger."))
                                      (lambda (c)
                                        (trivial-backtrace:print-backtrace
                                         c :output *error-output*)
-                                       (uiop:quit 3)))
+                                       (uiop:quit 1)))
                                    (skipped-properties (lambda (c)
                                                          (declare (ignore c))
                                                          (setq ,failures t))))
                       ,@forms)))
        (uiop:quit (cond ((eql :no-change result) 0)
-                        (,failures               2)
-                        (t                       1))))))
+                        (,failures               22)
+                        (t                       23))))))
 
 (defmacro return-exit (exit &key on-failure)
   `(values
     nil
     (case ,exit
-      (0                              :no-change)
-      (1                              nil)
-      (2 (signal 'skipped-properties) nil)
-      (t                              ,on-failure))))
+      (0                               :no-change)
+      (22 (signal 'skipped-properties) nil)
+      (23                              nil)
+      (t                               ,on-failure))))
 
 (defun posix-login-environment (&optional uid logname home)
   "Reset the environment after switching UID, or similar, in a :LISP connection.
