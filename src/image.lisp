@@ -287,7 +287,8 @@ then quietly skip over this property by applying it like this:
 ;; a remote Lisp image and every time we establish a further FORK-CONNECTION,
 ;; however, though perhaps we could arrange to avoid dumping an executable if
 ;; we know that we aren't going to need to reinvoke it, by having connection
-;; types push hostattrs.
+;; types push hostattrs.  We would also need to resolve issues detailed under
+;; "Dumping and reinvoking Lisp" in pitfalls.rst.
 ;;
 ;; If we took this approach, then we'd have implementation-specific dumping
 ;; code, but the code to reinvoke the dumped images would be fully portable --
