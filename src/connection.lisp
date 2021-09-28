@@ -391,10 +391,13 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
            finally (nreversef cmd))
      (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
      (loop while env
-           collect (format nil "~A=~A"
-                           (string-upcase (symbol-name (pop env)))
-                           (escape-sh-token (pop env)))
-             into accum
+           for k = (string-upcase (symbol-name (pop env)))
+           for v = (pop env)
+           if v
+             collect (format nil "export ~A=~A" k (escape-sh-token v))
+               into accum
+           else
+             collect (format nil "unset -v ~A" k) into accum
            finally
               (when accum
                 ;; We take this approach of exporting individual variables
@@ -405,7 +408,7 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
                 ;; does mean that implementations of CONNECTION-RUN will need
                 ;; to start a fresh 'sh -c' for each command run, but that's
                 ;; desirable to ensure any variables set by CMD are reset.
-                (setq cmd (format nil "~{export ~A;~^ ~} ~A" accum cmd))))
+                (setq cmd (format nil "~{~A;~^ ~} ~A" accum cmd))))
      ;; Set HOME (in a way which ENV can override) because with certain
      ;; connection types the value sh(1) sets or inherits is wrong.  E.g. with
      ;; :CHROOT.SHELL we get the value from /etc/passwd outside the chroot.
@@ -446,7 +449,8 @@ Keyword arguments accepted:
 
   - :ENV ENVIRONMENT -- where ENVIRONMENT is a plist specifying environment
     variable names and values, use env(1) to set these variables when running
-    the command.
+    the command.  An environment variable value of nil means that the variable
+    should be unset.
 
 Returns command's stdout, stderr and exit code, unless :FOR-EXIT, in which
 case return only the exit code."
