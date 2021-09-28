@@ -27,6 +27,7 @@
                           #:pathname-equal
                           #:subpathp
                           #:relative-pathname-p
+                          #:absolute-pathname-p
                           #:getenv
                           #:subdirectories
                           #:directory-files
@@ -66,6 +67,7 @@
            #:pathname-equal
            #:subpathp
            #:relative-pathname-p
+           #:absolute-pathname-p
            #:getenv
            #:subdirectories
            #:directory-files
@@ -313,7 +315,7 @@
            ;; image.lisp
            #:eval-in-grandchild
            #:dump-consfigurator-in-grandchild
-           #:no-runtime-for-image-dump
+           #:wrong-execution-context-for-image-dump
            #:image-dumped
            #:asdf-requirements-for-host-and-features
            #:request-asdf-requirements

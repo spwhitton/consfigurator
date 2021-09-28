@@ -105,10 +105,20 @@ Thus, PREREQUEST must not start up any threads."
   #+sbcl sb-ext:*core-pathname*
   #+(and linux (not sbcl)) (resolve-symlinks "/proc/self/exe"))
 
-(define-simple-error no-runtime-for-image-dump (aborted-change)
-  "Cannot dump image because same build of Lisp not available via filesystem.")
+(define-simple-error wrong-execution-context-for-image-dump (aborted-change))
 
 (defun %dump-consfigurator-in-grandchild (filename pre-dump form)
+  ;; Check that the image is likely to be reinvokable.
+  (loop for library in (list-foreign-libraries)
+        for path = (foreign-library-pathname library)
+        ;; If it's not absolute then it's something like "libacl.so" and we
+        ;; don't know whether that'll be findable at reinvocation time.
+        when (and (absolute-pathname-p path)
+                  (not (ignore-errors (nix:access path nix:R-OK))))
+          do (wrong-execution-context-for-image-dump
+              "Executable image will not be reinvokable as ~S unreadable."
+              path))
+  ;; Check that we can dump.
   #+sbcl
   (unless (and (not (pathname-equal filename *us*))
                (file-exists-p sb-ext:*core-pathname*)
@@ -118,8 +128,9 @@ Thus, PREREQUEST must not start up any threads."
                   (local-cksum sb-ext:*core-pathname*))
                (= *sbcl-runtime-cksum*
                   (local-cksum sb-ext:*runtime-pathname*)))
-    (no-runtime-for-image-dump
+    (wrong-execution-context-for-image-dump
      "Couldn't dump executable image because same SBCL build unavailable."))
+  ;; Perform the image dump.
   (with-fork-request nil
       `(progn ,pre-dump
               (nix:umask #o077)
@@ -170,19 +181,27 @@ into a chroot: unless the chroot has exactly the same operating system release
 as the parent host and SBCL has already been installed within the chroot, the
 requisite build of SBCL won't be accessible via the filesystem.
 
-In such a situation you might like to quietly skip dumping an image.  For
+Similarly, the dumped image will not be reinvokable if any of the shared
+libraries currently open are not accessible via the filesystem, which will
+usually be the case after forking into a chroot.  See \"Dumping and reinvoking
+Lisp\" in the \"Pitfalls and limitations\" section of the Consfigurator
+manual.
+
+In these situations you might like to quietly skip dumping an image.  For
 example, if you're preparing a disk image, successfully dumping an image is
 probably not needed for the image to be bootable.  After installing the disk
 image and starting up the target machine, you can connect to it directly and
 DEPLOY/HOSTDEPLOY all its properties again, at which point the image dump can
 succeed.
 
-To support this, when the Lisp implementation is SBCL, the current connection
-is a FORK-CONNECTION, and the same build of SBCL is not found to be accessible
-via the filesytem, this property signals NO-RUNTIME-FOR-IMAGE-DUMP.  You can
-then quietly skip over this property by applying it like this:
+To support this, when the current connection is a FORK-CONNECTION, and either
+the Lisp implementation is SBCL and the same build of SBCL is not found to be
+accessible via the filesytem, or some of the shared libraries currently open
+are not accessible at their original paths, this property signals
+WRONG-EXECUTION-CONTEXT-FOR-IMAGE-DUMP.  You can then quietly skip over this
+property by applying it like this:
 
-    (eseqprops-until 'no-runtime-for-image-dump
+    (eseqprops-until 'wrong-execution-context-for-image-dump
      (image-dumped)
      ;; ... properties depending on a successful image dump ...
      )"
@@ -199,15 +218,15 @@ then quietly skip over this property by applying it like this:
      (unless filename
        (nix:chmod (unix-namestring (pathname-directory-pathname file)) #o700))
      (handler-bind
-         ((no-runtime-for-image-dump
+         ((wrong-execution-context-for-image-dump
             (lambda (error)
               (unless (subtypep
                        (class-of *connection*)
                        'consfigurator.connection.fork:fork-connection)
-                ;; If we're *not* in the case described in the docstring, just
-                ;; signal a regular ABORTED-CHANGE, because this situation
-                ;; probably indicates a consfig problem which should not just
-                ;; be quietly skipped over.
+                ;; If we're *not* in one of the the cases described in the
+                ;; docstring, just signal a regular ABORTED-CHANGE, because
+                ;; this situation probably indicates a consfig problem which
+                ;; should not just be quietly skipped over.
                 (apply #'aborted-change (simple-condition-format-control error)
                        (simple-condition-format-arguments error))))))
        (if form
