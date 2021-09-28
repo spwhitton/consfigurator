@@ -451,6 +451,7 @@
            #:has-desktop-groups
 	   #:has-login-shell
            #:has-enabled-password
+           #:has-locked-password
 	   #:passwd-entry))
 
 (defpackage :consfigurator.property.chroot

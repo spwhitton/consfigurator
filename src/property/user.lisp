@@ -109,6 +109,17 @@ and then this property will do nothing."
   (:apply
    (mrun :input (format nil "~A:~A" username initial-password) "chpasswd")))
 
+(defprop has-locked-password :posix (username)
+  "Ensure that USERNAME cannot login via a password."
+  (:desc #?"${username} has a locked password")
+  (:hostattrs (os:required 'os:debianlike))
+  (:check
+   (assert-euid-root)
+   (string= "L" (cadr (split-string (run "passwd" "-S" username)))))
+  (:apply
+   (assert-euid-root)
+   (mrun "passwd" "--lock" username)))
+
 (defun %getent-entry (n name-or-id &optional (database "passwd"))
   "Get the nth entry in the getent(1) output for NAME-OR-ID in DATABASE."
   (let ((u (etypecase name-or-id
