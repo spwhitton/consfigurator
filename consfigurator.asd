@@ -21,6 +21,7 @@
                #:trivial-backtrace)
   :components ((:file "src/package")
                (:file "src/reader")
+               (:cffi-grovel-file "src/libc")
                (:cffi-grovel-file "src/libacl")
                (:file "src/util")
                (:file "src/util/posix1e")

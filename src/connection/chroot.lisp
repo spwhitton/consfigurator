@@ -52,16 +52,8 @@ should be the mount point, without the chroot's root prefixed.")
         (apply #'mrun "mount" mount-args)
         (push dest (chroot-mounts connection))))))
 
-(defmethod connection-teardown :before ((connection chroot-connection))
-  (dolist (mount (chroot-mounts connection))
-    ;; There shouldn't be any processes left running in the chroot after we've
-    ;; finished deploying it, but it's quite easy to end up with things like
-    ;; gpg-agent holding on to /dev/null, for example, so for simplicity, do a
-    ;; lazy unmount.
-    (mrun "umount" "-l" mount)))
-
-(defmethod initialize-instance :after ((connection chroot-connection) &key)
-  (when (string= "Linux" (stripln (run "uname")))
+(defgeneric linux-chroot-mounts (connection)
+  (:method ((connection chroot-connection))
     (with-slots (into) connection
       ;; Ensure the chroot itself is a mountpoint so that findmnt(8) works
       ;; correctly within the chroot.
@@ -116,16 +108,21 @@ should be the mount point, without the chroot's root prefixed.")
             (slot-value connection 'datadir)
             (merge-pathnames
              "consfigurator/data/" (chroot-pathname xdg-cache-home into))))
-    (unwind-protect (continue-connection connection remaining)
-      (connection-teardown connection))))
+    (continue-connection connection remaining)))
 
 (defmethod post-fork ((connection chroot.fork-connection))
-  (chroot (unix-namestring (slot-value connection 'into)))
-  (let ((home (connection-connattr connection :remote-home)))
-    (setf (getenv "HOME") (unix-namestring home))
-    ;; chdir, else our current working directory is a pointer to something
-    ;; outside the chroot
-    (uiop:chdir home)))
+  (with-slots (into) connection
+    #+linux
+    (progn (unshare +CLONE_NEWNS+)
+           (mrun "mount" "--make-rslave"
+                 (stripln (run "findmnt" "-nro" "TARGET" "-T" into)))
+           (linux-chroot-mounts connection))
+    (chroot (unix-namestring into))
+    (let ((home (connection-connattr connection :remote-home)))
+      (setf (getenv "HOME") (unix-namestring home))
+      ;; chdir, else our current working directory is a pointer to something
+      ;; outside the chroot
+      (uiop:chdir home))))
 
 
 ;;;; :CHROOT.SHELL
@@ -133,7 +130,9 @@ should be the mount point, without the chroot's root prefixed.")
 (defmethod establish-connection ((type (eql :chroot.shell)) remaining &key into)
   (declare (ignore remaining))
   (informat 1 "~&Shelling into chroot at ~A" into)
-  (make-instance 'shell-chroot-connection :into into))
+  (aprog1 (make-instance 'shell-chroot-connection :into into)
+    (when (string= "Linux" (stripln (run "uname")))
+      (linux-chroot-mounts it))))
 
 (defclass shell-chroot-connection (chroot-connection shell-wrap-connection) ())
 
@@ -141,3 +140,11 @@ should be the mount point, without the chroot's root prefixed.")
   (format nil "chroot ~A sh -c ~A"
           (escape-sh-token (unix-namestring (slot-value connection 'into)))
           (escape-sh-token cmd)))
+
+(defmethod connection-teardown :before ((connection shell-chroot-connection))
+  (dolist (mount (chroot-mounts connection))
+    ;; There shouldn't be any processes left running in the chroot after we've
+    ;; finished deploying it, but it's quite easy to end up with things like
+    ;; gpg-agent holding on to /dev/null, for example, so for simplicity, do a
+    ;; lazy unmount.
+    (mrun "umount" "-l" mount)))

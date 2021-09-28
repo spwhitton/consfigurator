@@ -638,6 +638,8 @@ Does not currently establish a PAM session."
 
 (define-error-retval-cfun () "chroot" :int (path :string))
 
+(define-error-retval-cfun () "unshare" :int (flags :int))
+
 
 ;;;; Lisp data files
 

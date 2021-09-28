@@ -82,6 +82,9 @@
            #:compile-file*
            #:compile-file-pathname*
 
+           ;; libc.lisp
+           #:+CLONE_NEWNS+
+
            ;; util.lisp
            #:multiple-value-mapcan
            #:lines
@@ -129,6 +132,7 @@
            #:define-error-retval-cfun
 
            #:chroot
+           #:unshare
 
            ;; connection.lisp
            #:establish-connection
