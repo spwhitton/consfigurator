@@ -300,6 +300,13 @@ parsing FORMSV and pushing SETPROP keyword argument pairs to plist SLOTSV."
                   ,@(and
                      (getf ,slotsv :apply)
                      `((defun-with-args ,,namev args ,,lambdav
+                         (unless *connection*
+                           (simple-program-error
+"Attempt to programmatically apply property with no connection established.
+
+Common causes of this error are (i) missing the '.' to enable the dotted
+propapp rules; and (ii) inadvertently calling the contents of a property's
+function cell, instead of constructing a propapp, within DEFPROPSPEC."))
                          ;; Properties with :HOSTATTRS subroutines which set
                          ;; new hostattrs should not be used programmatically
                          ;; in this way, so issue a warning.
