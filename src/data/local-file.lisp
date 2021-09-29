@@ -15,7 +15,7 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(in-package :consfigurator.data.git-snapshot)
+(in-package :consfigurator.data.local-file)
 (named-readtables:in-readtable :consfigurator)
 
 (defmethod register-data-source
