@@ -446,6 +446,7 @@
   (:local-nicknames (#:file  #:consfigurator.property.file)
                     (#:os    #:consfigurator.property.os))
   (:export #:has-account
+           #:has-account-with-uid
            #:has-groups
            #:has-desktop-groups
 	   #:has-login-shell

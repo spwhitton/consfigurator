@@ -29,6 +29,30 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (assert-euid-root)
    (mrun "useradd" "-m" username)))
 
+(defprop %has-uid-gid :posix (username uid gid)
+  "Ensure USERNAME has given UID and GID, group USERNAME has gid GID,
+and ~USERNAME is owned by UID:GID."
+  (:check
+   (and (= uid (parse-integer (passwd-entry 2 username)))
+        (= gid (parse-integer (passwd-entry 3 username)))
+        (= gid (parse-integer (group-entry 2 username)))))
+  (:apply
+   (let* ((gid-str (write-to-string gid))
+          (uid-str (write-to-string uid))
+          (uid+gid (format nil "~d:~d" uid gid))
+          (home (passwd-entry 5 username)))
+     (mrun "groupmod" "--gid" gid-str username)
+     (mrun "usermod" "--uid" uid-str "--gid" gid-str username)
+     (mrun "chown" "-R" uid+gid home))))
+
+(defproplist has-account-with-uid :posix (username uid &key (gid uid))
+  "Ensure there is an account for USERNAME with uid UID.
+Also ensure the group USERNAME has GID and ~USERNAME is owned by UID:GID."
+  (:hostattrs (os:required 'os:debianlike))
+  (:desc #?"${username} has uid ${uid} gid ${gid}")
+  (has-account username)
+  (%has-uid-gid username uid gid))
+
 (defprop has-groups :posix
     (username &rest groups &aux (groups* (format nil "~{~A~^,~}" groups)))
   "Ensure that USERNAME is a member of secondary groups GROUPS."
@@ -85,15 +109,25 @@ and then this property will do nothing."
   (:apply
    (mrun :input (format nil "~A:~A" username initial-password) "chpasswd")))
 
+(defun %getent-entry (n name-or-id &optional (database "passwd"))
+  "Get the nth entry in the getent(1) output for NAME-OR-ID in DATABASE."
+  (let ((u (etypecase name-or-id
+             (string name-or-id)
+             (number (write-to-string name-or-id)))))
+    (nth n (split-string (stripln (mrun "getent" database u))
+                         :separator ":"))))
+
 (defun passwd-entry (n username-or-uid)
   "Get the nth entry in the getent(1) output for USERNAME-OR-UID.
 Note that getent(1) is not specified in POSIX so use of this function makes
 properties not strictly POSIX-compatible."
-  (let ((u (etypecase username-or-uid
-	     (string username-or-uid)
-	     (number (write-to-string username-or-uid)))))
-    (nth n (split-string (stripln (mrun "getent" "passwd" u))
-			 :separator ":"))))
+  (%getent-entry n username-or-uid "passwd"))
+
+(defun group-entry (n groupname-or-gid)
+  "Get the nth entry in the getent(1) output for GROUPNAME-OR-GID.
+Note that getent(1) is not specified in POSIX so use of this function makes
+properties not strictly POSIX-compatible."
+  (%getent-entry n groupname-or-gid "group"))
 
 (defun user-exists (username)
   (zerop (mrun :for-exit "getent" "passwd" username)))
