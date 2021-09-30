@@ -30,8 +30,6 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (mrun "useradd" "-m" username)))
 
 (defprop %has-uid-gid :posix (username uid gid)
-  "Ensure USERNAME has given UID and GID, group USERNAME has gid GID,
-and ~USERNAME is owned by UID:GID."
   (:check
    (and (= uid (parse-integer (passwd-entry 2 username)))
         (= gid (parse-integer (passwd-entry 3 username)))
@@ -47,7 +45,8 @@ and ~USERNAME is owned by UID:GID."
 
 (defproplist has-account-with-uid :posix (username uid &key (gid uid))
   "Ensure there is an account for USERNAME with uid UID.
-Also ensure the group USERNAME has GID and ~USERNAME is owned by UID:GID."
+Also ensure the group named USERNAME has gid GID, USERNAME's primary group is
+that group, and ~USERNAME and its contents are owned by UID:GID."
   (:hostattrs (os:required 'os:debianlike))
   (:desc #?"${username} has uid ${uid} gid ${gid}")
   (has-account username)
