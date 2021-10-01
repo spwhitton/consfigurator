@@ -826,6 +826,7 @@
 
 (defpackage :consfigurator.property.systemd
   (:use #:cl #:consfigurator #:anaphora)
+  (:local-nicknames (#:service      #:consfigurator.property.service))
   (:export #:started
            #:stopped
            #:enabled

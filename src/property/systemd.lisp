@@ -18,47 +18,66 @@
 (in-package :consfigurator.property.systemd)
 (named-readtables:in-readtable :consfigurator)
 
+;;; Using systemctl(1), we cannot enable or disable user units unless the
+;;; user's service manager is actually running, and using loginctl(1), we
+;;; cannot enable or disable user lingering unless systemd is PID 1.
+;;;
+;;; Possibly we should manually create the symlinks in the former case, and
+;;; touch and delete the file under /var/lib/systemd/linger in the latter
+;;; case, so that more configuration is applicable to unbooted chroots.
+
 (defun systemctl (fn user &rest args &aux (args (cons "systemctl" args)))
   (apply fn (if user (apply #'systemd--user args) args)))
 
 (defprop started :posix (service &optional user)
   (:desc #?"systemd service ${service} started")
-  (:check (zerop (systemctl #'mrun user :for-exit "is-active" service)))
+  (:check (or (service:no-services-p)
+              (zerop (systemctl #'mrun user :for-exit "is-active" service))))
   (:apply (systemctl #'mrun user "start" service)))
 
 (defprop stopped :posix (service &optional user)
   (:desc #?"systemd service ${service} stopped")
-  (:check (plusp (systemctl #'mrun user :for-exit "is-active" service)))
+  (:check (or (service:no-services-p)
+              (plusp (systemctl #'mrun user :for-exit "is-active" service))))
   (:apply (systemctl #'mrun user "stop" service)))
 
 (defprop enabled :posix (service &optional user)
   (:desc #?"systemd service ${service} enabled")
-  (:check (zerop (systemctl #'mrun user :for-exit "is-enabled" service)))
+  (:check (or (and user (service:no-services-p))
+              (zerop (systemctl #'mrun user :for-exit "is-enabled" service))))
   (:apply (systemctl #'mrun user "enable" service)))
 
 (defprop disabled :posix (service &optional user)
   (:desc #?"systemd service ${service} disabled")
   (:check
-   (let ((status
-           (stripln
-            (systemctl #'run user :may-fail "is-enabled" service))))
-     (or (string-prefix-p "linked" status)
-         (string-prefix-p "masked" status)
-         (memstring=
-          status '("static" "disabled" "generated" "transient" "indirect")))))
+   (or
+    (and user (service:no-services-p))
+    (let ((status
+            (stripln
+             (systemctl #'run user :may-fail "is-enabled" service))))
+      (or (string-prefix-p "linked" status)
+          (string-prefix-p "masked" status)
+          (memstring=
+           status '("static" "disabled" "generated" "transient" "indirect"))))))
   (:apply (systemctl #'mrun user "disable" service)))
 
 (defprop masked :posix (service &optional user)
   (:desc #?"systemd service ${service} masked")
   (:check
-   (string-prefix-p
-    "masked"
-    (systemctl #'run user :may-fail "is-enabled" service)))
+   (or (and user (service:no-services-p))
+       (string-prefix-p
+        "masked"
+        (systemctl #'run user :may-fail "is-enabled" service))))
   (:apply (systemctl #'mrun user "mask" service))
-  (:unapply (systemctl #'mrun user "unmask" service)))
+  (:unapply (if (and user (service:no-services-p))
+                :no-change
+                (systemctl #'mrun user "unmask" service))))
 
 (defprop lingering-enabled :posix (user)
   (:desc #?"User lingering enable for ${user}")
-  (:check (memstring= "Linger=yes" (runlines "loginctl" "show-user" user)))
+  (:check (or (service:no-services-p)
+              (memstring= "Linger=yes" (runlines "loginctl" "show-user" user))))
   (:apply (mrun "loginctl" "enable-linger" user))
-  (:unapply (mrun "loginctl" "disable-linger" user)))
+  (:unapply (if (service:no-services-p)
+                :no-change
+                (mrun "loginctl" "disable-linger" user))))
