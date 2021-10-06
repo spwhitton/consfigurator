@@ -75,8 +75,15 @@
 
 (defprop lingering-enabled :posix (user)
   (:desc #?"User lingering enable for ${user}")
-  (:check (or (service:no-services-p)
-              (memstring= "Linger=yes" (runlines "loginctl" "show-user" user))))
+  (:check
+   (or (service:no-services-p)
+       ;; 'loginctl show-user' fails if the user is neither logged in nor
+       ;; lingering.  There is no dedicated exit code for that, so just assume
+       ;; lingering is not enabled if command exits nonzero.
+       (multiple-value-bind (out err exit)
+           (run :may-fail "loginctl" "show-user" user)
+         (declare (ignore err))
+         (and (zerop exit) (memstring= "Linger=yes" (lines out))))))
   (:apply (mrun "loginctl" "enable-linger" user))
   (:unapply (if (service:no-services-p)
                 :no-change
