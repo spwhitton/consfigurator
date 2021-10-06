@@ -328,10 +328,12 @@ different user."
      (setf (getf (slot-value host 'hostattrs) :data) nil)
      (setq host (preprocess-host host))
      (doplist (k v (hostattrs host))
-              (loop with root = (get-hostattrs k)
-                    for cell on v until (eq cell root)
-                    collect (car cell) into accum
-                    finally (apply #'push-hostattrs k (nreverse accum))))
+       (loop with root = (get-hostattrs k)
+             for cell on v until (eq cell root)
+             collect (car cell) into accum
+             finally (if (eql k :data)
+                         (pushnew-hostattrs :data (nreverse accum))
+                         (apply #'push-hostattrs k (nreverse accum)))))
      (dolist (system (propspec-systems (host-propspec host)))
        (pushnew system (slot-value (host-propspec *host*) 'systems)))
      (setf (getf properties :host) host)))
@@ -346,8 +348,7 @@ different user."
 (defun %propagate-hostattrs (host)
   (dolist (system (propspec-systems (host-propspec host)))
     (pushnew system (slot-value (host-propspec *host*) 'systems)))
-  (dolist (attr (get-hostattrs :data host))
-    (push-hostattrs :data attr)))
+  (pushnew-hostattrs :data (get-hostattrs :data host)))
 
 (defprop evals :posix (&rest forms)
   "Property which just evaluates each of FORMS using EVAL.  Only for testing
