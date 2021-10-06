@@ -65,3 +65,7 @@
      user (connection-connattr connection :remote-home))
     ;; We are privileged, so this sets the real, effective and saved IDs.
     (nix:setgid gid) (nix:initgroups user gid) (nix:setuid uid)))
+
+(defmethod propagate-connattr
+    ((type (eql :no-services)) connattr (connection setuid-connection))
+  connattr)

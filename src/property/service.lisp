@@ -18,7 +18,11 @@
 (in-package :consfigurator.property.service)
 (named-readtables:in-readtable :consfigurator)
 
-;;;; Controlling services using service(1)
+;;;; Controlling services using service(1), and the :NO-SERVICES hostattr and
+;;;; connattr.  A host has the :NO-SERVICES hostattr when it has static
+;;;; configuration never to start services.  The connattr is for when we
+;;;; should not start any services because we're doing something like
+;;;; chrooting in to the host's unbooted root filesystem.
 
 (define-constant +policyrcd+ #P"/usr/sbin/policy-rc.d" :test #'equal)
 
@@ -48,8 +52,12 @@ not affect you."
   (os:etypecase
       (debianlike (%policy-rc.d))))
 
+(defun no-services-p ()
+  "Returns true if no services should be started by the current deployment."
+  (or (get-hostattrs-car :no-service) (get-connattr :no-services)))
+
 (defun service (service action)
-  (unless (get-hostattrs-car :no-services)
+  (unless (no-services-p)
     (run :may-fail "service" service action)))
 
 (defprop running :posix (service)
@@ -72,7 +80,8 @@ properties."
   (:apply (service service "reload")))
 
 (define-function-property-combinator without-starting-services (&rest propapps)
-  "Apply PROPAPPS with SERVICE:NO-SERVICES temporarily in effect."
+  "Apply PROPAPPS with the :NO-SERVICES connattr temporarily in effect.  Also
+disable starting services by the package manager."
   (let ((propapp (if (cdr propapps) (apply #'eseqprops propapps) (car propapps))))
     (:retprop :type :lisp
               :hostattrs
@@ -88,8 +97,7 @@ properties."
                     ;; past.  (SLEEP 1) is only approximately one second so
                     ;; check that it's actually been a second.
                     (loop do (sleep 1) until (> (get-universal-time) before))
-                    (unwind-protect (with-preserve-hostattrs
-                                      (push-hostattrs :no-services t)
+                    (unwind-protect (with-connattrs (:no-services t)
                                       (propappapply propapp))
                       (if already-exists
                           ;; Check whether some property we applied set the

@@ -98,7 +98,7 @@ subcommand of virsh(1) to convert the running domain into a transient domain."
 (I.e., if HOST is a string, ensure the domain named HOST is started; if HOST
 is a HOST value, start the libvirt domain whose name is HOST's hostname.)"
   (:desc #?"libvirt domain ${(get-hostname host)} started")
-  (:check (host-domain-started-p host))
+  (:check (or (service:no-services-p) (host-domain-started-p host)))
   (:apply (mrun "virsh" "start" (get-hostname host))))
 
 (defprop destroyed :posix (host)

@@ -306,7 +306,11 @@ PROPERTIES, like DEPLOY-THESE."
 (defprop reconnects :posix (connections properties)
   "Connect back to the same host with CONNECTIONS and apply PROPERTIES.
 Mainly useful for using a connection type like :AS to apply properties as a
-different user."
+different user.
+
+Combinators that work by temporarily pushing hostattrs at :APPLY time will not
+be able to affect PROPERTIES in an application of RECONNECTS they enclose.
+Connection attributes, by contrast, are propagated as usual."
   (:desc (declare (ignore properties))
          (format nil "~S reconnection" connections))
   (:preprocess

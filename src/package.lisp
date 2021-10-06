@@ -430,6 +430,7 @@
   (:local-nicknames (#:os    #:consfigurator.property.os)
                     (#:file  #:consfigurator.property.file))
   (:export #:no-services
+           #:no-services-p
            #:running
            #:restarted
            #:reloaded
@@ -719,6 +720,7 @@
   (:use #:cl #:alexandria #:consfigurator)
   (:local-nicknames (#:os        #:consfigurator.property.os)
                     (#:cmd       #:consfigurator.property.cmd)
+                    (#:service   #:consfigurator.property.service)
                     (#:file      #:consfigurator.property.file)
                     (#:chroot    #:consfigurator.property.chroot)
                     (#:apt       #:consfigurator.property.apt))

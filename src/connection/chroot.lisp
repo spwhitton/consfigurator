@@ -86,6 +86,10 @@ should be the mount point, without the chroot's root prefixed.")
     ((type (eql :remote-gid)) connattr (connection chroot-connection))
   connattr)
 
+(defmethod propagate-connattr
+    ((type (eql :no-services)) connattr (connection chroot-connection))
+  connattr)
+
 
 ;;;; :CHROOT.FORK
 
