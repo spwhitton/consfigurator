@@ -103,7 +103,7 @@ should be the mount point, without the chroot's root prefixed.")
     ;; in UPLOAD-ALL-PREREQUISITE-DATA.
     (connection-connattr connection :remote-home)
     ;; Obtain & cache XDG_CACHE_HOME inside the chroot, and compute DATADIR.
-    (let ((xdg-cache-home (connection-connattr connection :XDG-CACHE-HOME)))
+    (let ((xdg-cache-home (connection-connattr connection :XDG_CACHE_HOME)))
       (setf connection (change-class connection 'chroot.fork-connection)
             (slot-value connection 'datadir)
             (merge-pathnames

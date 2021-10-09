@@ -245,7 +245,7 @@ login(1)).  Tilde expansion works correctly."
         (ensure-directory-pathname (stripln home)))))
 
 (defmethod connection-connattr
-    ((connection connection) (k (eql :XDG-CACHE-HOME)))
+    ((connection connection) (k (eql :XDG_CACHE_HOME)))
   (let ((env (stripln (connection-run connection "echo $XDG_CACHE_HOME" nil))))
     (if (plusp (length env))
         (ensure-directory-pathname env)
@@ -255,7 +255,7 @@ login(1)).  Tilde expansion works correctly."
 (defmethod connection-connattr
     ((connection connection) (k (eql :consfigurator-cache)))
   (merge-pathnames "consfigurator/"
-                   (connection-connattr connection :XDG-CACHE-HOME)))
+                   (connection-connattr connection :XDG_CACHE_HOME)))
 
 
 ;;;; Functions to access the slots of the current connection

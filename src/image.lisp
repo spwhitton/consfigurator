@@ -145,7 +145,7 @@ already running from FILENAME."
    (let ((file (or filename
                    (ensure-directories-exist
                     (merge-pathnames "consfigurator/images/latest"
-                                     (get-connattr :XDG-CACHE-HOME))))))
+                                     (get-connattr :XDG_CACHE_HOME))))))
      (unless (and (not always)
                   (eql :linux (uiop:operating-system))
                   (pathname-equal file (resolve-symlinks "/proc/self/exe")))

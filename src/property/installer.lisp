@@ -266,14 +266,14 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
        (let ((source
                (chroot-pathname
                 (merge-pathnames
-                 "consfigurator/" (get-connattr :XDG-CACHE-HOME))
+                 "consfigurator/" (get-connattr :XDG_CACHE_HOME))
                 old-os)))
          (when (directory-exists-p source)
            (rename-file source (ensure-directories-exist
                                 #P"/root/.cache/consfigurator/"))))
        (setf (get-connattr :remote-user) "root"
              (get-connattr :remote-home) "/root"
-             (get-connattr :XDG-CACHE-HOME) #P"/root/.cache/"
+             (get-connattr :XDG_CACHE_HOME) #P"/root/.cache/"
              (get-connattr :consfigurator-cache) #P"/root/.cache/consfigurator/")
        (posix-login-environment "root" "/root")
 

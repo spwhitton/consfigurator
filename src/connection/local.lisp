@@ -81,5 +81,5 @@
        (detype-pathname temp) (detype-pathname path)))))
 
 (defmethod connection-connattr
-    ((connection local-connection) (k (eql :XDG-CACHE-HOME)))
+    ((connection local-connection) (k (eql :XDG_CACHE_HOME)))
   (uiop:xdg-cache-home))

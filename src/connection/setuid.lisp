@@ -44,7 +44,7 @@
                    :remote-user ,(cdr (assoc :name ent))
                    :remote-home ,(ensure-directory-pathname
                                   (cdr (assoc :home ent)))
-                   :XDG-CACHE-HOME ,xdg-cache-home))
+                   :XDG_CACHE_HOME ,xdg-cache-home))
      remaining)))
 
 (defmethod post-fork ((connection setuid-connection))
