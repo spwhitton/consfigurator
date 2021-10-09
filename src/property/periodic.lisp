@@ -42,7 +42,8 @@ user."
   (symbol-macrolet
       ((flagfile (merge-pathnames
                   (string->filename desc)
-                  (remote-consfigurator-cache-pathname "at-most/"))))
+                  (merge-pathnames "at-most/"
+                                   (get-connattr :consfigurator-cache)))))
     (destructuring-bind (psym . args) propapp
       (:retprop :type (propapptype propapp)
                 :desc (lambda-ignoring-args desc)

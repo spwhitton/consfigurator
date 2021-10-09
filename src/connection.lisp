@@ -252,6 +252,11 @@ login(1)).  Tilde expansion works correctly."
         (merge-pathnames ".cache/"
                          (connection-connattr connection :remote-home)))))
 
+(defmethod connection-connattr
+    ((connection connection) (k (eql :consfigurator-cache)))
+  (merge-pathnames "consfigurator/"
+                   (connection-connattr connection :XDG-CACHE-HOME)))
+
 
 ;;;; Functions to access the slots of the current connection
 
@@ -602,10 +607,6 @@ specification of POSIX ls(1))."
                                  (elt groups 2) (elt groups 1) (elt groups 0)
                                  0))
         (failed-change "Could not determine time of remote's last reboot."))))
-
-(defun remote-consfigurator-cache-pathname (path)
-  (merge-pathnames
-   path (merge-pathnames "consfigurator/" (get-connattr :XDG-CACHE-HOME))))
 
 (defun remote-executable-find (executable)
   (zerop (mrun :for-exit "command" "-v" executable)))

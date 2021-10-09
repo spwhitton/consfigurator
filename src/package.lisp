@@ -163,7 +163,6 @@
            #:remote-exists-p
            #:remote-file-stats
            #:remote-last-reboot
-           #:remote-consfigurator-cache-pathname
            #:remote-executable-find
            #:mountpointp
            #:delete-remote-trees
@@ -296,7 +295,6 @@
            #:get-remote-cached-prerequisite-data
            #:get-local-cached-prerequisite-data
 	   #:get-highest-local-cached-prerequisite-data
-           #:get-remote-data-cache-dir
 
            #:try-register-data-source
            #:register-data-source

@@ -166,7 +166,8 @@ any of the regular expressions PATTERNS."
 (defprop data-cache-purged :posix ()
   "Ensure that any prerequisite data cached in the remote home directory is removed."
   (:desc "Consfigurator data cache cleaned")
-  (:apply (directory-does-not-exist (get-remote-data-cache-dir))))
+  (:apply (directory-does-not-exist
+           (merge-pathnames "data/" (get-connattr :consfigurator-cache)))))
 
 (defprop regex-replaced-lines :posix (file regex replace)
   "Like s/REGEX/REPLACE/ on the lines of FILE.

@@ -403,7 +403,8 @@ no risk of clashes between fresly generated files and cached copies of files."
      (if version pn (ensure-directory-pathname pn)))))
 
 (defun remote-data-pathname (&rest args)
-  (apply #'data-pathname (get-remote-data-cache-dir) args))
+  (apply #'data-pathname
+         (merge-pathnames "data/" (get-connattr :consfigurator-cache)) args))
 
 
 ;;;; Remote caches
@@ -420,12 +421,11 @@ of CONNECTION, where each entry is of the form
     (mapcar (lambda (line)
               (mapcar #'filename->string (split-string line :separator "/")))
             (multiple-value-bind (out exit)
-                (mrun :may-fail "find" (get-remote-data-cache-dir)
+                (mrun :may-fail "find" (merge-pathnames
+                                        "data/"
+                                        (get-connattr :consfigurator-cache))
                       "-type" "f" "-printf" "%P\\n")
               (and (zerop exit) (lines out))))))
-
-(defun get-remote-data-cache-dir ()
-  (remote-consfigurator-cache-pathname "data/"))
 
 
 ;;;; Local caches
