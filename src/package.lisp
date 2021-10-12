@@ -161,6 +161,10 @@
            #:mktemp
            #:with-remote-current-directory
            #:run-failed
+           #:failed-cmd
+           #:failed-stdout
+           #:failed-stderr
+           #:failed-exit-code
            #:runlines
            #:test
            #:remote-exists-p
@@ -839,7 +843,8 @@
   (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
                     (#:file         #:consfigurator.property.file)
                     (#:apt          #:consfigurator.property.apt)
-                    (#:os           #:consfigurator.property.os))
+                    (#:os           #:consfigurator.property.os)
+                    (#:service      #:consfigurator.property.service))
   (:export #:installed
            #:service
            #:policy
