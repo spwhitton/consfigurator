@@ -310,6 +310,12 @@ function cell, instead of constructing a propapp, within DEFPROPSPEC."))
                          ;; Properties with :HOSTATTRS subroutines which set
                          ;; new hostattrs should not be used programmatically
                          ;; in this way, so issue a warning.
+                         ;;
+                         ;; TODO If this property is defined using
+                         ;; DEFPROPLIST/DEFPROPSPEC and has no user-supplied
+                         ;; :HOSTATTRS subroutine of its own, but one of the
+                         ;; properties in the returned propspec does, then we
+                         ;; won't issue the warning, but we should.
                          ,@(and programmatic-warning
                                 (getf ,slotsv :hostattrs)
                                 `((warn 'programmatic-apply-hostattrs
