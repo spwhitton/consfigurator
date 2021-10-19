@@ -29,6 +29,12 @@
 (defun systemctl (fn user &rest args &aux (args (cons "systemctl" args)))
   (apply fn (if user (apply #'systemd--user args) args)))
 
+(defprop daemon-reloaded :posix (&optional user)
+  (:desc "Attempt to reload systemd manager configuration")
+  (:apply (if (service:no-services-p)
+              :no-change
+              (systemctl #'mrun user "daemon-reload"))))
+
 (defprop started :posix (service &optional user)
   (:desc #?"systemd service ${service} started")
   (:check (or (service:no-services-p)
@@ -40,6 +46,18 @@
   (:check (or (service:no-services-p)
               (plusp (systemctl #'mrun user :for-exit "is-active" service))))
   (:apply (systemctl #'mrun user "stop" service)))
+
+(defprop restarted :posix (service &optional user)
+  (:desc #?"Attempt to restart systemd service ${service}")
+  (:apply (if (service:no-services-p)
+              :no-change
+              (systemctl #'mrun user "restart" service))))
+
+(defprop reloaded :posix (service &optional user)
+  (:desc #?"Attempt to reload systemd service ${service}")
+  (:apply (if (service:no-services-p)
+              :no-change
+              (systemctl #'mrun user "reload" service))))
 
 (defprop enabled :posix (service &optional user)
   (:desc #?"systemd service ${service} enabled")

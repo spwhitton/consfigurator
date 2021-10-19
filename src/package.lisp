@@ -831,8 +831,11 @@
 (defpackage :consfigurator.property.systemd
   (:use #:cl #:consfigurator #:anaphora)
   (:local-nicknames (#:service      #:consfigurator.property.service))
-  (:export #:started
+  (:export #:daemon-reloaded
+           #:started
            #:stopped
+           #:reloaded
+           #:restarted
            #:enabled
            #:disabled
            #:masked
