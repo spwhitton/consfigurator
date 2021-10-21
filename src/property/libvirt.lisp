@@ -217,7 +217,12 @@ Sample usage:
       (file:contains-conf-tab \"/etc/hosts\"
                               \"192.168.122.31\" \"subbox.laptop.example.com\")
       (libvirt:kvm-boots-chroot-for. (:vcpus 2 :memory 2048)
-          subbox.laptop.example.com)
+          subbox.laptop.example.com
+        ;; Apply TIMEZONE:CONFIGURED-FROM-PARENT here rather than in the
+        ;; DEFHOST above because it can be applied only during a subdeployment
+        ;; of laptop.example.com -- when we deploy subbox directly, there is
+        ;; no parent host.
+        (timezone:configured-from-parent))
       (libvirt:when-started subbox.laptop.example.com
         ;; Here we elide most of the configuration necessary to ensure that
         ;; root can SSH into the VM.  You can deploy a passwordless SSH key,
