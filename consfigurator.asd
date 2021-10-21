@@ -9,6 +9,7 @@
                #:alexandria
                #:babel
                #:babel-streams
+               #:bordeaux-threads
                #:cl-ppcre
                #:cl-heredoc
                #:cl-interpol

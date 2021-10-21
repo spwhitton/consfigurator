@@ -264,20 +264,30 @@ already running from FILENAME."
                 (eval-input)
                 (with-fork-control (eval-input)))))))
     (unwind-protect
-         (with-open-file (out out :element-type 'character)
-           (with-open-file (err err :element-type 'character)
-             (let ((status (nth-value 1 (nix:waitpid child))))
-               (unless (nix:WIFEXITED status)
-                 (failed-change
-                  "~&Grandchild process did not exit normally, status #x~(~4,'0X~)."
-                  status))
-               (with-open-file (output output :direction :output
-                                              :if-exists :append
-                                              :element-type 'character)
-                 (write-to-mkfifo (list (slurp-stream-string out)
-                                        (slurp-stream-string err)
-                                        (nix:WEXITSTATUS status))
-                                  output)))))
+         (let* (outbuf
+                (out-reader
+                  (bt:make-thread
+                   (lambda ()
+                     (setq outbuf
+                           (read-file-string out :element-type 'character)))))
+                errbuf
+                (err-reader
+                  (bt:make-thread
+                   (lambda ()
+                     (setq errbuf
+                           (read-file-string err :element-type 'character)))))
+                (status (nth-value 1 (nix:waitpid child))))
+           (unless (nix:WIFEXITED status)
+             (failed-change
+              "~&Grandchild process did not exit normally, status #x~(~4,'0X~)."
+              status))
+           (bt:join-thread out-reader)
+           (bt:join-thread err-reader)
+           (with-open-file (output output :direction :output
+                                          :if-exists :append
+                                          :element-type 'character)
+             (write-to-mkfifo
+              (list outbuf errbuf (nix:WEXITSTATUS status)) output)))
       (delete-file out) (delete-file err))))
 
 (defclass asdf-requirements ()
