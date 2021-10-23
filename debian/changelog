@@ -2,6 +2,7 @@ consfigurator (0.12.0-1) UNRELEASED; urgency=medium
 
   * New upstream release.
   * Add deps and build-deps on cl-bordeaux-threads and libacl1-dev.
+  * Add ${sphinxdoc:Built-Using} to Built-Using.
 
  -- Sean Whitton <spwhitton@spwhitton.name>  Thu, 21 Oct 2021 13:25:09 -0700
 

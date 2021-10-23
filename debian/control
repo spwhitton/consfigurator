@@ -56,6 +56,8 @@ Recommends:
 Provides:
  consfigurator,
  elpa-consfigurator,
+Built-Using:
+ ${sphinxdoc:Built-Using},
 Description: Lisp declarative configuration management system
  Consfigurator is a system for declarative configuration management using
  Common Lisp.  You can use it to configure hosts as root, deploy services as
