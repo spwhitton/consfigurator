@@ -3,26 +3,26 @@ Section: admin
 Priority: optional
 Maintainer: Sean Whitton <spwhitton@spwhitton.name>
 Build-Depends:
+ cl-agnostic-lizard,
  cl-alexandria,
  cl-anaphora,
  cl-babel,
  cl-bordeaux-threads,
  cl-cffi,
- cl-osicat,
+ cl-closer-mop,
  cl-heredoc,
  cl-interpol,
  cl-named-readtables,
+ cl-osicat,
  cl-ppcre,
- cl-closer-mop,
  cl-trivial-backtrace,
- cl-agnostic-lizard,
  debhelper-compat (= 13),
  dh-elpa,
  libacl1-dev,
  python3-sphinx,
+ python3-sphinx-rtd-theme,
  sbcl,
  sphinx-common,
- python3-sphinx-rtd-theme,
  texinfo,
 Standards-Version: 4.5.1
 Homepage: https://spwhitton.name/tech/code/consfigurator/
@@ -33,19 +33,19 @@ Rules-Requires-Root: no
 Package: cl-consfigurator
 Architecture: all
 Depends:
+ cl-agnostic-lizard,
  cl-alexandria,
  cl-anaphora,
  cl-babel,
  cl-bordeaux-threads,
  cl-cffi,
- cl-osicat,
+ cl-closer-mop,
  cl-heredoc,
  cl-interpol,
  cl-named-readtables,
+ cl-osicat,
  cl-ppcre,
- cl-closer-mop,
  cl-trivial-backtrace,
- cl-agnostic-lizard,
  emacsen-common,
  libacl1-dev,
  ${misc:Depends},
