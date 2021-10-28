@@ -279,15 +279,27 @@ Portability and stability
 - **Consfigurator is still stabilising and so there may be lots of breaking
   changes.**
 
-- All of the code in the core library should be portable ANSI Common Lisp,
-  though optional packages providing properties and connection types might use
+- The core library should be portable between standards-conforming
+  implementations of ANSI Common Lisp which include support for a few
+  additional, widely-implemented features such as package-local nicknames.
+  Optional packages providing properties and connection types might use
   implementation-specific functionality.  Little to no testing is done by the
   author on implementations other than SBCL, so testing and portability
   patches are welcome.
 
 - Lisp implementations which will run on the hosts you wish to configure must
-  expose some mechanism for safely calling fork(2), like ``SB-POSIX:FORK`` in
-  the case of SBCL.  The root Lisp does not need to fork(2).
+  support multithreading and must expose some mechanism for safely calling
+  fork(2) in the presence of non-user threads, like ``SB-POSIX:FORK`` in the
+  case of SBCL.  The root Lisp does not need to fork(2).  With some additional
+  portability patches, it should be possible to host the root Lisp even on
+  systems to which Consfigurator probably can't apply properties, such as
+  Microsoft Windows.
+
+- As both Consfigurator and its dependency Osicat make use of CFFI-Grovel,
+  loading Consfigurator into Lisp currently always additionally requires a C
+  toolchain, and development headers for libacl.  It might be possible to
+  conditionalise further so as to avoid any dependency on a C toolchain for
+  the root Lisp.
 
 - Little attempt is made by the author to support systems other than Debian
   GNU/Linux, but again, portability patches are welcome, and the design of
