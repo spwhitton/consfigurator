@@ -34,16 +34,23 @@
              ;; argument to su(1) on, e.g., FreeBSD.  So should be fairly
              ;; portable.
              (mrun "su" (cdr (assoc :name ent))
-		   "-c" "echo ${XDG_CACHE_HOME:-$HOME/.cache}")))))
+		   "-c" "echo ${XDG_CACHE_HOME:-$HOME/.cache}"))))
+         (cache (merge-pathnames "consfigurator/" xdg-cache-home))
+         (datadir (merge-pathnames "data/" cache)))
+    (dolist (dir (list xdg-cache-home cache datadir))
+      (unless (directory-exists-p dir)
+        (nix:chown (ensure-directories-exist dir)
+                   (cdr (assoc :user-id ent)) (cdr (assoc :group-id ent)))))
     (continue-connection
      (make-instance
       'setuid-connection
-      :datadir (merge-pathnames "consfigurator/data/" xdg-cache-home)
+      :datadir datadir
       :connattrs `(:remote-uid ,(cdr (assoc :user-id ent))
                    :remote-gid ,(cdr (assoc :group-id ent))
                    :remote-user ,(cdr (assoc :name ent))
                    :remote-home ,(ensure-directory-pathname
                                   (cdr (assoc :home ent)))
+                   :consfigurator-cache ,cache
                    :XDG_CACHE_HOME ,xdg-cache-home))
      remaining)))
 
@@ -53,8 +60,7 @@
         (user (connection-connattr connection :remote-user)))
     (run-program (list "chown" "-R"
                        (format nil "~A:~A" uid gid)
-                       (unix-namestring (ensure-directories-exist
-                                         (slot-value connection 'datadir)))))
+                       (unix-namestring (slot-value connection 'datadir))))
     (posix-login-environment
      user (connection-connattr connection :remote-home))
     ;; We are privileged, so this sets the real, effective and saved IDs.
