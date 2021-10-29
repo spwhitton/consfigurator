@@ -149,13 +149,14 @@ FIREWALLD:POLICY.)"
 You will not usually need to call this property directly; it is applied by
 properties which add services, interfaces etc. to zones."
   (:desc #?"firewalld zone ${zone} exists")
-  (with-unapply
-    (%firewall-cmd nil :check `(,#?"--zone=${zone}" "--get-target")
-                       :apply #?"--new-zone=${zone}")
-    :unapply
-    (%firewall-cmd nil :complement-check t
-                       :check `(,#?"--zone=${zone}" "--get-target")
-                       :apply #?"--delete-zone=${zone}")))
+  (on-change (with-unapply
+               (%firewall-cmd nil :check `(,#?"--zone=${zone}" "--get-target")
+                                  :apply #?"--new-zone=${zone}")
+               :unapply
+               (%firewall-cmd nil :complement-check t
+                                  :check `(,#?"--zone=${zone}" "--get-target")
+                                  :apply #?"--delete-zone=${zone}"))
+    (%reloaded)))
 
 (defproplist zone-target :posix (zone target)
   (:desc #?"firewalld zone ${zone} has target ${target}")
