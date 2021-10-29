@@ -137,6 +137,8 @@ set up appropriately accessible and inaccessible.
 (By contrast, for defining services and policies we take the simpler approach
 of just setting the whole XML configuration, using FIREWALLD:SERVICE and
 FIREWALLD:POLICY.)"
+  ;; Another option might be to push all the settings to hostattrs and then at
+  ;; :APPLY time, generate the whole .xml / run commands to set all the XML.
   (:desc #?"firewalld has zone configuration for ${zone}")
   (%setxml "zones" zone xml))
 
