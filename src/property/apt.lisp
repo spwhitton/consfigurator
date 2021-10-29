@@ -58,6 +58,34 @@
    (with-maybe-update
        (apt-get :inform "-y" "--no-install-recommends" "install" packages))))
 
+(defun install-backports (args packages)
+  (with-maybe-update
+      (with-changes-dpkg-status
+        (apt-get :inform args "install"
+                 (loop with suite = (os:debian-suite (get-hostattrs-car :os))
+                       for pkg in packages
+                       collect (format nil "~A/~A-backports" pkg suite))))))
+
+(defprop backports-installed :posix (&rest packages)
+  "Ensure all of the apt packages PACKAGES are installed from stable-backports.
+
+Note that if installing any of the backports requires installing versions of
+the backport's dependencies from stable-backports too, you will need to list
+each of those dependencies in PACKAGES."
+  (:desc (format nil "apt installed backport~P ~{~A~^ ~}"
+                 (length packages) packages))
+  (:preprocess (flatten packages))
+  (:hostattrs (os:required 'os:debian-stable))
+  (:apply (install-backports '("-y") packages)))
+
+(defprop backports-installed-minimally :posix (&rest packages)
+  "Like APT:BACKPORTS-INSTALLED but don't install recommends."
+  (:desc (format nil "apt installed backport~P ~{~A~^ ~}"
+                 (length packages) packages))
+  (:preprocess (flatten packages))
+  (:hostattrs (os:required 'os:debian-stable))
+  (:apply (install-backports '("-y" "--no-install-recommends") packages)))
+
 (defprop removed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are removed."
   (:desc #?"apt removed @{packages}")

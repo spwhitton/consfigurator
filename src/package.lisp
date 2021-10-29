@@ -449,6 +449,8 @@
                     (#:service    #:consfigurator.property.service))
   (:export #:installed
            #:installed-minimally
+           #:backports-installed
+           #:backports-installed-minimally
            #:removed
            #:reconfigured
            #:service-installed-running
