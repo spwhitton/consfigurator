@@ -277,10 +277,13 @@ only FIREWALLD:DEFAULT-ZONE."
      :check `(,#?"--zone=${zone}" ,#?"--query-rich-rule=${rule}")
      :apply `(,#?"--zone=${zone}" ,#?"--remove-rich-rule=${rule}"))))
 
+
+;;;; Other daemon configuration
+
 ;; Note that direct rules will be deprecated as of firewalld 1.0.0, as
 ;; policies and rich rules should be able to cover all uses of direct rules.
 ;;     <https://firewalld.org/2021/06/the-upcoming-1-0-0>
-(defpropspec zone-direct-rule :posix (&rest rule-args)
+(defpropspec direct-rule :posix (&rest rule-args)
   (:desc #?"firewalld has direct rule \"@{rule-args}\"")
   `(with-unapply
      (installed)
@@ -292,9 +295,6 @@ only FIREWALLD:DEFAULT-ZONE."
                       :complement-check t
                       :check ("--direct" "--query-rule" ,@rule-args)
                       :apply ("--direct" "--remove-rule" ,@rule-args))))
-
-
-;;;; Daemon configuration
 
 (defproplist default-zone :posix (zone)
   (:desc #?"firewalld default zone is ${zone}")

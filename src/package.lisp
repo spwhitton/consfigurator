@@ -861,7 +861,7 @@
            #:zone-has-service
            #:zone-masquerade
            #:zone-rich-rule
-           #:zone-direct-rule
+           #:direct-rule
            #:default-zone))
 
 (defpackage :consfigurator.property.timezone
