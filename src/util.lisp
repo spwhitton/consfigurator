@@ -598,10 +598,10 @@ interactive debugger."))
       (2 (signal 'skipped-properties) nil)
       (t                              ,on-failure))))
 
-(defun posix-login-environment (logname home)
+(defun posix-login-environment (uid logname home)
   "Reset the environment after switching UID, or similar, in a :LISP connection.
 Does not currently establish a PAM session."
-  (let ((rootp (zerop (nix:geteuid)))
+  (let ((rootp (zerop uid))
         (maybe-preserve '("TERM")))
     (when rootp
       (push "SSH_AUTH_SOCK" maybe-preserve))

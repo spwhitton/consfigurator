@@ -62,7 +62,7 @@
                        (format nil "~A:~A" uid gid)
                        (unix-namestring (slot-value connection 'datadir))))
     (posix-login-environment
-     user (connection-connattr connection :remote-home))
+     uid user (connection-connattr connection :remote-home))
     ;; We are privileged, so this sets the real, effective and saved IDs.
     (nix:setgid gid) (nix:initgroups user gid) (nix:setuid uid)))
 

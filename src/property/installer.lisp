@@ -275,7 +275,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
              (get-connattr :remote-home) "/root"
              (get-connattr :XDG_CACHE_HOME) #P"/root/.cache/"
              (get-connattr :consfigurator-cache) #P"/root/.cache/consfigurator/")
-       (posix-login-environment "root" "/root")
+       (posix-login-environment 0 "root" "/root")
 
        ;; Remount (mainly virtual) filesystems that other properties we will
        ;; apply might require (esp. relevant for installing bootloaders).

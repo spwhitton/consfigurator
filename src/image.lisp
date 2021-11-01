@@ -93,7 +93,9 @@ Thus, PREREQUEST must not start up any threads."
                ,,@forms)))
     `(with-fork-request
          ,(wrap '`(posix-login-environment
-                   ,(get-connattr :remote-user) ,(get-connattr :remote-home))
+                   ,(get-connattr :remote-uid)
+                   ,(get-connattr :remote-user)
+                   ,(get-connattr :remote-home))
                 prerequest)
          ,(wrap request) (,out ,err ,exit)
        ,@forms)))
