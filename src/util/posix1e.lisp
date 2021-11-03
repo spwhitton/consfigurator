@@ -18,6 +18,8 @@
 (in-package :consfigurator.util.posix1e)
 (named-readtables:in-readtable :consfigurator)
 
+;;;; POSIX ACLs
+
 (define-foreign-library libacl (t (:default "libacl")))
 
 (use-foreign-library libacl)
@@ -57,3 +59,29 @@
 (defun acl-get-qualifier (entry-d type)
   (with-acl-free (qualifier-p (%acl-get-qualifier entry-d))
     (mem-ref qualifier-p type)))
+
+
+;;;; Capabilities
+
+(define-foreign-library libcap (:linux (:default "libcap")))
+
+(use-foreign-library libcap)
+
+(define-error-retval-cfun () "cap_free" :int (obj_d :pointer))
+
+(define-error-retval-cfun (:failure-val (null-pointer))
+  "cap_get_proc" :pointer)
+
+(define-error-retval-cfun ()
+  "cap_get_flag" :int
+  (cap-p :pointer) (cap cap_value_t) (flag cap_flag_t) (value-p :pointer))
+
+(defun capability-p (set &rest capabilities)
+  "Does the current thread have each of CAPABILITIES in SET?"
+  (let ((cap-opaque (cap-get-proc)))
+    (unwind-protect
+         (with-foreign-object (value-p 'cap_flag_value_t)
+           (loop for capability in capabilities
+                 do (cap-get-flag cap-opaque capability set value-p)
+                 always (eql :cap-set (mem-ref value-p 'cap_flag_value_t))))
+      (cap-free cap-opaque))))

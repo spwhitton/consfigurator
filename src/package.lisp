@@ -343,7 +343,52 @@
            #:acl-get-entry
            #:acl-get-tag-type
            #:acl-get-qualifier
-           #:acl-set-qualifier))
+           #:acl-set-qualifier
+
+           #:+CAP-CHOWN+
+           #:+CAP-DAC-OVERRIDE+
+           #:+CAP-DAC-READ-SEARCH+
+           #:+CAP-FOWNER+
+           #:+CAP-FSETID+
+           #:+CAP-KILL+
+           #:+CAP-SETGID+
+           #:+CAP-SETUID+
+
+           #:+CAP-SETPCAP+
+           #:+CAP-LINUX-IMMUTABLE+
+           #:+CAP-NET-BIND-SERVICE+
+           #:+CAP-NET-BROADCAST+
+           #:+CAP-NET-ADMIN+
+           #:+CAP-NET-RAW+
+           #:+CAP-IPC-LOCK+
+           #:+CAP-IPC-OWNER+
+           #:+CAP-SYS-MODULE+
+           #:+CAP-SYS-RAWIO+
+           #:+CAP-SYS-CHROOT+
+           #:+CAP-SYS-PTRACE+
+           #:+CAP-SYS-PACCT+
+           #:+CAP-SYS-ADMIN+
+           #:+CAP-SYS-BOOT+
+           #:+CAP-SYS-NICE+
+           #:+CAP-SYS-RESOURCE+
+           #:+CAP-SYS-TIME+
+           #:+CAP-SYS-TTY-CONFIG+
+           #:+CAP-MKNOD+
+           #:+CAP-LEASE+
+           #:+CAP-AUDIT-WRITE+
+           #:+CAP-AUDIT-CONTROL+
+           #:+CAP-SETFCAP+
+           #:+CAP-MAC-OVERRIDE+
+           #:+CAP-MAC-ADMIN+
+           #:+CAP-SYSLOG+
+           #:+CAP-WAKE-ALARM+
+           #:+CAP-BLOCK-SUSPEND+
+           #:+CAP-AUDIT-READ+
+           #:+CAP-PERFMON+
+           #:+CAP-BPF+
+           #:+CAP-CHECKPOINT-RESTORE+
+
+           #:capability-p))
 
 (defpackage :consfigurator.property.cmd
   (:use #:cl #:consfigurator)

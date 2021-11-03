@@ -297,7 +297,8 @@ Portability and stability
 
 - As both Consfigurator and its dependency Osicat make use of CFFI-Grovel,
   loading Consfigurator into Lisp currently always additionally requires a C
-  toolchain, and development headers for libacl.  It might be possible to
+  toolchain, and development headers for libacl.  On GNU/Linux, development
+  headers for libcap are also required.  It might be possible to
   conditionalise further so as to avoid any dependency on a C toolchain for
   the root Lisp.
 

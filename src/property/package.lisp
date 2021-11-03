@@ -19,7 +19,7 @@
 (named-readtables:in-readtable :consfigurator)
 
 (defparameter *consfigurator-system-dependencies*
-  '(:apt ("build-essential" "libacl1-dev")))
+  '(:apt ("build-essential" "libacl1-dev" "libcap-dev")))
 
 (defgeneric %command (package-manager)
   (:documentation

@@ -24,6 +24,7 @@
                (:file "src/reader")
                (:cffi-grovel-file "src/libc")
                (:cffi-grovel-file "src/libacl")
+               (:cffi-grovel-file "src/libcap" :if-feature :linux)
                (:file "src/util")
                (:file "src/util/posix1e")
                (:file "src/connection")

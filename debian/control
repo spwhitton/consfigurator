@@ -19,6 +19,7 @@ Build-Depends:
  debhelper-compat (= 13),
  dh-elpa,
  libacl1-dev,
+ libcap-dev,
  python3-sphinx,
  python3-sphinx-rtd-theme,
  sbcl,
@@ -48,6 +49,7 @@ Depends:
  cl-trivial-backtrace,
  emacsen-common,
  libacl1-dev,
+ libcap-dev,
  ${misc:Depends},
 Recommends:
  emacs,
