@@ -234,6 +234,7 @@ setgroups(2) is denied in the namespace."
 (defclass setns-connection
     (linux-namespace-connection init-hooks-connection) ())
 
+#+linux
 (define-constant +namespace-types+ `(("user"   . ,+CLONE_NEWUSER+)
                                      ("cgroup" . ,+CLONE_NEWCGROUP+)
                                      ("ipc"    . ,+CLONE_NEWIPC+)
@@ -247,7 +248,7 @@ setgroups(2) is denied in the namespace."
 
 (define-error-retval-cfun () "setns" :int (fd :int) (type :int))
 
-#+sbcl
+#+(and linux sbcl)
 (defmethod post-fork ((connection setns-connection))
   (with-slots (pid uid gid env) connection
     (let* (user opened-fds
