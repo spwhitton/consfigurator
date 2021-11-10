@@ -69,11 +69,11 @@
       (cdr propapp)))
 
 (defun collapse-types (&rest lists)
-  (if (member :posix (flatten lists)) :posix :lisp))
+  (if (member :lisp (flatten lists)) :lisp :posix))
 
 (defun collapse-propapp-types (&rest lists)
-  (if (member :posix (mapcan (curry #'mapcar #'propapptype) lists))
-      :posix :lisp))
+  (if (member :lisp (mapcan (curry #'mapcar #'propapptype) lists))
+      :lisp :posix))
 
 (defun propdesc (prop &rest args)
   (apply (get prop 'desc #'noop) args))
