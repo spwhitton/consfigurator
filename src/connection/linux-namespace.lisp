@@ -241,7 +241,8 @@ setgroups(2) is denied in the namespace."
                                      ("net"    . ,+CLONE_NEWNET+)
                                      ("pid"    . ,+CLONE_NEWPID+)
                                      ("mnt"    . ,+CLONE_NEWNS+)
-                                     ("time"   . ,+CLONE_NEWTIME+))
+                                     ,@(and (boundp '+CLONE_NEWTIME+)
+                                            `(("time" . ,+CLONE_NEWTIME+))))
   :test #'equal)
 
 (define-error-retval-cfun () "setns" :int (fd :int) (type :int))
