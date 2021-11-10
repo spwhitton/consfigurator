@@ -224,7 +224,7 @@ OPTIONS is a plist of keyword parameters:
 
   - :CHROOT-OPTIONS -- passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
 
-A limitation of the current implementation is the the root filesystem of the
+A limitation of the current implementation is that the root filesystem of the
 container is always created under ~/.local/share/lxc/HOSTNAME where HOSTNAME
 is the hostname of HOST, ignoring any configured XDG_DATA_HOME for USER.
 
