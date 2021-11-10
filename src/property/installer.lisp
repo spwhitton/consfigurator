@@ -272,7 +272,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
            (rename-file source (ensure-directories-exist
                                 #P"/root/.cache/consfigurator/"))))
        (setf (get-connattr :remote-user) "root"
-             (get-connattr :remote-home) "/root"
+             (get-connattr :remote-home) #P"/root/"
              (get-connattr :XDG_CACHE_HOME) #P"/root/.cache/"
              (get-connattr :consfigurator-cache) #P"/root/.cache/consfigurator/")
        (posix-login-environment 0 "root" "/root")
