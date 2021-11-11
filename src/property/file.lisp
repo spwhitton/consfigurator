@@ -133,6 +133,7 @@ any of the regular expressions PATTERNS."
   (:apply (mrun "rm" "-rf" directories)))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
+  (:desc #?"${destination} installed")
   (:hostattrs
    (declare (ignore destination))
    (require-data iden1 iden2))
@@ -149,6 +150,7 @@ any of the regular expressions PATTERNS."
   (data-uploaded (get-hostname) destination destination))
 
 (defprop secret-uploaded :posix (iden1 iden2 destination)
+  (:desc #?"${destination} installed")
   (:hostattrs
    (declare (ignore destination))
    (require-data iden1 iden2))
