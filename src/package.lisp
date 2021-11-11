@@ -344,735 +344,657 @@
            #:request-asdf-requirements
            #:continue-deploy*-program))
 
-(defpackage :consfigurator.util.posix1e
-  (:use #:cl #:alexandria #:consfigurator #:cffi)
-  (:export #:acl_type_t
-           #:acl_entry_t
-           #:+ACL-USER+
-           #:+ACL-GROUP+
-           #:+ACL-TYPE-ACCESS+
-           #:+ACL-TYPE-DEFAULT+
-           #:+ACL-NEXT-ENTRY+
-           #:+ACL-FIRST-ENTRY+
-
-           #:with-acl-free
-           #:acl-get-file
-           #:acl-set-file
-           #:acl-get-entry
-           #:acl-get-tag-type
-           #:acl-get-qualifier
-           #:acl-set-qualifier
-
-           #:+CAP-CHOWN+
-           #:+CAP-DAC-OVERRIDE+
-           #:+CAP-DAC-READ-SEARCH+
-           #:+CAP-FOWNER+
-           #:+CAP-FSETID+
-           #:+CAP-KILL+
-           #:+CAP-SETGID+
-           #:+CAP-SETUID+
-
-           #:+CAP-SETPCAP+
-           #:+CAP-LINUX-IMMUTABLE+
-           #:+CAP-NET-BIND-SERVICE+
-           #:+CAP-NET-BROADCAST+
-           #:+CAP-NET-ADMIN+
-           #:+CAP-NET-RAW+
-           #:+CAP-IPC-LOCK+
-           #:+CAP-IPC-OWNER+
-           #:+CAP-SYS-MODULE+
-           #:+CAP-SYS-RAWIO+
-           #:+CAP-SYS-CHROOT+
-           #:+CAP-SYS-PTRACE+
-           #:+CAP-SYS-PACCT+
-           #:+CAP-SYS-ADMIN+
-           #:+CAP-SYS-BOOT+
-           #:+CAP-SYS-NICE+
-           #:+CAP-SYS-RESOURCE+
-           #:+CAP-SYS-TIME+
-           #:+CAP-SYS-TTY-CONFIG+
-           #:+CAP-MKNOD+
-           #:+CAP-LEASE+
-           #:+CAP-AUDIT-WRITE+
-           #:+CAP-AUDIT-CONTROL+
-           #:+CAP-SETFCAP+
-           #:+CAP-MAC-OVERRIDE+
-           #:+CAP-MAC-ADMIN+
-           #:+CAP-SYSLOG+
-           #:+CAP-WAKE-ALARM+
-           #:+CAP-BLOCK-SUSPEND+
-           #:+CAP-AUDIT-READ+
-           #:+CAP-PERFMON+
-           #:+CAP-BPF+
-           #:+CAP-CHECKPOINT-RESTORE+
-
-           #:capability-p))
-
-(defpackage :consfigurator.util.linux-namespace
-  (:use #:cl
-        #:anaphora
-        #:alexandria
-        #:consfigurator
-        #:consfigurator.util.posix1e
-        #:cffi)
-  (:export #:get-ids-offset
-           #:reduce-id-maps
-           #:shift-ids
-           #:setgroups-p
-           #:get-userns-owner))
-
-(defpackage :consfigurator.property.cmd
-  (:use #:cl #:consfigurator)
-  (:export #:single))
-
-(defpackage :consfigurator.property.file
-  (:use #:cl #:consfigurator #:alexandria)
-  (:local-nicknames (#:re #:cl-ppcre))
-  (:export #:map-file-lines
-           #:has-content
-           #:exists-with-content
-           #:contains-lines
-           #:lacks-lines
-           #:lacks-lines-matching
-           #:has-mode
-           #:has-ownership
-           #:does-not-exist
-           #:directory-does-not-exist
-           #:data-uploaded
-           #:host-data-uploaded
-           #:secret-uploaded
-           #:host-secret-uploaded
-           #:data-cache-purged
-           #:contains-conf-equals
-           #:contains-conf-space
-           #:contains-conf-tab
-           #:contains-conf-shell
-           #:contains-ini-settings
-           #:regex-replaced-lines
-           #:directory-exists
-           #:containing-directory-exists
-           #:symlinked
-           #:is-copy-of
-           #:update-unix-table))
-
-(defpackage :consfigurator.property.etc-default
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file  #:consfigurator.property.file))
-  (:shadow #:set)
-  (:export #:set))
-
-(defpackage :consfigurator.property.os
-  (:use #:cl #:consfigurator)
-  (:shadow #:typecase #:etypecase)
-  (:export #:unixlike
-           #:linux
-           #:linux-architecture
-           #:debianlike
-           #:debian
-           #:debian-stable
-           #:debian-testing
-           #:debian-unstable
-           #:debian-experimental
-           #:debian-suite
-           #:debian-architecture
-           #:typecase
-           #:host-typecase
-           #:etypecase
-           #:host-etypecase
-           #:required
-           #:supports-arch-p))
-
-(defpackage :consfigurator.property.container
-  (:use #:cl #:consfigurator)
-  (:export #:contained
-           #:when-contained))
-
-(defpackage :consfigurator.property.periodic
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file  #:consfigurator.property.file))
-  (:export #:at-most))
-
-(defpackage :consfigurator.property.mount
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:os    #:consfigurator.property.os)
-                    (#:cmd   #:consfigurator.property.cmd)
-                    (#:file  #:consfigurator.property.file))
-  (:export #:mounted
-           #:unmounted-below
-           #:unmounted-below-and-removed
-           #:all-mounts
-           #:*standard-linux-vfs*
-           #:*linux-efivars-vfs*
-           #:assert-devtmpfs-udev-/dev))
-
-(defpackage :consfigurator.property.service
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:os    #:consfigurator.property.os)
-                    (#:file  #:consfigurator.property.file))
-  (:export #:no-services
-           #:no-services-p
-           #:running
-           #:restarted
-           #:reloaded
-           #:without-starting-services))
-
-(defpackage :consfigurator.property.apt
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:re         #:cl-ppcre)
-                    (#:cmd        #:consfigurator.property.cmd)
-                    (#:file       #:consfigurator.property.file)
-                    (#:os         #:consfigurator.property.os)
-                    (#:service    #:consfigurator.property.service))
-  (:export #:installed
-           #:installed-minimally
-           #:backports-installed
-           #:backports-installed-minimally
-           #:removed
-           #:reconfigured
-           #:service-installed-running
-           #:all-configured
-           #:updated
-           #:upgraded
-           #:autoremoved
-           #:periodic-updates
-           #:unattended-upgrades
-           #:mirror
-           #:uses-parent-mirrors
-           #:proxy
-           #:uses-parent-proxy
-           #:uses-local-cacher
-           #:get-mirrors
-           #:standard-sources.list
-           #:additional-sources
-           #:cache-cleaned
-           #:trusts-key
-           #:all-installed-p
-           #:none-installed-p
-           #:suites-available-pinned
-           #:pinned
-           #:no-pdiffs))
-
-(defpackage :consfigurator.property.package
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:apt #:consfigurator.property.apt))
-  (:export #:*consfigurator-system-dependencies*
-           #:package-manager-not-found
-           #:installed))
-
-(defpackage :consfigurator.connection.sbcl
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:os      #:consfigurator.property.os)
-                    (#:package #:consfigurator.property.package)))
-
-(defpackage :consfigurator.property.user
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file  #:consfigurator.property.file)
-                    (#:os    #:consfigurator.property.os))
-  (:export #:has-account
-           #:has-account-with-uid
-           #:has-groups
-           #:has-desktop-groups
-	   #:has-login-shell
-           #:has-enabled-password
-           #:has-locked-password
-	   #:passwd-entry))
-
-(defpackage :consfigurator.property.chroot
-  (:use #:cl #:consfigurator #:alexandria)
-  (:local-nicknames (#:service   #:consfigurator.property.service)
-                    (#:apt       #:consfigurator.property.apt)
-                    (#:os        #:consfigurator.property.os)
-                    (#:package   #:consfigurator.property.package)
-                    (#:container #:consfigurator.property.container)
-                    (#:mount     #:consfigurator.property.mount)
-                    (#:file      #:consfigurator.property.file))
-  (:shadow #:deploys #:deploys. #:deploys-these #:deploys-these.)
-  (:export #:deploys
-           #:deploys.
-           #:deploys-these
-           #:deploys-these.
-           #:os-bootstrapped-for
-           #:os-bootstrapped-for.
-           #:os-bootstrapped
-           #:os-bootstrapped.))
-
-(defpackage :consfigurator.property.disk
-  (:use #:cl #:anaphora #:alexandria #:consfigurator)
-  (:local-nicknames (#:re      #:cl-ppcre)
-                    (#:chroot  #:consfigurator.property.chroot)
-                    (#:cmd     #:consfigurator.property.cmd)
-                    (#:file    #:consfigurator.property.file)
-                    (#:os      #:consfigurator.property.os)
-                    (#:apt     #:consfigurator.property.apt))
-  (:export #:volume
-           #:volume-label
-           #:volume-contents
-           #:volume-size
-           #:volume-bootloader
-           #:subvolumes-of-type
-           #:all-subvolumes
-           #:copy-volume-and-contents
-           #:require-volumes-data
-           #:opened-volume
-           #:device-file
-
-           #:physical-disk
-           #:disk-image
-           #:image-file
-           #:raw-disk-image
-           #:opened-raw-disk-image
-           #:partitioned-volume
-           #:opened-partitioned-volume
-           #:partition
-           #:opened-partition
-
-           #:lvm-volume-group
-           #:lvm-logical-volume
-           #:activated-lvm-logical-volume
-           #:lvm-physical-volume
-           #:opened-lvm-physical-volume
-
-           #:filesystem
-           #:mount-point
-           #:mount-options
-           #:mounted-filesystem
-           #:ext4-filesystem
-           #:mounted-ext4-filesystem
-           #:fat32-filesystem
-           #:mounted-fat32-filesystem
-
-           #:luks-container
-           #:opened-luks-container
-           #:crypttab-options
-           #:crypttab-keyfile
-           #:linux-swap
-
-           #:with-these-open-volumes
-
-           #:has-volumes
-           #:caches-cleaned
-           #:raw-image-built-for
-           #:debian-live-iso-built
-           #:debian-live-iso-built.
-           #:host-volumes-created
-           #:host-logical-volumes-exist
-
-           #:parse-volume-size
-           #:volumes))
-
-(defpackage :consfigurator.property.fstab
-  (:use #:cl
-        #:anaphora
-        #:alexandria
-        #:consfigurator
-        #:consfigurator.property.disk)
-  (:local-nicknames (#:os    #:consfigurator.property.os)
-                    (#:file  #:consfigurator.property.file))
-  (:export #:volume->entry
-           #:entries
-           #:entries-for-volumes
-           #:entries-for-opened-volumes))
-
-(defpackage :consfigurator.property.crypttab
-  (:use #:cl
-        #:anaphora
-        #:alexandria
-        #:consfigurator
-        #:consfigurator.property.disk)
-  (:local-nicknames (#:re    #:cl-ppcre)
-                    (#:os    #:consfigurator.property.os)
-                    (#:file  #:consfigurator.property.file))
-  (:export #:volume->entry
-           #:entries-for-opened-volumes))
-
-(defpackage :consfigurator.property.gnupg
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:re        #:cl-ppcre))
-  (:export #:public-key-imported
-           #:secret-key-imported))
-
-(defpackage :consfigurator.property.git
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file)
-                    (#:apt       #:consfigurator.property.apt))
-  (:export #:installed
-           #:snapshot-extracted
-           #:cloned
-           #:pulled
-           #:repo-configured))
-
-(defpackage :consfigurator.property.sshd
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:re        #:cl-ppcre)
-                    (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file)
-                    (#:apt       #:consfigurator.property.apt)
-                    (#:service   #:consfigurator.property.service))
-  (:export #:installed
-           #:configured
-           #:no-passwords
-           #:get-host-public-keys
-           #:has-host-public-key
-           #:has-host-key))
-
-(defpackage :consfigurator.property.ssh
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:file      #:consfigurator.property.file)
-                    (#:sshd      #:consfigurator.property.sshd))
-  (:export #:authorized-keys
-           #:has-user-key
-           #:known-host
-           #:globally-known-host
-           #:parent-is-globally-known-host))
-
-(defpackage :consfigurator.property.locale
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:re        #:cl-ppcre)
-                    (#:os        #:consfigurator.property.os)
-                    (#:apt       #:consfigurator.property.apt)
-                    (#:cmd       #:consfigurator.property.cmd)
-                    (#:file      #:consfigurator.property.file))
-  (:export #:available
-           #:selected-for))
-
-(defpackage :consfigurator.property.reboot
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:container    #:consfigurator.property.container))
-  (:export #:rebooted-at-end))
-
-(defpackage :consfigurator.property.installer
-  (:use #:cl #:alexandria #:consfigurator #:consfigurator.property.disk)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:cmd       #:consfigurator.property.cmd)
-                    (#:file      #:consfigurator.property.file)
-                    (#:chroot    #:consfigurator.property.chroot)
-                    (#:mount     #:consfigurator.property.mount)
-                    (#:fstab     #:consfigurator.property.fstab)
-                    (#:reboot    #:consfigurator.property.reboot)
-                    (#:crypttab  #:consfigurator.property.crypttab))
-  (:export #:install-bootloader-propspec
-           #:install-bootloader-binaries-propspec
-           #:chroot-installed-to-volumes
-           #:bootloader-binaries-installed
-           #:bootloaders-installed
-           #:cleanly-installed-once))
-
-(defpackage :consfigurator.property.grub
-  (:use #:cl #:alexandria #:consfigurator
-        #:consfigurator.property.disk
-        #:consfigurator.property.installer)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file)
-                    (#:apt       #:consfigurator.property.apt))
-  (:export #:grub
-           #:grub-installed))
-
-(defpackage :consfigurator.property.u-boot
-  (:use #:cl #:alexandria #:consfigurator
-        #:consfigurator.property.disk
-        #:consfigurator.property.installer)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:apt       #:consfigurator.property.apt))
-  (:export #:u-boot-install-rockchip
-           #:u-boot-installed-rockchip))
-
-(defpackage :consfigurator.property.hostname
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
-                    (#:container #:consfigurator.property.container)
-                    (#:file      #:consfigurator.property.file))
-  (:export #:is
-           #:configured
-           #:mailname-configured
-           #:search-configured))
-
-(defpackage :consfigurator.property.network
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file))
-  (:export #:aliases
-           #:ipv4
-           #:ipv6
-           #:clean-/etc/network/interfaces
-           #:static
-           #:preserve-static-once))
-
-(defpackage :consfigurator.property.libvirt
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:cmd       #:consfigurator.property.cmd)
-                    (#:service   #:consfigurator.property.service)
-                    (#:file      #:consfigurator.property.file)
-                    (#:chroot    #:consfigurator.property.chroot)
-                    (#:apt       #:consfigurator.property.apt))
-  (:export #:installed
-           #:default-network-started
-           #:default-network-autostarted
-           #:defined
-           #:started
-           #:destroyed
-           #:when-started
-           #:kvm-boots-chroot-for
-           #:kvm-boots-chroot-for.
-           #:kvm-boots-chroot
-           #:kvm-boots-chroot.
-           #:virsh-get-columns))
-
-(defpackage :consfigurator.property.ccache
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file)
-                    (#:apt       #:consfigurator.property.apt))
-  (:export #:installed
-           #:has-limits
-           #:group-cache))
-
-(defpackage :consfigurator.property.schroot
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file)
-                    (#:apt       #:consfigurator.property.apt))
-  (:export #:installed
-           #:uses-overlays
-           #:overlays-in-tmpfs))
-
-(defpackage :consfigurator.property.sbuild
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file)
-                    (#:chroot    #:consfigurator.property.chroot)
-                    (#:user      #:consfigurator.property.user)
-                    (#:apt       #:consfigurator.property.apt)
-                    (#:ccache    #:consfigurator.property.ccache)
-                    (#:schroot   #:consfigurator.property.schroot)
-                    (#:periodic  #:consfigurator.property.periodic))
-  (:export #:installed
-           #:usable-by
-           #:built
-           #:built.
-           #:standard-debian-schroot))
-
-(defpackage :consfigurator.property.postfix
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
-                    (#:service   #:consfigurator.property.service)
-                    (#:apt       #:consfigurator.property.apt)
-                    (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file))
-  (:export #:installed
-           #:reloaded
-           #:main-configured
-           #:mapped-file))
-
-(defpackage :consfigurator.property.cron
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:re        #:cl-ppcre)
-                    (#:service   #:consfigurator.property.service)
-                    (#:apt       #:consfigurator.property.apt)
-                    (#:os        #:consfigurator.property.os)
-                    (#:file      #:consfigurator.property.file))
-  (:export #:system-job
-           #:nice-system-job
-           #:runs-consfigurator
-           #:user-crontab))
-
-(defpackage :consfigurator.property.lets-encrypt
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:apt       #:consfigurator.property.apt)
-                    (#:os        #:consfigurator.property.os))
-  (:export #:installed
-           #:agree-tos
-           #:certificate-obtained
-           #:fullchain-for
-           #:chain-for
-           #:certificate-for
-           #:privkey-for))
-
-(defpackage :consfigurator.property.apache
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:service      #:consfigurator.property.service)
-                    (#:apt          #:consfigurator.property.apt)
-                    (#:os           #:consfigurator.property.os)
-                    (#:file         #:consfigurator.property.file)
-                    (#:network      #:consfigurator.property.network)
-                    (#:lets-encrypt #:consfigurator.property.lets-encrypt))
-  (:export #:installed
-           #:reloaded
-           #:mod-enabled
-           #:conf-enabled
-           #:conf-available
-           #:site-enabled
-           #:site-available
-           #:https-vhost))
-
-(defpackage :consfigurator.property.systemd
-  (:use #:cl #:consfigurator #:anaphora)
-  (:local-nicknames (#:service      #:consfigurator.property.service))
-  (:export #:daemon-reloaded
-           #:started
-           #:stopped
-           #:reloaded
-           #:restarted
-           #:enabled
-           #:disabled
-           #:masked
-           #:lingering-enabled))
-
-(defpackage :consfigurator.property.firewalld
-  (:use #:cl #:anaphora #:alexandria #:consfigurator)
-  (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
-                    (#:file         #:consfigurator.property.file)
-                    (#:apt          #:consfigurator.property.apt)
-                    (#:os           #:consfigurator.property.os)
-                    (#:service      #:consfigurator.property.service))
-  (:export #:installed
-           #:service
-           #:policy
-           #:zone
-           #:has-zone
-           #:zone-target
-           #:default-route-zoned-once
-           #:zone-has-interface
-           #:zone-has-service
-           #:zone-masquerade
-           #:zone-rich-rule
-           #:direct-rule
-           #:default-zone))
-
-(defpackage :consfigurator.property.timezone
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:file         #:consfigurator.property.file)
-                    (#:apt          #:consfigurator.property.apt)
-                    (#:os           #:consfigurator.property.os))
-  (:export #:configured
-           #:configured-from-parent))
-
-(defpackage :consfigurator.property.swap
-  (:use #:cl #:consfigurator)
-  (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
-                    (#:fstab        #:consfigurator.property.fstab)
-                    (#:os           #:consfigurator.property.os))
-  (:export #:has-swap-file))
-
-(defpackage :consfigurator.property.lxc
-  (:use #:cl
-        #:anaphora
-        #:alexandria
-        #:consfigurator
-        #:consfigurator.util.linux-namespace
-        #:cffi)
-  (:local-nicknames (#:file         #:consfigurator.property.file)
-                    (#:apt          #:consfigurator.property.apt)
-                    (#:os           #:consfigurator.property.os)
-                    (#:service      #:consfigurator.property.service)
-                    (#:chroot       #:consfigurator.property.chroot)
-                    (#:user         #:consfigurator.property.user)
-                    (#:systemd      #:consfigurator.property.systemd))
-  (:export #:installed
-           #:user-container-started
-           #:when-user-container-running
-           #:user-containers-autostart
-           #:usernet-usable-by
-           #:user-container-for
-           #:user-container-for.
-           #:user-container
-           #:user-container.
-
-           #:lxc-ls))
-
-(defpackage :consfigurator.connection.local
-  (:use #:cl #:consfigurator #:alexandria)
-  (:export #:local-connection))
-
-(defpackage :consfigurator.connection.shell-wrap
-  (:use #:cl #:alexandria #:consfigurator)
-  (:export #:shell-wrap-connection #:connection-shell-wrap))
-
-(defpackage :consfigurator.connection.fork
-  (:use #:cl #:alexandria #:consfigurator #:consfigurator.connection.local)
-  (:export #:fork-connection
-           #:post-fork
-           #:init-hooks-connection))
-
-(defpackage :consfigurator.connection.rehome
-  (:use #:cl #:consfigurator #:consfigurator.connection.fork)
-  (:export #:rehome-connection
-           #:datadir))
-
-(defpackage :consfigurator.connection.as
-  (:use #:cl
-	#:consfigurator
-	#:consfigurator.connection.fork
-	#:cffi))
-
-(defpackage :consfigurator.connection.ssh
-  (:use #:cl
-        #:consfigurator
-        #:anaphora
-        #:alexandria
-        #:consfigurator.connection.shell-wrap))
-
-(defpackage :consfigurator.connection.sudo
-  (:use #:cl
-        #:consfigurator
-        #:anaphora
-        #:alexandria
-        #:consfigurator.connection.shell-wrap))
-
-(defpackage :consfigurator.connection.su
-  (:use #:cl
-        #:consfigurator
-        #:consfigurator.connection.shell-wrap))
-
-(defpackage :consfigurator.connection.chroot
-  (:use #:cl
-        #:anaphora
-        #:alexandria
-	#:consfigurator
-	#:consfigurator.connection.fork
-        #:consfigurator.connection.rehome
-        #:consfigurator.connection.shell-wrap
-	#:cffi)
-  (:local-nicknames (#:disk      #:consfigurator.property.disk)
-                    (#:mount     #:consfigurator.property.mount)))
-
-(defpackage :consfigurator.connection.setuid
-  (:use #:cl
-	#:consfigurator
-	#:consfigurator.connection.fork
-        #:consfigurator.connection.rehome
-	#:cffi)
-  (:local-nicknames (#:re   #:cl-ppcre)
-		    (#:user #:consfigurator.property.user)))
-
-(defpackage :consfigurator.connection.linux-namespace
-  (:use #:cl
-        #:anaphora
-        #:alexandria
-        #:consfigurator
-        #:consfigurator.util.linux-namespace
-        #:consfigurator.connection.fork
-        #:consfigurator.connection.shell-wrap)
-  (:local-nicknames (#:user #:consfigurator.property.user)
-                    (#:lxc  #:consfigurator.property.lxc)))
-
-(defpackage :consfigurator.data.asdf
-  (:use #:cl #:alexandria #:consfigurator))
-
-(defpackage :consfigurator.data.pgp
-  (:use #:cl #:consfigurator #:alexandria)
-  (:export #:list-data #:get-data #:set-data #:set-data-from-file))
-
-(defpackage :consfigurator.data.git-snapshot
-  (:use #:cl #:consfigurator #:alexandria))
-
-(defpackage :consfigurator.data.gpgpubkeys
-  (:use #:cl #:consfigurator))
-
-(defpackage :consfigurator.data.ssh-askpass
-  (:use #:cl #:alexandria #:consfigurator)
-  (:local-nicknames (#:re   #:cl-ppcre)))
-
-(defpackage :consfigurator.data.local-file
-  (:use #:cl #:consfigurator))
+(macrolet
+    ((package (package &body options &aux (use (find :use options :key #'car)))
+       `(defpackage ,package
+          (:use #:cl #:anaphora #:alexandria #:consfigurator ,@(cdr use))
+          ,@(remove use options))))
+
+  (package :consfigurator.util.posix1e
+           (:use #:cffi)
+           (:export #:acl_type_t
+                    #:acl_entry_t
+                    #:+ACL-USER+
+                    #:+ACL-GROUP+
+                    #:+ACL-TYPE-ACCESS+
+                    #:+ACL-TYPE-DEFAULT+
+                    #:+ACL-NEXT-ENTRY+
+                    #:+ACL-FIRST-ENTRY+
+
+                    #:with-acl-free
+                    #:acl-get-file
+                    #:acl-set-file
+                    #:acl-get-entry
+                    #:acl-get-tag-type
+                    #:acl-get-qualifier
+                    #:acl-set-qualifier
+
+                    #:+CAP-CHOWN+
+                    #:+CAP-DAC-OVERRIDE+
+                    #:+CAP-DAC-READ-SEARCH+
+                    #:+CAP-FOWNER+
+                    #:+CAP-FSETID+
+                    #:+CAP-KILL+
+                    #:+CAP-SETGID+
+                    #:+CAP-SETUID+
+
+                    #:+CAP-SETPCAP+
+                    #:+CAP-LINUX-IMMUTABLE+
+                    #:+CAP-NET-BIND-SERVICE+
+                    #:+CAP-NET-BROADCAST+
+                    #:+CAP-NET-ADMIN+
+                    #:+CAP-NET-RAW+
+                    #:+CAP-IPC-LOCK+
+                    #:+CAP-IPC-OWNER+
+                    #:+CAP-SYS-MODULE+
+                    #:+CAP-SYS-RAWIO+
+                    #:+CAP-SYS-CHROOT+
+                    #:+CAP-SYS-PTRACE+
+                    #:+CAP-SYS-PACCT+
+                    #:+CAP-SYS-ADMIN+
+                    #:+CAP-SYS-BOOT+
+                    #:+CAP-SYS-NICE+
+                    #:+CAP-SYS-RESOURCE+
+                    #:+CAP-SYS-TIME+
+                    #:+CAP-SYS-TTY-CONFIG+
+                    #:+CAP-MKNOD+
+                    #:+CAP-LEASE+
+                    #:+CAP-AUDIT-WRITE+
+                    #:+CAP-AUDIT-CONTROL+
+                    #:+CAP-SETFCAP+
+                    #:+CAP-MAC-OVERRIDE+
+                    #:+CAP-MAC-ADMIN+
+                    #:+CAP-SYSLOG+
+                    #:+CAP-WAKE-ALARM+
+                    #:+CAP-BLOCK-SUSPEND+
+                    #:+CAP-AUDIT-READ+
+                    #:+CAP-PERFMON+
+                    #:+CAP-BPF+
+                    #:+CAP-CHECKPOINT-RESTORE+
+
+                    #:capability-p))
+
+  (package :consfigurator.util.linux-namespace
+           (:use #:consfigurator.util.posix1e #:cffi)
+           (:export #:get-ids-offset
+                    #:reduce-id-maps
+                    #:shift-ids
+                    #:setgroups-p
+                    #:get-userns-owner))
+
+  (package :consfigurator.property.cmd
+           (:export #:single))
+
+  (package :consfigurator.property.file
+           (:local-nicknames (#:re #:cl-ppcre))
+           (:export #:map-file-lines
+                    #:has-content
+                    #:exists-with-content
+                    #:contains-lines
+                    #:lacks-lines
+                    #:lacks-lines-matching
+                    #:has-mode
+                    #:has-ownership
+                    #:does-not-exist
+                    #:directory-does-not-exist
+                    #:data-uploaded
+                    #:host-data-uploaded
+                    #:secret-uploaded
+                    #:host-secret-uploaded
+                    #:data-cache-purged
+                    #:contains-conf-equals
+                    #:contains-conf-space
+                    #:contains-conf-tab
+                    #:contains-conf-shell
+                    #:contains-ini-settings
+                    #:regex-replaced-lines
+                    #:directory-exists
+                    #:containing-directory-exists
+                    #:symlinked
+                    #:is-copy-of
+                    #:update-unix-table))
+
+  (package :consfigurator.property.etc-default
+           (:local-nicknames (#:file  #:consfigurator.property.file))
+           (:shadow #:set)
+           (:export #:set))
+
+  (package :consfigurator.property.os
+           (:shadow #:typecase #:etypecase)
+           (:export #:unixlike
+                    #:linux
+                    #:linux-architecture
+                    #:debianlike
+                    #:debian
+                    #:debian-stable
+                    #:debian-testing
+                    #:debian-unstable
+                    #:debian-experimental
+                    #:debian-suite
+                    #:debian-architecture
+                    #:typecase
+                    #:host-typecase
+                    #:etypecase
+                    #:host-etypecase
+                    #:required
+                    #:supports-arch-p))
+
+  (package :consfigurator.property.container
+           (:export #:contained
+                    #:when-contained))
+
+  (package :consfigurator.property.periodic
+           (:local-nicknames (#:file  #:consfigurator.property.file))
+           (:export #:at-most))
+
+  (package :consfigurator.property.mount
+           (:local-nicknames (#:os    #:consfigurator.property.os)
+                             (#:cmd   #:consfigurator.property.cmd)
+                             (#:file  #:consfigurator.property.file))
+           (:export #:mounted
+                    #:unmounted-below
+                    #:unmounted-below-and-removed
+                    #:all-mounts
+                    #:*standard-linux-vfs*
+                    #:*linux-efivars-vfs*
+                    #:assert-devtmpfs-udev-/dev))
+
+  (package :consfigurator.property.service
+           (:local-nicknames (#:os    #:consfigurator.property.os)
+                             (#:file  #:consfigurator.property.file))
+           (:export #:no-services
+                    #:no-services-p
+                    #:running
+                    #:restarted
+                    #:reloaded
+                    #:without-starting-services))
+
+  (package :consfigurator.property.apt
+           (:local-nicknames (#:re         #:cl-ppcre)
+                             (#:cmd        #:consfigurator.property.cmd)
+                             (#:file       #:consfigurator.property.file)
+                             (#:os         #:consfigurator.property.os)
+                             (#:service    #:consfigurator.property.service))
+           (:export #:installed
+                    #:installed-minimally
+                    #:backports-installed
+                    #:backports-installed-minimally
+                    #:removed
+                    #:reconfigured
+                    #:service-installed-running
+                    #:all-configured
+                    #:updated
+                    #:upgraded
+                    #:autoremoved
+                    #:periodic-updates
+                    #:unattended-upgrades
+                    #:mirror
+                    #:uses-parent-mirrors
+                    #:proxy
+                    #:uses-parent-proxy
+                    #:uses-local-cacher
+                    #:get-mirrors
+                    #:standard-sources.list
+                    #:additional-sources
+                    #:cache-cleaned
+                    #:trusts-key
+                    #:all-installed-p
+                    #:none-installed-p
+                    #:suites-available-pinned
+                    #:pinned
+                    #:no-pdiffs))
+
+  (package :consfigurator.property.package
+           (:local-nicknames (#:apt #:consfigurator.property.apt))
+           (:export #:*consfigurator-system-dependencies*
+                    #:package-manager-not-found
+                    #:installed))
+
+  (package :consfigurator.connection.sbcl
+           (:local-nicknames (#:os      #:consfigurator.property.os)
+                             (#:package #:consfigurator.property.package)))
+
+  (package :consfigurator.property.user
+           (:local-nicknames (#:file  #:consfigurator.property.file)
+                             (#:os    #:consfigurator.property.os))
+           (:export #:has-account
+                    #:has-account-with-uid
+                    #:has-groups
+                    #:has-desktop-groups
+	            #:has-login-shell
+                    #:has-enabled-password
+                    #:has-locked-password
+	            #:passwd-entry))
+
+  (package :consfigurator.property.chroot
+           (:local-nicknames (#:service   #:consfigurator.property.service)
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:os        #:consfigurator.property.os)
+                             (#:package   #:consfigurator.property.package)
+                             (#:container #:consfigurator.property.container)
+                             (#:mount     #:consfigurator.property.mount)
+                             (#:file      #:consfigurator.property.file))
+           (:shadow #:deploys #:deploys. #:deploys-these #:deploys-these.)
+           (:export #:deploys
+                    #:deploys.
+                    #:deploys-these
+                    #:deploys-these.
+                    #:os-bootstrapped-for
+                    #:os-bootstrapped-for.
+                    #:os-bootstrapped
+                    #:os-bootstrapped.))
+
+  (package :consfigurator.property.disk
+           (:local-nicknames (#:re      #:cl-ppcre)
+                             (#:chroot  #:consfigurator.property.chroot)
+                             (#:cmd     #:consfigurator.property.cmd)
+                             (#:file    #:consfigurator.property.file)
+                             (#:os      #:consfigurator.property.os)
+                             (#:apt     #:consfigurator.property.apt))
+           (:export #:volume
+                    #:volume-label
+                    #:volume-contents
+                    #:volume-size
+                    #:volume-bootloader
+                    #:subvolumes-of-type
+                    #:all-subvolumes
+                    #:copy-volume-and-contents
+                    #:require-volumes-data
+                    #:opened-volume
+                    #:device-file
+
+                    #:physical-disk
+                    #:disk-image
+                    #:image-file
+                    #:raw-disk-image
+                    #:opened-raw-disk-image
+                    #:partitioned-volume
+                    #:opened-partitioned-volume
+                    #:partition
+                    #:opened-partition
+
+                    #:lvm-volume-group
+                    #:lvm-logical-volume
+                    #:activated-lvm-logical-volume
+                    #:lvm-physical-volume
+                    #:opened-lvm-physical-volume
+
+                    #:filesystem
+                    #:mount-point
+                    #:mount-options
+                    #:mounted-filesystem
+                    #:ext4-filesystem
+                    #:mounted-ext4-filesystem
+                    #:fat32-filesystem
+                    #:mounted-fat32-filesystem
+
+                    #:luks-container
+                    #:opened-luks-container
+                    #:crypttab-options
+                    #:crypttab-keyfile
+                    #:linux-swap
+
+                    #:with-these-open-volumes
+
+                    #:has-volumes
+                    #:caches-cleaned
+                    #:raw-image-built-for
+                    #:debian-live-iso-built
+                    #:debian-live-iso-built.
+                    #:host-volumes-created
+                    #:host-logical-volumes-exist
+
+                    #:parse-volume-size
+                    #:volumes))
+
+  (package :consfigurator.property.fstab
+           (:use #:consfigurator.property.disk)
+           (:local-nicknames (#:os    #:consfigurator.property.os)
+                             (#:file  #:consfigurator.property.file))
+           (:export #:volume->entry
+                    #:entries
+                    #:entries-for-volumes
+                    #:entries-for-opened-volumes))
+
+  (package :consfigurator.property.crypttab
+           (:use #:consfigurator.property.disk)
+           (:local-nicknames (#:re    #:cl-ppcre)
+                             (#:os    #:consfigurator.property.os)
+                             (#:file  #:consfigurator.property.file))
+           (:export #:volume->entry
+                    #:entries-for-opened-volumes))
+
+  (package :consfigurator.property.gnupg
+           (:local-nicknames (#:re        #:cl-ppcre))
+           (:export #:public-key-imported
+                    #:secret-key-imported))
+
+  (package :consfigurator.property.git
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file)
+                             (#:apt       #:consfigurator.property.apt))
+           (:export #:installed
+                    #:snapshot-extracted
+                    #:cloned
+                    #:pulled
+                    #:repo-configured))
+
+  (package :consfigurator.property.sshd
+           (:local-nicknames (#:re        #:cl-ppcre)
+                             (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file)
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:service   #:consfigurator.property.service))
+           (:export #:installed
+                    #:configured
+                    #:no-passwords
+                    #:get-host-public-keys
+                    #:has-host-public-key
+                    #:has-host-key))
+
+  (package :consfigurator.property.ssh
+           (:local-nicknames (#:file      #:consfigurator.property.file)
+                             (#:sshd      #:consfigurator.property.sshd))
+           (:export #:authorized-keys
+                    #:has-user-key
+                    #:known-host
+                    #:globally-known-host
+                    #:parent-is-globally-known-host))
+
+  (package :consfigurator.property.locale
+           (:local-nicknames (#:re        #:cl-ppcre)
+                             (#:os        #:consfigurator.property.os)
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:cmd       #:consfigurator.property.cmd)
+                             (#:file      #:consfigurator.property.file))
+           (:export #:available
+                    #:selected-for))
+
+  (package :consfigurator.property.reboot
+           (:local-nicknames (#:container #:consfigurator.property.container))
+           (:export #:rebooted-at-end))
+
+  (package :consfigurator.property.installer
+           (:use #:consfigurator.property.disk)
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:cmd       #:consfigurator.property.cmd)
+                             (#:file      #:consfigurator.property.file)
+                             (#:chroot    #:consfigurator.property.chroot)
+                             (#:mount     #:consfigurator.property.mount)
+                             (#:fstab     #:consfigurator.property.fstab)
+                             (#:reboot    #:consfigurator.property.reboot)
+                             (#:crypttab  #:consfigurator.property.crypttab))
+           (:export #:install-bootloader-propspec
+                    #:install-bootloader-binaries-propspec
+                    #:chroot-installed-to-volumes
+                    #:bootloader-binaries-installed
+                    #:bootloaders-installed
+                    #:cleanly-installed-once))
+
+  (package :consfigurator.property.grub
+           (:use #:consfigurator.property.disk
+                 #:consfigurator.property.installer)
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file)
+                             (#:apt       #:consfigurator.property.apt))
+           (:export #:grub
+                    #:grub-installed))
+
+  (package :consfigurator.property.u-boot
+           (:use #:consfigurator.property.disk
+                 #:consfigurator.property.installer)
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:apt       #:consfigurator.property.apt))
+           (:export #:u-boot-install-rockchip
+                    #:u-boot-installed-rockchip))
+
+  (package :consfigurator.property.hostname
+           (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
+                             (#:container #:consfigurator.property.container)
+                             (#:file      #:consfigurator.property.file))
+           (:export #:is
+                    #:configured
+                    #:mailname-configured
+                    #:search-configured))
+
+  (package :consfigurator.property.network
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file))
+           (:export #:aliases
+                    #:ipv4
+                    #:ipv6
+                    #:clean-/etc/network/interfaces
+                    #:static
+                    #:preserve-static-once))
+
+  (package :consfigurator.property.libvirt
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:cmd       #:consfigurator.property.cmd)
+                             (#:service   #:consfigurator.property.service)
+                             (#:file      #:consfigurator.property.file)
+                             (#:chroot    #:consfigurator.property.chroot)
+                             (#:apt       #:consfigurator.property.apt))
+           (:export #:installed
+                    #:default-network-started
+                    #:default-network-autostarted
+                    #:defined
+                    #:started
+                    #:destroyed
+                    #:when-started
+                    #:kvm-boots-chroot-for
+                    #:kvm-boots-chroot-for.
+                    #:kvm-boots-chroot
+                    #:kvm-boots-chroot.
+                    #:virsh-get-columns))
+
+  (package :consfigurator.property.ccache
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file)
+                             (#:apt       #:consfigurator.property.apt))
+           (:export #:installed
+                    #:has-limits
+                    #:group-cache))
+
+  (package :consfigurator.property.schroot
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file)
+                             (#:apt       #:consfigurator.property.apt))
+           (:export #:installed
+                    #:uses-overlays
+                    #:overlays-in-tmpfs))
+
+  (package :consfigurator.property.sbuild
+           (:local-nicknames (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file)
+                             (#:chroot    #:consfigurator.property.chroot)
+                             (#:user      #:consfigurator.property.user)
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:ccache    #:consfigurator.property.ccache)
+                             (#:schroot   #:consfigurator.property.schroot)
+                             (#:periodic  #:consfigurator.property.periodic))
+           (:export #:installed
+                    #:usable-by
+                    #:built
+                    #:built.
+                    #:standard-debian-schroot))
+
+  (package :consfigurator.property.postfix
+           (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
+                             (#:service   #:consfigurator.property.service)
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file))
+           (:export #:installed
+                    #:reloaded
+                    #:main-configured
+                    #:mapped-file))
+
+  (package :consfigurator.property.cron
+           (:local-nicknames (#:re        #:cl-ppcre)
+                             (#:service   #:consfigurator.property.service)
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:os        #:consfigurator.property.os)
+                             (#:file      #:consfigurator.property.file))
+           (:export #:system-job
+                    #:nice-system-job
+                    #:runs-consfigurator
+                    #:user-crontab))
+
+  (package :consfigurator.property.lets-encrypt
+           (:local-nicknames (#:apt       #:consfigurator.property.apt)
+                             (#:os        #:consfigurator.property.os))
+           (:export #:installed
+                    #:agree-tos
+                    #:certificate-obtained
+                    #:fullchain-for
+                    #:chain-for
+                    #:certificate-for
+                    #:privkey-for))
+
+  (package :consfigurator.property.apache
+           (:local-nicknames
+            (#:service             #:consfigurator.property.service)
+            (#:apt                 #:consfigurator.property.apt)
+            (#:os                  #:consfigurator.property.os)
+            (#:file                #:consfigurator.property.file)
+            (#:network             #:consfigurator.property.network)
+            (#:lets-encrypt        #:consfigurator.property.lets-encrypt))
+           (:export #:installed
+                    #:reloaded
+                    #:mod-enabled
+                    #:conf-enabled
+                    #:conf-available
+                    #:site-enabled
+                    #:site-available
+                    #:https-vhost))
+
+  (package :consfigurator.property.systemd
+           (:local-nicknames (#:service #:consfigurator.property.service))
+           (:export #:daemon-reloaded
+                    #:started
+                    #:stopped
+                    #:reloaded
+                    #:restarted
+                    #:enabled
+                    #:disabled
+                    #:masked
+                    #:lingering-enabled))
+
+  (package :consfigurator.property.firewalld
+           (:local-nicknames (#:cmd         #:consfigurator.property.cmd)
+                             (#:file        #:consfigurator.property.file)
+                             (#:apt         #:consfigurator.property.apt)
+                             (#:os          #:consfigurator.property.os)
+                             (#:service     #:consfigurator.property.service))
+           (:export #:installed
+                    #:service
+                    #:policy
+                    #:zone
+                    #:has-zone
+                    #:zone-target
+                    #:default-route-zoned-once
+                    #:zone-has-interface
+                    #:zone-has-service
+                    #:zone-masquerade
+                    #:zone-rich-rule
+                    #:direct-rule
+                    #:default-zone))
+
+  (package :consfigurator.property.timezone
+           (:local-nicknames (#:file         #:consfigurator.property.file)
+                             (#:apt          #:consfigurator.property.apt)
+                             (#:os           #:consfigurator.property.os))
+           (:export #:configured
+                    #:configured-from-parent))
+
+  (package :consfigurator.property.swap
+           (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
+                             (#:fstab        #:consfigurator.property.fstab)
+                             (#:os           #:consfigurator.property.os))
+           (:export #:has-swap-file))
+
+  (package :consfigurator.property.lxc
+           (:use #:consfigurator.util.linux-namespace #:cffi)
+           (:local-nicknames (#:file        #:consfigurator.property.file)
+                             (#:apt         #:consfigurator.property.apt)
+                             (#:os          #:consfigurator.property.os)
+                             (#:service     #:consfigurator.property.service)
+                             (#:chroot      #:consfigurator.property.chroot)
+                             (#:user        #:consfigurator.property.user)
+                             (#:systemd     #:consfigurator.property.systemd))
+           (:export #:installed
+                    #:user-container-started
+                    #:when-user-container-running
+                    #:user-containers-autostart
+                    #:usernet-usable-by
+                    #:user-container-for
+                    #:user-container-for.
+                    #:user-container
+                    #:user-container.
+
+                    #:lxc-ls))
+
+  (package :consfigurator.connection.local
+           (:export #:local-connection))
+
+  (package :consfigurator.connection.shell-wrap
+           (:export #:shell-wrap-connection #:connection-shell-wrap))
+
+  (package :consfigurator.connection.fork
+           (:use #:consfigurator.connection.local)
+           (:export #:fork-connection
+                    #:post-fork
+                    #:init-hooks-connection))
+
+  (package :consfigurator.connection.rehome
+           (:use #:consfigurator.connection.fork)
+           (:export #:rehome-connection
+                    #:datadir))
+
+  (package :consfigurator.connection.as
+           (:use #:consfigurator.connection.fork #:cffi))
+
+  (package :consfigurator.connection.ssh
+           (:use #:consfigurator.connection.shell-wrap))
+
+  (package :consfigurator.connection.sudo
+           (:use #:consfigurator.connection.shell-wrap))
+
+  (package :consfigurator.connection.su
+           (:use #:consfigurator.connection.shell-wrap))
+
+  (package :consfigurator.connection.chroot
+           (:use #:consfigurator.connection.fork
+                 #:consfigurator.connection.rehome
+                 #:consfigurator.connection.shell-wrap
+	         #:cffi)
+           (:local-nicknames (#:disk      #:consfigurator.property.disk)
+                             (#:mount     #:consfigurator.property.mount)))
+
+  (package :consfigurator.connection.setuid
+           (:use #:consfigurator.connection.fork
+                 #:consfigurator.connection.rehome
+	         #:cffi)
+           (:local-nicknames (#:re   #:cl-ppcre)
+		             (#:user #:consfigurator.property.user)))
+
+  (package :consfigurator.connection.linux-namespace
+           (:use #:consfigurator.util.linux-namespace
+                 #:consfigurator.connection.fork
+                 #:consfigurator.connection.shell-wrap)
+           (:local-nicknames (#:user #:consfigurator.property.user)
+                             (#:lxc  #:consfigurator.property.lxc)))
+
+  (package :consfigurator.data.asdf)
+
+  (package :consfigurator.data.pgp
+           (:export #:list-data #:get-data #:set-data #:set-data-from-file))
+
+  (package :consfigurator.data.git-snapshot)
+
+  (package :consfigurator.data.gpgpubkeys)
+
+  (package :consfigurator.data.ssh-askpass
+           (:local-nicknames (#:re   #:cl-ppcre)))
+
+  (package :consfigurator.data.local-file))
