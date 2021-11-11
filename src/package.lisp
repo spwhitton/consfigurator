@@ -126,6 +126,7 @@
            #:lambda-ignoring-args
            #:parse-cidr
            #:system
+           #:random-alphanumeric
 
            #:*consfigurator-debug-level*
            #:with-indented-inform

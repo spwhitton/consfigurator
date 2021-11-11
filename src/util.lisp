@@ -373,6 +373,14 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
   :test #'string=)
 
+(defun random-alphanumeric (length)
+  "Return a random alphanumeric string of length LENGTH."
+  (aprog1 (make-string length)
+    (loop with *random-state* = (make-random-state t)
+          for i below length
+          do (setf (char it i)
+                   (char +alphanum+ (random #.(length +alphanum+)))))))
+
 (defun mkfifo ()
   "Use mkfifo(3) to create a named pipe with a mkstemp(3)-like name."
   (let* ((dir (drop-trailing-slash (or (getenv "TMPDIR") "/tmp")))
