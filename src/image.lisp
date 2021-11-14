@@ -106,7 +106,7 @@ Thus, PREREQUEST must not start up any threads."
 #+sbcl (defvar *sbcl-runtime-cksum* (local-cksum sb-ext:*runtime-pathname*))
 
 (defvar *us*
-  #+sbcl sb-ext:*core-pathname*
+  #+sbcl sb-ext:*runtime-pathname*
   #+(and linux (not sbcl)) (resolve-symlinks "/proc/self/exe"))
 
 (define-simple-error wrong-execution-context-for-image-dump (aborted-change))
