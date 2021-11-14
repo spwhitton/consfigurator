@@ -277,6 +277,7 @@
            #:ensure-host
            #:with-preserve-hostattrs
            #:with-replace-hostattrs
+           #:has-hostattrs
 
            ;; deployment.lisp
            #:at-end

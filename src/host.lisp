@@ -191,3 +191,8 @@ entries."
          ,(car (getf attrs :desc)))
        ,@(and deploy
               `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))
+
+(defprop has-hostattrs :posix (k &rest vs)
+  "Push hostattrs VS of type K."
+  (:desc (format nil "Has hostattr~P ~A ~{~A~^, ~}" (length vs) k vs))
+  (:hostattrs (apply #'push-hostattrs k vs)))
