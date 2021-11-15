@@ -102,12 +102,26 @@ Thus, PREREQUEST must not start up any threads."
        ,(wrap-grandchild-request request) (,out ,err ,exit)
      ,@forms))
 
-#+sbcl (defvar *sbcl-core-cksum* (local-cksum sb-ext:*core-pathname*))
-#+sbcl (defvar *sbcl-runtime-cksum* (local-cksum sb-ext:*runtime-pathname*))
+;; As SBCL does not expose the build-id, use two checksums.
+#+sbcl (defvar *sbcl-core-cksum*) #+sbcl (defvar *sbcl-runtime-cksum*)
+#+sbcl (uiop:register-image-restore-hook
+        (lambda ()
+          ;; Something like an INIT-HOOKS-CONNECTION might have already
+          ;; rendered these files inaccessible, in which case just clear out
+          ;; the old checksums.
+          (setq
+           *sbcl-core-cksum* (and (file-exists-p sb-ext:*core-pathname*)
+                                  (local-cksum sb-ext:*core-pathname*))
+           *sbcl-runtime-cksum* (and (file-exists-p sb-ext:*runtime-pathname*)
+                                     (local-cksum sb-ext:*runtime-pathname*))))
+        t)
 
-(defvar *us*
-  #+sbcl sb-ext:*runtime-pathname*
-  #+(and linux (not sbcl)) (resolve-symlinks "/proc/self/exe"))
+(defvar *us*)
+(uiop:register-image-restore-hook
+ (lambda ()
+   (setq *us* #+sbcl sb-ext:*runtime-pathname*
+              #+(and linux (not sbcl)) (resolve-symlinks "/proc/self/exe")))
+ t)
 
 (define-simple-error wrong-execution-context-for-image-dump (aborted-change))
 
@@ -124,21 +138,29 @@ Thus, PREREQUEST must not start up any threads."
               path))
   ;; Check that we can dump.
   #+sbcl
-  (unless (and (not (pathname-equal filename *us*))
+  (unless (and *sbcl-core-cksum*
                (file-exists-p sb-ext:*core-pathname*)
-               (file-exists-p sb-ext:*runtime-pathname*)
-               ;; As SBCL does not expose the build-id, use two checksums.
-               (= *sbcl-core-cksum*
-                  (local-cksum sb-ext:*core-pathname*))
-               (= *sbcl-runtime-cksum*
-                  (local-cksum sb-ext:*runtime-pathname*)))
+               (= *sbcl-core-cksum* (local-cksum sb-ext:*core-pathname*))
+               ;; If we're running from a dumped executable then the runtime
+               ;; and core pathnames are the same, so no need to check.
+               (or (eql :executable uiop:*image-dumped-p*)
+                   (and *sbcl-runtime-cksum*
+                        (file-exists-p sb-ext:*runtime-pathname*)
+                        (= *sbcl-runtime-cksum*
+                           (local-cksum sb-ext:*runtime-pathname*)))))
     (wrong-execution-context-for-image-dump
      "Couldn't dump executable image because same SBCL build unavailable."))
   ;; Perform the image dump.
   (with-fork-request nil
       `(progn ,pre-dump
               (nix:umask #o077)
-              (uiop:register-image-restore-hook (lambda () (eval ',form)) nil)
+              (uiop:register-image-restore-hook
+               (named-lambda hook ()
+                 ;; Remove ourselves so that a dump-and-reinvoke by the
+                 ;; reinvoked image will not try to run us again.
+                 (deletef uiop:*image-restore-hook* #'hook)
+                 (eval ',form))
+               nil)
               (uiop:dump-image ,filename :executable t))
       (out err exit)
     (declare (ignore out))
