@@ -1,6 +1,6 @@
 (defsystem "consfigurator"
   :description "Lisp declarative configuration management system"
-  :version "0.12.1"
+  :version "0.12.2"
   :author "Sean Whitton <spwhitton@spwhitton.name>"
   :licence "GPL-3+"
   :serial t
@@ -98,7 +98,7 @@
 (defsystem "consfigurator/tests"
   :description
   "Tests for Consfigurator, Lisp declarative configuration management system"
-  :version "0.12.1"
+  :version "0.12.2"
   :author "Sean Whitton <spwhitton@spwhitton.name>"
   :licence "GPL-3+"
   :serial t
