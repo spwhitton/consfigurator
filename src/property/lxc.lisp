@@ -318,7 +318,7 @@ implications."
 
 (defun lxc-ls (&optional owner &rest args)
   "Return the lines of output from lxc-ls(1) called with ARGS and for OWNER."
-  (lines (apply #'lxc-cmd owner "lxc-ls" args)))
+  (lines (apply #'lxc-cmd owner "lxc-ls" "-1" args)))
 
 (defun user-container-active-p (host &optional owner)
   (and (not (service:no-services-p))
