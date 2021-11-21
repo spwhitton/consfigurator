@@ -40,10 +40,12 @@
   (declare (ignore args))
   (values))
 
-(defun lines (text)
+(defun lines (text &optional trimfun (trimchars '(#\Space #\Tab)))
   (with-input-from-string (stream text)
     (let (bolp buffer)
-      (flet ((reset ()
+      (flet ((trim (line)
+               (if trimfun (funcall trimfun trimchars line) line))
+             (reset ()
                (setq bolp t
                      buffer (make-array 0 :fill-pointer 0
                                           :element-type 'character))))
@@ -53,7 +55,7 @@
               for char = (read-char stream nil nil)
               if char
                 if (member char '(#\Return #\Newline) :test #'char=)
-                  collect buffer
+                  collect (trim buffer)
                   and do (reset)
                          (when (char= char #\Return)
                            (when-let ((next (peek-char nil stream nil nil)))
@@ -63,7 +65,7 @@
                         (vector-push-extend char buffer)
                 end
               else
-                unless bolp collect buffer end
+                unless bolp collect (trim buffer) end
                 and do (loop-finish))))))
 
 (defun unlines (lines)
