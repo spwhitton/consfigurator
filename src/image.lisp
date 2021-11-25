@@ -180,7 +180,7 @@ respectively, and evaluate FORMS."
     ;; Don't want to use ~/.cache/consfigurator/images because want to write
     ;; to a tmpfs/ramdisk if possible.
     `(with-local-temporary-directory (,tempdir)
-       (let ((file (merge-pathnames "image" ,tempdir)))
+       (let ((file (merge-pathnames "consfigurator" ,tempdir)))
          (%dump-consfigurator-in-grandchild
           file ,(wrap-grandchild-request prerequest)
           ;; Try to ensure that the new fork control child does not end up
