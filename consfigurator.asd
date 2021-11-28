@@ -106,5 +106,6 @@
                (:feature :sbcl (:require #:sb-rt))
                (:feature (:not :sbcl) #:rt))
   :components ((:file "tests/package")
+               (:file "tests/util")
                (:file "tests/property/file"))
   :perform (test-op (o c) (symbol-call :consfigurator/tests '#:do-tests)))

@@ -470,20 +470,44 @@ previous output."
 
 ;;;; Version numbers
 
-(defun number->string (x)
-  (etypecase x (string x) (number (format nil "~D" x))))
+(defun compare-versions (x y &optional less-than-or-equal)
+  (flet
+      ((components (v)
+         (etypecase v
+           (number (list v))
+           (string
+            (loop with buf
+                    = (make-array 0 :fill-pointer 0 :element-type 'character)
+                  for c across v
+                  if (digit-char-p c)
+                    do (vector-push-extend c buf)
+                  else if (and (char= c #\.) (plusp (fill-pointer buf)))
+                         collect (parse-integer buf) into accum
+                         and do (setf (fill-pointer buf) 0)
+                  else do (loop-finish)
+                  finally (return (if (plusp (fill-pointer buf))
+                                      (nconc accum (list (parse-integer buf)))
+                                      accum)))))))
+    (setq x (components x) y (components y))
+    (if less-than-or-equal
+        (loop while (or x y) for a = (or (pop x) 0) and b = (or (pop y) 0)
+              never (> a b)
+              if (< a b) return t)
+        (loop while (or x y) for a = (or (pop x) 0) and b = (or (pop y) 0)
+              thereis (> b a)
+              if (< b a) return nil))))
 
 (defun version< (x y)
-  (uiop:version< (number->string x) (number->string y)))
-
-(defun version> (x y)
-  (version< y x))
+  (compare-versions x y))
 
 (defun version<= (x y)
-  (uiop:version<= (number->string x) (number->string y)))
+  (compare-versions x y t))
+
+(defun version> (x y)
+  (compare-versions y x))
 
 (defun version>= (x y)
-  (version<= y x))
+  (compare-versions y x t))
 
 
 ;;;; Encoding of strings to filenames
