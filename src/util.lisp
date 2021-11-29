@@ -371,9 +371,10 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
                         (car args))
    :int))
 
-(define-constant +alphanum+
-  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-  :test #'string=)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (define-constant +alphanum+
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    :test #'string=))
 
 (defun random-alphanumeric (length)
   "Return a random alphanumeric string of length LENGTH."
