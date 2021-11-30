@@ -133,7 +133,7 @@ Unapplying removes the Apache site config but leaves the certificate behind."
                      ,(strcat "ServerName " name ":80")
                      ,@initial
                      "RewriteEngine On"
-                     "RewriteRule ^/.well-known/(.*) - [L]"
+                     "RewriteRule ^/.well-known/acme-challenge.* - [L]"
                      ;; redirect everything else to https
                      ,(strcat "RewriteRule ^/(.*) https://" name "/$1 [L,R,NE]")
                      ,@additional-config
