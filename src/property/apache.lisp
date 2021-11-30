@@ -135,7 +135,7 @@ Unapplying removes the Apache site config but leaves the certificate behind."
                      "RewriteEngine On"
                      "RewriteRule ^/.well-known/acme-challenge.* - [L]"
                      ;; redirect everything else to https
-                     ,(strcat "RewriteRule ^/(.*) https://" name "/$1 [L,R,NE]")
+                     "RewriteRule (.*) https://%{SERVER_NAME}$1 [R=301,L,NE]"
                      ,@additional-config
                      "</VirtualHost>")))))
      (on-change (lets-encrypt:certificate-obtained
