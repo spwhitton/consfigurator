@@ -39,7 +39,7 @@ etc."))
                                     `(:email-address ,email-address))))
 
 ;; Based on Propellor's LetsEncrypt.letsEncrypt' property.
-(defprop %obtained :posix (agree-tos htdocs domains)
+(defprop %obtained :posix (agree-tos domains &rest args)
   (:apply
    (check-type agree-tos agree-tos)
    (let ((dir (ensure-directory-pathname
@@ -52,8 +52,7 @@ etc."))
              (if (slot-boundp agree-tos 'email-address)
                  (strcat "--email=" (slot-value agree-tos 'email-address))
                  "--register-unsafely-without-email")
-             "--webroot" "--webroot-path" htdocs
-             "--text" "--noninteractive" "--keep-until-expiring"
+             args "--text" "--noninteractive" "--keep-until-expiring"
              ;; Always request expansion in case DOMAINS has changed.
              "--expand"
              (loop for domain in domains
@@ -73,7 +72,17 @@ the obtained certificate.  Typically you'll want to combine this property with
 web server-specific properties in a DEFPROPLIST/DEFPROPSPEC."
   (:desc (format nil "Let's Encrypt for ~{~A~^, ~}" domains))
   (installed)
-  (%obtained agree-tos htdocs (flatten domains)))
+  (%obtained agree-tos (flatten domains) "--webroot" "--webroot-path" htdocs))
+
+(defproplist certificate-obtained-standalone :posix (agree-tos &rest domains)
+  "Like LETS-ENCRYPT:CERTIFICATE-OBTAINED, but use the --standalone argument to
+letsencrypt(1) to start up the client's built-in webserver on port 80.  Useful
+on hosts which do not normally run a web server, but nevertheless require an
+SSL certificate for other service(s), such as mail servers."
+  (:desc (format nil "Let's Encrypt for ~{~A~^, ~}" domains))
+  (installed)
+  (%obtained agree-tos (flatten domains)
+             "--standalone" "--preferred-challenges" "http"))
 
 (defun dir-for (domain)
   (ensure-directory-pathname

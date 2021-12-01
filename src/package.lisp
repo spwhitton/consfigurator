@@ -848,6 +848,7 @@
            (:export #:installed
                     #:agree-tos
                     #:certificate-obtained
+                    #:certificate-obtained-standalone
                     #:fullchain-for
                     #:chain-for
                     #:certificate-for
