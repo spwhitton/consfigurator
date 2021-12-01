@@ -130,12 +130,23 @@ effect deployments: it sends over the ASDF systems specified by SYSTEMS."
 Consfigurator properties and property combinators code in this symbol's
 package applies to hosts."))))
 
+(define-condition no-consfig (simple-warning) ())
+
 (defclass propspec ()
   ((systems
     :initarg :systems
-    :initform (or (symbol-value (find-symbol "*CONSFIG*"))
-                  (error
-                   "Looks like *CONSFIG* is not set; please call IN-CONSFIG"))
+    :initform
+    (or (handler-case (symbol-value (find-symbol "*CONSFIG*"))
+          (unbound-variable ()))
+        (warn 'no-consfig :format-arguments `(,*package*) :format-control
+"Initialising propspec without any list of ASDF systems supplied,
+and *PACKAGE* is not a package for which IN-CONSFIG has been called.
+Consfigurator may not be able to start up remote Lisp images to effect
+deployments involving this propspec; see the docstring for IN-CONSFIG.
+
+Either call IN-CONSFIG for ~S, explicitly pass
+:SYSTEMS NIL to MAKE-PROPSPEC, or muffle this warning if code using this
+propspec will not need to start up any remote Lisp images."))
     :reader propspec-systems
     :documentation
     "List of names of ASDF systems, the loading of all of which is sufficient

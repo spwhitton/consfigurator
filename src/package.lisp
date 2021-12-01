@@ -240,6 +240,7 @@
 
            ;; propspec.lisp
            #:in-consfig
+           #:no-consfig
            #:propspec-systems
            #:propspec-props
            #:make-propspec
