@@ -561,10 +561,13 @@ Preprocessing must occur in the root Lisp."))
                      else collect intern-form))
              (proclamations `((proclaim '(special *no-data-sources*))
                               (proclaim '(special *consfigurator-debug-level*))))
+             (initialisations '(setq *no-data-sources* nil
+                                     *consfigurator-debug-level* 0))
              (forms
                `((make-package "CONSFIGURATOR")
                  ,@intern-forms
                  ,@proclamations
+                 ,initialisations
                  ;; (define-condition missing-data-source (error) ())
                  (require "asdf")
                  ;; Hide the compile and/or load output unless there are
