@@ -42,10 +42,10 @@ The output of the cronjob will be mailed only if the job exits nonzero."
          (script (merge-pathnames (strcat (string->filename desc) "_cronjob")
                                   #P"/usr/local/bin/"))
          (script* (escape-sh-token (unix-namestring script))))
-    `(eseqprops
+    `(with-unapply
       (apt:service-installed-running "cron")
       (apt:installed "moreutils")
-      (file:has-content ,job
+      (file:exists-with-content ,job
         ,`(,@(and (not times) '("#!/bin/sh" "" "set -e" ""))
            "SHELL=/bin/sh"
            "PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin"
@@ -59,7 +59,7 @@ The output of the cronjob will be mailed only if the job exits nonzero."
         ,@(and (not times) '(:mode #o755)))
       ;; Using a separate script makes for more readable e-mail subject lines,
       ;; and also makes it easy to do a manual run of the job.
-      (file:has-content ,script
+      (file:exists-with-content ,script
         ,`("#!/bin/sh"
            ""
            "set -e"
@@ -69,7 +69,8 @@ The output of the cronjob will be mailed only if the job exits nonzero."
            ,(format nil "flock -n ~A sh -c ~A"
                     (escape-sh-token (unix-namestring job))
                     (escape-sh-token shell-command)))
-        :mode #o755))))
+        :mode #o755)
+       :unapply (file:does-not-exist ,job ,script))))
 
 (defproplist nice-system-job :posix (desc when user shell-command)
   "Like CRON:SYSTEM-JOB, but run the command niced and ioniced."
