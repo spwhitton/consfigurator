@@ -95,7 +95,10 @@ additional lines to add to the Apache configuration for both the HTTP and
 HTTPS virtual hosts; ADDITIONAL-CONFIG-HTTPS are additional lines to be added
 only to the HTTPS virtual host.
 
-Unapplying removes the Apache site config but leaves the certificate behind."
+Unapplying removes the Apache site config but leaves the certificate behind.
+
+The current implementation does not install a certificate renewal hook to
+restart Apache."
   `(with-unapply
      (network:aliases ,domain ,@aliases)
      (mod-enabled "ssl")
