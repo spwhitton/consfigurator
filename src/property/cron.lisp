@@ -105,10 +105,12 @@ HOSTDEPLOY etc.
 
 You may wish to apply this property within ESEQPROPS-UNTIL; see the docstring
 of IMAGE-DUMPED."
-  (image-dumped)
-  (nice-system-job
-   "consfigurator" when "root"
-   "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/images/latest"))
+  (with-unapply
+    (image-dumped)
+    (nice-system-job
+     "consfigurator" when "root"
+     "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/images/latest")
+    :unapply (unapply (system-job "consfigurator" when "" ""))))
 
 (defprop user-crontab :posix (env &rest jobs)
   "Set the contents of the current user's crontab.  ENV is like the ENV argument
