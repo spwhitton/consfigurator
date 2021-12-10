@@ -825,11 +825,13 @@
                              (#:service   #:consfigurator.property.service)
                              (#:apt       #:consfigurator.property.apt)
                              (#:os        #:consfigurator.property.os)
-                             (#:file      #:consfigurator.property.file))
+                             (#:file      #:consfigurator.property.file)
+                             (#:user      #:consfigurator.property.user))
            (:export #:installed
                     #:reloaded
                     #:main-configured
-                    #:mapped-file))
+                    #:mapped-file
+                    #:daemon-socket-directory))
 
   (package :consfigurator.property.cron
            (:local-nicknames (#:re        #:cl-ppcre)

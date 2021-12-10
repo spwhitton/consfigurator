@@ -55,3 +55,16 @@ defaults to the first argument to PROPAPP."
                 (apply f args))
               (file:does-not-exist (strcat (unix-namestring file) ".db")))
             :args (cdr propapp)))
+
+(defproplist daemon-socket-directory :posix
+    (daemon-user &optional (daemon-group daemon-user) (name daemon-user)
+                 &aux (dir (ensure-directory-pathname
+                            (merge-pathnames name #P"/var/spool/postfix/"))))
+  "Create directory NAME in /var/spool/postfix in which a daemon can create a
+Unix domain socket for communication with Postfix.  Commonly used for milters
+like OpenDKIM, OpenDMARC, etc.."
+  (:desc #?"Postfix daemon socket directory created for ${daemon-user}")
+  (installed)
+  (file:directory-exists dir)
+  (file:has-ownership dir :user daemon-user :group daemon-group)
+  (file:has-mode dir #o750) (user:has-groups "postfix" daemon-group))
