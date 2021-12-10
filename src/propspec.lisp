@@ -122,6 +122,8 @@ property combinators you intend to use in specifying propspecs.
 
 Consfigurator uses this information when starting up remote Lisp images to
 effect deployments: it sends over the ASDF systems specified by SYSTEMS."
+  (when (null systems)
+    (simple-program-error "Cannot pass NIL to IN-CONSFIG."))
   (setq systems (ensure-cons systems))
   (let ((sym (intern "*CONSFIG*")))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
