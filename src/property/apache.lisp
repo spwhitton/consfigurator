@@ -145,5 +145,5 @@ restart Apache."
                  ,agree-tos ,htdocs ,domain ,@aliases)
        (reloaded))
      :unapply
-     (unapply (site-enabled ,domain))
-     (unapply (site-available ,domain ""))))
+     (unapplied (site-enabled ,domain))
+     (unapplied (site-available ,domain ""))))

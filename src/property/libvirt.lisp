@@ -303,10 +303,11 @@ your preferred VM networking setup and corresponding DEPLOYS propapp."
        ,@(and autostart `((started ,host)))
        :unapply
        (destroyed ,host*)
-       (unapply (defined ,host*))
-       (unapply (with-flagfile ,flagfile
-                  (chroot:os-bootstrapped-for
-                   ,chroot-options ,chroot ,host ,additional-properties))))))
+       (unapplied (defined ,host*))
+       (unapplied
+        (with-flagfile ,flagfile
+          (chroot:os-bootstrapped-for
+           ,chroot-options ,chroot ,host ,additional-properties))))))
 
 (defproplist kvm-boots-chroot :lisp (options properties)
   "Like LIBVIRT:KVM-BOOTS-CHROOT-FOR but define a new host using PROPERTIES."

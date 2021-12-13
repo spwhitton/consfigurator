@@ -77,7 +77,7 @@ Example usage:
     (sbuild:usable-by \"spwhitton\")
     (schroot:overlays-in-tmpfs)
     (periodic:at-most :monthly \"sbuild sid schroot rebuilt\"
-      (unapply (sbuild:built. nil (os:debian-unstable :amd64))))
+      (unapplied (sbuild:built. nil (os:debian-unstable :amd64))))
     (sbuild:built. nil
       (os:debian-unstable :amd64)
       (sbuild:standard-debian-schroot)
@@ -183,7 +183,7 @@ EOF :mode #o755)
        ;; TODO We should kill any sessions still using the chroot before
        ;; destroying it (as suggested by sbuild-destroychroot(8)).
        :unapply
-       (unapply (chroot:os-bootstrapped-for ,chroot-options ,chroot ,host))
+       (unapplied (chroot:os-bootstrapped-for ,chroot-options ,chroot ,host))
        (file:does-not-exist ,conf))))
 
 ;; Here we combine Propellor's Sbuild.osDebianStandard and Sbuild.update.

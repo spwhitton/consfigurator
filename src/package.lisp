@@ -256,6 +256,7 @@
            #:with-requirements
            #:silent-seqprops
            #:unapply
+           #:unapplied
            #:desc
            #:on-change
            #:on-apply-change

@@ -76,7 +76,7 @@ preprocessed."
   "Immediately preprocess and apply PROPSPEC-EXPRESSION in the context of the
 current target host and connection.  This function is provided for use by
 specialised property combinators.  It should not be used in property
-definitions nor in consfigs.
+definitions nor in consfigs (except via the UNAPPLY macro).
 
 The :HOSTATTRS subroutines of properties applied by PROPSPEC-EXPRESSION will
 be executed, but any new hostattrs they push will be discarded.  Thus either

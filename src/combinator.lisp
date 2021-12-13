@@ -230,12 +230,19 @@ apply the elements of REQUIREMENTS in reverse order."
           (post-apply "failed"))
         (setf (fill-pointer buffer) 0)))))
 
-(define-function-property-combinator unapply (propapp)
+(defmacro unapply (form)
+  "Where FORM is a programmatic application of a property (i.e. an application
+of a property directly inside an :APPLY or :UNAPPLY subroutine), unapply the
+property instead of applying it."
+  (destructuring-bind (property . args) form
+    `(consfigure `(unapplied (,',property ,,@args)))))
+
+(define-function-property-combinator unapplied (propapp)
   (destructuring-bind (psym . args) propapp
     (:retprop :type (proptype psym)
               :lambda (proplambda psym)
               :desc (lambda (&rest args)
-                      (strcat "Unapply: " (apply #'propdesc psym args)))
+                      (strcat "Unapplied: " (apply #'propdesc psym args)))
               :check (when-let ((check (get psym 'check)))
                        (complement check))
               :hostattrs (lambda (&rest args)
@@ -353,7 +360,7 @@ an :UNAPPLY subroutine for a property which works by calling other properties."
         (:retprop :type (collapse-propapp-types apply (cdr unapply))
                   :hostattrs (lambda-ignoring-args
                                (propappattrs apply-propapp)
-                               ;; as in definition of UNAPPLY combinator
+                               ;; as in definition of UNAPPLIED combinator
                                (with-preserve-hostattrs
                                  (propappattrs unapply-propapp)))
                   :apply (lambda-ignoring-args (propappapply apply-propapp))

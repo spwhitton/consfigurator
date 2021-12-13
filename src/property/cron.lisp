@@ -94,7 +94,7 @@ inconsistent situations.  For example, suppose you
 
 and then later
 
-    (hostdeploy-these foo.example.org (unapply (additional-property)).
+    (hostdeploy-these foo.example.org (unapplied (additional-property)).
 
 As neither CRON:RUNS-CONFIGURATOR nor IMAGE-DUMPED with no arguments was
 applied since ADDITIONAL-PROPERTY was unapplied, the executable invoked by the
@@ -110,7 +110,7 @@ of IMAGE-DUMPED."
     (nice-system-job
      "consfigurator" when "root"
      "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/images/latest")
-    :unapply (unapply (system-job "consfigurator" when "" ""))))
+    :unapply (unapplied (system-job "consfigurator" when "" ""))))
 
 (defprop user-crontab :posix (env &rest jobs)
   "Set the contents of the current user's crontab.  ENV is like the ENV argument

@@ -118,8 +118,8 @@ Function.  Applies each of the propapps passed as arguments, stopping and
 signalling a failed change if any of the propapps signal a failed change.
 Semantically, each propapp implicitly depends upon the preceding propapps.
 
-``UNAPPLY``
-~~~~~~~~~~~
+``UNAPPLIED``
+~~~~~~~~~~~~~
 
 Function.  Unapplies a single propapp.
 
