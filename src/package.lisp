@@ -1003,4 +1003,6 @@
   (package :consfigurator.data.ssh-askpass
            (:local-nicknames (#:re   #:cl-ppcre)))
 
-  (package :consfigurator.data.local-file))
+  (package :consfigurator.data.local-file)
+
+  (package :consfigurator.data.files-tree))
