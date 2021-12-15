@@ -21,13 +21,16 @@
 (defmethod register-data-source ((type (eql :files-tree)) &key location)
   "Provide the contents of a local directory on the machine running the root
 Lisp.  Register this data source multiple times to provide multiple trees.
+
 LOCATION is either a designator for a pathname representing the root of the
 tree of files or a symbol which designates an ASDF package where the tree is
-contained in the subdirectory `data/'.  IDEN1 specifies a subdirectory under
-LOCATION and IDEN2 a relative path within that subdirectory. For convenience
-IDEN1 and IDEN2 may be passed as absolute and will be converted to relative
-paths. The usual cases of IDEN1 as a hostname or a `_' prefixed identifier,
-and IDEN2 an an absolute or relative path are all supported."
+contained in the subdirectory 'data/'.
+
+IDEN1 specifies a subdirectory under LOCATION and IDEN2 a relative path within
+that subdirectory.  For convenience IDEN1 and IDEN2 may be passed as absolute
+and will be converted to relative paths.  The usual cases of IDEN1 as a
+hostname, IDEN1 as an underscore-prefixed identifier, and IDEN2 an an absolute
+or relative path are all supported."
   (let ((base-path (if (symbolp location)
                         (asdf:system-relative-pathname location "data/")
                         (ensure-directory-pathname location))))
