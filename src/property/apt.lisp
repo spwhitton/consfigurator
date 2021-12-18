@@ -216,7 +216,7 @@ only upgrade Debian stable."
 (defproplist uses-local-cacher :posix ()
   (:desc "apt uses local apt cacher")
   (service-installed-running "apt-cacher-ng")
-  (proxy "http://localhost:3142"))
+  (proxy "http://[::1]:3142"))
 
 (defun get-mirrors ()
   (or (get-hostattrs :apt.mirror) (call-with-os #'get-default-mirrors)))
