@@ -137,9 +137,9 @@ restart Apache."
                      ,@initial
                      "RewriteEngine On"
                      "RewriteRule ^/.well-known/acme-challenge.* - [L]"
+                     ,@additional-config
                      ;; redirect everything else to https
                      "RewriteRule (.*) https://%{SERVER_NAME}$1 [R=301,L,NE]"
-                     ,@additional-config
                      "</VirtualHost>")))))
      (on-change (lets-encrypt:certificate-obtained
                  ,agree-tos ,htdocs ,domain ,@aliases)
