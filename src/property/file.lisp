@@ -35,7 +35,8 @@ CONTENT can be a list of lines or a single string."
   (declare (indent 1))
   (:desc (declare (ignore content mode mode-supplied-p))
          #?"${path} has defined content")
-  (:apply (apply #'maybe-writefile-string
+  (:apply (unless mode-supplied-p (containing-directory-exists path))
+          (apply #'maybe-writefile-string
                  path
                  (etypecase content
                    (cons (unlines content))
@@ -62,6 +63,7 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
   "Ensure there is a file at PATH containing each of LINES once."
   (declare (indent 1))
   (:apply
+   (containing-directory-exists path)
    (let ((new-lines (copy-list (ensure-cons lines)))
          (existing-lines (and (remote-exists-p path)
                               (lines (readfile path)))))
@@ -230,7 +232,8 @@ error if FROM is another kind of file, except when unapplying."
        (failed-change "~A exists but is not a symbolic link." from))
      (if (and link (string= (remote-link-target from) to))
          :no-change
-         (mrun "ln" "-sf" to from))))
+         (progn
+           (containing-directory-exists from) (mrun "ln" "-sf" to from)))))
   (:unapply
    (declare (ignore to))
    (if (test "-L" from)
@@ -361,6 +364,7 @@ Other arguments:
             do (simple-program-error
                 "Values passed are not all strings, or list is not even")
           do (setf (gethash k keys) v))
+    (containing-directory-exists file)
     (map-file-lines
      file (apply
            #'config-file-map
@@ -520,6 +524,7 @@ an attempt is made to activate the swap, set up the bind mount, etc."
         (pending (make-hash-table :test #'equal)))
     (dolist (entry entries)
       (setf (gethash (nth target (words entry)) pending) entry))
+    (containing-directory-exists file)
     (map-file-lines
      file
      (lambda (lines)

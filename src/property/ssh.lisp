@@ -23,7 +23,6 @@
   (:desc (declare (ignore keys))
          (strcat (get-connattr :remote-user) " has authorized_keys"))
   (:apply
-   (file:directory-exists ".ssh")
    (apply #'file:contains-lines ".ssh/authorized_keys" keys))
   (:unapply
    (apply #'file:lacks-lines ".ssh/authorized_keys" keys)))

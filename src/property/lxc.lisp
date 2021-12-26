@@ -76,7 +76,6 @@ is ~/.config."
   (user:has-account user)
   (systemd:lingering-enabled user)
   (as user
-    (file:directory-exists ".config/systemd/user")
     (file:has-content ".config/systemd/user/lxc-autostart.service"
       '("[Unit]"
         "Description=\"lxc-autostart\""
