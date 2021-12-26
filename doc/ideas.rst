@@ -80,8 +80,7 @@ Core
 Project & packaging
 -------------------
 
-- Define a semantics for version numbers (probably just like Propellor's),
-  start keeping a NEWS file, start actually announcing releases to
-  sgo-software-announce.  Take the opportunity to review whole public API for
-  good choices of names and sensible separation of responsibilities.
-  Increment major version number from zero to one.
+- Start actually announcing releases to sgo-software-announce.  Take the
+  opportunity to review whole public API for good choices of names and
+  sensible separation of responsibilities.  Increment major version number
+  from zero to one, and from then on start updating news.rst.

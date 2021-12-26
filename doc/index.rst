@@ -15,6 +15,7 @@ Consfigurator user's manual
    propspecs
    data
    pitfalls
+   news
    ideas
 
 Indices and search

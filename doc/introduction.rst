@@ -276,9 +276,6 @@ nicknames.
 Portability and stability
 -------------------------
 
-- **Consfigurator is still stabilising and so there may be lots of breaking
-  changes.**
-
 - The core library should be portable between standards-conforming
   implementations of ANSI Common Lisp which include support for a few
   additional, widely-implemented features such as package-local nicknames.
