@@ -155,7 +155,6 @@ any of the regular expressions PATTERNS."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (containing-directory-exists destination)
    (maybe-writefile-data destination iden1 iden2 :mode #o600)))
 
 (defproplist host-secret-uploaded :posix
