@@ -124,7 +124,7 @@ With ``*ALL-MY-SERVERS*`` as in the previous example,::
 
   (dolist (server *all-my-servers*)
     (deploy-these :ssh server
-                  (file:regex-replace-lines "/etc/baz" #?/foo/ "bar")))
+                  (file:regex-replace-lines "/etc/baz" #?/^foo/ "bar")))
 
 (relies on CL-INTERPOL syntax being enabled, as it is in the example consfig
 above)
