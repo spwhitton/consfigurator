@@ -2,13 +2,13 @@ Tutorial conventions
 --------------------
 
 In these tutorials we assume that you have a workstation called
-``laptop.silentflame.com`` where you run the root Lisp.  We also assume that
+``laptop.example.com`` where you run the root Lisp.  We also assume that
 Consfigurator knows about your laptop, and that it has a host deployment
 specified, so that you can use ``HOSTDEPLOY-THESE`` to deploy properties to
 the laptop as root.  For example,::
 
-  (defhost laptop.silentflame.com
-      (:deploy ((:sudo :as "spwhitton@melete.silentflame.com") :sbcl))
+  (defhost laptop.example.com
+      (:deploy ((:sudo :as "spwhitton@laptop.example.com") :sbcl))
     "Sean's laptop."
     (os:debian-stable "bullseye" :amd64))
 

@@ -362,9 +362,9 @@ REPL with DEPLOY-THESE/HOSTDEPLOY-THESE -- do not add to hosts.
 For example, to sudo to root to test your new function which needs root
 privileges to do anything at all,
 
-    (deploy-these :sudo melete.silentflame.com (evals '(my-new-function)))
+    (deploy-these :sudo laptop.example.com (evals '(my-new-function)))
 
-where melete.silentflame.com is your laptop.
+where laptop.example.com is your laptop.
 
 Note that while this property is declared to be :POSIX for flexibility,
 whether it is actually :POSIX depends on what input and output FORMS perform."

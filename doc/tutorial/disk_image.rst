@@ -11,7 +11,7 @@ Consfiguration
 
 Here is a minimal definition of the host for which we can build a disk image:::
 
-  (defhost test.silentflame.com ()
+  (defhost test.example.com ()
     (os:debian-stable "bullseye" :amd64)
     (disk:has-volumes
      (physical-disk
@@ -49,19 +49,19 @@ Building the image
 ------------------
 
 What we've established so far is a definition of a host.  But it does not yet
-make any sense to say ``(deploy :foo test.silentflame.com ...)`` because the
+make any sense to say ``(deploy :foo test.example.com ...)`` because the
 host does not yet exist anywhere for us to connect to it.  What we can now use
 is the ``DISK:RAW-IMAGE-BUILT-FOR`` property, which we can apply to a host
 which *does* already exist to build an image for our host which does not yet
 exist:::
 
-  CONSFIG> (hostdeploy-these laptop.silentflame.com
+  CONSFIG> (hostdeploy-these laptop.example.com
              (disk:raw-image-built-for
-	      nil test.silentflame.com "/home/spwhitton/tmp/test.img"))
+	      nil test.example.com "/home/spwhitton/tmp/test.img"))
 
-This property does the following on laptop.silentflame.com:
+This property does the following on laptop.example.com:
 
-1. Build a chroot with the root filesystem of test.silentflame.com, and apply
+1. Build a chroot with the root filesystem of test.example.com, and apply
    all its properties, such as installing the kernel and building the
    initramfs.
 
@@ -105,9 +105,9 @@ Uses for the disk image
 You might upload this image to a cloud provider and boot up a minimal
 instance.  Supposing we also added at least an sshd and our public key, we
 could then continue to add properties to the ``DEFHOST`` for
-test.silentflame.com and then apply them with SSH:::
+test.example.com and then apply them with SSH:::
 
-  CONSFIG> (deploy ((:ssh :user "root") :sbcl) test.silentflame.com)
+  CONSFIG> (deploy ((:ssh :user "root") :sbcl) test.example.com)
 
 Another possibility is to dd the image out to a USB flash drive and then boot
 a physical machine from it.

@@ -64,11 +64,11 @@ disk, copy in the contents of the prebuilt chroot, and update /etc/fstab and
          (merge-pathnames (get-hostname with-chroot-for) "/srv/chroot/")
          with-chroot-for)))
 
-Supposing we've a DEFHOST form for test.silentflame.com, on our laptop we
+Supposing we've a DEFHOST form for test.example.com, on our laptop we
 could then use::
 
-  CONSFIG> (hostdeploy-these laptop.silentflame.com
-             (live-installer-built-for test.silentflame.com))
+  CONSFIG> (hostdeploy-these laptop.example.com
+             (live-installer-built-for test.example.com))
 
 Then once the live system has booted on the target host, you'd use the
 DISK:HOST-VOLUMES-CREATED and INSTALLER:CHROOT-INSTALLED-TO-VOLUMES properties

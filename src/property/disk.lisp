@@ -1120,10 +1120,10 @@ Example usage:
        (partition
         (luks-container
          (lvm-physical-volume
-          :volume-group \"vg_melete\"))))))
+          :volume-group \"vg_laptop\"))))))
     (lvm-logical-volume
-       :volume-group \"vg_melete\"
-       :volume-label \"lv_melete_root\"
+       :volume-group \"vg_laptop\"
+       :volume-label \"lv_laptop_root\"
        (ext4-filesystem :mount-point #P\"/\")))"
   (labels
       ((parse (spec)
