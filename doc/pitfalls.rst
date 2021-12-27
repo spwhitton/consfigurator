@@ -121,9 +121,9 @@ problem of files under ~/.cache/common-lisp.  Secondly, there are unsolved
 difficulties integrating it with some of Consfigurator's standard usage
 patterns, such as calls to TRY-REGISTER-DATA-SOURCE which appear directly in
 consfigs (STATIC-PROGRAM-OP tries to load up consfigs in another Lisp image
-without a way for us to bind *NO-DATA-SOURCES*).  Thirdly, [CFFI currently
+without a way for us to bind *NO-DATA-SOURCES*).  Thirdly, `CFFI currently
 tries to reopen all shared libraries upon reinvocation regardless of the use
-of STATIC-PROGRAM-OP](https://github.com/cffi/cffi/pull/163).  Finally, many
+of STATIC-PROGRAM-OP <https://github.com/cffi/cffi/pull/163>`_.  Finally, many
 builds of SBCL (including Debian's at the time of writing) can't get all the
 way through STATIC-PROGRAM-OP without hacks like manually setting the
 SBCL_HOME environment variable before starting the attempt.

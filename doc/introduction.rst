@@ -314,4 +314,4 @@ to a single, unnested Lisp-type connection).  Additionally, after five years
 of using and extending Propellor, I've come to disagree with Joey about
 whether Haskell's type system helps or hinders using and extending Propellor.
 
-.. Propellor_: https://propellor.branchable.com/
+.. _Propellor: https://propellor.branchable.com/

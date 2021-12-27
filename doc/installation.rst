@@ -11,6 +11,8 @@ unstable`_, and the .deb there should work fine on Debian stable and testing,
 and derivatives like Ubuntu.  After adding an apt source for unstable, if
 necessary, ``apt-get install cl-consfigurator/unstable``.
 
+.. _Debian unstable: https://www.debian.org/doc/manuals/debian-faq/choosing.en.html
+
 Quicklisp
 ---------
 
