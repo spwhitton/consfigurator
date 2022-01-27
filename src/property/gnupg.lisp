@@ -52,7 +52,7 @@ integer."
       `(%public-key-imported ,fingerprint)))
 
 (defprop secret-key-imported :posix (fingerprint)
-  (:desc #?"PGP public key ${fingerprint} imported")
+  (:desc #?"PGP secret key ${fingerprint} imported")
   (:preprocess (list (remove #\Space fingerprint)))
   (:hostattrs (require-data "--pgp-seckey" fingerprint))
   (:check
