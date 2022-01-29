@@ -34,8 +34,8 @@ corresponding to the final dot-delimited component of their names."
 
   ;; Other operators
   (put 'with-unapply 'common-lisp-indent-function '(&body))
-  (put 'os:typecase 'common-lisp-indent-function '(as cond))
-  (put 'os:etypecase 'common-lisp-indent-function '(as cond)))
+  (put 'os:typecase 'common-lisp-indent-function '(&rest (&whole 2 &rest 1)))
+  (put 'os:etypecase 'common-lisp-indent-function '(&rest (&whole 2 &rest 1))))
 
 (provide 'consfigurator)
 
