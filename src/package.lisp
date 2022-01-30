@@ -940,6 +940,18 @@
 
                     #:lxc-ls))
 
+  (package :consfigurator.property.postgres
+           (:local-nicknames (#:apt         #:consfigurator.property.apt)
+                             (#:os          #:consfigurator.property.os)
+                             (#:cmd         #:consfigurator.property.cmd))
+           (:export #:installed
+                    #:superuser-is
+                    #:has-role
+                    #:has-database
+                    #:has-owner
+                    #:has-group
+                    #:can-login))
+
   (package :consfigurator.connection.local
            (:export #:local-connection))
 

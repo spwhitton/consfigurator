@@ -76,6 +76,7 @@
                (:file "src/property/timezone")
                (:file "src/property/swap")
                (:file "src/property/lxc")
+               (:file "src/property/postgres")
                (:file "src/connection/shell-wrap")
 	       (:file "src/connection/fork")
                (:file "src/connection/rehome")
