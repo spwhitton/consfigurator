@@ -1,3 +1,10 @@
+consfigurator (0.14.0-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+  * d/copyright: update years for David Bremner to include 2022.
+
+ -- Sean Whitton <spwhitton@spwhitton.name>  Wed, 02 Feb 2022 13:49:04 -0700
+
 consfigurator (0.13.0-1) unstable; urgency=medium
 
   * New upstream release.
