@@ -31,7 +31,8 @@
          "initramfs-tools"
          ,(eswitch (target :test #'string=)
             ("i386-pc" "grub-pc")
-            ("x86_64-efi" "grub-efi-amd64"))))))
+            ("x86_64-efi" "grub-efi-amd64")
+            ("arm64-efi" "grub-efi-arm64"))))))
 
 (defprop grub-installed :posix
     (volume running-on-target &key (target "i386-pc") force-extra-removable)
