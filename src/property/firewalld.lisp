@@ -228,6 +228,22 @@ only FIREWALLD:DEFAULT-ZONE."
      :check `(,#?"--zone=${zone}" ,#?"--query-interface=${interface}")
      :apply `(,#?"--zone=${zone}" ,#?"--remove-interface=${interface}"))))
 
+(defproplist zone-has-source :posix (zone source)
+  (:desc #?"firewalld zone ${zone} has source ${source}")
+  (with-unapply
+    (installed)
+    (has-zone zone)
+    (%firewall-cmd
+     t :file #?"zones/${zone}.xml" :warning "ZONE_ALREADY_SET"
+     :check `(,#?"--zone=${zone}" ,#?"--query-source=${source}")
+     :apply `(,#?"--zone=${zone}" ,#?"--add-source=${source}"))
+    :unapply
+    (%firewall-cmd
+     t :file #?"zones/${zone}.xml" :warning "UNKNOWN_SOURCE"
+     :complement-check t
+     :check `(,#?"--zone=${zone}" ,#?"--query-source=${source}")
+     :apply `(,#?"--zone=${zone}" ,#?"--remove-source=${source}"))))
+
 (defproplist zone-has-service :posix (zone service)
   (:desc #?"firewalld zone ${zone} has service ${service}")
   (with-unapply

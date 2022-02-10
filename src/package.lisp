@@ -900,6 +900,7 @@
                     #:zone-target
                     #:default-route-zoned-once
                     #:zone-has-interface
+                    #:zone-has-source
                     #:zone-has-service
                     #:zone-masquerade
                     #:zone-rich-rule
