@@ -4,31 +4,18 @@ Prerequisite data
 Naming
 ------
 
-A piece of prerequisite data is identified by two strings.  Typically the
-first of these specifies the context in which the data is relevant.  For an
-ssh host key, for example, this context would be a hostname.  If it's ``nil``
-then the data is valid in any context.  The second of these identifies the
-data within its context.  This is often just the filename in which the
-prerequisite data will eventually be stored.  It might also be a
-human-readable string describing the purpose of the data.
-
-Reserved names
-~~~~~~~~~~~~~~
-
-These are exclusive semantics for certain possible pairs of strings
-identifying prerequisite data -- to avoid confusion and potential clashes, do
-not use prerequisite data identified by strings matching these conditions for
-other purposes.
+An item of prerequisite data is identified by two strings, called ``IDEN1``
+and ``IDEN2``; together these are the *prerequisite data identifiers* for an
+item of prerequisite data.  Typically ``IDEN1`` specifies the context in which
+the data is relevant, and ``IDEN2`` identifies the data within its context.
+``IDEN2`` is very often the filename in which the prerequisite data will
+eventually be stored.  It might also be a human-readable string describing the
+purpose of the data.  The following are the valid forms of ``IDEN1``, and
+their meanings.
 
 - ``(HOSTNAME . PATH)`` means the data that should be uploaded to ``PATH`` on
   ``HOSTNAME`` (and usually nowhere else, except in the case of, e.g., a
   public key).  ``PATH`` must be absolute, not relative.
-
-- ``(_CONTEXT . ITEM)`` is an arbitrary prerequisite data context named
-  ``CONTEXT``; typically ``CONTEXT`` will be a network or grouping name,
-  rather than referring to a single host.  ``ITEM`` might be a path or some
-  other identifier.  Reserved for consfigs; will not be used by property
-  definitions included with Consfigurator.
 
 - ``("--lisp-system" . SYSTEM)`` means the data is Lisp code which, when
   loaded, defines the packages and symbols contained in the ASDF system
@@ -49,9 +36,25 @@ other purposes.
 - ``("--luks-passphrase" . VOLUME-LABEL)`` means a LUKS passphrase for volume
   with label ``VOLUME-LABEL``.
 
-(Proposed convention: Except for the first two items above, these reserved
-names should start with ``--`` and use ``--`` to separate parameter values
-within the string.  Hostnames cannot start with a hyphen.)
+- Any other ``IDEN1`` beginning with exactly two hyphens is reserved for
+  future use.
+
+- ``(_CONTEXT . ITEM)`` is an arbitrary prerequisite data context named
+  ``CONTEXT``; typically ``CONTEXT`` will be a network or grouping name,
+  rather than referring to a single host.  ``ITEM`` might be a path or some
+  other identifier.  Reserved for consfigs; will not be used by property
+  definitions included with Consfigurator, and should not be used by third
+  party extensions.
+
+- ``(---CONTEXT . ITEM)`` is, similarly, an arbitrary prerequisite data
+  context named ``CONTEXT``.  This form is intended for contexts similar to
+  the reserved names beginning with two hyphens: types of information rather
+  than site-local network or grouping names.  This form will not be used by
+  property definitions included with Consfigurator, but may be used by both
+  consfigs and third party extensions.
+
+Any other forms are invalid.  In particular, an ``IDEN1`` that is not a valid
+hostname and does not begin with a hyphen or an underscore must not be used.
 
 Mechanics
 ---------

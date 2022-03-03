@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021-2022  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -173,6 +173,9 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
                      (missing-iden1 condition) (missing-iden2 condition)))))
 
 (defun %get-data (iden1 iden2)
+  (alet (first-char iden1)
+    (unless (or (char= #\_ it) (char= #\- it) (valid-hostname-p iden1))
+      (simple-program-error "Invalid IDEN1: ~S" iden1)))
   (let* ((idenpair (cons iden1 iden2))
          (from-source (query-data-sources iden1 iden2))
          (from-source-version (and from-source (car from-source)))
