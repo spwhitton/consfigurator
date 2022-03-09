@@ -34,7 +34,7 @@
         &allow-other-keys
         &aux (os (get-hostattrs-car :os host))
           (args (list "debootstrap"
-                      (plist-to-cmd-args
+                      (plist->long-options
                        (remove-from-plist options :apt.proxy :apt.mirror))
                       (strcat "--arch=" (os:debian-architecture os))
                       (os:debian-suite os)

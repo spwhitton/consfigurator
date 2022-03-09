@@ -107,7 +107,7 @@
            #:unwords
            #:memstr=
            #:define-simple-error
-           #:plist-to-cmd-args
+           #:plist->long-options
            #:systemd--user
 	   #:with-local-temporary-directory
            #:pathname-file

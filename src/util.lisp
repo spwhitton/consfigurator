@@ -160,7 +160,7 @@ supported."
         do (pop forms)
         finally (return forms)))
 
-(defun plist-to-cmd-args (plist &aux args)
+(defun plist->long-options (plist &aux args)
   (doplist (k v plist args)
            (push (strcat "--" (string-downcase (symbol-name k)) "=" v) args)))
 
