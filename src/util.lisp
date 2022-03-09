@@ -72,7 +72,7 @@
 (defun unwords (words)
   (format nil "~{~A~^ ~}" words))
 
-(defun memstring= (string list)
+(defun memstr= (string list)
   (member string list :test #'string=))
 
 (defun assert-ordinary-ll-member (arg)

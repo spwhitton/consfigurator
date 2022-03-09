@@ -105,7 +105,7 @@
            #:unlines
            #:words
            #:unwords
-           #:memstring=
+           #:memstr=
            #:define-simple-error
            #:plist-to-cmd-args
            #:systemd--user

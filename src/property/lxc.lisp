@@ -321,8 +321,8 @@ implications."
 
 (defun user-container-active-p (host &optional owner)
   (and (not (service:no-services-p))
-       (memstring= (get-hostname host) (lxc-ls owner "--active"))))
+       (memstr= (get-hostname host) (lxc-ls owner "--active"))))
 
 (defun user-container-running-p (host &optional owner)
   (and (not (service:no-services-p))
-       (memstring= (get-hostname host) (lxc-ls owner "--running"))))
+       (memstr= (get-hostname host) (lxc-ls owner "--running"))))

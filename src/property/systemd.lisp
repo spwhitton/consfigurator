@@ -75,8 +75,7 @@
              (systemctl #'run user :may-fail "is-enabled" service))))
       (or (string-prefix-p "linked" status)
           (string-prefix-p "masked" status)
-          (memstring=
-           status '("static" "disabled" "generated" "transient" "indirect"))))))
+          (memstr= status '("static" "disabled" "generated" "transient" "indirect"))))))
   (:apply (systemctl #'mrun user "disable" service)))
 
 (defprop masked :posix (service &optional user)
@@ -101,7 +100,7 @@
        (multiple-value-bind (out err exit)
            (run :may-fail "loginctl" "show-user" user)
          (declare (ignore err))
-         (and (zerop exit) (memstring= "Linger=yes" (lines out))))))
+         (and (zerop exit) (memstr= "Linger=yes" (lines out))))))
   (:apply (mrun "loginctl" "enable-linger" user))
   (:unapply (if (service:no-services-p)
                 :no-change

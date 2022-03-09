@@ -447,8 +447,7 @@ Called by connection types which start up remote Lisp images."
                   :goal-operation 'asdf:monolithic-compile-bundle-op))
           (let ((name (asdf:component-name requirement)))
             ;; Handle UIOP specially because it comes with ASDF.
-            (unless
-                (memstring= (asdf:primary-system-name name) '("asdf" "uiop"))
+            (unless (memstr= (asdf:primary-system-name name) '("asdf" "uiop"))
               (pushnew requirement asdf-requirements)))))
       (nreversef asdf-requirements))
     requirements))

@@ -80,7 +80,7 @@ the installation of other software."
            (loop for line in (lines (readfile "/etc/group"))
                  collect (car (split-string line :separator ":")))))
      (apply #'has-groups username (loop for group in *desktop-groups*
-                                        when (memstring= group existing-groups)
+                                        when (memstr= group existing-groups)
                                           collect group)))))
 
 (defprop has-login-shell :posix (username shell)

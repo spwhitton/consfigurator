@@ -30,7 +30,7 @@ entry in FILE for IDENTIFIER."
                     (write-to-string (cdr (assoc :user-id info))))
           for line = (read-line file)
           for (field start count) = (split-string line :separator '(#\:))
-          when (memstring= field fields)
+          when (memstr= field fields)
             return (values (parse-integer start) (parse-integer count)))))
 
 (defun reduce-id-maps (id-maps)

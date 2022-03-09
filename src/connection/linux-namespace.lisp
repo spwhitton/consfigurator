@@ -339,7 +339,7 @@ setgroups(2) is denied in the namespace."
                (val (subseq entry (1+ pos))))
           (unless
               (and uid
-                   (memstring= var '("HOME" "SHELL" "USER" "LOGNAME" "PATH")))
+                   (memstr= var '("HOME" "SHELL" "USER" "LOGNAME" "PATH")))
             (setf (getenv var) val))))
       (when gid
         (nix:setgid gid)
