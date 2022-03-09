@@ -76,7 +76,7 @@
       :lisp :posix))
 
 (defun propdesc (prop &rest args)
-  (apply (get prop 'desc #'noop) args))
+  (apply (get prop 'desc (lambda-ignoring-args)) args))
 
 (defun propappdesc (propapp)
   (when propapp
@@ -86,14 +86,14 @@
   (get prop 'plambda))
 
 (defun propattrs (prop &rest args)
-  (apply (get prop 'hostattrs #'noop) args))
+  (apply (get prop 'hostattrs (lambda-ignoring-args)) args))
 
 (defun propappattrs (propapp)
   (when propapp
     (apply #'propattrs propapp)))
 
 (defun propcheck (prop &rest args)
-  (apply (get prop 'check #'noop) args))
+  (apply (get prop 'check (lambda-ignoring-args)) args))
 
 (defun propappcheck (propapp)
   (if propapp (apply #'propcheck propapp) t))

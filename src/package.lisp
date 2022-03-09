@@ -105,7 +105,6 @@
            #:unlines
            #:words
            #:unwords
-           #:noop
            #:symbol-named
            #:memstring=
            #:define-simple-error

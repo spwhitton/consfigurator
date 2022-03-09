@@ -35,11 +35,6 @@
              (loop for result in new-results and i upfrom 0
                    do (nconcf (aref results i) result)))))
 
-(defun noop (&rest args)
-  "Accept any arguments and do nothing."
-  (declare (ignore args))
-  (values))
-
 (defun lines (text &optional trimfun (trimchars '(#\Space #\Tab)))
   (with-input-from-string (stream text)
     (let (bolp buffer)
