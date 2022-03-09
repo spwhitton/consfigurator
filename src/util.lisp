@@ -209,7 +209,7 @@ directory, one solution is to convert your property to a :LISP property."
             (enough-pathname pathname (pathname-directory-pathname pathname))
             pathname))))
 
-(defun directory-contents (pathname)
+(defun local-directory-contents (pathname)
   "Return the immediate contents of PATHNAME, a directory, without resolving
 symlinks.  Not suitable for use by :POSIX properties."
   ;; On SBCL on Debian UIOP:*WILD-FILE-FOR-DIRECTORY* is #P"*.*".

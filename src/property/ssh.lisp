@@ -45,7 +45,7 @@
 (defprop %update-known-hosts :posix
     (file host &key short-hostname (aliases t) (ips t) additional-names)
   (:apply
-   (file:map-file-lines
+   (file:map-remote-file-lines
     file
     (lambda (lines)
       (loop with host = (preprocess-host host)

@@ -283,7 +283,7 @@ directly writing out with dd(1)."))
 (defmethod create-volume ((volume raw-disk-image) (file null))
   "Ensure that a raw disk image exists.  Will overwrite only regular files."
   (let ((file (image-file volume)))
-    (when (test "-L" file "-o" "-e" file "-a" "!" "-f" file)
+    (when (remote-test "-L" file "-o" "-e" file "-a" "!" "-f" file)
       (failed-change "~A already exists and is not a regular file." file))
     ;; Here, following Propellor, we want to ensure that the disk image size
     ;; is a multiple of 4096 bytes, so that the size is aligned to the common

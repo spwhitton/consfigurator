@@ -46,7 +46,7 @@ should be the mount point, without the chroot's root prefixed.")
                                  (slot-value connection 'into))))
       ;; We only mount when the target is not already a mount point, so we
       ;; don't shadow anything that the user has already set up.
-      (unless (mountpointp dest)
+      (unless (remote-mount-point-p dest)
         (setq mount-args (copy-list mount-args))
         (setf (lastcar mount-args) dest)
         (apply #'mrun "mount" mount-args)
@@ -57,7 +57,8 @@ should be the mount point, without the chroot's root prefixed.")
     (with-slots (into) connection
       ;; Ensure the chroot itself is a mountpoint so that findmnt(8) works
       ;; correctly within the chroot.
-      (unless (mountpointp into) (chroot-mount connection "--bind" into "/"))
+      (unless (remote-mount-point-p into)
+        (chroot-mount connection "--bind" into "/"))
       ;; Now set up the usual bind mounts.  Help here from arch-chroot(8).
       (mount:assert-devtmpfs-udev-/dev)
       (dolist (mount mount:*standard-linux-vfs*)

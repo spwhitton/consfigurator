@@ -82,10 +82,10 @@ and unless DIR is itself a mount point, also remove DIR."
   (:desc #?"${dir} unmounted below and emptied/removed")
   (:hostattrs (os:required 'os:linux))
   (:check (or (not (remote-exists-p dir))
-              (and (mountpointp dir)
+              (and (remote-mount-point-p dir)
                    (null (runlines "find" dir "-not" "-path" dir)))))
   (:apply (ignoring-hostattrs (unmounted-below dir :and-at nil))
-          (if (mountpointp dir)
+          (if (remote-mount-point-p dir)
               (empty-remote-directory dir)
               (delete-remote-trees dir))))
 
@@ -119,7 +119,7 @@ After mounting /sys, mount this when /sys/firmware/efi/efivars exists.")
 
 (defun assert-devtmpfs-udev-/dev ()
   "On a system with the Linux kernel, assert that /dev has fstype devtmpfs."
-  (unless (and (mountpointp "/dev")
+  (unless (and (remote-mount-point-p "/dev")
                (string= "devtmpfs udev"
                         (stripln (run "findmnt" "-nro" "fstype,source" "/dev"))))
     (failed-change

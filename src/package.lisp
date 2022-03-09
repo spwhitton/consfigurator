@@ -111,7 +111,7 @@
            #:systemd--user
 	   #:with-local-temporary-directory
            #:pathname-file
-           #:directory-contents
+           #:local-directory-contents
            #:ensure-trailing-slash
            #:drop-trailing-slash
            #:define-print-object-for-structlike
@@ -178,12 +178,12 @@
            #:failed-stderr
            #:failed-exit-code
            #:runlines
-           #:test
+           #:remote-test
            #:remote-exists-p
            #:remote-file-stats
            #:remote-last-reboot
            #:remote-executable-find
-           #:mountpointp
+           #:remote-mount-point-p
            #:delete-remote-trees
            #:empty-remote-directory
            #:readfile
@@ -426,7 +426,7 @@
 
   (package :consfigurator.property.file
            (:local-nicknames (#:re #:cl-ppcre))
-           (:export #:map-file-lines
+           (:export #:map-remote-file-lines
                     #:has-content
                     #:exists-with-content
                     #:contains-lines

@@ -521,10 +521,10 @@ expected."
 (defun runlines (&rest args)
   (lines (apply #'run args)))
 
-(defun test (&rest args)
+(defun remote-test (&rest args)
   (zerop (apply #'mrun :for-exit "test" args)))
 
-(defun mountpointp (path)
+(defun remote-mount-point-p (path)
   "Is PATH a mount point?
 
 Uses mountpoint(1) from util-linux, so add a property requiring OS:LINUX or a
@@ -543,9 +543,9 @@ subclass to the :HOSTATTRS subroutine of properties calling this."
 (defun remote-exists-p (&rest paths)
   "Does each of PATHS exists?
 PATH may be any kind of file, including directories."
-  (apply #'test (loop for path on paths
-                      nconc (list "-e" (car path))
-                      when (cdr path) collect "-a")))
+  (apply #'remote-test (loop for path on paths
+                             nconc (list "-e" (car path))
+                             when (cdr path) collect "-a")))
 
 (defun remote-file-stats (path)
   "Get the numeric mode, size in bytes and mtime of PATH, or NIL if it does not

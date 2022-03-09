@@ -23,8 +23,8 @@
   (:check
    (declare (ignore options host))
    ;; check whether a previous debootstrap failed partway through
-   (if (test "-d" (merge-pathnames "debootstrap/"
-                                   (ensure-directory-pathname root)))
+   (if (remote-test "-d" (merge-pathnames "debootstrap/"
+                                          (ensure-directory-pathname root)))
        (progn (delete-remote-trees root) nil)
        (remote-exists-p (chroot-pathname "/usr/lib/os-release" root))))
   (:apply

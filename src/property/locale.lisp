@@ -22,7 +22,7 @@
   (:desc (declare (ignore locale)) "/etc/locale.gen updated")
   (:apply
    (assert-euid-root)
-   (file:map-file-lines
+   (file:map-remote-file-lines
     "/etc/locale.gen"
     (lambda (lines)
       (loop with found

@@ -189,7 +189,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
      (flet ((preservedp (pathname)
               (member pathname preserved-directories :test #'pathname-equal)))
        (mount:assert-devtmpfs-udev-/dev)
-       (unless (mountpointp "/run")
+       (unless (remote-mount-point-p "/run")
          (failed-change "/run is not a mount point; don't know what to do."))
 
        ;; If there's an EFI system partition, we need to store knowledge of
@@ -198,7 +198,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
        ;; is responsible for adding an entry for the EFI system partition to
        ;; the new system's fstab, but we are responsible for restoring
        ;; knowledge of the partition to the kernel's mount table.
-       (when (mountpointp "/boot/efi")
+       (when (remote-mount-point-p "/boot/efi")
          (destructuring-bind (type source options)
              (words (stripln (run "findmnt" "-nro" "FSTYPE,SOURCE,OPTIONS"
                                   "/boot/efi")))
@@ -237,12 +237,12 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
        (let (done)
          (handler-case
              (flet ((rename (s d) (rename-file s d) (push (cons s d) done)))
-               (dolist (file (directory-contents #P"/"))
+               (dolist (file (local-directory-contents #P"/"))
                  (unless (or (preservedp file)
                              (pathname-equal file new-os)
                              (pathname-equal file old-os))
                    (rename file (chroot-pathname file old-os))))
-               (dolist (file (directory-contents new-os))
+               (dolist (file (local-directory-contents new-os))
                  (let ((dest (in-chroot-pathname file new-os)))
                    (unless (preservedp dest)
                      (when (or (file-exists-p dest) (directory-exists-p dest))

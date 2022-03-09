@@ -100,7 +100,7 @@ As a special case, INTERFACE may also be \"none\", which gives USER permission
 to create veth pairs where the peer outside the container is not attached to
 any bridge."
   (:desc #?"${user} may attach LXC veth devices to ${interface}")
-  (:apply (file:map-file-lines
+  (:apply (file:map-remote-file-lines
            "/etc/lxc/lxc-usernet"
            (lambda (lines)
              (loop with done

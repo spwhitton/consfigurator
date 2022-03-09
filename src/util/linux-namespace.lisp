@@ -117,7 +117,7 @@ CONSFIGURATOR.UTIL.LINUX-NAMESPACE:REDUCE-ID-MAPS and user_namespaces(7)."
                (shift-acl file +ACL-TYPE-ACCESS+)
                (when dirp (shift-acl file +ACL-TYPE-DEFAULT+)))
              (when (and dirp (not linkp))
-               (mapc #'shift (directory-contents file))))))
+               (mapc #'shift (local-directory-contents file))))))
        (shift-acl (file type)
          (with-acl-free (acl (acl-get-file file type))
            (with-foreign-objects

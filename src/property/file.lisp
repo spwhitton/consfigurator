@@ -18,7 +18,7 @@
 (in-package :consfigurator.property.file)
 (named-readtables:in-readtable :consfigurator)
 
-(defun map-file-lines (file function)
+(defun map-remote-file-lines (file function)
   "Apply FUNCTION to the lines of FILE.  Safe to use in a :POSIX property.
 
 For efficiency, a :LISP property might want to use streams, but there's no
@@ -76,7 +76,7 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
 (defprop lacks-lines :posix (path &rest lines)
   "If there is a file at PATH, ensure it does not contain any of LINES."
   (:apply
-   (map-file-lines
+   (map-remote-file-lines
     path
     (curry #'remove-if (lambda (l) (member l lines :test #'string=))))))
 
@@ -85,7 +85,7 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
 any of the regular expressions PATTERNS."
   (:apply
    (let ((scanners (mapcar #'re:create-scanner patterns)))
-     (map-file-lines
+     (map-remote-file-lines
       path (lambda (lines)
              (loop for line in lines
                    unless (loop for s in scanners thereis (re:scan s line))
@@ -176,7 +176,7 @@ any of the regular expressions PATTERNS."
   "Like s/REGEX/REPLACE/ on the lines of FILE.
 Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
   (:apply
-   (map-file-lines
+   (map-remote-file-lines
     file
     (lambda (lines)
       (mapcar (lambda (line) (re:regex-replace regex line replace)) lines)))))
@@ -226,7 +226,7 @@ error if FROM is another kind of file, except when unapplying."
       "FILE:SYMLINKED: need both :FROM and :TO arguments."))
    (when (pathnamep to)
      (setq to (unix-namestring to)))
-   (let* ((link (test "-L" from))
+   (let* ((link (remote-test "-L" from))
           (exists (remote-exists-p from)))
      (when (and exists (not link))
        (failed-change "~A exists but is not a symbolic link." from))
@@ -236,7 +236,7 @@ error if FROM is another kind of file, except when unapplying."
            (containing-directory-exists from) (mrun "ln" "-sf" to from)))))
   (:unapply
    (declare (ignore to))
-   (if (test "-L" from)
+   (if (remote-test "-L" from)
        (mrun "rm" from)
        :no-change)))
 
@@ -245,7 +245,7 @@ error if FROM is another kind of file, except when unapplying."
 symbolic link, in which case the target of the link will be copied."
   (:desc #?"${dest} is copy of ${source}")
   (:check
-   (and (test "-f" dest)
+   (and (remote-test "-f" dest)
         (zerop (mrun :for-exit "cmp" "-s" dest source))))
   (:apply
    (with-remote-temporary-file
@@ -264,11 +264,11 @@ symbolic link, in which case the target of the link will be copied."
     (&key (parse-comment "#") (new-comment "# ")
        (parse-section (constantly nil)) (new-section #'identity)
        parse-kv new-kv map)
-  "Return a function suitable for passing to FILE:MAP-FILE-LINES, to modify
-the lines of a config file using MAP.  MAP is a function from a list of config
-file lines to a list of config file lines, except that lines which set values
-in the original file will be replaced by lists of the form (COMMENTED SECTION
-KEY VALUE), where
+  "Return a function suitable for passing to FILE:MAP-REMOTE-FILE-LINES, to
+modify the lines of a config file using MAP.  MAP is a function from a list of
+config file lines to a list of config file lines, except that lines which set
+values in the original file will be replaced by lists of the form (COMMENTED
+SECTION KEY VALUE), where
 
     - COMMENTED is a boolean indicating whether the line was commented
     - SECTION is the section of the config file in which the line appears
@@ -365,7 +365,7 @@ Other arguments:
                 "Values passed are not all strings, or list is not even")
           do (setf (gethash k keys) v))
     (containing-directory-exists file)
-    (map-file-lines
+    (map-remote-file-lines
      file (apply
            #'config-file-map
            :map
@@ -456,7 +456,7 @@ removed, and semicolon comment chars will be replaced with '#'."
          (keys (make-hash-table :test #'equal)))
      (loop for (s k v) in triples
            do (setf (gethash (cons s k) keys) v))
-     (map-file-lines
+     (map-remote-file-lines
       file
       (config-file-map
        :parse-comment "[#;]"
@@ -525,7 +525,7 @@ an attempt is made to activate the swap, set up the bind mount, etc."
     (dolist (entry entries)
       (setf (gethash (nth target (words entry)) pending) entry))
     (containing-directory-exists file)
-    (map-file-lines
+    (map-remote-file-lines
      file
      (lambda (lines)
        (stable-sort
