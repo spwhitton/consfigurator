@@ -105,7 +105,6 @@
            #:unlines
            #:words
            #:unwords
-           #:symbol-named
            #:memstring=
            #:define-simple-error
            #:plist-to-cmd-args

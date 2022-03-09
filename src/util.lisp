@@ -72,10 +72,6 @@
 (defun unwords (words)
   (format nil "~{~A~^ ~}" words))
 
-(defmacro symbol-named (name symbol)
-  `(and (symbolp ,symbol)
-        (string= (symbol-name ',name) (symbol-name ,symbol))))
-
 (defun memstring= (string list)
   (member string list :test #'string=))
 
