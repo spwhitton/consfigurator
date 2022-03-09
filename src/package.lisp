@@ -114,7 +114,6 @@
            #:directory-contents
            #:ensure-trailing-slash
            #:drop-trailing-slash
-           #:quote-nonselfeval
            #:define-print-object-for-structlike
            #:chroot-pathname
            #:in-chroot-pathname
@@ -139,7 +138,6 @@
            #:string->filename
            #:filename->string
 
-           #:with-backtrace-and-exit-code
            #:return-exit
            #:posix-login-environment
 
