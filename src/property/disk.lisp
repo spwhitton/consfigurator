@@ -819,6 +819,7 @@ the LVM physical volumes corresponding to those volume groups."
    (os:required 'os:linux)
    (apply #'push-hostattrs :volumes volumes)))
 
+;; TODO This should probably be in another package, and exported from there.
 (defproplist caches-cleaned :posix ()
   "Clean all caches we know how to clean in preparation for image creation."
   (:desc "Caches cleaned")

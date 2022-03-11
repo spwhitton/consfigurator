@@ -636,7 +636,6 @@
                     #:with-these-open-volumes
 
                     #:has-volumes
-                    #:caches-cleaned
                     #:raw-image-built-for
                     #:debian-live-iso-built
                     #:debian-live-iso-built.
