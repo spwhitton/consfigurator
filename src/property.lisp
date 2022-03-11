@@ -588,9 +588,6 @@ PATH already has the specified CONTENT and MODE."
       (apply #'writefile
              path content (and mode-supplied-p `(:mode ,mode)))))
 
-(defun call-with-os (f &rest args)
-  (apply (ensure-function f) (get-hostattrs-car :os) args))
-
 (defun assert-euid-root ()
   "Assert that the remote user has uid 0 (root)"
   (unless (zerop (get-connattr :remote-uid))

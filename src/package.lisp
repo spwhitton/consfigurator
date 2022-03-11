@@ -219,7 +219,6 @@
            #:aborted-change
            #:assert-euid-root
            #:maybe-writefile-string
-           #:call-with-os
            #:with-change-if-changes-file
            #:with-change-if-changes-files
            #:with-change-if-changes-file-content

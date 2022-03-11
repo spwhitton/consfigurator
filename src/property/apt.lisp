@@ -219,15 +219,16 @@ only upgrade Debian stable."
   (proxy "http://[::1]:3142"))
 
 (defun get-mirrors ()
-  (or (get-hostattrs :apt.mirror) (call-with-os #'get-default-mirrors)))
+  (or (get-hostattrs :apt.mirror)
+      (get-default-mirrors (get-hostattrs-car :os))))
 
 (defmethod get-default-mirrors ((os os:debian))
   '("http://deb.debian.org/debian"))
 
 (defproplist standard-sources.list :posix ()
   (:desc "Standard sources.list")
-  (file:has-content "/etc/apt/sources.list"
-    (call-with-os #'standard-sources-for)))
+  (file:has-content
+      "/etc/apt/sources.list" (standard-sources-for (get-hostattrs-car :os))))
 
 (defmethod standard-sources-for ((os os:debian))
   (let* ((suite (os:debian-suite os))

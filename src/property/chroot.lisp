@@ -72,9 +72,9 @@
         ;; %DEBOOTSTRAP-MANUALLY-INSTALLED for the case where the
         ;; architectures do not match because ensuring that debootstrap(8)
         ;; will be able to bootstrap a foreign arch is more involved.
-        ,@(and (not (call-with-os
-                     #'os:supports-arch-p
-                     (os:linux-architecture (get-hostattrs-car :os host))))
+        ,@(and (not (os:supports-arch-p
+                     (get-hostattrs-car :os) (os:linux-architecture
+                                              (get-hostattrs-car :os host))))
                '((os:etypecase
                    (debianlike (apt:installed "qemu-user-static")))))))))
 
