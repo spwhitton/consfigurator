@@ -451,7 +451,7 @@ We do not specify what logical volumes it contains."))
         (and (slot-boundp volume 'data-alignment)
              `("--dataalignment" ,(data-alignment volume)))
         file)
-  (if (member (lvm-volume-group volume) (all-vgs) :test #'string=)
+  (if (memstr= (lvm-volume-group volume) (all-lvm-volume-groups))
       (mrun :inform "vgextend" (lvm-volume-group volume) file)
       (mrun :inform "vgcreate" "--systemid" ""
             (and (slot-boundp volume 'physical-extent-size)
@@ -460,7 +460,7 @@ We do not specify what logical volumes it contains."))
                  `("--alloc" ,(alloc volume)))
             (lvm-volume-group volume) file)))
 
-(defun all-vgs ()
+(defun all-lvm-volume-groups ()
   (mapcar (curry #'string-trim " ")
           (runlines "vgs" "--no-headings" "-ovg_name")))
 
@@ -499,7 +499,7 @@ We do not specify what logical volumes it contains."))
 (defmethod create-volume ((volume lvm-logical-volume) (file null))
   (with-slots (volume-label lvm-volume-group) volume
     ;; Check that the VG exists.
-    (unless (member lvm-volume-group (all-vgs) :test #'string=)
+    (unless (memstr= lvm-volume-group (all-lvm-volume-groups))
       (failed-change "Looks like no PVs for VG ~A?" lvm-volume-group))
     ;; Create the LV.
     (mrun :inform "lvcreate" "-Wn"
