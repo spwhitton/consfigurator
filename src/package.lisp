@@ -122,7 +122,6 @@
            #:defpackage-consfig
            #:lambda-ignoring-args
            #:parse-cidr
-           #:system
            #:random-alphanumeric
 
            #:*consfigurator-debug-level*
@@ -704,7 +703,7 @@
            (:export #:rebooted-at-end))
 
   (package :consfigurator.property.installer
-           (:use #:consfigurator.property.disk)
+           (:use #:consfigurator.property.disk #:cffi)
            (:local-nicknames (#:os        #:consfigurator.property.os)
                              (#:cmd       #:consfigurator.property.cmd)
                              (#:file      #:consfigurator.property.file)

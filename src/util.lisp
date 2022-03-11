@@ -350,18 +350,6 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
                                        else do (princ #\: s)
                                                (loop-finish)))))))))
 
-(defun system (&rest args)
-  "Simple wrapper around system(3)."
-  (foreign-funcall
-   "system" :string (if (cdr args)
-                        (escape-sh-command
-                         (loop for arg in args
-                               if (pathnamep arg)
-                                 collect (unix-namestring arg)
-                               else collect arg))
-                        (car args))
-   :int))
-
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (define-constant +alphanum+
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"

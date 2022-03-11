@@ -186,7 +186,13 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
              ;; This we make use of below.
              #P"/old-run/"))
          efi-system-partition-mount-args)
-     (flet ((preservedp (pathname)
+     (flet ((system (&rest args)
+              (alet (loop for arg in args
+                          if (pathnamep arg)
+                            collect (unix-namestring arg)
+                          else collect arg)
+                (foreign-funcall "system" :string (escape-sh-command it) :int)))
+            (preservedp (pathname)
               (member pathname preserved-directories :test #'pathname-equal)))
        (mount:assert-devtmpfs-udev-/dev)
        (unless (remote-mount-point-p "/run")
