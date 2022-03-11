@@ -243,7 +243,6 @@
            #:seqprops
            #:eseqprops
            #:eseqprops-until
-           #:with-requirements
            #:silent-seqprops
            #:unapply
            #:unapplied
@@ -268,7 +267,6 @@
            #:preprocess-host
            #:ensure-host
            #:with-preserve-hostattrs
-           #:with-replace-hostattrs
            #:has-hostattrs
 
            ;; deployment.lisp
