@@ -192,10 +192,7 @@
            #:with-connattrs
 
            ;; property.lisp
-           #:propattrs
-           #:propunapply
            #:collapse-types
-           #:collapse-propapp-types
            #:propapptype
            #:propappargs
            #:propappdesc
@@ -221,13 +218,11 @@
            #:failed-change
            #:aborted-change
            #:assert-euid-root
-           #:assert-connection-supports
            #:maybe-writefile-string
            #:call-with-os
            #:with-change-if-changes-file
            #:with-change-if-changes-files
            #:with-change-if-changes-file-content
-           #:with-change-if-changes-file-content-or-mode
 
            #:ptype
            #:plambda
