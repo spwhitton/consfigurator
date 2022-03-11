@@ -44,7 +44,7 @@
     (%acl-get-tag-type entry-d tag-type-p)
     (mem-ref tag-type-p 'acl_tag_t)))
 
-(defmacro with-acl-free ((aclvar aclcall) &body forms)
+(defmacro with-acl-free (((aclvar aclcall)) &body forms)
   (with-gensyms (aclvar*)
     `(let* ((,aclvar ,aclcall)
             (,aclvar* (make-pointer (pointer-address ,aclvar))))
@@ -57,7 +57,7 @@
   "acl_set_qualifier" :int (entry-d acl_entry_t) (qualifier-p :pointer))
 
 (defun acl-get-qualifier (entry-d type)
-  (with-acl-free (qualifier-p (%acl-get-qualifier entry-d))
+  (with-acl-free ((qualifier-p (%acl-get-qualifier entry-d)))
     (mem-ref qualifier-p type)))
 
 
