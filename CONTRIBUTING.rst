@@ -66,6 +66,15 @@ Code style
 - Choose judiciously between a functional programming style and LOOP.  Err on
   the side of LOOP.
 
+- Use SETQ not SETF whenever SETQ works.
+
+- Separate sentences with two spaces after the period.  In recent Emacs there
+  is ``M-x repunctuate-sentences`` to help with this.
+
+- In docstrings, comments and commit messages, refer to symbols and Lisp
+  packages -- though not ASDF systems -- in BLOCK CAPITALS, without any
+  quotation marks.
+
 - Avoid complicating property definitions to include updates to file
   ownership, and the like, when it's possible instead to switch to the target
   user and apply a simpler version of the property.  For example, instead of
