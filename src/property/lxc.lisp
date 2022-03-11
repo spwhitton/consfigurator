@@ -30,11 +30,11 @@
   `(setq ,uid-maps-param
          (or ,uid-maps-param
              (list (cons 0 (multiple-value-list
-                            (get-ids-offset user "/etc/subuid")))))
+                            (get-ids-offset "/etc/subuid" user)))))
          ,gid-maps-param
          (or ,gid-maps-param
              (list (cons 0 (multiple-value-list
-                            (get-ids-offset user "/etc/subgid")))))))
+                            (get-ids-offset "/etc/subgid" user)))))))
 
 (defprop user-container-started :posix (host &optional owner)
   "Ensure the LXC unprivileged container for the host designated by HOST owned

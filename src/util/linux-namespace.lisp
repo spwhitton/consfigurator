@@ -18,7 +18,7 @@
 (in-package :consfigurator.util.linux-namespace)
 (named-readtables:in-readtable :consfigurator)
 
-(defun get-ids-offset (identifier file)
+(defun get-ids-offset (file identifier)
   "Where IDENTIFIER is a username or uid, and FILE is structured like
 /etc/subuid and /etc/subuid (see subuid(5) and subgid(5)), return the
 numerical subordinate ID and numerical subordinate ID count for the first
