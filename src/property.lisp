@@ -595,7 +595,7 @@ PATH already has the specified CONTENT and MODE."
 
 (defun assert-connection-supports (type)
   (unless (or (eq type :posix) (lisp-connection-p))
-    (failed-change
+    (aborted-change
      "Cannot apply :LISP properties using a POSIX-type connection")))
 
 (defun cksum (file)
