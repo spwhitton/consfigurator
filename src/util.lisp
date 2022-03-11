@@ -265,13 +265,11 @@ one-dimensional collections of values."
   (ensure-pathname (enough-pathname pathname chroot)
                    :ensure-absolute t :defaults #P"/"))
 
-(defun escape-sh-token (token &optional s)
-  "Like UIOP:ESCAPE-SH-TOKEN, but also escape the empty string."
-  (if (string= token "") (format s "\"\"") (uiop:escape-sh-token token s)))
-
-(defun escape-sh-command (command &optional s)
-  "Like UIOP:ESCAPE-SH-COMMAND, but also escape the empty string."
-  (uiop:escape-command command s 'escape-sh-token))
+(defun sh-escape (token-or-cmd &optional s)
+  (cond ((listp token-or-cmd) (uiop:escape-command token-or-cmd s 'sh-escape))
+        ((pathnamep token-or-cmd) (sh-escape (unix-namestring token-or-cmd) s))
+        ((string= token-or-cmd "") (format s "\"\""))
+        (t (uiop:escape-sh-token token-or-cmd s))))
 
 (defun parse-username-from-id (output)
   "Where OUTPUT is the output of the id(1) command, extract the username."

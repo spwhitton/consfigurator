@@ -54,8 +54,7 @@
   (handler-case
       (safe-read-from-string
        (run-program
-        (escape-sh-command (list "gpg" "--decrypt" (unix-namestring location)))
-        :output :string))
+        (sh-escape (list "gpg" "--decrypt" location)) :output :string))
     (subprocess-error (error)
       (missing-data-source "While attempt to decrypt, gpg exited with ~A"
 			   (uiop:subprocess-error-code error)))))

@@ -430,8 +430,7 @@ commented out; the first commented or uncommented line for each key will be
 uncommented and used to set the value, if it exists."
   (:desc (format nil "~A has ~{~A=~S~^, ~}" file pairs))
   (:apply (simple-conf-update file (loop for (k v) on pairs by #'cddr
-                                         collect k
-                                         collect (escape-sh-token v))
+                                         collect k collect (sh-escape v))
                               ;; include quoting as part of the value so we
                               ;; don't end up substituting double quotation
                               ;; marks for single, or similar

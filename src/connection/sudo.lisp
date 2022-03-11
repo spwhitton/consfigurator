@@ -79,7 +79,7 @@
          (user (connection-connattr connection :remote-user))
          (prefix (if file
                      (format nil "cat ~A - | sudo -HkS --prompt=\"\""
-                             (escape-sh-token file))
+                             (sh-escape file))
                      "sudo -Hkn")))
     ;; Wrap in sh -c so that it is more likely we are either asked for a
     ;; password for all our commands or not asked for one for any.
@@ -94,4 +94,4 @@
     (mrun :may-fail :input input
           (format nil
                   "~A ~:[~;--preserve-env=SSH_AUTH_SOCK ~]--user=~A sh -c ~A"
-                  prefix (string= user "root") user (escape-sh-token cmd)))))
+                  prefix (string= user "root") user (sh-escape cmd)))))

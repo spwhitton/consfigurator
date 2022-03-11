@@ -307,8 +307,7 @@ implementation."))
                    (let ((destfile (strcat destfile ".gz")))
                      (with-temporary-file (:pathname tmp)
                        (run-program
-                        (strcat "gzip -c " (escape-sh-token source))
-                        :output tmp)
+                        (strcat "gzip -c " (sh-escape source)) :output tmp)
                        (upload tmp destfile)
                        (mrun "gunzip" destfile)))
                    (upload source destfile)))))))))
@@ -370,11 +369,10 @@ CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
           else do (error 'missing-data :iden1 iden1 :iden2 iden2))))
 
 (defun try-get-file-mime-type (file)
-  (handler-case (stripln (run-program
-                          (escape-sh-command (list "file" "-E"
-                                                   "--mime-type" "--brief"
-                                                   (unix-namestring file)))
-                          :output :string))
+  (handler-case (stripln
+                 (run-program
+                  (sh-escape `("file" "-E" "--mime-type" "--brief" ,file))
+                  :output :string))
     (subprocess-error () nil)))
 
 (defun sort-prerequisite-data-cache (cache)

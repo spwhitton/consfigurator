@@ -84,7 +84,7 @@
     (format
      nil
      "nsenter ~@[-S ~D ~]~@[-G ~D ~]-at ~D env -i ~{~A~^ ~} sh -c ~A"
-     uid gid pid (mapcar #'escape-sh-token env) (escape-sh-token cmd))))
+     uid gid pid (mapcar #'sh-escape env) (sh-escape cmd))))
 
 (defmethod establish-connection
     ((type (eql :nsenter)) remaining &key name pid uid gid)

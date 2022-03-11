@@ -28,7 +28,7 @@
 
 (defun %readfile (c path &optional delete)
   (multiple-value-bind (out exit)
-      (let* ((path (escape-sh-token path))
+      (let* ((path (sh-escape path))
              (base #?"test -r ${path} && cat ${path}")
              (cmd (if delete (strcat base #?" && rm ${path}") base)))
         (connection-run c cmd nil))
@@ -57,7 +57,7 @@ mv \"$tmpf\" ~A"
            (mkstemp-cmd
             (merge-pathnames "tmp.XXXXXX" (pathname-directory-pathname path)))
            mode
-           (escape-sh-token (unix-namestring path)))))
+           (sh-escape path))))
     (multiple-value-bind (out exit) (connection-run conn cmd content)
       (unless (zerop exit)
         (error "Failed to write ~A: ~A" path out)))))

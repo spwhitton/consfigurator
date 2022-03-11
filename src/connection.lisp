@@ -121,7 +121,7 @@ time savings add up."))
 
 (defmethod connection-readfile-and-remove ((connection connection) path)
   (prog1 (connection-readfile connection path)
-    (connection-run connection (strcat "rm " (escape-sh-token path)) nil)))
+    (connection-run connection (strcat "rm " (sh-escape path)) nil)))
 
 ;; only functional difference between WRITEFILE and UPLOAD is what args they
 ;; take: a string vs. a path.  for a given connection type, they may have same
@@ -296,7 +296,7 @@ which will be cleaned up when BODY is finished."
                           :connection ,connection)))
        (unwind-protect (progn ,@body)
          (connection-run ,connection
-                         (format nil "rm -f ~A" (escape-sh-token ,file))
+                         (format nil "rm -f ~A" (sh-escape ,file))
                          nil)))))
 
 (defun mkstemp-cmd (&optional template
@@ -394,12 +394,12 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
                          (ensure-list arg))))
            while args
            finally (nreversef cmd))
-     (setq cmd (if (cdr cmd) (escape-sh-command cmd) (car cmd)))
+     (setq cmd (if (cdr cmd) (sh-escape cmd) (car cmd)))
      (loop while env
            for k = (string-upcase (symbol-name (pop env)))
            for v = (pop env)
            if v
-             collect (format nil "export ~A=~A" k (escape-sh-token v))
+             collect (format nil "export ~A=~A" k (sh-escape v))
                into accum
            else
              collect (format nil "unset -v ~A" k) into accum
@@ -422,10 +422,10 @@ the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
      ;; simplicity, particularly to avoid having to check whether the connattr
      ;; is set yet, because setting it requires working CONNECTION-RUN.
      (setq cmd (format nil "export HOME=~A; cd ~A; ~A"
-                       (escape-sh-token (drop-trailing-slash
-                                         (unix-namestring
-                                          (get-connattr :remote-home))))
-                       (escape-sh-token (unix-namestring (pwd)))
+                       (sh-escape (drop-trailing-slash
+                                   (unix-namestring
+                                    (get-connattr :remote-home))))
+                       (sh-escape (pwd))
                        cmd))
      ,@forms))
 
@@ -472,7 +472,7 @@ case return only the exit code."
                (when stdout
                  (connection-run
                   *connection*
-                  (format nil "rm -f ~A" (escape-sh-token stdout))
+                  (format nil "rm -f ~A" (sh-escape stdout))
                   nil)))))
         (informat 4 "~&RUN ~A"
                   (if (> *consfigurator-debug-level* 4) wrapped cmd))
@@ -537,7 +537,7 @@ subclass to the :HOSTATTRS subroutine of properties calling this."
 
 (defun empty-remote-directory (directory)
   "Recursively delete the contents of DIRECTORY, but not DIRECTORY itself."
-  (alet (escape-sh-token (drop-trailing-slash (unix-namestring directory)))
+  (alet (sh-escape (drop-trailing-slash (unix-namestring directory)))
     (mrun (format nil "rm -rf -- ~A/* ~A/.[!.]* ~A/..?*" it it it))))
 
 (defun remote-exists-p (&rest paths)
@@ -649,7 +649,7 @@ specification of POSIX ls(1))."
                 (uid (elt groups 3))
                 (gid (elt groups 4)))
             (connection-writefile *connection* namestring content mode)
-            (let ((namestring (escape-sh-token namestring)))
+            (let ((namestring (sh-escape namestring)))
               (unless mode-supplied-p
                 ;; assume that if we can write it we can chmod it
                 (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${namestring}"))

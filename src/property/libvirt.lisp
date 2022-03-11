@@ -87,7 +87,7 @@ subcommand of virsh(1) to convert the running domain into a transient domain."
        nil
        "virt-install --print-xml -n ~A~:[~; --os-variant=~:*~A~]~{ ~A~} >~S"
        (get-hostname host) (os-variant host)
-       (mapcar #'escape-sh-token arguments) file))
+       (mapcar #'sh-escape arguments) file))
      (mrun "virsh" "define" file)))
   (:unapply
    (declare (ignore arguments))

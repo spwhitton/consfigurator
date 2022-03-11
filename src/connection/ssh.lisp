@@ -46,4 +46,4 @@
   ;; wrap in 'sh -c' in case the login shell is not POSIX
   (format nil "ssh ~A ~A"
           (ssh-host connection)
-          (escape-sh-token (format nil "sh -c ~A" (escape-sh-token cmd)))))
+          (sh-escape (format nil "sh -c ~A" (sh-escape cmd)))))

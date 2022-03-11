@@ -41,7 +41,7 @@ The output of the cronjob will be mailed only if the job exits nonzero."
          (job (merge-pathnames (string->filename desc) dir))
          (script (merge-pathnames (strcat (string->filename desc) "_cronjob")
                                   #P"/usr/local/bin/"))
-         (script* (escape-sh-token (unix-namestring script))))
+         (script* (sh-escape script)))
     `(with-unapply
       (apt:service-installed-running "cron")
       (apt:installed "moreutils")
@@ -67,8 +67,7 @@ The output of the cronjob will be mailed only if the job exits nonzero."
            ;; Use flock(1) to ensure that only one instance of the job is ever
            ;; running, no matter how long one run of the job takes.
            ,(format nil "flock -n ~A sh -c ~A"
-                    (escape-sh-token (unix-namestring job))
-                    (escape-sh-token shell-command)))
+                    (sh-escape job) (sh-escape shell-command)))
         :mode #o755)
        :unapply (file:does-not-exist ,job ,script))))
 
@@ -76,7 +75,7 @@ The output of the cronjob will be mailed only if the job exits nonzero."
   "Like CRON:SYSTEM-JOB, but run the command niced and ioniced."
   (:desc #?"Cronned ${desc}, niced and ioniced")
   (system-job desc when user (format nil "nice ionice -c 3 sh -c ~A"
-                                     (escape-sh-token shell-command))))
+                                     (sh-escape shell-command))))
 
 (defproplist runs-consfigurator :lisp (when)
   "Re-execute the most recent deployment that included an application of this

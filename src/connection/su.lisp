@@ -32,5 +32,4 @@
 ;; argument to su(1) on, e.g., FreeBSD.  So this should be fairly portable.
 (defmethod connection-shell-wrap ((connection su-connection) cmd)
   (format nil "su ~A -c ~A"
-          (escape-sh-token (slot-value connection 'user))
-          (escape-sh-token cmd)))
+          (sh-escape (slot-value connection 'user)) (sh-escape cmd)))

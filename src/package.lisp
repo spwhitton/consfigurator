@@ -117,8 +117,7 @@
            #:define-print-object-for-structlike
            #:chroot-pathname
            #:in-chroot-pathname
-           #:escape-sh-token
-           #:escape-sh-command
+           #:sh-escape
            #:defpackage-consfig
            #:lambda-ignoring-args
            #:parse-cidr

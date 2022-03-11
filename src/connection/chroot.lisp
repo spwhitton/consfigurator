@@ -145,8 +145,7 @@ should be the mount point, without the chroot's root prefixed.")
 
 (defmethod connection-shell-wrap ((connection shell-chroot-connection) cmd)
   (format nil "chroot ~A sh -c ~A"
-          (escape-sh-token (unix-namestring (slot-value connection 'into)))
-          (escape-sh-token cmd)))
+          (sh-escape (slot-value connection 'into)) (sh-escape cmd)))
 
 (defmethod connection-teardown :before ((connection shell-chroot-connection))
   (dolist (mount (chroot-mounts connection))

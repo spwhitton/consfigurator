@@ -191,7 +191,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
                           if (pathnamep arg)
                             collect (unix-namestring arg)
                           else collect arg)
-                (foreign-funcall "system" :string (escape-sh-command it) :int)))
+                (foreign-funcall "system" :string (sh-escape it) :int)))
             (preservedp (pathname)
               (member pathname preserved-directories :test #'pathname-equal)))
        (mount:assert-devtmpfs-udev-/dev)
