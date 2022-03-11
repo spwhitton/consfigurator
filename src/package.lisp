@@ -411,7 +411,7 @@
                     #:+CAP-BPF+
                     #:+CAP-CHECKPOINT-RESTORE+
 
-                    #:capability-p))
+                    #:posix-capability-p))
 
   (package :consfigurator.util.linux-namespace
            (:use #:consfigurator.util.posix1e #:cffi)

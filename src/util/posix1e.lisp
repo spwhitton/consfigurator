@@ -76,7 +76,7 @@
   "cap_get_flag" :int
   (cap-p :pointer) (cap cap_value_t) (flag cap_flag_t) (value-p :pointer))
 
-(defun capability-p (set &rest capabilities)
+(defun posix-capability-p (set &rest capabilities)
   "Does the current thread have each of CAPABILITIES in SET?"
   (let ((cap-opaque (cap-get-proc)))
     (unwind-protect

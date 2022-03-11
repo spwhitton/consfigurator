@@ -153,7 +153,7 @@ CONSFIGURATOR.UTIL.LINUX-NAMESPACE:REDUCE-ID-MAPS and user_namespaces(7)."
 (defun setgroups-p ()
   "In a Lisp-type connection, do we have the ability to use setgroups(2)?"
   (and #-linux (zerop (nix:geteuid))
-       #+linux (capability-p :cap-effective +CAP-SETGID+)
+       #+linux (posix-capability-p :cap-effective +CAP-SETGID+)
        #+linux (string= "allow"
                         (stripln
                          (read-file-string "/proc/thread-self/setgroups")))))
