@@ -303,7 +303,8 @@ property by applying it like this:
          ;; standard about closing synonym streams; see
          ;; <https://bugs.launchpad.net/sbcl/+bug/1904257>.
          (loop initially (mapc-open-input-streams
-                          #'close *standard-input* *debug-io* *terminal-io*)
+                          #'close (list *standard-input*
+                                        *debug-io* *terminal-io*))
                with ,fork-control = (open ,fork-control
                                           :element-type 'character)
                for (input . output) = (handler-case (with-safe-io-syntax ()
@@ -312,8 +313,8 @@ property by applying it like this:
                                           (close ,fork-control)
                                           (uiop:quit)))
                do (mapc-open-output-streams
-                   #'force-output
-                   *standard-output* *error-output* *debug-io* *terminal-io*)
+                   #'force-output (list *debug-io* *terminal-io*
+                                        *standard-output* *error-output*))
                when (zerop (fork))
                  do (nix:setsid)
                     (close ,fork-control)

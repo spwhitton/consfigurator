@@ -316,8 +316,8 @@ setgroups(2) is denied in the namespace."
                ;; If we entered new PID or time namespaces then need to fork
                ;; so we're actually within them; for simplicity, always fork.
                (mapc-open-output-streams
-                #'force-output
-                *standard-output* *error-output* *debug-io* *terminal-io*)
+                #'force-output (list *debug-io* *terminal-io*
+                                     *standard-output* *error-output*))
                (let ((child (nix:fork)))
                  (when (plusp child)
                    (let ((status (nth-value 1 (nix:waitpid child))))

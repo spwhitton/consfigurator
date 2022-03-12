@@ -550,8 +550,8 @@ previous output."
     `(progn
        #-(or sbcl) (error "Don't know how to safely fork(2) in this Lisp.")
        (mapc-open-output-streams
-        #'force-output
-        *standard-output* *error-output* *debug-io* *terminal-io*)
+        #'force-output (list *debug-io* *terminal-io*
+                             *standard-output* *error-output*))
        (let ((,retval (fork)))
          (if (zerop ,retval)
              ;; We leave it to the caller to appropriately call CLOSE or
@@ -701,7 +701,7 @@ Does not currently establish a PAM session."
     (two-way-stream (two-way-stream-input-stream stream))
     (stream (and (input-stream-p stream) stream))))
 
-(defun mapc-open-input-streams (function &rest streams)
+(defun mapc-open-input-streams (function streams)
   (dolist (stream streams streams)
     (when-let ((input-stream (stream->input-stream stream)))
       (when (open-stream-p input-stream)
@@ -714,7 +714,7 @@ Does not currently establish a PAM session."
     (two-way-stream (two-way-stream-output-stream stream))
     (stream (and (output-stream-p stream) stream))))
 
-(defun mapc-open-output-streams (function &rest streams)
+(defun mapc-open-output-streams (function streams)
   (dolist (stream streams streams)
     (when-let ((output-stream (stream->output-stream stream)))
       (when (open-stream-p output-stream)
