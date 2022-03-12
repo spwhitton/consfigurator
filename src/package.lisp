@@ -114,7 +114,7 @@
            #:local-directory-contents
            #:ensure-trailing-slash
            #:drop-trailing-slash
-           #:define-print-object-for-structlike
+           #:define-simple-print-object
            #:chroot-pathname
            #:in-chroot-pathname
            #:sh-escape

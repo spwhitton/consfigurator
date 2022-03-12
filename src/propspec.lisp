@@ -197,9 +197,9 @@ systems."
                      :systems systems :propspec propspec)
       (make-instance 'unpreprocessed-propspec :propspec propspec)))
 
-(define-print-object-for-structlike preprocessed-propspec)
+(define-simple-print-object preprocessed-propspec)
 
-(define-print-object-for-structlike unpreprocessed-propspec)
+(define-simple-print-object unpreprocessed-propspec)
 
 ;; this could be defined for preprocessed propspecs easily enough but we
 ;; shouldn't need to append those

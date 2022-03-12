@@ -32,7 +32,7 @@ Let's Encrypt client.  Supply an e-mail address so that Let's Encrypt can
 contact you for things like certificate expiry, planned outage notifications
 etc."))
 
-(define-print-object-for-structlike agree-tos)
+(define-simple-print-object agree-tos)
 
 (defmacro agree-tos (&key (email-address nil email-address-supplied-p))
   `(make-instance 'agree-tos ,@(and email-address-supplied-p

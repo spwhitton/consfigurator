@@ -32,7 +32,7 @@
   (:desc "Host kernel is Linux")
   (:hostattrs (push-hostattrs :os (make-instance 'linux :arch architecture))))
 
-(define-print-object-for-structlike linux)
+(define-simple-print-object linux)
 
 (defclass debianlike (linux) ())
 
@@ -41,7 +41,7 @@
           :reader debian-suite
           :initform (error "Must provide suite"))))
 
-(define-print-object-for-structlike debian)
+(define-simple-print-object debian)
 
 (defclass debian-stable (debian) ())
 

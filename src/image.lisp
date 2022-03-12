@@ -619,5 +619,5 @@ hostattrs; see \"Pitfalls\" in the Consfigurator user manual.
 
 If ~:*~A is a simple object then you may be able to resolve this by defining
 a PRINT-OBJECT method for your class, possibly using
-CONSFIGURATOR:DEFINE-PRINT-OBJECT-FOR-STRUCTLIKE."
+CONSFIGURATOR:DEFINE-SIMPLE-PRINT-OBJECT."
                    (print-not-readable-object c))))))))

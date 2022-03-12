@@ -115,7 +115,7 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
     (make-instance 'unpreprocessed-host
                    :propspec propspec :hostattrs hostattrs*)))
 
-(define-print-object-for-structlike host)
+(define-simple-print-object host)
 
 (defmethod union-propspec-into-host
     ((host unpreprocessed-host) (propspec propspec))

@@ -227,7 +227,7 @@ symlinks.  Not suitable for use by :POSIX properties."
       (subseq namestring 0 (1- (length namestring)))
       namestring))
 
-(defun reinit-structlike (class &rest slots)
+(defun reinit-from-simple-print (class &rest slots)
   (loop with object = (allocate-instance (find-class class))
         for (slot-name slot-value) on slots by #'cddr
         do (setf (slot-value object slot-name) slot-value)
@@ -238,14 +238,14 @@ symlinks.  Not suitable for use by :POSIX properties."
     `(if (member (type-of ,x) '(cons symbol))
          `',,x ,x)))
 
-(defmacro define-print-object-for-structlike (class)
-  "Define an implementation of PRINT-OBJECT for objects which are simple
-one-dimensional collections of values."
+(defmacro define-simple-print-object (class)
+  "Define an implementation of PRINT-OBJECT suitable for classes representing
+simple collections of readably-printable values."
   `(defmethod print-object ((object ,class) stream)
      (if (and *print-readably* *read-eval*)
          (format
           stream "#.~S"
-          `(reinit-structlike
+          `(reinit-from-simple-print
             ',(type-of object)
             ;; Call CLASS-OF so that subclasses of CLASS are handled too.
             ,@(loop for slot in (closer-mop:class-slots (class-of object))

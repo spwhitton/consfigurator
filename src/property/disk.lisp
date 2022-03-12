@@ -63,7 +63,7 @@ slot bound."))
   (:documentation
    "Something which contains filesystems and/or other volumes."))
 
-(define-print-object-for-structlike volume)
+(define-simple-print-object volume)
 
 (defgeneric copy-volume-and-contents
     (volume &rest initialisations &key &allow-other-keys)
