@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Consfigurator'
-copyright = '2020-2021, Sean Whitton'
+copyright = '2020-2022, Sean Whitton'
 author = 'Sean Whitton'
 
 # The full version, including alpha/beta/rc tags
