@@ -228,10 +228,9 @@ symlinks.  Not suitable for use by :POSIX properties."
       namestring))
 
 (defun reinit-from-simple-print (class &rest slots)
-  (loop with object = (allocate-instance (find-class class))
-        for (slot-name slot-value) on slots by #'cddr
-        do (setf (slot-value object slot-name) slot-value)
-        finally (return (reinitialize-instance object))))
+  (aprog1 (allocate-instance (find-class class))
+    (loop for (slot-name slot-value) on slots by #'cddr
+          do (setf (slot-value it slot-name) slot-value))))
 
 (defmacro quote-nonselfeval (x)
   (once-only (x)
