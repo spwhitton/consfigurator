@@ -399,6 +399,17 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
   (with-standard-io-syntax
     (write object :stream fifo) (terpri fifo) (finish-output fifo)))
 
+(defun valid-hostname-p (string)
+  "Test whether STRING looks like a valid hostname, as defined by RFCs 952 and
+1123."
+  (and
+   (<= (length string) 253)
+   (let ((parts (split-string string :separator ".")))
+     (every (lambda (part)
+              (and (<= (length part) 63)
+                   (re:scan "^[a-zA-Z0-9][a-zA-Z0-9-]*$" part)))
+            parts))))
+
 
 ;;;; Progress & debug printing
 

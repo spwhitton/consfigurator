@@ -122,6 +122,7 @@
            #:lambda-ignoring-args
            #:parse-cidr
            #:random-alphanumeric
+           #:valid-hostname-p
 
            #:*consfigurator-debug-level*
            #:with-indented-inform
