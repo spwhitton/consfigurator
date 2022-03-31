@@ -77,7 +77,19 @@ Code style
 
 - Follow the conventions detailed in sections "Tips for Documentation Strings"
   and "Tips on Writing Comments" of the *GNU Emacs Lisp Reference Manual*, to
-  the extent that they are applicable to Common Lisp.
+  the extent that they are applicable to Common Lisp.  Additionally:
+
+  - Place blank lines before and after comments whose lines begin with more
+    than two semicolons.
+
+  - Separate major sections of files using the form feed character, like
+    this::
+
+      ^L
+      ;;;; Header for new major section
+
+  - If the first major section of the file has a four-semicolon header, it
+    should not be preceded by the ``^L`` character.
 
 - Avoid complicating property definitions to include updates to file
   ownership, and the like, when it's possible instead to switch to the target
