@@ -75,6 +75,10 @@ Code style
   packages -- though not ASDF systems -- in BLOCK CAPITALS, without any
   quotation marks.
 
+- Follow the conventions detailed in sections "Tips for Documentation Strings"
+  and "Tips on Writing Comments" of the *GNU Emacs Lisp Reference Manual*, to
+  the extent that they are applicable to Common Lisp.
+
 - Avoid complicating property definitions to include updates to file
   ownership, and the like, when it's possible instead to switch to the target
   user and apply a simpler version of the property.  For example, instead of
