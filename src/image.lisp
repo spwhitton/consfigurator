@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021-2022  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -46,27 +46,23 @@
 
 (defvar *fork-control* nil)
 
-(defmacro with-fork-request (prerequest request (out err exit) &body forms)
-  (with-gensyms (input output)
-    `(progn
-       (unless (lisp-connection-p)
-         (failed-change "Forking requires a Lisp-type connection."))
-       (unless *fork-control*
-         (failed-change
-          "Fork requested but no fork control child; is this the root Lisp?"))
-       (informat 3 "~&Making grandchild request ~S" ,request)
-       (with-mkfifos (,input ,output)
-         ;; We send the path to a named pipe, INPUT, rather than our actual
-         ;; request.  That way we can be confident that what we send into the
-         ;; (shared) requests pipe will be less than PIPE_BUF (see pipe(7)).
-         (write-to-mkfifo (cons ,input ,output) *fork-control*)
-         (with-open-file (,input ,input :direction :output :if-exists :append
-                                        :element-type 'character)
-           (write-to-mkfifo ,prerequest ,input)
-           (write-to-mkfifo ,request    ,input))
-         (destructuring-bind (,out ,err ,exit)
-             (safe-read-file-form ,output :element-type 'character)
-           ,@forms)))))
+(defun issue-fork-request (prerequest request)
+  (unless (lisp-connection-p)
+    (failed-change "Forking requires a Lisp-type connection."))
+  (unless *fork-control*
+    (failed-change
+     "Fork requested but no fork control child; is this the root Lisp?"))
+  (informat 3 "~&Making grandchild request ~S" request)
+  (with-mkfifos (input output)
+    ;; We send the path to a named pipe, INPUT, rather than our actual
+    ;; request.  That way we can be confident that what we send into the
+    ;; (shared) requests pipe will be less than PIPE_BUF (see pipe(7)).
+    (write-to-mkfifo (cons input output) *fork-control*)
+    (with-open-file (input input :direction :output :if-exists :append
+                           :element-type 'character)
+      (write-to-mkfifo prerequest input)
+      (write-to-mkfifo request    input))
+    (values-list (safe-read-file-form output :element-type 'character))))
 
 ;;; These are the two requests we expect to make of grandchildren: complete
 ;;; the work of an enclosing call to DEPLOY* or DEPLOY-THESE*, or dump an
@@ -75,32 +71,29 @@
 ;;; the latter case we do not carry over any of these by default.
 
 (defun wrap-grandchild-request (&rest forms)
-  ``(let ((*host* ,*host*)
-          (*connection* ,*connection*)
-          (*no-data-sources* t)
-          (*consfigurator-debug-level* ,*consfigurator-debug-level*))
-      ,,@forms))
+  `(let ((*host* ,*host*)
+         (*connection* ,*connection*)
+         (*no-data-sources* t)
+         (*consfigurator-debug-level* ,*consfigurator-debug-level*))
+     ,@forms))
 
-(defmacro eval-in-grandchild (prerequest request (out err exit) &body forms)
+(defun eval-in-grandchild (prerequest request)
   "Evaluate PREREQUEST and REQUEST, both readably printable Lisp forms, in a
 grandchild process.  PREREQUEST and REQUEST must be evaluable using only
 definitions established statically by your consfig, or in one of the ASDF
-systems upon which your consfig depends.  Then bind OUT, ERR and EXIT to the
-stdout, stderr and exit code of that process, respectively, and evaluate
-FORMS.
+systems upon which your consfig depends.  Returns the stdout, stderr and exit
+code of that process.
 
 PREREQUEST will be evaluated before the grandchild calls fork(2) to establish
 its own infrastructure for subsequent uses of this macro, and REQUEST after.
 Thus, PREREQUEST must not start up any threads."
-  `(with-fork-request
-       ,(wrap-grandchild-request
-         '`(posix-login-environment
-            ,(get-connattr :remote-uid)
-            ,(get-connattr :remote-user)
-            ,(get-connattr :remote-home))
-         prerequest)
-       ,(wrap-grandchild-request request) (,out ,err ,exit)
-     ,@forms))
+  (issue-fork-request
+   (wrap-grandchild-request `(posix-login-environment
+                              ,(get-connattr :remote-uid)
+                              ,(get-connattr :remote-user)
+                              ,(get-connattr :remote-home))
+                            prerequest)
+   (wrap-grandchild-request request)))
 
 ;; As SBCL does not expose the build-id, use two checksums.
 #+sbcl (defvar *sbcl-core-cksum*) #+sbcl (defvar *sbcl-runtime-cksum*)
@@ -151,49 +144,46 @@ Thus, PREREQUEST must not start up any threads."
     (wrong-execution-context-for-image-dump
      "Couldn't dump executable image because same SBCL build unavailable."))
   ;; Perform the image dump.
-  (with-fork-request nil
-      `(progn ,pre-dump
-              (nix:umask #o077)
-              (uiop:register-image-restore-hook
-               (named-lambda hook ()
-                 ;; Remove ourselves so that a dump-and-reinvoke by the
-                 ;; reinvoked image will not try to run us again.
-                 (deletef uiop:*image-restore-hook* #'hook)
-                 (eval ',form))
-               nil)
-              (uiop:dump-image ,filename :executable t))
-      (out err exit)
+  (multiple-value-bind (out err exit)
+      (issue-fork-request
+       nil
+       `(progn ,pre-dump
+               (nix:umask #o077)
+               (uiop:register-image-restore-hook
+                (named-lambda hook ()
+                  ;; Remove ourselves so that a dump-and-reinvoke by the
+                  ;; reinvoked image will not try to run us again.
+                  (deletef uiop:*image-restore-hook* #'hook)
+                  (eval ',form))
+                nil)
+               (uiop:dump-image ,filename :executable t)))
     (declare (ignore out))
     (unless (zerop exit)
       (failed-change "~&Failed to dump image; stderr was ~%~%~A" err))))
 
-(defmacro eval-in-reinvoked (prerequest request (out err exit) &body forms)
+(defun eval-in-reinvoked (prerequest request)
   "In a grandchild process, evaluate PREREQUEST, dump an executable image, and
 immediately reinvoke that image to evaluate REQUEST.  PREREQUEST and REQUEST
 must be evaluable using only definitions established statically by your
-consfig, or in one of the ASDF systems upon which your consfig depends.  Then
-bind OUT, ERR and EXIT to the stdout, stderr and exit code of that process,
-respectively, and evaluate FORMS."
-  (with-gensyms (tempdir)
-    ;; Create a temporary directory which will be readable only by the present
-    ;; user, because of how SBCL overrides the umask when dumping an image.
-    ;; Don't want to use ~/.cache/consfigurator/images because want to write
-    ;; to a tmpfs/ramdisk if possible.
-    `(with-local-temporary-directory (,tempdir)
-       (let ((file (merge-pathnames "consfigurator" ,tempdir)))
-         (%dump-consfigurator-in-grandchild
-          file ,(wrap-grandchild-request prerequest)
-          ;; Try to ensure that the new fork control child does not end up
-          ;; with the actual request in its memory.
-          '(with-backtrace-and-exit-code
-            (with-fork-control (eval (with-standard-io-syntax (read))))))
-         (nix:chmod file #o700)         ; ensure it's executable
-         (multiple-value-bind (,out ,err ,exit)
-             (run :may-fail :input (with-standard-io-syntax
-                                     (write-to-string
-                                      ,(wrap-grandchild-request request)))
-                  file)
-           ,@forms)))))
+consfig, or in one of the ASDF systems upon which your consfig depends.
+Returns the stdout, stderr and exit code of that process."
+  ;; Create a temporary directory which will be readable only by the present
+  ;; user, because of how SBCL overrides the umask when dumping an image.
+  ;; Don't want to use ~/.cache/consfigurator/images because want to write to
+  ;; a tmpfs/ramdisk if possible.
+  (with-local-temporary-directory (tempdir)
+    (let ((file (merge-pathnames "consfigurator" tempdir)))
+      (%dump-consfigurator-in-grandchild
+       file (wrap-grandchild-request prerequest)
+       ;; Try to ensure that the new fork control child does not end up with
+       ;; the actual request in its memory.
+       '(with-backtrace-and-exit-code
+         (with-fork-control (eval (with-standard-io-syntax (read))))))
+      (nix:chmod file #o700)            ; ensure it's executable
+      (run :may-fail :input (with-standard-io-syntax
+                              (write-to-string
+                               (wrap-grandchild-request request)))
+           file))))
 
 (defun dump-consfigurator-in-grandchild
     (filename &optional (form `(let ((*no-data-sources* t)

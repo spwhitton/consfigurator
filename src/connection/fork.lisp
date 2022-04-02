@@ -26,8 +26,9 @@
 Must not start up any threads."))
 
 (defmethod continue-connection ((connection fork-connection) remaining)
-  (eval-in-grandchild `(post-fork ,connection)
-      `(continue-deploy* ,connection ',remaining) (out err exit)
+  (multiple-value-bind (out err exit)
+      (eval-in-grandchild `(post-fork ,connection)
+                          `(continue-deploy* ,connection ',remaining))
     (when-let ((lines (lines out)))
       (inform t lines))
     (return-exit
@@ -59,24 +60,25 @@ single-threaded context for the execution of POST-FORK."))
 
 #+sbcl
 (defmethod continue-connection ((connection init-hooks-connection) remaining)
-  (eval-in-reinvoked
-      `(push
-        (lambda ()
-          (handler-bind
-              ((serious-condition
-                 (lambda (c)
-                   (trivial-backtrace:print-backtrace c :output *error-output*)
-                   (uiop:quit 1))))
-            ;; Handle the finaliser thread in older SBCL, before the change in
-            ;; 2.1.8 to call *INIT-HOOKS* before starting system threads.
-            #+consfigurator.connection.fork::older-sbcl
-            (sb-int:with-system-mutex (sb-thread::*make-thread-lock*)
-              (sb-impl::finalizer-thread-stop))
-            (post-fork ,connection)
-            #+consfigurator.connection.fork::older-sbcl
-            (sb-impl::finalizer-thread-start)))
-        sb-ext:*init-hooks*)
-      `(continue-deploy* ,connection ',remaining) (out err exit)
+  (multiple-value-bind (out err exit)
+      (eval-in-reinvoked
+       `(push
+         (lambda ()
+           (handler-bind
+               ((serious-condition
+                  (lambda (c)
+                    (trivial-backtrace:print-backtrace c :output *error-output*)
+                    (uiop:quit 1))))
+             ;; Handle the finaliser thread in older SBCL, before the change in
+             ;; 2.1.8 to call *INIT-HOOKS* before starting system threads.
+             #+consfigurator.connection.fork::older-sbcl
+             (sb-int:with-system-mutex (sb-thread::*make-thread-lock*)
+               (sb-impl::finalizer-thread-stop))
+             (post-fork ,connection)
+             #+consfigurator.connection.fork::older-sbcl
+             (sb-impl::finalizer-thread-start)))
+         sb-ext:*init-hooks*)
+       `(continue-deploy* ,connection ',remaining))
     (when-let ((lines (lines out)))
       (inform t lines))
     (return-exit
