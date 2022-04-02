@@ -164,7 +164,7 @@ supported."
   (doplist (k v plist args)
            (push (strcat "--" (string-downcase (symbol-name k)) "=" v) args)))
 
-(defun systemd--user (&rest args)
+(defun systemd-user-instance-args (args)
   "Where ARGS are args to RUN or MRUN for an invocation of a systemd command
 which can take \"--user\", insert the \"--user\" parameter, and modify or
 insert an :ENV parameter so that the call is more likely to succeed."

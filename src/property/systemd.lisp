@@ -27,7 +27,7 @@
 ;;; case, so that more configuration is applicable to unbooted chroots.
 
 (defun systemctl (fn user &rest args &aux (args (cons "systemctl" args)))
-  (apply fn (if user (apply #'systemd--user args) args)))
+  (apply fn (if user (systemd-user-instance-args args) args)))
 
 (defprop daemon-reloaded :posix (&optional user)
   (:desc "Attempt to reload systemd manager configuration")

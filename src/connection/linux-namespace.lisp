@@ -129,8 +129,9 @@
                   "--" "sh" "-c" ,cmd)))
       (if (and owner (not (string= owner (get-connattr :remote-user))))
           (with-connattrs (:remote-uid owner-uid)
-            (list* "runuser" "-u" owner "--" (apply #'systemd--user args)))
-          (apply #'systemd--user args)))))
+            (list* "runuser" "-u" owner "--"
+                   (systemd-user-instance-args args)))
+          (systemd-user-instance-args args)))))
 
 (defmethod establish-connection
     ((type (eql :lxc-unpriv-attach)) remaining &key owner name pid uid gid)

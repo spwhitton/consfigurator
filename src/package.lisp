@@ -108,7 +108,7 @@
            #:memstr=
            #:define-simple-error
            #:plist-to-long-options
-           #:systemd--user
+           #:systemd-user-instance-args
 	   #:with-local-temporary-directory
            #:pathname-file
            #:local-directory-contents
