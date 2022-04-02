@@ -199,17 +199,11 @@ You can then eval (NAME) to execute this deployment."
 
 (defun hostdeploy* (host &optional additional-properties)
   "Like DEPLOY*, but use the host's default deployment."
-  (deploy* (or (host-deployment host)
-               (simple-program-error "Host has no default deployment"))
-           host
-           additional-properties))
+  (deploy* (host-deployment host) host additional-properties))
 
 (defun hostdeploy-these* (host properties)
   "Like DEPLOY-THESE*, but use the host's default deployment."
-  (deploy-these* (or (host-deployment host)
-                     (simple-program-error "Host has no default deployment"))
-                 host
-                 properties))
+  (deploy-these* (host-deployment host) host properties))
 
 (defmacro hostdeploy (host &body additional-properties)
   "Like DEPLOY, but use the host's default deployment."

@@ -30,7 +30,6 @@
     :reader host-propspec
     :documentation "Propspec of the properties to be applied to the host.")
    (default-deployment
-    :initform nil
     :initarg :deploy
     :reader host-deployment
     :documentation
@@ -100,9 +99,11 @@ values higher up the call stack."))
     (propappattrs (eval-propspec (host-propspec *host*)))
     *host*))
 
-(defun make-host (&key hostattrs (propspec (make-propspec)) deploy)
-  (make-instance 'unpreprocessed-host
-                 :hostattrs hostattrs :propspec propspec :deploy deploy))
+(defun make-host
+    (&key hostattrs (propspec (make-propspec)) (deploy nil deploy-supplied-p))
+  (apply #'make-instance 'unpreprocessed-host
+         :hostattrs hostattrs :propspec propspec
+         (and deploy-supplied-p `(:deploy ,deploy))))
 
 (defun make-child-host (&key hostattrs propspec)
   "Make a host object to represent a chroot, container or the like.
@@ -148,7 +149,8 @@ Called by properties which set up such subhosts, like CHROOT:OS-BOOTSTRAPPED."
                                    (propspec-systems (host-propspec host)))
                             :propspec (propspec-props propspec))))
 
-(defmacro defhost (hostname (&key deploy) &body properties)
+(defmacro defhost
+    (hostname (&key (deploy nil deploy-supplied-p)) &body properties)
   "Define a host with hostname HOSTNAME and properties PROPERTIES.
 HOSTNAME can be a string or a symbol.  In either case, the host will get a
 static informational property with its hostname as a string, and the symbol
@@ -187,7 +189,7 @@ entries."
          (make-host :hostattrs ',attrs
                     :propspec (make-propspec
                                :propspec (props seqprops ,@properties))
-                    :deploy ',deploy)
+                    ,@(and deploy-supplied-p `(:deploy ',deploy)))
          ,(car (getf attrs :desc)))
        ,@(and deploy
               `((defdeploy ,hostname-sym (,deploy ,hostname-sym)))))))
