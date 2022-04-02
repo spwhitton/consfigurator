@@ -147,7 +147,7 @@ should be the mount point, without the chroot's root prefixed.")
   (format nil "chroot ~A sh -c ~A"
           (sh-escape (slot-value connection 'into)) (sh-escape cmd)))
 
-(defmethod connection-teardown :before ((connection shell-chroot-connection))
+(defmethod connection-tear-down :before ((connection shell-chroot-connection))
   (dolist (mount (chroot-mounts connection))
     ;; There shouldn't be any processes left running in the chroot after we've
     ;; finished deploying it, but it's quite easy to end up with things like

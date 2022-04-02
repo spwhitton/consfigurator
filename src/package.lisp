@@ -161,7 +161,7 @@
            #:connection-readfile
            #:connection-readfile-and-remove
            #:connection-writefile
-           #:connection-teardown
+           #:connection-tear-down
            #:connection-connattr
            #:propagate-connattr
 

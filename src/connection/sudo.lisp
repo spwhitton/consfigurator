@@ -70,7 +70,7 @@
                                                (string (code-char 13)))
                                     :mode #o600)))))
 
-(defmethod connection-teardown :after ((connection sudo-connection))
+(defmethod connection-tear-down :after ((connection sudo-connection))
   (when-let ((file (slot-value connection 'password-file)))
     (delete-remote-trees file)))
 

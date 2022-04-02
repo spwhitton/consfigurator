@@ -153,15 +153,15 @@ if they need to handle streams and strings differently."))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
-(defgeneric connection-teardown (connection)
+(defgeneric connection-tear-down (connection)
   (:documentation "Subroutine to disconnect from the host."))
 
-(defmethod connection-teardown :around ((connection connection))
+(defmethod connection-tear-down :around ((connection connection))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
 ;; many connection types don't need anything to be done to disconnect
-(defmethod connection-teardown ((connection connection))
+(defmethod connection-tear-down ((connection connection))
    (values))
 
 (defgeneric connection-connattr (connection k)

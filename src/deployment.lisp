@@ -59,7 +59,7 @@ preprocessed."
              (if *connection*
                  (unwind-protect
                      (if remaining (connect remaining) (apply-*host*-propspec))
-                   (connection-teardown *connection*))
+                   (connection-tear-down *connection*))
                  return)))))
     (let ((*host* (preprocess-host host)))
       (cond
