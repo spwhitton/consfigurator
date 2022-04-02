@@ -118,7 +118,7 @@ Thus, PREREQUEST must not start up any threads."
 
 (define-simple-error wrong-execution-context-for-image-dump (aborted-change))
 
-(defun %dump-consfigurator-in-grandchild (filename pre-dump form)
+(defun dump-consfigurator-in-grandchild (filename pre-dump form)
   "Dump an executable image to FILENAME which will evaluate the readably
 printable Lisp form FORM, which defaults to one which will execute the current
 deployment.  FORM must be evaluable using only definitions established
@@ -186,7 +186,7 @@ Returns the stdout, stderr and exit code of that process."
   ;; a tmpfs/ramdisk if possible.
   (with-local-temporary-directory (tempdir)
     (let ((file (merge-pathnames "consfigurator" tempdir)))
-      (%dump-consfigurator-in-grandchild
+      (dump-consfigurator-in-grandchild
        file (wrap-grandchild-request prerequest)
        ;; Try to ensure that the new fork control child does not end up with
        ;; the actual request in its memory.
@@ -263,7 +263,7 @@ property by applying it like this:
                 ;; should not just be quietly skipped over.
                 (apply #'aborted-change (simple-condition-format-control error)
                        (simple-condition-format-arguments error))))))
-       (%dump-consfigurator-in-grandchild
+       (dump-consfigurator-in-grandchild
         file nil (or form `(let ((*no-data-sources* t)
                                  (*connection* ,*connection*)
                                  (*consfigurator-debug-level*
