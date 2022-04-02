@@ -590,7 +590,7 @@ PATH if PATH already has the specified CONTENT and MODE."
 (defun assert-euid-root ()
   "Assert that the remote user has uid 0 (root)"
   (unless (zerop (get-connattr :remote-uid))
-    (failed-change "Property requires root to apply")))
+    (aborted-change "Property requires root to apply")))
 
 (defun assert-connection-supports (type)
   (unless (or (eq type :posix) (lisp-connection-p))
