@@ -554,7 +554,7 @@
 	            #:has-login-shell
                     #:has-enabled-password
                     #:has-locked-password
-	            #:passwd-entry))
+	            #:passwd-field))
 
   (package :consfigurator.property.chroot
            (:local-nicknames (#:service   #:consfigurator.property.service)

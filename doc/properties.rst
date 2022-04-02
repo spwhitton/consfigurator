@@ -113,4 +113,4 @@ Specification.  Nevertheless, if a ``:posix`` property or function intended to
 be called by ``:posix`` properties uses non-POSIX facilities, but it is not
 obvious given the stated purpose of the property that it will do this, it is
 good to mention the use of non-POSIX facilities in the docstring.  For
-examples of this, see ``USER:HAS-LOGIN-SHELL`` and ``USER:PASSWD-ENTRY``.
+examples of this, see ``USER:HAS-LOGIN-SHELL`` and ``USER:PASSWD-FIELD``.

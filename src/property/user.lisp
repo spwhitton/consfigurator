@@ -31,14 +31,14 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
 
 (defprop %has-uid-gid :posix (username uid gid)
   (:check
-   (and (= uid (parse-integer (passwd-entry 2 username)))
-        (= gid (parse-integer (passwd-entry 3 username)))
+   (and (= uid (parse-integer (passwd-field 2 username)))
+        (= gid (parse-integer (passwd-field 3 username)))
         (= gid (parse-integer (group-entry 2 username)))))
   (:apply
    (let* ((gid-str (write-to-string gid))
           (uid-str (write-to-string uid))
           (uid+gid (format nil "~d:~d" uid gid))
-          (home (passwd-entry 5 username)))
+          (home (passwd-field 5 username)))
      (mrun "groupmod" "--gid" gid-str username)
      (mrun "usermod" "--uid" uid-str "--gid" gid-str username)
      (mrun "chown" "-R" uid+gid home))))
@@ -88,7 +88,7 @@ the installation of other software."
 Note that this uses getent(1) and so is not strictly POSIX-compatible."
   (:desc #?"${username} has login shell ${shell}")
   (:check
-   (string= (passwd-entry 6 username) shell))
+   (string= (passwd-field 6 username) shell))
   (:apply
    (file:contains-lines "/etc/shells" shell)
    (mrun "chsh" "--shell" shell username)))
@@ -127,7 +127,7 @@ and then this property will do nothing."
     (nth n (split-string (stripln (mrun "getent" database u))
                          :separator ":"))))
 
-(defun passwd-entry (n username-or-uid)
+(defun passwd-field (n username-or-uid)
   "Get the nth entry in the getent(1) output for USERNAME-OR-UID.
 Note that getent(1) is not specified in POSIX so use of this function makes
 properties not strictly POSIX-compatible."

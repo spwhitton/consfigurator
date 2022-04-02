@@ -309,7 +309,7 @@ implications."
   (let* ((runuser
            (and owner (not (string= owner (get-connattr :remote-user)))))
          (uid (if runuser
-                  (user:passwd-entry 2 owner)
+                  (user:passwd-field 2 owner)
                   (get-connattr :remote-uid))))
     (apply #'run :env `(:DBUS_SESSION_BUS_ADDRESS nil
                         :XDG_RUNTIME_DIR ,(format nil "/run/user/~D" uid))

@@ -114,7 +114,7 @@
 (defmethod initialize-instance :after
     ((connection lxc-unpriv-attach-connection) &key)
   (with-slots (owner owner-uid) connection
-    (when owner (setf owner-uid (user:passwd-entry 2 owner)))))
+    (when owner (setf owner-uid (user:passwd-field 2 owner)))))
 
 (defmethod connection-shell-wrap
     ((connection lxc-unpriv-attach-connection) cmd)
