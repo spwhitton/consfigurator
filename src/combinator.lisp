@@ -98,7 +98,7 @@ Usage notes:
            ,@forms)))))
 
 (define-function-property-combinator eseqprops (&rest propapps)
-  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
+  (:retprop :type (combine-propapp-types propapps)
             :hostattrs (lambda () (mapc #'propappattrs propapps))
             :apply (lambda () (apply-and-print propapps))
             :unapply (lambda () (apply-and-print propapps t))))
@@ -106,7 +106,7 @@ Usage notes:
 (define-function-property-combinator eseqprops-until (condition &rest propapps)
   "Like ESEQPROPS, but if CONDITION is signalled, handle it simply by skipping
 remaining elements of PROPAPPS.  CONDITION must subtype FAILED-CHANGE."
-  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
+  (:retprop :type (combine-propapp-types propapps)
             :hostattrs (lambda () (mapc #'propappattrs propapps))
             :apply (lambda ()
                      (with-skip-failed-changes (:condition condition
@@ -118,7 +118,7 @@ remaining elements of PROPAPPS.  CONDITION must subtype FAILED-CHANGE."
                          (apply-and-print propapps t)))))
 
 (define-function-property-combinator seqprops (&rest propapps)
-  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
+  (:retprop :type (combine-propapp-types propapps)
             :hostattrs (lambda () (mapc #'propappattrs propapps))
             :apply (lambda ()
                      (with-skip-failed-changes ()
@@ -134,7 +134,7 @@ apply the elements of REQUIREMENTS in reverse order."
   `(eseqprops ,@(reverse requirements) ,propapp))
 
 (define-function-property-combinator silent-seqprops (&rest propapps)
-  (:retprop :type (collapse-types (mapcar #'propapptype propapps))
+  (:retprop :type (combine-propapp-types propapps)
             :hostattrs (lambda () (mapc #'propappattrs propapps))
             :apply (lambda ()
                      (with-skip-failed-changes ()
@@ -286,8 +286,7 @@ in order."
 (define-function-property-combinator on-change*
     (propapp on-change &optional unapply)
   (let ((prop (car propapp)))
-    (:retprop :type
-              (collapse-types (propapptype propapp) (propapptype on-change))
+    (:retprop :type (combine-propapp-types (list propapp on-change))
               :desc (get prop 'desc)
               :hostattrs (lambda (&rest args)
                            (apply #'propattrs prop args)

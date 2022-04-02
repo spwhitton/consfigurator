@@ -101,8 +101,7 @@
 ;;;; Property combinators
 
 (defun typecase-type (cases)
-  (collapse-types (loop for propapp in (cdr cases) by #'cddr
-                        collect (propapptype propapp))))
+  (combine-propapp-types (loop for pa in (cdr cases) by #'cddr collect pa)))
 
 (defun typecase-host (host)
   (class-of (if host

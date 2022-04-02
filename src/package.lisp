@@ -191,7 +191,7 @@
            #:with-connattrs
 
            ;; property.lisp
-           #:collapse-types
+           #:combine-propapp-types
            #:propapptype
            #:propappargs
            #:propappdesc

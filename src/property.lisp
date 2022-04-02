@@ -68,8 +68,6 @@
       (getf (cadr propapp) :orig-args)
       (cdr propapp)))
 
-(defun collapse-types (&rest lists)
-  (if (member :lisp (flatten lists)) :lisp :posix))
 
 (defun combine-propapp-types (&rest lists)
   (if (member :lisp (mapcan (curry #'mapcar #'propapptype) lists))
