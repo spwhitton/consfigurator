@@ -106,25 +106,23 @@ manual."
                      (if reconstruct (cons 'list walked) walked)))))
       (walk expanded))))
 
-(defmacro in-consfig (systems)
-  "Sets the variable *CONSFIG* in the current package to SYSTEMS, or (SYSTEMS)
-if SYSTEMS is an atom.  Used at the top of your consfig, right after IN-PACKAGE.
+(defmacro in-consfig (&rest systems)
+  "Sets the variable *CONSFIG* in the current package to SYSTEMS.
+Used at the top of your consfig, right after IN-PACKAGE.
 
 This is used to record a list of the names of the ASDF systems in which you
 define your hosts, site-specific properties and deployments.  These systems
 should depend on the \"consfigurator\" system.
 
 SYSTEMS should satisfy the following condition: in normal usage of
-Consfigurator, evaluating
-(mapc #'asdf:load-system (if (atom SYSTEMS) (list SYSTEMS) SYSTEMS) should be
+Consfigurator, evaluating (mapc #'asdf:load-system SYSTEMS) should be
 sufficient to define all the properties you intend to apply to hosts and
 property combinators you intend to use in specifying propspecs.
 
 Consfigurator uses this information when starting up remote Lisp images to
 effect deployments: it sends over the ASDF systems specified by SYSTEMS."
   (when (null systems)
-    (simple-program-error "Cannot pass NIL to IN-CONSFIG."))
-  (setq systems (ensure-cons systems))
+    (simple-program-error "Cannot pass no arguments to IN-CONSFIG."))
   (let ((sym (intern "*CONSFIG*")))
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (defparameter ,sym ',systems
