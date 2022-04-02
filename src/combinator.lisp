@@ -357,7 +357,7 @@ an :UNAPPLY subroutine for a property which works by calling other properties."
                               (apply #'eseqprops (cdr unapply))
                               (cadr unapply))))
     (if unapply
-        (:retprop :type (collapse-propapp-types apply (cdr unapply))
+        (:retprop :type (combine-propapp-types apply (cdr unapply))
                   :hostattrs (lambda-ignoring-args
                                (propappattrs apply-propapp)
                                ;; as in definition of UNAPPLIED combinator

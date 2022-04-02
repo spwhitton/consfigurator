@@ -71,7 +71,7 @@
 (defun collapse-types (&rest lists)
   (if (member :lisp (flatten lists)) :lisp :posix))
 
-(defun collapse-propapp-types (&rest lists)
+(defun combine-propapp-types (&rest lists)
   (if (member :lisp (mapcan (curry #'mapcar #'propapptype) lists))
       :lisp :posix))
 
