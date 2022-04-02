@@ -640,9 +640,9 @@
            (:local-nicknames (#:os    #:consfigurator.property.os)
                              (#:file  #:consfigurator.property.file))
            (:export #:volume->entry
-                    #:entries
-                    #:entries-for-volumes
-                    #:entries-for-opened-volumes))
+                    #:has-entries
+                    #:has-entries-for-volumes
+                    #:has-entries-for-opened-volumes))
 
   (package :consfigurator.property.crypttab
            (:use #:consfigurator.property.disk)
@@ -650,7 +650,7 @@
                              (#:os    #:consfigurator.property.os)
                              (#:file  #:consfigurator.property.file))
            (:export #:volume->entry
-                    #:entries-for-opened-volumes))
+                    #:has-entries-for-opened-volumes))
 
   (package :consfigurator.property.gnupg
            (:local-nicknames (#:re        #:cl-ppcre))

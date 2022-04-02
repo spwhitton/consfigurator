@@ -38,5 +38,5 @@ Current implementation assumes a non-CoW filesystem; see NOTES in swapon(8)."
   (:hostattrs (os:required 'os:linux))
   (on-apply-change (%swapfile-exists size location)
     (cmd:single "swapon" location))
-  (fstab:entries
+  (fstab:has-entries
    (strcat (unix-namestring location) " swap swap defaults 0 0")))

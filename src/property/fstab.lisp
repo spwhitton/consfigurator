@@ -76,7 +76,7 @@ Other properties might fill it in."
 
 ;;;; Properties
 
-(defprop entries :posix (&rest entries)
+(defprop has-entries :posix (&rest entries)
   "Ensure that /etc/fstab contains each of ENTRIES, using a simple merge
 procedure: existing lines of the fstab with the same mount point as any of
 ENTRIES are updated to match the corresponding members of ENTRIES, except that
@@ -89,26 +89,26 @@ partition or filesystem UUID in your consfig."
            (format nil "fstab entr~@P for ~{~A~^, ~}" (length it) it)))
   (:apply (file:update-unix-table #P"/etc/fstab" 0 1 entries)))
 
-(defprop entries-for-volumes :posix (&optional volumes)
+(defprop has-entries-for-volumes :posix (&optional volumes)
   "Add or update entries in /etc/fstab for VOLUMES, or the host's volumes, as
 specified with DISK:HAS-VOLUMES."
   (:desc (format nil "fstab entries for ~:[~;host's ~]volumes" volumes))
   (:hostattrs (os:required 'os:linux))
-  (:apply (apply #'entries
+  (:apply (apply #'has-entries
                  (apply #'mapcar #'volume->entry
                         (multiple-value-list
                          (multiple-value-mapcan
                           (curry #'subvolumes-of-type 'filesystem)
                           (or volumes (get-hostattrs :volumes))))))))
 
-(defprop entries-for-opened-volumes :posix ()
+(defprop has-entries-for-opened-volumes :posix ()
   "Add or update entries in /etc/fstab for currently open volumes.
 
 This is used when building disk images and installing operating systems."
   (:desc "fstab entries for opened volumes")
   (:hostattrs (os:required 'os:linux))
   (:apply
-   (apply #'entries
+   (apply #'has-entries
           (apply #'mapcar #'volume->entry
                  (multiple-value-list
                   (multiple-value-mapcan

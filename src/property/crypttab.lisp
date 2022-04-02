@@ -62,7 +62,7 @@
 
 ;;;; Properties
 
-(defprop entries :posix (&rest entries)
+(defprop has-entries :posix (&rest entries)
   "Ensure that /etc/crypttab contains each of ENTRIES, using a simple merge
 procedure: existing lines of the crypttab with the same mapped device name as
 any of ENTRIES are updated to match the corresponding members of ENTRIES,
@@ -74,14 +74,14 @@ existing field value."
      (format nil "crypttab entr~@P for ~{~A~^, ~}" (length it) it)))
   (:apply (file:update-unix-table #P"/etc/crypttab" 1 0 entries)))
 
-(defprop entries-for-opened-volumes :posix ()
+(defprop has-entries-for-opened-volumes :posix ()
   "Add or update entries in /etc/crypttab for currently open volumes.
 
 This is used when building disk images and installing operating systems."
   (:desc "crypttab entries for opened volumes")
   (:hostattrs (os:required 'os:linux))
   (:apply
-   (apply #'entries
+   (apply #'has-entries
           (mapcar #'volume->entry
                   (mapcan (curry #'subvolumes-of-type 'opened-luks-container)
                           (get-connattr :opened-volumes))))))

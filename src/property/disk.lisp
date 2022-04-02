@@ -532,8 +532,9 @@ We do not specify what logical volumes it contains."))
                               when (slot-boundp volume 'mount-point)
                                 collect volume))))
      (if to-create
-         (prog2 (ignoring-hostattrs
-                 (consfigurator.property.fstab:entries-for-volumes to-create))
+         (prog2
+             (ignoring-hostattrs
+              (consfigurator.property.fstab:has-entries-for-volumes to-create))
              (create-volumes-and-contents to-create)
            (dolist (volume to-create)
              (open-volume volume nil))

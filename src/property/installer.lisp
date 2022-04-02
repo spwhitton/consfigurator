@@ -111,8 +111,8 @@ Also update the fstab and crypttab, and try to install bootloader(s)."
                    ;; from the volumes the user has declared for the host, it
                    ;; is unlikely there are other properties setting mount
                    ;; options etc. which are in conflict with VOLUMES.
-                   (fstab:entries-for-opened-volumes)
-                   (crypttab:entries-for-opened-volumes))))
+                   (fstab:has-entries-for-opened-volumes)
+                   (crypttab:has-entries-for-opened-volumes))))
             (%install-bootloaders
              ,running-on-target
              ,@(get-propspecs (get-hostattrs :volumes) running-on-target))))))))
@@ -353,7 +353,7 @@ Here are some other propapps you might want to attach to the application of
 this property with ON-CHANGE:
 
     (bootloaders-installed)
-    (fstab:entries-for-volumes
+    (fstab:has-entries-for-volumes
      (disk:volumes
        (mounted-ext4-filesystem :mount-point #P\"/\")
        (partition (mounted-fat32-filesystem :mount-point #P\"/boot/efi/\"))))
@@ -377,7 +377,7 @@ of properties subsequent to this one.  A more complete example:
       (apt:installed \"linux-image-amd64\")
       (installer:bootloaders-installed)
 
-      (fstab:entries-for-volumes
+      (fstab:has-entries-for-volumes
        (disk:volumes
          (mounted-ext4-filesystem :mount-point #P\"/\")
          (partition
