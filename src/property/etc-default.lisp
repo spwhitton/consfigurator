@@ -18,7 +18,7 @@
 (in-package :consfigurator.property.etc-default)
 (named-readtables:in-readtable :consfigurator)
 
-(defpropspec set :posix
+(defpropspec contains :posix
     (file &rest pairs &aux (file* (merge-pathnames file #P"/etc/default/")))
   "Where PAIRS is a list of even length of alternating keys and values, set each
 of these keys and values in /etc/default/FILE."

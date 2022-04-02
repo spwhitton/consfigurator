@@ -446,8 +446,7 @@
 
   (package :consfigurator.property.etc-default
            (:local-nicknames (#:file  #:consfigurator.property.file))
-           (:shadow #:set)
-           (:export #:set))
+           (:export #:contains))
 
   (package :consfigurator.property.os
            (:shadow #:typecase #:etypecase)

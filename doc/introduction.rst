@@ -192,7 +192,7 @@ and/or lacks.  For example,::
 
 
   (eseqprops (apt:installed postfix)
-             (etc-default:set "locale" "LANG" "en_GB.UTF-8")
+             (etc-default:contains "locale" "LANG" "en_GB.UTF-8")
              (unapplied (com.example.consfig.services:mail-satellite)))
 
 Property application specifications are applied in order, so properties later
