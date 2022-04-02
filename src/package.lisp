@@ -327,7 +327,6 @@
            ;; image.lisp
            #:eval-in-grandchild
            #:eval-in-reinvoked
-           #:dump-consfigurator-in-grandchild
            #:wrong-execution-context-for-image-dump
            #:image-dumped
            #:asdf-requirements-for-host-and-features
