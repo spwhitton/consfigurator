@@ -19,21 +19,22 @@
 (named-readtables:in-readtable :consfigurator)
 
 (defmethod register-data-source
-    ((type (eql :local-file)) &key file version iden1 iden2)
+    ((type (eql :local-file)) &key location version iden1 iden2)
   "Provide the contents of a single local file on the machine running the root
 Lisp.  Register this data source more than once to provide multiple files.
 The version of the data provided is either VERSION or the file's last
 modification time."
-  (unless (file-exists-p file)
-    (missing-data-source "~A does not exist." file))
+  (unless (file-exists-p location)
+    (missing-data-source "~A does not exist." location))
   (cons (lambda (iden1* iden2*)
           (and (string= iden1 iden1*) (string= iden2 iden2*)
-               (file-exists-p file)
-               (or version (file-write-date file))))
+               (file-exists-p location)
+               (or version (file-write-date location))))
         (lambda (iden1* iden2*)
           (and (string= iden1 iden1*) (string= iden2 iden2*)
-               (file-exists-p file)
+               (file-exists-p location)
                (make-instance 'file-data
-                              :file file
+                              :file location
                               :iden1 iden1 :iden2 iden2
-                              :version (or version (file-write-date file)))))))
+                              :version (or version
+                                           (file-write-date location)))))))
