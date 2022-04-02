@@ -39,7 +39,12 @@ CONTENT can be a list of lines or a single string."
           (apply #'maybe-writefile-string
                  path
                  (etypecase content
-                   (cons (unlines content))
+                   (list
+                    ;; Within a DEFPROPSPEC it is easy to accidentally pass a
+                    ;; quoted list to this property.  Error rather than write
+                    ;; the quoted list into the remote file.
+                    (assert (every #'stringp content))
+                    (unlines content))
                    (string (format nil "~A~&" content)))
                  (and mode-supplied-p `(:mode ,mode)))))
 
