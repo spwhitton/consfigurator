@@ -31,7 +31,7 @@ Must not start up any threads."))
                           `(continue-deploy* ,connection ',remaining))
     (when-let ((lines (lines out)))
       (inform t lines))
-    (return-exit
+    (exit-code-to-retval
      exit
      :on-failure (failed-change
                   "~&Fork connection child failed; stderr was ~%~%~A" err))))
@@ -81,7 +81,7 @@ single-threaded context for the execution of POST-FORK."))
        `(continue-deploy* ,connection ',remaining))
     (when-let ((lines (lines out)))
       (inform t lines))
-    (return-exit
+    (exit-code-to-retval
      exit
      :on-failure (failed-change
                   "~&Reinvoked Lisp image failed; stderr was ~%~%~A" err))))

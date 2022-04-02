@@ -66,7 +66,7 @@ recommended."))
         (when-let ((lines (lines out)))
           (inform t "  Output was:" :fresh-line nil)
           (with-indented-inform (inform t lines)))
-        (return-exit
+        (exit-code-to-retval
          exit
          ;; print FORMS not PROGRAM because latter might contain sudo passwords
          :on-failure

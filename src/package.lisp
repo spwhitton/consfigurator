@@ -137,7 +137,7 @@
            #:string-to-filename
            #:filename-to-string
 
-           #:return-exit
+           #:exit-code-to-retval
            #:posix-login-environment
 
            #:define-error-retval-cfun

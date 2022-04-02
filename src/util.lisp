@@ -611,7 +611,7 @@ interactive debugger."))
                         (,failures               22)
                         (t                       23))))))
 
-(defmacro return-exit (exit &key on-failure)
+(defmacro exit-code-to-retval (exit &key on-failure)
   `(values
     nil
     (case ,exit
