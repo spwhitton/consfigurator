@@ -30,8 +30,7 @@
    (mrun :may-fail "swapoff" location)
    (delete-remote-trees location)))
 
-(defproplist has-swap-file :posix
-    (size &optional (location #P"/var/lib/swapfile"))
+(defproplist has-swap-file :posix (size &key (location #P"/var/lib/swapfile"))
   "Add a swap file.  SIZE is the -l argument to fallocate(1).
 Current implementation assumes a non-CoW filesystem; see NOTES in swapon(8)."
   (:desc #?"Has swapfile of size ${size}")
