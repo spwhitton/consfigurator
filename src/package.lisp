@@ -485,7 +485,7 @@
                     #:unmounted-below
                     #:unmounted-below-and-removed
                     #:all-mounts
-                    #:*standard-linux-vfs*
+                    #:*linux-basic-vfs*
                     #:*linux-efivars-vfs*
                     #:assert-devtmpfs-udev-/dev))
 

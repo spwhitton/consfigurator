@@ -103,7 +103,7 @@ Uses findmnt(8), so Linux-specific."
 
 ;;;; Utilities for :LISP properties
 
-(defparameter *standard-linux-vfs* '(
+(defparameter *linux-basic-vfs* '(
 ("-t" "proc"     "-o" "nosuid,noexec,nodev"                "proc"   "/proc")
 ("-t" "sysfs"    "-o" "nosuid,noexec,nodev,ro"             "sys"    "/sys")
 ("-t" "devtmpfs" "-o" "mode=0755,nosuid"                   "udev"   "/dev")
