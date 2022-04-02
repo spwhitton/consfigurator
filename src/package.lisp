@@ -172,10 +172,10 @@
            #:mktemp
            #:with-remote-current-directory
            #:run-failed
-           #:failed-cmd
-           #:failed-stdout
-           #:failed-stderr
-           #:failed-exit-code
+           #:run-failed-cmd
+           #:run-failed-stdout
+           #:run-failed-stderr
+           #:run-failed-exit
            #:runlines
            #:remote-test
            #:remote-exists-p

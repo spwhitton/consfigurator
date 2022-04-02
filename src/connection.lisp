@@ -267,18 +267,18 @@ login(1)).  Tilde expansion works correctly."
 ;; their corresponding implementation of CONNECTION-RUN).
 
 (define-condition run-failed (error)
-  ((cmd :initarg :cmd :reader failed-cmd)
-   (stdout :initarg :stdout :reader failed-stdout)
-   (stderr :initarg :stderr :reader failed-stderr)
-   (exit-code :initarg :exit-code :reader failed-exit-code))
+  ((cmd :initarg :cmd :reader run-failed-cmd)
+   (stdout :initarg :stdout :reader run-failed-stdout)
+   (stderr :initarg :stderr :reader run-failed-stderr)
+   (exit-code :initarg :exit-code :reader run-failed-exit))
   (:report (lambda (condition stream)
              (format
               stream
               "~&'~A' failed, exit code ~A~%~%stderr was:~%~A~&~%stdout:~%~A"
-              (failed-cmd condition)
-              (failed-exit-code condition)
-              (failed-stderr condition)
-              (failed-stdout condition)))))
+              (run-failed-cmd condition)
+              (run-failed-exit condition)
+              (run-failed-stderr condition)
+              (run-failed-stdout condition)))))
 
 (defmacro with-remote-temporary-file ((file
                                        &key

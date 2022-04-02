@@ -67,7 +67,7 @@
                        ((run-failed
                           (lambda (c)
                             (when (and warning
-                                       (search warning (failed-stdout c)))
+                                       (search warning (run-failed-stdout c)))
                               (return-from permanent-change :no-change)))))
                      (apply #'mrun "firewall-offline-cmd" offline-apply))
                    (if --permanent
