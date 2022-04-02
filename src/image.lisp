@@ -119,6 +119,19 @@ Thus, PREREQUEST must not start up any threads."
 (define-simple-error wrong-execution-context-for-image-dump (aborted-change))
 
 (defun %dump-consfigurator-in-grandchild (filename pre-dump form)
+  "Dump an executable image to FILENAME which will evaluate the readably
+printable Lisp form FORM, which defaults to one which will execute the current
+deployment.  FORM must be evaluable using only definitions established
+statically by your consfig, or in one of the ASDF systems upon which your
+consfig depends.  Evaluate PRE-DUMP in the process which will perform the dump
+prior to dumping.
+
+Only :LISP property :APPLY subroutines should call this.
+
+The process which performs the dump will have its umask set to #o077, but
+implementation-specific image dumping code might undo this (SBCL, for example,
+changes the mode of the file to #o755).  You might want to ensure that the
+directory containing FILENAME is locked down."
   ;; Check that the image is likely to be reinvokable.
   (loop for library in (list-foreign-libraries)
         for path = (foreign-library-pathname library)
@@ -185,29 +198,6 @@ Returns the stdout, stderr and exit code of that process."
                                (wrap-grandchild-request request)))
            file))))
 
-(defun dump-consfigurator-in-grandchild
-    (filename &optional (form `(let ((*no-data-sources* t)
-                                     (*connection* ,*connection*)
-                                     (*consfigurator-debug-level*
-                                       ,*consfigurator-debug-level*))
-                                 (with-deployment-report
-                                   (with-fork-control
-                                     (%consfigure nil ,*host*)))
-                                 (fresh-line))))
-  "Dump an executable image to FILENAME which will evaluate the readably
-printable Lisp form FORM, which defaults to one which will execute the current
-deployment.  FORM must be evaluable using only definitions established
-statically by your consfig, or in one of the ASDF systems upon which your
-consfig depends.
-
-Only :LISP property :APPLY subroutines should call this.
-
-The process which performs the dump will have its umask set to #o077, but
-implementation-specific image dumping code might undo this (SBCL, for example,
-changes the mode of the file to #o755).  You might want to ensure that the
-directory containing FILENAME is locked down."
-  (%dump-consfigurator-in-grandchild filename nil form))
-
 (defprop image-dumped :lisp (&optional filename form (always form))
   "Dump an executable image to FILENAME which will evaluate FORM, which must be
 evaluable using only definitions established statically by your consfig, or in
@@ -273,9 +263,14 @@ property by applying it like this:
                 ;; should not just be quietly skipped over.
                 (apply #'aborted-change (simple-condition-format-control error)
                        (simple-condition-format-arguments error))))))
-       (if form
-           (dump-consfigurator-in-grandchild file form)
-           (dump-consfigurator-in-grandchild file))))
+       (%dump-consfigurator-in-grandchild
+        file nil (or form `(let ((*no-data-sources* t)
+                                 (*connection* ,*connection*)
+                                 (*consfigurator-debug-level*
+                                   ,*consfigurator-debug-level*))
+                             (with-deployment-report
+                               (with-fork-control (%consfigure nil ,*host*)))
+                             (fresh-line))))))
    ;; Return :NO-CHANGE, though we can't detect whether a change was actually
    ;; made: it depends on whether the definitions determining the evaluation
    ;; of FORM, or the definition of this host established by the consfig, was
