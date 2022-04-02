@@ -367,7 +367,7 @@ in testing, you could use:
             collect (list
                      'file:exists-with-content
                      (strcat "/etc/apt/preferences.d/10consfig_"
-                             (string->filename preference)
+                             (string-to-filename preference)
                              ".pref")
                      (nbutlast
                       (loop for (os pin) on pairs by #'cddr

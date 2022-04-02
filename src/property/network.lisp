@@ -75,7 +75,7 @@ OPTIONS is a list of even length of alternating keys and values."
      (setq options (list* "netmask" netmask options)))
    (setq options (list* "address" address options))
    (file:has-content
-       (merge-pathnames (string->filename interface)
+       (merge-pathnames (string-to-filename interface)
                         #P"/etc/network/interfaces.d/")
      (list* (strcat "auto " interface)
             (format nil "iface ~A ~A static"
@@ -103,7 +103,7 @@ the networking stack's current state like this one does."
                     return (words line)))
           (interface (or interface (fifth default)))
           (gateway (and (string= (fifth default) interface) (third default)))
-          (file (merge-pathnames (string->filename interface)
+          (file (merge-pathnames (string-to-filename interface)
                                  #P"/etc/network/interfaces.d/")))
      (if (remote-exists-p file)
          :no-change

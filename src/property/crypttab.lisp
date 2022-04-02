@@ -54,7 +54,7 @@
 (defmethod ct-options ((volume opened-luks-container))
   (or (crypttab-options volume) '("none")))
 
-(defmethod volume->entry ((volume opened-luks-container))
+(defmethod volume-to-entry ((volume opened-luks-container))
   (format nil "~A ~A ~A ~{~A~^,~}"
           (ct-target volume) (ct-source volume)
           (ct-keyfile volume) (ct-options volume)))
@@ -82,6 +82,6 @@ This is used when building disk images and installing operating systems."
   (:hostattrs (os:required 'os:linux))
   (:apply
    (apply #'has-entries
-          (mapcar #'volume->entry
+          (mapcar #'volume-to-entry
                   (mapcan (curry #'subvolumes-of-type 'opened-luks-container)
                           (get-connattr :opened-volumes))))))

@@ -41,7 +41,7 @@ user."
 (define-function-property-combinator at-most* (period desc propapp)
   (symbol-macrolet
       ((flagfile (merge-pathnames
-                  (string->filename desc)
+                  (string-to-filename desc)
                   (merge-pathnames "at-most/"
                                    (get-connattr :consfigurator-cache)))))
     (destructuring-bind (psym . args) propapp

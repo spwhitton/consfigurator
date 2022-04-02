@@ -383,7 +383,7 @@ CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM."
 
 (defun data-pathname (root &rest segments)
   (destructuring-bind (last . rest)
-      (nreverse (mapcar #'string->filename segments))
+      (nreverse (mapcar #'string-to-filename segments))
     (merge-pathnames last (reduce #'merge-pathnames
                                   (mapcar (lambda (s) (strcat s "/")) rest)
                                   :from-end t :initial-value root))))
@@ -420,7 +420,7 @@ of CONNECTION, where each entry is of the form
 (defmethod get-remote-cached-prerequisite-data ((connection connection))
   (let ((*connection* connection))
     (mapcar (lambda (line)
-              (mapcar #'filename->string (split-string line :separator "/")))
+              (mapcar #'filename-to-string (split-string line :separator "/")))
             (multiple-value-bind (out exit)
                 (mrun :may-fail "find" (merge-pathnames
                                         "data/"
@@ -444,7 +444,7 @@ always supply a value for WHERE."
         nconc (loop for subdir in (subdirectories dir)
                     nconc (loop for file in (directory-files subdir)
                                 collect
-                                (mapcar #'filename->string
+                                (mapcar #'filename-to-string
                                         (list (lastcar
                                                (pathname-directory dir))
                                               (lastcar

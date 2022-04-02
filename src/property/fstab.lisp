@@ -67,7 +67,7 @@ Other properties might fill it in."
   (if (eql #P"/" (mount-point volume))
       1 2))
 
-(defmethod volume->entry ((volume filesystem) parent)
+(defmethod volume-to-entry ((volume filesystem) parent)
   (format nil "~A ~A ~A ~{~A~^,~} ~A ~A"
           (fs-spec volume parent) (fs-file volume)
           (fs-vfstype volume) (fs-mntops volume)
@@ -95,7 +95,7 @@ specified with DISK:HAS-VOLUMES."
   (:desc (format nil "fstab entries for ~:[~;host's ~]volumes" volumes))
   (:hostattrs (os:required 'os:linux))
   (:apply (apply #'has-entries
-                 (apply #'mapcar #'volume->entry
+                 (apply #'mapcar #'volume-to-entry
                         (multiple-value-list
                          (multiple-value-mapcan
                           (curry #'subvolumes-of-type 'filesystem)
@@ -109,7 +109,7 @@ This is used when building disk images and installing operating systems."
   (:hostattrs (os:required 'os:linux))
   (:apply
    (apply #'has-entries
-          (apply #'mapcar #'volume->entry
+          (apply #'mapcar #'volume-to-entry
                  (multiple-value-list
                   (multiple-value-mapcan
                    (curry #'subvolumes-of-type 'mounted-filesystem)

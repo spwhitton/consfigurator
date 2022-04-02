@@ -38,8 +38,8 @@ The output of the cronjob will be mailed only if the job exits nonzero."
                (strcat "/etc/cron." (if (keywordp when)
                                         (string-downcase (symbol-name when))
                                         "d"))))
-         (job (merge-pathnames (string->filename desc) dir))
-         (script (merge-pathnames (strcat (string->filename desc) "_cronjob")
+         (job (merge-pathnames (string-to-filename desc) dir))
+         (script (merge-pathnames (strcat (string-to-filename desc) "_cronjob")
                                   #P"/usr/local/bin/"))
          (script* (sh-escape script)))
     `(with-unapply

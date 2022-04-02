@@ -107,7 +107,7 @@
            #:unwords
            #:memstr=
            #:define-simple-error
-           #:plist->long-options
+           #:plist-to-long-options
            #:systemd--user
 	   #:with-local-temporary-directory
            #:pathname-file
@@ -134,8 +134,8 @@
            #:version<=
            #:version>=
 
-           #:string->filename
-           #:filename->string
+           #:string-to-filename
+           #:filename-to-string
 
            #:return-exit
            #:posix-login-environment
@@ -638,7 +638,7 @@
            (:use #:consfigurator.property.disk)
            (:local-nicknames (#:os    #:consfigurator.property.os)
                              (#:file  #:consfigurator.property.file))
-           (:export #:volume->entry
+           (:export #:volume-to-entry
                     #:has-entries
                     #:has-entries-for-volumes
                     #:has-entries-for-opened-volumes))
@@ -648,7 +648,7 @@
            (:local-nicknames (#:re    #:cl-ppcre)
                              (#:os    #:consfigurator.property.os)
                              (#:file  #:consfigurator.property.file))
-           (:export #:volume->entry
+           (:export #:volume-to-entry
                     #:has-entries-for-opened-volumes))
 
   (package :consfigurator.property.gnupg

@@ -160,7 +160,7 @@ supported."
         do (pop forms)
         finally (return forms)))
 
-(defun plist->long-options (plist &aux args)
+(defun plist-to-long-options (plist &aux args)
   (doplist (k v plist args)
            (push (strcat "--" (string-downcase (symbol-name k)) "=" v) args)))
 
@@ -509,7 +509,7 @@ previous output."
 ;; This implementation also assumes that the Lisp doing the decoding has the
 ;; same charset as the Lisp doing the encoding.
 
-(defun string->filename (s)
+(defun string-to-filename (s)
   (apply #'concatenate 'string
          (loop for c
                  across (etypecase s (string s) (number (write-to-string s)))
@@ -520,7 +520,7 @@ previous output."
                else
                  collect (format nil "_~X_" (char-code c)))))
 
-(defun filename->string (s)
+(defun filename-to-string (s)
   (loop with decoding
         with buffer
         with result
