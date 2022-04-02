@@ -18,9 +18,10 @@ Except where specified otherwise in property docstrings, relative paths are
 relative to the remote home directory.  ``:LISP`` properties may assume they
 will be executed in the remote home directory, and ``:POSIX`` properties may
 assume that commands will be executed in the remote home directory, and that
-relative paths passed to ``READFILE`` and ``WRITEFILE`` are relative to the
-remote home directory.  Use ``WITH-REMOTE-CURRENT-DIRECTORY`` to change the
-remote working directory in a way which ensures it will get changed back.
+relative paths passed to ``READ-REMOTE-FILE`` and ``WRITE-REMOTE-FILE`` are
+relative to the remote home directory.  Use ``WITH-REMOTE-CURRENT-DIRECTORY``
+to change the remote working directory in a way which ensures it will get
+changed back.
 
 Property subroutines
 --------------------
@@ -98,14 +99,15 @@ Errors in attempting to apply a property are indicated by signalling a
 ``:posix`` properties should not make any assumptions about what localhost is
 -- they may be running in the root Lisp, but they might be running in a Lisp
 image running on an intermediary host, or even on the host to be configured.
-They should perform I/O only by calling ``RUN``, ``RUNLINES``, ``READFILE``,
-``WRITEFILE``, requesting prerequisite data, and applying or unapplying other
-``:posix`` properties.  Otherwise, they should be pure functions.
+They should perform I/O only by calling ``RUN``, ``RUNLINES``,
+``READ-REMOTE-FILE``, ``WRITE-REMOTE-FILE``, requesting prerequisite data, and
+applying or unapplying other ``:posix`` properties.  Otherwise, they should be
+pure functions.
 
 ``:lisp`` properties, by contrast, may (and should) assume that they are
 running in a Lisp image on the host to which they are to be applied, so they
 can perform arbitrary I/O in that context.  They can also make use of ``RUN``,
-``RUNLINES``, ``READFILE`` and ``WRITEFILE`` if desired.
+``RUNLINES``, ``READ-REMOTE-FILE`` and ``WRITE-REMOTE-FILE`` if desired.
 
 ``:posix`` properties are characterised by the limited set of ways in which
 they perform I/O, not by the use of only facilities defined in the Single UNIX

@@ -575,17 +575,18 @@ the actual state of the host but without making any changes.
 
 Not to be confused with INAPPLICABLE-PROPERTY.")
 
-(defun maybe-writefile-string (path content &key (mode nil mode-supplied-p))
-  "Wrapper around WRITEFILE which returns :NO-CHANGE and avoids writing PATH if
-PATH already has the specified CONTENT and MODE."
+(defun maybe-write-remote-file-string
+    (path content &key (mode nil mode-supplied-p))
+  "Wrapper around WRITE-REMOTE-FILE which returns :NO-CHANGE and avoids writing
+PATH if PATH already has the specified CONTENT and MODE."
   (if (and (remote-exists-p path)
            (multiple-value-bind (existing-mode existing-size)
                (remote-file-stats path)
              (and (or (not mode-supplied-p) (= mode existing-mode))
                   (and (>= (* 4 (length content)) existing-size)
-                       (string= (readfile path) content)))))
+                       (string= (read-remote-file path) content)))))
       :no-change
-      (apply #'writefile
+      (apply #'write-remote-file
              path content (and mode-supplied-p `(:mode ,mode)))))
 
 (defun assert-euid-root ()

@@ -43,7 +43,7 @@ refuses to proceed if root has no authorized_keys."
   (:apply
    (assert-euid-root)
    (unless (and (remote-exists-p ".ssh/authorized_keys")
-                (plusp (length (readfile ".ssh/authorized_keys"))))
+                (plusp (length (read-remote-file ".ssh/authorized_keys"))))
      (failed-change "root has no authorized_keys"))
    (configured "PermitRootLogin" "prohibit-password"
                "PasswordAuthentication" "no")))

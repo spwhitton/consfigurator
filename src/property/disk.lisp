@@ -948,8 +948,8 @@ filesystems will be incrementally updated when other properties change."
   (:apply
    (file:does-not-exist image)
    (with-remote-temporary-file (excludes)
-     (writefile excludes
-                (format nil "~@{~&~A~}" "/boot" "/proc" "/dev" "/sys" "/run"))
+     (write-remote-file
+      excludes (format nil "~@{~&~A~}" "/boot" "/proc" "/dev" "/sys" "/run"))
      (run :inform "nice" "mksquashfs" chroot image
           "-no-progress" "-comp" compression "-ef" excludes))))
 

@@ -77,7 +77,7 @@ the installation of other software."
   (:hostattrs (os:required 'os:debianlike))
   (:apply
    (let ((existing-groups
-           (loop for line in (lines (readfile "/etc/group"))
+           (loop for line in (lines (read-remote-file "/etc/group"))
                  collect (car (split-string line :separator ":")))))
      (apply #'has-groups username (loop for group in *desktop-groups*
                                         when (memstr= group existing-groups)

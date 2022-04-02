@@ -22,12 +22,13 @@
   "Apply FUNCTION to the lines of FILE.  Safe to use in a :POSIX property.
 
 For efficiency, a :LISP property might want to use streams, but there's no
-point in doing that here because WRITEFILE is synchronous."
-  (let* ((orig-lines (and (remote-exists-p file) (lines (readfile file))))
+point in doing that here because WRITE-REMOTE-FILE is synchronous."
+  (let* ((orig-lines (and (remote-exists-p file)
+                          (lines (read-remote-file file))))
          (new-lines (funcall function orig-lines)))
     (if (equal orig-lines new-lines)
         :no-change
-        (writefile file (unlines new-lines)))))
+        (write-remote-file file (unlines new-lines)))))
 
 (defprop has-content :posix (path content &key (mode nil mode-supplied-p))
   "Ensure there is a file at PATH whose content is CONTENT.
@@ -36,7 +37,7 @@ CONTENT can be a list of lines or a single string."
   (:desc (declare (ignore content mode mode-supplied-p))
          #?"${path} has defined content")
   (:apply (unless mode-supplied-p (containing-directory-exists path))
-          (apply #'maybe-writefile-string
+          (apply #'maybe-write-remote-file-string
                  path
                  (etypecase content
                    (list
@@ -71,11 +72,11 @@ replacing the contents of existing files, prefer FILE:HAS-CONTENT."
    (containing-directory-exists path)
    (let ((new-lines (copy-list (ensure-cons lines)))
          (existing-lines (and (remote-exists-p path)
-                              (lines (readfile path)))))
+                              (lines (read-remote-file path)))))
      (dolist (existing-line existing-lines)
        (deletef new-lines existing-line :test #'string=))
      (if new-lines
-         (writefile path (unlines (nconc existing-lines new-lines)))
+         (write-remote-file path (unlines (nconc existing-lines new-lines)))
          :no-change))))
 
 (defprop lacks-lines :posix (path &rest lines)
@@ -146,7 +147,7 @@ any of the regular expressions PATTERNS."
    (require-data iden1 iden2))
   (:apply
    (containing-directory-exists destination)
-   (maybe-writefile-data destination iden1 iden2)))
+   (maybe-write-remote-file-data destination iden1 iden2)))
 
 (defproplist host-data-uploaded :posix
     (destination
@@ -162,7 +163,7 @@ any of the regular expressions PATTERNS."
    (declare (ignore destination))
    (require-data iden1 iden2))
   (:apply
-   (maybe-writefile-data destination iden1 iden2 :mode #o600)))
+   (maybe-write-remote-file-data destination iden1 iden2 :mode #o600)))
 
 (defproplist host-secret-uploaded :posix
     (destination

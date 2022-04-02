@@ -98,36 +98,36 @@ error condition just because EXIT is non-zero."))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
-(defgeneric connection-readfile (connection path)
+(defgeneric connection-read-file (connection path)
   (:documentation "Subroutine to read the contents of files on the host."))
 
-(defmethod connection-readfile :around ((connection connection) path)
+(defmethod connection-read-file :around ((connection connection) path)
   (declare (ignore path))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
-(defgeneric connection-readfile-and-remove (connection path)
-  (:documentation "As READFILE and then delete the file.
+(defgeneric connection-read-and-remove-file (connection path)
+  (:documentation "As READ-REMOTE-FILE and then delete the file.
 
 For some connection types, when latency is high, combining these two
 operations is noticeably faster than doing one after the other.  For every use
 of RUN we read and delete the file containing the command's stdout, so the
 time savings add up."))
 
-(defmethod connection-readfile-and-remove
+(defmethod connection-read-and-remove-file
     :around ((connection connection) path)
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
 
-(defmethod connection-readfile-and-remove ((connection connection) path)
-  (prog1 (connection-readfile connection path)
+(defmethod connection-read-and-remove-file ((connection connection) path)
+  (prog1 (connection-read-file connection path)
     (connection-run connection (strcat "rm " (sh-escape path)) nil)))
 
-;; only functional difference between WRITEFILE and UPLOAD is what args they
-;; take: a string vs. a path.  for a given connection type, they may have same
-;; or different implementations.
+;; only functional difference between WRITE-REMOTE-FILE and UPLOAD is what
+;; args they take: a string vs. a path.  for a given connection type, they may
+;; have same or different implementations.
 
-(defgeneric connection-writefile (connection path content mode)
+(defgeneric connection-write-file (connection path content mode)
   (:documentation
    "Subroutine to replace/create the contents of files on the host.
 
@@ -145,10 +145,10 @@ WITH-REMOTE-TEMPORARY-FILE can be used to do this.
 Implementations can specialise on both the CONNECTION and CONTENT arguments,
 if they need to handle streams and strings differently."))
 
-(defmethod connection-writefile :around ((connection connection)
-                                         path
-                                         content
-                                         mode)
+(defmethod connection-write-file :around ((connection connection)
+                                          path
+                                          content
+                                          mode)
   (declare (ignore path content mode))
   (let ((*connection* (slot-value connection 'parent)))
     (call-next-method)))
@@ -261,9 +261,9 @@ login(1)).  Tilde expansion works correctly."
 ;;;; Functions to access the slots of the current connection
 
 ;; Used by properties and by implementations of ESTABLISH-CONNECTION.  This is
-;; the only code that ever call CONNECTION-RUN, CONNECTION-READFILE and
-;; CONNECTION-WRITEFILE directly (except that it might make sense for
-;; implementations of CONNECTION-READFILE and CONNECTION-WRITEFILE to call
+;; the only code that ever call CONNECTION-RUN, CONNECTION-READ-FILE and
+;; CONNECTION-WRITE-FILE directly (except that it might make sense for
+;; implementations of CONNECTION-READ-FILE and CONNECTION-WRITE-FILE to call
 ;; their corresponding implementation of CONNECTION-RUN).
 
 (define-condition run-failed (error)
@@ -357,9 +357,10 @@ fi")
 (defmacro with-remote-current-directory ((dir) &body forms)
   "Execute FORMS with the current working directory DIR.
 This affects the working directory for commands run using RUN and MRUN, and
-the resolution of relative pathnames passed as the first argument of READFILE
-and WRITEFILE.  For Lisp-type connections, it additionally temporarily sets
-the working directory of the Lisp process using UIOP:WITH-CURRENT-DIRECTORY."
+the resolution of relative pathnames passed as the first argument of
+READ-REMOTE-FILE and WRITE-REMOTE-FILE.  For Lisp-type connections, it
+additionally temporarily sets the working directory of the Lisp process using
+UIOP:WITH-CURRENT-DIRECTORY."
   (with-gensyms (previous new)
     `(let ((,previous (get-connattr 'current-directory))
            (,new (ensure-pathname ,dir
@@ -479,7 +480,7 @@ case return only the exit code."
         (multiple-value-bind (err exit)
             (connection-run *connection* wrapped input)
           (setq err (lines err) stdout (car err) err (unlines (cdr err)))
-          (let ((out (connection-readfile-and-remove *connection* stdout)))
+          (let ((out (connection-read-and-remove-file *connection* stdout)))
             (when inform
               (informat 1 "~&    % ~A~%~{    ~A~%~}"
                         (if (> *consfigurator-debug-level* 4) wrapped cmd)
@@ -496,7 +497,7 @@ that this might mean interleaved or simply concatenated, depending on the
 connection chain).
 
 Some (but not all) connection types will want to use this when implementing
-ESTABLISH-CONNECTION, CONNECTION-RUN, CONNECTION-WRITEFILE etc. to avoid the
+ESTABLISH-CONNECTION, CONNECTION-RUN, CONNECTION-WRITE-FILE etc. to avoid the
 overhead of splitting the output streams only to immediately recombine them.
 
 Code in property definitions which will not examine command output should
@@ -611,8 +612,8 @@ specification of POSIX ls(1))."
 (defun remote-executable-find (executable)
   (zerop (mrun :for-exit "command" "-v" executable)))
 
-(defun readfile (path)
-  (connection-readfile
+(defun read-remote-file (path)
+  (connection-read-file
    *connection*
    (unix-namestring
     (ensure-pathname path
@@ -620,17 +621,18 @@ specification of POSIX ls(1))."
                      :defaults (pwd)
                      :ensure-absolute t))))
 
-(defun writefile (path content
-                  &key (mode #o644 mode-supplied-p)
-                  &aux (pathname (ensure-pathname path
-                                                  :namestring :unix
-                                                  :defaults (pwd)
-                                                  :ensure-absolute t))
-                    (namestring (unix-namestring pathname)))
+(defun write-remote-file (path content
+                          &key (mode #o644 mode-supplied-p)
+                          &aux (pathname (ensure-pathname path
+                                                          :namestring :unix
+                                                          :defaults (pwd)
+                                                          :ensure-absolute t))
+                            (namestring (unix-namestring pathname)))
   ;; If (lisp-connection-p), the file already exists, and it's not owned by
-  ;; us, we could (have a keyword argument to) bypass CONNECTION-WRITEFILE and
-  ;; just WRITE-STRING to the file.  That way we don't replace the file with
-  ;; one owned by us, which we might not be able to chown back as non-root.
+  ;; us, we could (have a keyword argument to) bypass CONNECTION-WRITE-FILE
+  ;; and just WRITE-STRING to the file.  That way we don't replace the file
+  ;; with one owned by us, which we might not be able to chown back as
+  ;; non-root.
   ;;
   ;; The following, simpler behaviour should fit most sysadmin needs.
   (if (remote-exists-p pathname)
@@ -642,20 +644,21 @@ specification of POSIX ls(1))."
                                 (run :env '(:LOCALE "C") "ls" "-nd" pathname))
           (unless match
             (error
-             "WRITEFILE could not determine ownership and mode of ~A" pathname))
+             "WRITE-REMOTE-FILE could not determine ownership and mode of ~A"
+             pathname))
           (let ((umode (dehyphen (elt groups 0)))
                 (gmode (dehyphen (elt groups 1)))
                 (omode (dehyphen (elt groups 2)))
                 (uid (elt groups 3))
                 (gid (elt groups 4)))
-            (connection-writefile *connection* namestring content mode)
+            (connection-write-file *connection* namestring content mode)
             (let ((namestring (sh-escape namestring)))
               (unless mode-supplied-p
                 ;; assume that if we can write it we can chmod it
                 (mrun #?"chmod u=${umode},g=${gmode},o=${omode} ${namestring}"))
               ;; we may not be able to chown; that's okay
               (mrun :may-fail #?"chown ${uid}:${gid} ${namestring}")))))
-      (connection-writefile *connection* namestring content mode)))
+      (connection-write-file *connection* namestring content mode)))
 
 (defun get-connattr (k)
   "Get the connattr identified by K for the current connection."

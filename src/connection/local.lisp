@@ -42,16 +42,16 @@
     (declare (ignore _))
     (values output exit-code)))
 
-(defmethod connection-readfile ((connection local-connection) path)
+(defmethod connection-read-file ((connection local-connection) path)
   (read-file-string path))
 
-(defmethod connection-readfile-and-remove ((connection local-connection) path)
+(defmethod connection-read-and-remove-file ((connection local-connection) path)
   (prog1 (read-file-string path) (delete-file path)))
 
-(defmethod connection-writefile ((connection local-connection)
-                                 path
-                                 content
-                                 mode)
+(defmethod connection-write-file ((connection local-connection)
+                                  path
+                                  content
+                                  mode)
   ;; we cannot use UIOP:WITH-TEMPORARY-FILE etc., because those do not ensure
   ;; the file is only readable by us, and we might be writing a secret key
   (with-remote-temporary-file

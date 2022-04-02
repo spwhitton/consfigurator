@@ -37,10 +37,10 @@ Defining connection types
 
 The code which establishes connections (i.e., implementations of the
 ``ESTABLISH-CONNECTION`` generic) is like code in ``:posix`` properties -- it
-should restrict its I/O to ``RUN``, ``RUNLINES``, ``READFILE`` and
-``WRITEFILE``, functions which access the currently active connection.  This
-is in order to permit the arbitrary nesting of connections.  If establishing a
-connection really does require more I/O, such as in the case of
+should restrict its I/O to ``RUN``, ``RUNLINES``, ``READ-REMOTE-FILE`` and
+``WRITE-REMOTE-FILE``, functions which access the currently active connection.
+This is in order to permit the arbitrary nesting of connections.  If
+establishing a connection really does require more I/O, such as in the case of
 ``:CHROOT.FORK`` connections, code can call ``LISP-CONNECTION-P``, and either
 signal an error, or fall back to another connection type.
 

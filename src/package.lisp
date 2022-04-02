@@ -158,9 +158,9 @@
            #:connection-parent
            #:lisp-connection-p
            #:connection-run
-           #:connection-readfile
-           #:connection-readfile-and-remove
-           #:connection-writefile
+           #:connection-read-file
+           #:connection-read-and-remove-file
+           #:connection-write-file
            #:connection-tear-down
            #:connection-connattr
            #:propagate-connattr
@@ -185,8 +185,8 @@
            #:remote-mount-point-p
            #:delete-remote-trees
            #:empty-remote-directory
-           #:readfile
-           #:writefile
+           #:read-remote-file
+           #:write-remote-file
            #:get-connattr
            #:with-connattrs
 
@@ -217,7 +217,7 @@
            #:failed-change
            #:aborted-change
            #:assert-euid-root
-           #:maybe-writefile-string
+           #:maybe-write-remote-file-string
            #:with-change-if-changes-file
            #:with-change-if-changes-files
            #:with-change-if-changes-file-content
@@ -301,7 +301,7 @@
            #:file-data
            #:data-file
 	   #:data-source-providing-p
-           #:maybe-writefile-data
+           #:maybe-write-remote-file-data
            #:missing-data-source
            #:data-pathname
 	   #:local-data-pathname

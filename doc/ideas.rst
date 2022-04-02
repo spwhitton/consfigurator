@@ -14,10 +14,10 @@ Connections
 
 - Basic infrastructure for connections which work with just input and output
   streams connected to an interactive POSIX sh somewhere, like TRAMP, and
-  probably using ``base64 -d`` for WRITEFILE.  Probably the basic connection
-  type will take a command to start up the shell as a keyword argument, and
-  then we can have more specific connection types which take other arguments
-  and construct the full command.
+  probably using ``base64 -d`` for WRITE-REMOTE-FILE.  Probably the basic
+  connection type will take a command to start up the shell as a keyword
+  argument, and then we can have more specific connection types which take
+  other arguments and construct the full command.
 
 - It might be possible to write an implementation of CONNECTION-UPLOAD for
   SSH-CONNECTION which can optimise a common case.  If it can see that it is

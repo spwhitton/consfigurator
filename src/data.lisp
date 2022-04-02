@@ -261,14 +261,16 @@ This function is for implementation of REGISTER-DATA-SOURCE to check for
 clashes.  It should not be called by properties."
   (if (query-data-sources iden1 iden2) t nil))
 
-(defun maybe-writefile-data (path iden1 iden2 &key (mode nil mode-supplied-p))
-  "Wrapper around WRITEFILE which returns :NO-CHANGE and avoids touching PATH if
-PATH's content is already the prerequisite data identified by IDEN1 and IDEN2
-and PATH has mode MODE."
+(defun maybe-write-remote-file-data
+    (path iden1 iden2 &key (mode nil mode-supplied-p))
+  "Wrapper around WRITE-REMOTE-FILE which returns :NO-CHANGE and avoids touching
+PATH if PATH's content is already the prerequisite data identified by IDEN1
+and IDEN2 and PATH has mode MODE."
   (let ((data (funcall (%get-data iden1 iden2))))
     (etypecase data
-      (string-data (apply #'maybe-writefile-string path (data-string data)
-                          (and mode-supplied-p `(:mode ,mode))))
+      (string-data
+       (apply #'maybe-write-remote-file-string path (data-string data)
+              (and mode-supplied-p `(:mode ,mode))))
       (file-data
        (let ((stream (%get-data-stream data)))
          (if (and (remote-exists-p path)
@@ -278,21 +280,21 @@ and PATH has mode MODE."
                          (= (file-length stream) existing-size)
                          (= (data-cksum data) (cksum path)))))
              :no-change
-             (apply #'writefile path stream
+             (apply #'write-remote-file path stream
                     (and mode-supplied-p `(:mode ,mode)))))))))
 
 (defgeneric connection-upload (connection data)
   (:documentation
    "Subroutine to upload an item of prerequisite data to the remote cache.
 The default implementation will work for any connection which implements
-CONNECTION-WRITEFILE and CONNECTION-RUN, but connection types which work by
+CONNECTION-WRITE-FILE and CONNECTION-RUN, but connection types which work by
 calling CONTINUE-DEPLOY* or CONTINUE-DEPLOY*-PROGRAM will need their own
 implementation."))
 
 (defmethod connection-upload ((connection connection) (data data))
   (flet ((upload (from to)
            (with-open-file (stream from :element-type '(unsigned-byte 8))
-             (writefile to stream))))
+             (write-remote-file to stream))))
     (with-slots (iden1 iden2 data-version) data
       (informat 1 "~&Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
       (let* ((*connection* connection)
@@ -303,7 +305,7 @@ implementation."))
         (with-remote-current-directory (destdir)
           (etypecase data
             (string-data
-             (writefile destfile (data-string data)))
+             (write-remote-file destfile (data-string data)))
             (file-data
              (let ((source (unix-namestring (data-file data))))
                (if (string-prefix-p "text/" (data-mime data))

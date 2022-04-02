@@ -36,16 +36,16 @@
         out
         (error "Could not read~:[~; and/or remove~] ~S" delete path))))
 
-(defmethod connection-readfile ((c shell-wrap-connection) path)
+(defmethod connection-read-file ((c shell-wrap-connection) path)
   (%readfile c path))
 
-(defmethod connection-readfile-and-remove ((c shell-wrap-connection) path)
+(defmethod connection-read-and-remove-file ((c shell-wrap-connection) path)
   (%readfile c path t))
 
-(defmethod connection-writefile ((conn shell-wrap-connection)
-                                 path
-                                 content
-                                 mode)
+(defmethod connection-write-file ((conn shell-wrap-connection)
+                                  path
+                                  content
+                                  mode)
   (let ((cmd
           (format
            nil "set -e
