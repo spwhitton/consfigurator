@@ -25,9 +25,9 @@
 ;; data to obtain passwords by following the conventions for having
 ;; prerequisite data sources provide them.
 
-(defmethod preprocess-connection-args ((type (eql :sudo)) &key as (to "root"))
+(defmethod preprocess-connection-args ((type (eql :sudo)) &key as (user "root"))
   (list :sudo
-        :user to
+        :user user
         :password (and
                    as
                    (destructuring-bind (user host)

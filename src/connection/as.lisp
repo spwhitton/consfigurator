@@ -23,7 +23,7 @@
 (defun can-setuid ()
   (zerop (nix:geteuid)))
 
-(defmethod establish-connection ((type (eql :as)) remaining &key to)
+(defmethod establish-connection ((type (eql :as)) remaining &key user)
   "Establish a :SETUID or :SU connection to another user account, depending on
 whether it is possible to establish a :SETUID connection.
 
@@ -32,4 +32,4 @@ Note that both these connection types require root."
   ;; portable.
   (establish-connection (if (and (lisp-connection-p) (can-setuid))
                             :setuid :su)
-                        remaining :to to))
+                        remaining :user user))

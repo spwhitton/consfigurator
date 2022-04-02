@@ -20,12 +20,13 @@
 
 (defclass setuid-connection (rehome-connection fork-connection) ())
 
-(defmethod establish-connection ((type (eql :setuid)) remaining &key to)
+(defmethod establish-connection ((type (eql :setuid)) remaining &key user)
   (unless (and (lisp-connection-p) (zerop (nix:geteuid)))
     (error "~&SETUIDing requires a Lisp image running as root"))
-  (informat 1 "~&SETUIDing to ~A" to)
-  (let* ((ent (or (osicat:user-info to)
-                  (failed-change "~&Could not look up user info for ~A." to)))
+  (informat 1 "~&SETUIDing to ~A" user)
+  (let* ((ent
+           (or (osicat:user-info user)
+               (failed-change "~&Could not look up user info for ~A." user)))
 	 (xdg-cache-home
            (ensure-directory-pathname
             (stripln

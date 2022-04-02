@@ -312,7 +312,7 @@ explicit that in this case they're being applied as root, e.g. that they will
 affect /root and not /home."
   (if (and (stringp user) (string= user "root"))
       `(eseqprops ,@properties)
-      `(reconnects. `((:as :to ,,user)) ,@properties)))
+      `(reconnects. `((:as :user ,,user)) ,@properties)))
 
 (defmacro with-flagfile (flagfile &body propapps)
   "Apply PROPAPPS unless FLAGFILE exists on the remote; after applying, create

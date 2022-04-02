@@ -159,7 +159,7 @@ and
 
 will work but
 
-    ((:ssh :user \"root\") :sbcl (:setuid :to \"user\") (:lxc :name \"foo\"))
+    ((:ssh :user \"root\") :sbcl (:setuid :user \"user\") (:lxc :name \"foo\"))
 
 will not.  See \"Dumping and reinvoking Lisp\" in the \"Pitfalls and
 limitations\" section of the Consfigurator manual.
