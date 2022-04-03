@@ -57,11 +57,11 @@ container type."
                                   always (member factor host-contained)))
                       ,form
                       :no-change))))
-    (:retprop :type (propapptype propapp)
+    (:retprop :type (propapp-type propapp)
               :hostattrs (lambda-ignoring-args
-                           (propappattrs propapp))
+                           (propapp-attrs propapp))
               :apply (lambda-ignoring-args
-                       (check-contained (propappapply propapp)))
+                       (check-contained (apply-propapp propapp)))
               :unapply (lambda-ignoring-args
-                         (check-contained (propappunapply propapp)))
+                         (check-contained (unapply-propapp propapp)))
               :args (cdr propapp))))

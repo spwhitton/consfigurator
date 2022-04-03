@@ -58,24 +58,24 @@
 (defun proppp (prop)
   (get prop 'preprocess (lambda (&rest args) args)))
 
-(defun propapptype (propapp)
+(defun propapp-type (propapp)
   (if propapp
       (get (car propapp) 'ptype)
       :posix))
 
-(defun propappargs (propapp)
+(defun propapp-args (propapp)
   (if (and (listp (cadr propapp)) (member :orig-args (cadr propapp)))
       (getf (cadr propapp) :orig-args)
       (cdr propapp)))
 
 (defun combine-propapp-types (&rest lists)
-  (if (member :lisp (mapcan (curry #'mapcar #'propapptype) lists))
+  (if (member :lisp (mapcan (curry #'mapcar #'propapp-type) lists))
       :lisp :posix))
 
 (defun propdesc (prop &rest args)
   (apply (get prop 'desc (lambda-ignoring-args)) args))
 
-(defun propappdesc (propapp)
+(defun propapp-desc (propapp)
   (when propapp
     (apply #'propdesc propapp)))
 
@@ -85,14 +85,14 @@
 (defun propattrs (prop &rest args)
   (apply (get prop 'hostattrs (lambda-ignoring-args)) args))
 
-(defun propappattrs (propapp)
+(defun propapp-attrs (propapp)
   (when propapp
     (apply #'propattrs propapp)))
 
 (defun propcheck (prop &rest args)
   (apply (get prop 'check (lambda-ignoring-args)) args))
 
-(defun propappcheck (propapp)
+(defun check-propapp (propapp)
   (if propapp (apply #'propcheck propapp) t))
 
 (defmacro with-some-errors-are-failed-change (&body forms)
@@ -106,7 +106,7 @@
         :no-change
         (apply (get prop 'papply (constantly :no-change)) args))))
 
-(defun propappapply (propapp)
+(defun apply-propapp (propapp)
   (if propapp
       (apply #'propapply propapp)
       :no-change))
@@ -130,7 +130,7 @@
          (failed-change
 "Attempt to unapply property with :APPLY subroutine but no :UNAPPLY subroutine."))))))
 
-(defun propappunapply (propapp)
+(defun unapply-propapp (propapp)
   (if propapp
       (apply #'propunapply propapp)
       :no-change))
@@ -410,11 +410,11 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
   (setf (getf slots :apply)
         '(lambda (plist)
           (let ((propapp (eval-propspec (getf plist :propspec))))
-            (assert-connection-supports (propapptype propapp))
-            (propappapply propapp))))
+            (assert-connection-supports (propapp-type propapp))
+            (apply-propapp propapp))))
   (setf (getf slots :unapply)
         '(lambda (plist)
-          (propappunapply (eval-propspec (getf plist :propspec)))))
+          (unapply-propapp (eval-propspec (getf plist :propspec)))))
   (loop while (and (listp (car forms)) (keywordp (caar forms)))
 	do (setf (getf slots (caar forms))
 		 `(lambda (plist)
@@ -438,7 +438,7 @@ You can usually use DEFPROPLIST instead of DEFPROPSPEC, which see."
                                                (getf plist :orig-args)
                                              ,@forms))))))
              (setf (getf plist :propspec) propspec)
-             (propappattrs (eval-propspec propspec))))))
+             (propapp-attrs (eval-propspec propspec))))))
 
 (defmacro defproplist (name type lambda &body properties)
   "Like DEFPROPSPEC, but define the function which yields the propspec using the

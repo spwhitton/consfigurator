@@ -84,8 +84,9 @@ properties."
 disable starting services by the package manager."
   (let ((propapp (if (cdr propapps) (apply #'eseqprops propapps) (car propapps))))
     (:retprop :type :lisp
-              :hostattrs
-              (lambda () (propappattrs propapp) (os:required 'os:debianlike))
+              :hostattrs (lambda ()
+                           (propapp-attrs propapp)
+                           (os:required 'os:debianlike))
               :apply
               (lambda (&aux (already-exists (file-exists-p +policyrcd+)))
                 (with-remote-temporary-file (temp :directory "/usr/sbin")
@@ -98,7 +99,7 @@ disable starting services by the package manager."
                     ;; check that it's actually been a second.
                     (loop do (sleep 1) until (> (get-universal-time) before))
                     (unwind-protect (with-connattrs (:no-services t)
-                                      (propappapply propapp))
+                                      (apply-propapp propapp))
                       (if already-exists
                           ;; Check whether some property we applied set the
                           ;; contents of /usr/sbin/policy-rc.d, in which case
@@ -107,4 +108,4 @@ disable starting services by the package manager."
                             (rename-file temp +policyrcd+))
                           (when (file-exists-p +policyrcd+)
                             (delete-file +policyrcd+)))))))
-              :unapply (lambda () (propappunapply propapp)))))
+              :unapply (lambda () (unapply-propapp propapp)))))

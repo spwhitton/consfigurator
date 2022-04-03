@@ -45,7 +45,7 @@ user."
                   (merge-pathnames "at-most/"
                                    (get-connattr :consfigurator-cache)))))
     (destructuring-bind (psym . args) propapp
-      (:retprop :type (propapptype propapp)
+      (:retprop :type (propapp-type propapp)
                 :desc (lambda-ignoring-args desc)
                 :hostattrs (get psym 'hostattrs)
                 :check
@@ -63,7 +63,7 @@ user."
                        (:yearly
                         (< now (+ #.(ceiling (* 365.25 24 60 60)) mtime)))))))
                 :apply (lambda-ignoring-args
-                         (prog1 (propappapply propapp)
+                         (prog1 (apply-propapp propapp)
                            (file:containing-directory-exists flagfile)
                            (mrun "touch" flagfile)))
                 :args args))))

@@ -38,11 +38,11 @@ Implementations should not fail just because we are not root, or otherwise
 privileged, if the package is already installed."))
 
 (defmethod %installed ((package-manager (eql :apt)) packages)
-  ;; Call PROPAPPAPPLY directly because we want the :CHECK subroutine run, but
-  ;; it does not make sense to run the :HOSTATTRS subroutine because *HOST*
-  ;; does not necessarily correspond to the host we're attempting to install
-  ;; packages on.
-  (propappapply `(apt:installed ,@packages)))
+  ;; Call APPLY-PROPAPP directly because we want the :CHECK subroutine run,
+  ;; but it does not make sense to run the :HOSTATTRS subroutine because
+  ;; *HOST* does not necessarily correspond to the host we're attempting to
+  ;; install packages on.
+  (apply-propapp `(apt:installed ,@packages)))
 
 (define-simple-error package-manager-not-found (aborted-change))
 

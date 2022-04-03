@@ -96,7 +96,7 @@ values higher up the call stack."))
                  :hostattrs (copy-list (hostattrs host))
                  :propspec (preprocess-propspec (host-propspec host))))
         (*preprocessing-host* host))
-    (propappattrs (eval-propspec (host-propspec *host*)))
+    (propapp-attrs (eval-propspec (host-propspec *host*)))
     *host*))
 
 (defun make-host

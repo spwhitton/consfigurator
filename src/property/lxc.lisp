@@ -56,13 +56,13 @@ and owned by OWNER, defaulting to the current user, is already started."
     when-user-container-running* (host owner propapp)
   (macrolet ((check-running (form)
                `(if (user-container-running-p host owner) ,form :no-change)))
-    (:retprop :type (propapptype propapp)
+    (:retprop :type (propapp-type propapp)
               :desc (get (car propapp) 'desc)
               :hostattrs (get (car propapp) 'hostattrs)
               :apply (lambda-ignoring-args
-                       (check-running (propappapply propapp)))
+                       (check-running (apply-propapp propapp)))
               :unapply (lambda-ignoring-args
-                         (check-running (propappunapply propapp)))
+                         (check-running (unapply-propapp propapp)))
               :args (cdr propapp))))
 
 (defproplist user-containers-autostart :posix (user)

@@ -750,17 +750,17 @@ must not be modified."
 (define-function-property-combinator with-these-open-volumes*
     (volumes propapp &key (mount-below nil mount-below-supplied-p))
   (:retprop
-   :type (propapptype propapp)
+   :type (propapp-type propapp)
    :hostattrs (lambda-ignoring-args
                 (require-volumes-data volumes)
-                (propappattrs propapp))
+                (propapp-attrs propapp))
    :apply
    (lambda-ignoring-args
      (with-connattrs (:opened-volumes
                       (apply #'open-volumes-and-contents
                              `(,volumes ,@(and mount-below-supplied-p
                                                `(:mount-below ,mount-below)))))
-       (unwind-protect (propappapply propapp)
+       (unwind-protect (apply-propapp propapp)
          (mrun "sync")
          (mapc #'close-volume (get-connattr :opened-volumes)))))
    :args (cdr propapp)))

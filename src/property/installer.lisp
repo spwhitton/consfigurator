@@ -57,7 +57,7 @@ BOOTLOADER-TYPE to VOLUME."))
     %install-bootloaders (running-on-target &rest propapps)
   (:retprop
    :type :lisp
-   :hostattrs (lambda () (mapc #'propappattrs propapps))
+   :hostattrs (lambda () (mapc #'propapp-attrs propapps))
    :apply
    (lambda ()
      (mapc #'consfigure
@@ -160,10 +160,10 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
 ;;; the definition of SERVICES:WITHOUT-STARTING-SERVICES to *AT-END-FUNCTIONS*
 ;;; in a closure.  We'd also want %CONSFIGURE to use UNWIND-PROTECT to ensure
 ;;; that the AT-END functions get run even when there's a nonlocal exit from
-;;; %CONSFIGURE's call to PROPAPPAPPLY; perhaps we could pass a second
+;;; %CONSFIGURE's call to APPLY-PROPAPP; perhaps we could pass a second
 ;;; argument to the AT-END functions indicating whether there was a non-local
 ;;; transfer of control.  REBOOT:REBOOTED-AT-END might only reboot when there
-;;; was a normal return from PROPAPPAPPLY, whereas the cleanup forms from
+;;; was a normal return from APPLY-PROPAPP, whereas the cleanup forms from
 ;;; SERVICES:WITHOUT-STARTING-SERVICES would always be evaluated.
 
 (defprop %root-filesystems-flipped :lisp (new-os old-os)

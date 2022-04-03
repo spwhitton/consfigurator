@@ -42,13 +42,13 @@ preprocessed."
   (labels
       ((apply-*host*-propspec ()
          (let ((propapp (eval-propspec (host-propspec *host*))))
-           (assert-connection-supports (propapptype propapp))
+           (assert-connection-supports (propapp-type propapp))
            (if collect-at-end
                (let (*at-end-functions*)
-                 (let ((result (propappapply propapp)))
+                 (let ((result (apply-propapp propapp)))
                    (dolist (function *at-end-functions* result)
                      (funcall function result))))
-               (propappapply propapp))))
+               (apply-propapp propapp))))
        (connect (connections)
          (destructuring-bind ((type . args) . remaining) connections
            ;; implementations of ESTABLISH-CONNECTION which call

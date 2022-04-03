@@ -37,10 +37,10 @@
        (reloaded))))
 
 (define-function-property-combinator mapped-file
-    (propapp &optional (file (car (propappargs propapp))))
+    (propapp &optional (file (car (propapp-args propapp))))
   "Apply PROPAPP, and if it makes a change, run postmap(1) on FILE, which
 defaults to the first argument to PROPAPP."
-  (:retprop :type (propapptype propapp)
+  (:retprop :type (propapp-type propapp)
             :desc (get (car propapp) 'desc)
             :check (get (car propapp) 'check)
             :hostattrs (get (car propapp) 'hostattrs)

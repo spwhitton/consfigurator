@@ -192,13 +192,13 @@
 
            ;; property.lisp
            #:combine-propapp-types
-           #:propapptype
-           #:propappargs
-           #:propappdesc
-           #:propappattrs
-           #:propappcheck
-           #:propappapply
-           #:propappunapply
+           #:propapp-type
+           #:propapp-args
+           #:propapp-desc
+           #:propapp-attrs
+           #:check-propapp
+           #:apply-propapp
+           #:unapply-propapp
            #:ignoring-hostattrs
            #:defprop
            #:defpropspec

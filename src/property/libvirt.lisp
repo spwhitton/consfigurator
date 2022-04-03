@@ -120,13 +120,13 @@ already running, for a VM which is not always booted, e.g. on a laptop."
   (macrolet ((check-started (form)
                `(if (host-domain-started-p host)
                     ,form :no-change)))
-    (:retprop :type (propapptype propapp)
+    (:retprop :type (propapp-type propapp)
               :desc (get (car propapp) 'desc)
               :hostattrs (get (car propapp) 'hostattrs)
               :apply (lambda-ignoring-args
-                       (check-started (propappapply propapp)))
+                       (check-started (apply-propapp propapp)))
               :unapply (lambda-ignoring-args
-                         (check-started (propappunapply propapp)))
+                         (check-started (unapply-propapp propapp)))
               :args (cdr propapp))))
 
 ;; Another possible approach would be to convert DISK:VOLUME values to --disk

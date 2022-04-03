@@ -26,7 +26,7 @@
 Usage notes:
 
 - If you need to read individual arguments to propapps passed as arguments to
-  NAME, call PROPAPPARGS to access them.  For passing a whole list of args on
+  NAME, call PROPAPP-ARGS to access them.  For passing a whole list of args on
   to a property subroutine, just take the cdr of the propapp.
 
   For an example showing both techniques at work, see POSTFIX:MAPPED-FILE."
@@ -53,16 +53,16 @@ Usage notes:
          (:retprop :type ,type
                    :desc (lambda (&rest args)
                            (declare (ignore args))
-                           (propappdesc (choose-propapp)))
+                           (propapp-desc (choose-propapp)))
                    :hostattrs (lambda (&rest args)
                                 (declare (ignore args))
-                                (propappattrs (choose-propapp)))
+                                (propapp-attrs (choose-propapp)))
                    :apply (lambda (&rest args)
                             (declare (ignore args))
-                            (propappapply (choose-propapp)))
+                            (apply-propapp (choose-propapp)))
                    :unapply (lambda (&rest args)
                               (declare (ignore args))
-                              (propappunapply (choose-propapp))))))
+                              (unapply-propapp (choose-propapp))))))
      (setf (get ',name 'inline-combinator) t)))
 
 ;; There can be multiple SKIP-* restarts with the same name established at
@@ -99,7 +99,7 @@ Usage notes:
 
 (define-function-property-combinator eseqprops (&rest propapps)
   (:retprop :type (combine-propapp-types propapps)
-            :hostattrs (lambda () (mapc #'propappattrs propapps))
+            :hostattrs (lambda () (mapc #'propapp-attrs propapps))
             :apply (lambda () (apply-and-print propapps))
             :unapply (lambda () (apply-and-print propapps t))))
 
@@ -107,7 +107,7 @@ Usage notes:
   "Like ESEQPROPS, but if CONDITION is signalled, handle it simply by skipping
 remaining elements of PROPAPPS.  CONDITION must subtype FAILED-CHANGE."
   (:retprop :type (combine-propapp-types propapps)
-            :hostattrs (lambda () (mapc #'propappattrs propapps))
+            :hostattrs (lambda () (mapc #'propapp-attrs propapps))
             :apply (lambda ()
                      (with-skip-failed-changes (:condition condition
                                                 :restart 'skip-sequence)
@@ -119,7 +119,7 @@ remaining elements of PROPAPPS.  CONDITION must subtype FAILED-CHANGE."
 
 (define-function-property-combinator seqprops (&rest propapps)
   (:retprop :type (combine-propapp-types propapps)
-            :hostattrs (lambda () (mapc #'propappattrs propapps))
+            :hostattrs (lambda () (mapc #'propapp-attrs propapps))
             :apply (lambda ()
                      (with-skip-failed-changes ()
                        (apply-and-print propapps)))
@@ -135,7 +135,7 @@ apply the elements of REQUIREMENTS in reverse order."
 
 (define-function-property-combinator silent-seqprops (&rest propapps)
   (:retprop :type (combine-propapp-types propapps)
-            :hostattrs (lambda () (mapc #'propappattrs propapps))
+            :hostattrs (lambda () (mapc #'propapp-attrs propapps))
             :apply (lambda ()
                      (with-skip-failed-changes ()
                        (apply-and-print propapps nil t)))
@@ -177,7 +177,7 @@ apply the elements of REQUIREMENTS in reverse order."
                    (princ buffer))
                  (when announce
                    (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
-                             (get-hostname) (propappdesc propapp) status))
+                             (get-hostname) (propapp-desc propapp) status))
                  ;; Ensure POST-APPLY called exactly once for each propapp.
                  (setq propapp nil)))
 
@@ -186,10 +186,10 @@ apply the elements of REQUIREMENTS in reverse order."
 
              (pareport (s)
                (format s "Skip (~{~S~^ ~})"
-                       (cons (car propapp) (propappargs propapp))))
+                       (cons (car propapp) (propapp-args propapp))))
              (seqreport (s)
                (format s "Skip remainder of sequence containing (~{~S~^ ~})"
-                       (cons (car propapp) (propappargs propapp)))))
+                       (cons (car propapp) (propapp-args propapp)))))
         (unwind-protect
              ;; Establish restarts to be invoked by WITH-SKIP-FAILED-CHANGES
              ;; or possibly interactively by the user.  There are two of each
@@ -199,11 +199,11 @@ apply the elements of REQUIREMENTS in reverse order."
                            (with-output-to-string (*standard-output* buffer)
                              (with-indented-inform
                                (if unapply
-                                   (propappunapply propapp)
-                                   (propappapply propapp))))
+                                   (unapply-propapp propapp)
+                                   (apply-propapp propapp))))
                            (if unapply
-                               (propappunapply propapp)
-                               (propappapply propapp)))
+                               (unapply-propapp propapp)
+                               (apply-propapp propapp)))
                    (accumulate it)
                    (post-apply (if (eql it :no-change) "ok" "done")))
                ;; Standard restarts for skipping over sequence entries.
@@ -256,17 +256,17 @@ property instead of applying it."
               :args args)))
 
 (define-function-property-combinator desc (desc propapp)
-  (:retprop :type (propapptype propapp)
+  (:retprop :type (propapp-type propapp)
             :desc (lambda () desc)
             :hostattrs (lambda (&rest args)
                          (declare (ignore args))
-                         (propappattrs propapp))
+                         (propapp-attrs propapp))
             :apply (lambda (&rest args)
                      (declare (ignore args))
-                     (propappapply propapp))
+                     (apply-propapp propapp))
             :unapply (lambda (&rest args)
                        (declare (ignore args))
-                       (propappunapply propapp))))
+                       (unapply-propapp propapp))))
 
 (defmacro on-change (propapp &body on-change)
   "If applying or unapplying PROPAPP makes a change, also apply each of the
@@ -290,15 +290,15 @@ in order."
               :desc (get prop 'desc)
               :hostattrs (lambda (&rest args)
                            (apply #'propattrs prop args)
-                           (propappattrs on-change))
+                           (propapp-attrs on-change))
               :apply (lambda (&rest args)
                        (aprog1 (apply #'propapply prop args)
                          (unless (eql it :no-change)
-                           (propappapply on-change))))
+                           (apply-propapp on-change))))
               :unapply (lambda (&rest args)
                          (aprog1 (apply #'propunapply prop args)
                            (when (and unapply (not (eql it :no-change)))
-                             (propappapply on-change))))
+                             (apply-propapp on-change))))
               :args (cdr propapp))))
 
 (defmacro as (user &body properties)
@@ -323,18 +323,18 @@ FLAGFILE exists, PROPAPPS are assumed to all be already applied."
     ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))))
 
 (define-function-property-combinator with-flagfile* (flagfile propapp)
-  (:retprop :type (propapptype propapp)
+  (:retprop :type (propapp-type propapp)
             :desc (get (car propapp) 'desc)
             :hostattrs (get (car propapp) 'hostattrs)
             :check (lambda-ignoring-args
                      (remote-exists-p flagfile))
             :apply (lambda-ignoring-args
-                     (prog1 (propappapply propapp)
+                     (prog1 (apply-propapp propapp)
                        (mrun "mkdir" "-p"
                              (pathname-directory-pathname flagfile))
                        (mrun "touch" flagfile)))
             :unapply (lambda-ignoring-args
-                       (prog1 (propappunapply propapp)
+                       (prog1 (unapply-propapp propapp)
                          (mrun "rm" "-f" flagfile)))
             :args (cdr propapp)))
 
@@ -358,13 +358,13 @@ an :UNAPPLY subroutine for a property which works by calling other properties."
     (if unapply
         (:retprop :type (combine-propapp-types apply (cdr unapply))
                   :hostattrs (lambda-ignoring-args
-                               (propappattrs apply-propapp)
+                               (propapp-attrs apply-propapp)
                                ;; as in definition of UNAPPLIED combinator
                                (with-preserve-hostattrs
-                                 (propappattrs unapply-propapp)))
-                  :apply (lambda-ignoring-args (propappapply apply-propapp))
+                                 (propapp-attrs unapply-propapp)))
+                  :apply (lambda-ignoring-args (apply-propapp apply-propapp))
                   :unapply (lambda-ignoring-args
-                             (propappapply unapply-propapp)))
+                             (apply-propapp unapply-propapp)))
         apply-propapp)))
 
 (defmacro with-homedir ((&key user dir) &body propapps)
@@ -391,9 +391,9 @@ DIR or the home directory of USER."
                        (unwind-protect (funcall f propapp)
                          (setf (getenv "HOME") orig)))
                      (funcall f propapp)))))))
-    (:retprop :type (propapptype propapp)
+    (:retprop :type (propapp-type propapp)
               :desc (get (car propapp) 'desc)
               :hostattrs (get (car propapp) 'hostattrs)
-              :apply (lambda-ignoring-args (change #'propappapply))
-              :unapply (lambda-ignoring-args (change #'propappunapply))
+              :apply (lambda-ignoring-args (change #'apply-propapp))
+              :unapply (lambda-ignoring-args (change #'unapply-propapp))
               :args (cdr propapp))))
