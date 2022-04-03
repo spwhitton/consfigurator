@@ -313,7 +313,6 @@
            #:try-register-data-source
            #:register-data-source
            #:reset-data-sources
-           #:skip-data-source
            #:get-data-stream
            #:with-data-stream
            #:get-data-string

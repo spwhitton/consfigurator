@@ -134,10 +134,6 @@ as, before being passed to implementations of REGISTER-DATA-SOURCE."
       (push pair *data-sources*)
       (push args *data-source-registrations*))))
 
-(defun skip-data-source (c)
-  (declare (ignore c))
-  (invoke-restart 'skip-data-source))
-
 (defun reset-data-sources ()
   "Forget all data sources registered in this Lisp image and items of string
 data obtained from data sources by this Lisp image.
