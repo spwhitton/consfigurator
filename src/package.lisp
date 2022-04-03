@@ -208,6 +208,7 @@
            #:get-hostattrs-car
            #:get-parent-hostattrs
            #:get-parent-hostattrs-car
+           #:push-hostattr
            #:push-hostattrs
            #:pushnew-hostattr
            #:pushnew-hostattrs

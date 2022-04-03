@@ -21,7 +21,7 @@
 (defproplist configured :posix (timezone)
   "Set the system timezone.  TIMEZONE is a relative path under /usr/share/zoneinfo,
 e.g. \"Europe/London\"."
-  (:hostattrs (push-hostattrs 'timezone timezone))
+  (:hostattrs (push-hostattr 'timezone timezone))
   (os:etypecase
     (linux
      (file:symlinked :from "/etc/localtime"

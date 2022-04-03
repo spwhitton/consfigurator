@@ -517,8 +517,14 @@ Called by property :HOSTATTRS, :APPLY and :UNAPPLY subroutines."
 (defun get-parent-hostattrs-car (k &optional (host *host*))
   (car (get-parent-hostattrs k host)))
 
-(defun push-hostattrs (k &rest vs)
-  "Push new static informational attributes VS of type KEY.
+(defun push-hostattr (k v)
+  "Push new static informational attribute V of type K.
+
+Called by property :HOSTATTRS subroutines."
+  (push v (getf (slot-value *host* 'hostattrs) k)))
+
+(defun push-hostattrs (k vs)
+  "Push new static informational attributes VS of type K.
 
 Called by property :HOSTATTRS subroutines."
   (setf (getf (slot-value *host* 'hostattrs) k)

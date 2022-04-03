@@ -197,4 +197,4 @@ entries."
 (defprop has-hostattrs :posix (k &rest vs)
   "Push hostattrs VS of type K."
   (:desc (format nil "Has hostattr~P ~A ~{~A~^, ~}" (length vs) k vs))
-  (:hostattrs (apply #'push-hostattrs k vs)))
+  (:hostattrs (push-hostattrs k vs)))

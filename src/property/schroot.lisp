@@ -31,7 +31,7 @@ Adding this property does not actually ensure that the line
 'union-type=overlay' is present in any schroot config files.  See SBUILD:BUILT
 for example usage, via SCHROOT:OVERLAYS-IN-TMPFS."
   (:desc "schroots on host use union-type=overlay")
-  (:hostattrs (push-hostattrs 'uses-overlays t)))
+  (:hostattrs (push-hostattr 'uses-overlays t)))
 
 (defprop overlays-in-tmpfs :posix ()
   "Configure schroot(1) such that all schroots with 'union-type=overlay' in
@@ -43,7 +43,7 @@ Implicitly sets SCHROOT:USES-OVERLAYS.
 
 Shell script from <https://wiki.debian.org/sbuild>."
   (:desc "schroot overlays in tmpfs")
-  (:hostattrs (push-hostattrs 'uses-overlays t))
+  (:hostattrs (push-hostattr 'uses-overlays t))
   (:apply (file:has-content "/etc/schroot/setup.d/04tmpfs"
 #>EOF>#!/bin/sh
 

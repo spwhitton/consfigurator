@@ -54,7 +54,7 @@ refuses to proceed if root has no authorized_keys."
 (defprop has-host-public-key :posix (type public-key)
   "Records an SSH public key of type TYPE as identifying this host."
   (:desc #?"Has SSH host key of type ${type}")
-  (:hostattrs (push-hostattrs 'host-public-key (cons type public-key))))
+  (:hostattrs (push-hostattr 'host-public-key (cons type public-key))))
 
 (defproplist has-host-key :posix (type public-key)
   "Installs the host key whose public part is PUBLIC-KEY and is of type TYPE.

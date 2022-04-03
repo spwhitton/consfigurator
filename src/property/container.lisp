@@ -39,7 +39,7 @@ This property is usually set by properties which establish containers, like
 CHROOT:OS-BOOTSTRAPPED, rather than being added to DEFHOST forms."
   (:desc (format nil "~{~(~S~)~^, ~} ~:*~1{~#[are~;is~:;are~]~} contained"
                  contained))
-  (:hostattrs (apply #'push-hostattrs 'iscontained contained)))
+  (:hostattrs (push-hostattrs 'iscontained contained)))
 
 (defmacro when-contained ((&rest contained) &body propapps)
   "Macro property combinator.  Apply each of PROPAPPS only when outside of any

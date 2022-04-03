@@ -28,7 +28,7 @@
   "Record Postgres superuser"
   (:desc "postgres superuser is ${name}")
   (:hostattrs
-   (push-hostattrs 'postgres-superuser name)))
+   (push-hostattr 'postgres-superuser name)))
 
 (defprop %psql :posix (sql &key unless)
   (:check

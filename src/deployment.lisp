@@ -331,7 +331,7 @@ Connection attributes, by contrast, are propagated as usual."
              collect (car cell) into accum
              finally (if (eql k :data)
                          (pushnew-hostattrs :data (nreverse accum))
-                         (apply #'push-hostattrs k (nreverse accum)))))
+                         (push-hostattrs k (nreverse accum)))))
      (dolist (system (propspec-systems (host-propspec host)))
        (pushnew system (slot-value (host-propspec *host*) 'systems)))
      (setf (getf properties :host) host)))

@@ -28,7 +28,7 @@
 Useful for hosts implicitly defined inline using dotted propapp notation.
 Unlikely to be useful for hosts defined using DEFHOST."
   (:desc #?"Hostname is ${hostname}")
-  (:hostattrs (push-hostattrs :hostname hostname)))
+  (:hostattrs (push-hostattr :hostname hostname)))
 
 (defpropspec configured :posix
     (&optional (hostname (get-hostname) hostname-supplied-p)

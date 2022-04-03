@@ -28,7 +28,7 @@
 
 (defprop %no-services :posix ()
   (:hostattrs
-   (push-hostattrs :no-services t)))
+   (push-hostattr :no-services t)))
 
 (defprop %policy-rc.d :posix ()
   (:apply

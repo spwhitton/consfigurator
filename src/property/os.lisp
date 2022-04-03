@@ -30,7 +30,7 @@
 
 (defprop linux :posix (architecture)
   (:desc "Host kernel is Linux")
-  (:hostattrs (push-hostattrs :os (make-instance 'linux :arch architecture))))
+  (:hostattrs (push-hostattr :os (make-instance 'linux :arch architecture))))
 
 (define-simple-print-object linux)
 
@@ -53,9 +53,9 @@
    (declare (ignore architecture))
    #?{Host is Debian "${suite}"})
   (:hostattrs
-   (push-hostattrs :os
-                   (make-instance 'debian-stable
-                                  :arch architecture :suite suite))))
+   (push-hostattr :os
+                  (make-instance 'debian-stable
+                                 :arch architecture :suite suite))))
 
 (defclass debian-testing (debian)
   ((suite :initform "testing")))
@@ -68,9 +68,9 @@
    (declare (ignore architecture))
    "Host is Debian testing")
   (:hostattrs
-   (push-hostattrs :os
-                   (make-instance 'debian-testing
-                                  :arch architecture))))
+   (push-hostattr :os
+                  (make-instance 'debian-testing
+                                 :arch architecture))))
 
 (defclass debian-unstable (debian)
   ((suite :initform "unstable")))
@@ -83,9 +83,9 @@
    (declare (ignore architecture))
    "Host is Debian unstable")
   (:hostattrs
-   (push-hostattrs :os
-                   (make-instance 'debian-unstable
-                                  :arch architecture))))
+   (push-hostattr :os
+                  (make-instance 'debian-unstable
+                                 :arch architecture))))
 
 (defclass debian-experimental (debian)
   ((suite :initform "experimental")))
