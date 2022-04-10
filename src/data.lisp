@@ -21,20 +21,21 @@
 ;;;; Prerequisite data
 
 (defclass data ()
-  ((iden1
+  ((data-iden1
     :initarg :iden1
-    :reader iden1)
-   (iden2
+    :initform (simple-program-error "Must supply iden1 for data.")
+    :reader data-iden1)
+   (data-iden2
     :initarg :iden2
-    :reader iden2)
+    :initform (simple-program-error "Must supply iden2 for data.")
+    :reader data-iden2)
    (data-version
     :initarg :version
-    :reader data-version
-    :initform nil)
+    :initform (simple-program-error "Must supply version for data.")
+    :reader data-version)
    (data-mime
     :initarg :mime
     :accessor data-mime
-    :initform nil
     :documentation "The MIME type of the data, if known."))
   (:documentation
    "An item of prerequisite data as provided by a registered prerequisite data
@@ -291,10 +292,11 @@ implementation."))
   (flet ((upload (from to)
            (with-open-file (stream from :element-type '(unsigned-byte 8))
              (write-remote-file to stream))))
-    (with-slots (iden1 iden2 data-version) data
-      (informat 1 "~&Uploading (~@{~S~^ ~}) ... " iden1 iden2 data-version)
+    (with-slots (data-iden1 data-iden2 data-version) data
+      (informat 1 "~&Uploading (~@{~S~^ ~}) ... "
+                data-iden1 data-iden2 data-version)
       (let* ((*connection* connection)
-             (dest (remote-data-pathname iden1 iden2 data-version))
+             (dest (remote-data-pathname data-iden1 data-iden2 data-version))
              (destdir (pathname-directory-pathname dest))
              (destfile (pathname-file dest)))
         (mrun "mkdir" "-p" destdir)
@@ -304,7 +306,8 @@ implementation."))
              (write-remote-file destfile (data-string data)))
             (file-data
              (let ((source (unix-namestring (data-file data))))
-               (if (string-prefix-p "text/" (data-mime data))
+               (if (and (slot-boundp data 'data-mime)
+                        (string-prefix-p "text/" (data-mime data)))
                    (let ((destfile (strcat destfile ".gz")))
                      (with-temporary-file (:pathname tmp)
                        (run-program

@@ -292,8 +292,8 @@
 
            ;; data.lisp
            #:data
-           #:iden1
-           #:iden2
+           #:data-iden1
+           #:data-iden2
            #:data-version
            #:data-mime
            #:string-data

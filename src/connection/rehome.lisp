@@ -31,10 +31,10 @@
     (upload-all-prerequisite-data connection))
 
 (defmethod connection-upload ((connection rehome-connection) (data file-data))
-  (with-slots (iden1 iden2 data-version) data
+  (with-slots (data-iden1 data-iden2 data-version) data
     (let ((inside (data-pathname
-                   (datadir connection) iden1 iden2 data-version))
-          (outside (remote-data-pathname iden1 iden2 data-version)))
+                   (datadir connection) data-iden1 data-iden2 data-version))
+          (outside (remote-data-pathname data-iden1 data-iden2 data-version)))
       (mrun "mkdir" "-p" (pathname-directory-pathname inside))
       (if (remote-exists-p outside)
           (mrun "cp" outside inside)
