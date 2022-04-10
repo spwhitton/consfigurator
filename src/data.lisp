@@ -183,7 +183,8 @@ This function is called by property :APPLY and :UNAPPLY subroutines."
                                  (and (string= (first c) iden1)
                                       (string= (second c) iden2)))
                                (sort-prerequisite-data-cache
-                                (get-local-cached-prerequisite-data)))))
+                                (get-local-cached-prerequisite-data
+                                 (get-local-data-cache-dir))))))
          (local-cached-version (caddr local-cached)))
     (cond
       ((and in-memory
@@ -432,8 +433,7 @@ of CONNECTION, where each entry is of the form
 
 ;;;; Local caches
 
-(defun get-local-cached-prerequisite-data
-    (&optional (where (get-local-data-cache-dir)))
+(defun get-local-cached-prerequisite-data (where)
   "Scan a local cache of prerequisite data at WHERE, and return a list of
 items of prerequisite data where each entry is of the form
 
@@ -464,7 +464,8 @@ properties, or data sources which return objects referencing existing files."
 			     (and (string= (car c) iden1)
 				  (string= (cadr c) iden2)))
 			   (sort-prerequisite-data-cache
-			    (get-local-cached-prerequisite-data))))))
+			    (get-local-cached-prerequisite-data
+                             (get-local-data-cache-dir)))))))
     (make-instance 'file-data :file (apply #'local-data-pathname triple)
 			      :iden1 (car triple)
 			      :iden2 (cadr triple)
