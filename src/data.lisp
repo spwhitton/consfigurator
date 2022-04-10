@@ -487,26 +487,26 @@ properties, or data sources which return objects referencing existing files."
 
 ;;;; Passphrases
 
-(defclass passphrase ()
-  ((passphrase :initarg :passphrase :reader passphrase)))
+(defclass wrapped-passphrase ()
+  ((passphrase :initarg :passphrase :reader unwrap-passphrase)))
 
-(defun make-passphrase (passphrase)
+(defun wrap-passphrase (passphrase)
   "Make an object which is unprintable by default to contain a passphrase."
-  (make-instance 'passphrase :passphrase passphrase))
+  (make-instance 'wrapped-passphrase :passphrase passphrase))
 
 (defun get-data-protected-string (iden1 iden2)
   "Like GET-DATA-STRING, but wrap the content in an object which is unprintable
 by default.  Intended for code which fetches passwords and wants to lessen the
 chance of those passwords showing up in the clear in the Lisp debugger."
-  (make-passphrase (get-data-string iden1 iden2)))
+  (wrap-passphrase (get-data-string iden1 iden2)))
 
 (defvar *allow-printing-passphrases* nil)
 
-(defmethod print-object ((passphrase passphrase) stream)
+(defmethod print-object ((passphrase wrapped-passphrase) stream)
   (if *allow-printing-passphrases*
       (format stream "#.~S"
-              `(make-instance 'passphrase
-                              :passphrase ,(passphrase passphrase)))
+              `(make-instance 'wrapped-passphrase
+                              :passphrase ,(unwrap-passphrase passphrase)))
       (print-unreadable-object (passphrase stream)
         (format stream "PASSPHRASE")))
   passphrase)

@@ -319,8 +319,9 @@
            #:connection-upload
            #:connection-clear-data-cache
            #:upload-all-prerequisite-data
-           #:passphrase
-           #:make-passphrase
+           #:wrapped-passphrase
+           #:wrap-passphrase
+           #:unwrap-passphrase
            #:get-data-protected-string
 
            ;; image.lisp
