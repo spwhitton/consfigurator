@@ -22,7 +22,11 @@
   ((datadir
     :type :string :initarg :datadir :reader datadir
     :documentation
-    "Where Consfigurator would cache items of prerequisite data in the new HOME."))
+    "Where Consfigurator would cache items of prerequisite data in the new HOME,
+as accessible from the previous connection hop.
+
+In the case of a connection which chroots, for example, this will be the path
+to a directory inside the chroot as seen from outside the chroot."))
   (:documentation
    "A connection which works by switching to a new HOME on the same host."))
 
