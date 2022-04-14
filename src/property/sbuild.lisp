@@ -187,12 +187,12 @@ EOF :mode #o755)
        (file:does-not-exist ,conf))))
 
 ;; Here we combine Propellor's Sbuild.osDebianStandard and Sbuild.update.
-(defpropspec standard-debian-schroot :posix (&optional (period :weekly))
+(defpropspec standard-debian-schroot :posix (&key (upgrade :weekly))
   "Properties that will be wanted in almost any Debian sbuild schroot, but not
 in sbuild schroots for other operating systems.
 
 Includes replacing use of sbuild-update(1)."
   (:desc "Standard Debian sbuild properties")
   `(eseqprops (apt:standard-sources.list)
-              (periodic:at-most ,period "sbuild schroot updated"
+              (periodic:at-most ,upgrade "sbuild schroot updated"
                 (apt:updated) (apt:upgraded) (apt:autoremoved))))
