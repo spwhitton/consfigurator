@@ -916,7 +916,7 @@
                     #:user-container-started
                     #:when-user-container-running
                     #:user-containers-autostart
-                    #:usernet-usable-by
+                    #:usernet-veth-usable-by
                     #:user-container-for
                     #:user-container-for.
                     #:user-container

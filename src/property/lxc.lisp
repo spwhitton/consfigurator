@@ -91,7 +91,7 @@ is ~/.config."
         "WantedBy=default.target"))
     (systemd:enabled "lxc-autostart" t)))
 
-(defprop usernet-usable-by :posix
+(defprop usernet-veth-usable-by :posix
     (user &optional (interface "lxcbr0") (count 10))
   "Ensure that USER is allowed to attach up to COUNT unprivileged LXCs to the
 LXC-managed bridge INTERFACE.
@@ -198,8 +198,8 @@ OPTIONS is a plist of keyword parameters:
     lxc.container.conf(5).  In most cases you will need to include, at a
     minimum, lines setting up a network interface for the container.  The
     default value serves as an example of a standard way to do this; if you
-    use them unmodified, you will also need to apply LXC:USERNET-USABLE-BY for
-    USER before this property.
+    use them unmodified, you will also need to apply
+    LXC:USERNET-VETH-USABLE-BY for USER before this property.
 
   - :UID-MAPS -- a list of the form (INSIDE OUTSIDE COUNT), or a list of such
     lists, specifying the subordinate UIDs for the container's user namespace.
