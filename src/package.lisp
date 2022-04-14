@@ -951,7 +951,7 @@
   (package :consfigurator.connection.rehome
            (:use #:consfigurator.connection.fork)
            (:export #:rehome-connection
-                    #:datadir))
+                    #:rehome-datadir))
 
   (package :consfigurator.connection.as
            (:use #:consfigurator.connection.fork #:cffi))

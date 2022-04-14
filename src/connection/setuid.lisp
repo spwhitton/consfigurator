@@ -45,7 +45,7 @@
     (continue-connection
      (make-instance
       'setuid-connection
-      :datadir datadir
+      :rehome-datadir datadir
       :connattrs `(:remote-uid ,(cdr (assoc :user-id ent))
                    :remote-gid ,(cdr (assoc :group-id ent))
                    :remote-user ,(cdr (assoc :name ent))
@@ -59,9 +59,10 @@
   (let ((uid (connection-connattr connection :remote-uid))
         (gid (connection-connattr connection :remote-gid))
         (user (connection-connattr connection :remote-user)))
-    (run-program (list "chown" "-R"
-                       (format nil "~A:~A" uid gid)
-                       (unix-namestring (slot-value connection 'datadir))))
+    (run-program
+     (list "chown" "-R"
+           (format nil "~A:~A" uid gid)
+           (unix-namestring (slot-value connection 'rehome-datadir))))
     (posix-login-environment
      uid user (connection-connattr connection :remote-home))
     ;; We are privileged, so this sets the real, effective and saved IDs.

@@ -109,10 +109,10 @@ should be the mount point, without the chroot's root prefixed.")
     ;; ensure they don't get bogus values when this connection object is used
     ;; in UPLOAD-ALL-PREREQUISITE-DATA.
     (connection-connattr connection :remote-home)
-    ;; Obtain & cache XDG_CACHE_HOME inside the chroot, and compute DATADIR.
+    ;; Cache XDG_CACHE_HOME inside the chroot, and compute REHOME-DATADIR.
     (let ((xdg-cache-home (connection-connattr connection :XDG_CACHE_HOME)))
       (setf connection (change-class connection 'chroot.fork-connection)
-            (slot-value connection 'datadir)
+            (slot-value connection 'rehome-datadir)
             (merge-pathnames
              "consfigurator/data/" (chroot-pathname xdg-cache-home into))))
     (continue-connection connection remaining)))

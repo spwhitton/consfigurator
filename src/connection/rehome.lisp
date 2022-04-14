@@ -19,8 +19,8 @@
 (named-readtables:in-readtable :consfigurator)
 
 (defclass rehome-connection ()
-  ((datadir
-    :type :string :initarg :datadir :reader datadir
+  ((rehome-datadir
+    :type :string :initarg :rehome-datadir :reader rehome-datadir
     :documentation
     "Where Consfigurator would cache items of prerequisite data in the new HOME,
 as accessible from the previous connection hop.
@@ -36,8 +36,9 @@ to a directory inside the chroot as seen from outside the chroot."))
 
 (defmethod connection-upload ((connection rehome-connection) (data file-data))
   (with-slots (data-iden1 data-iden2 data-version) data
-    (let ((inside (data-pathname
-                   (datadir connection) data-iden1 data-iden2 data-version))
+    (let ((inside
+            (data-pathname
+                   (rehome-datadir connection) data-iden1 data-iden2 data-version))
           (outside (remote-data-pathname data-iden1 data-iden2 data-version)))
       (mrun "mkdir" "-p" (pathname-directory-pathname inside))
       (if (remote-exists-p outside)
@@ -52,8 +53,9 @@ to a directory inside the chroot as seen from outside the chroot."))
 
 (defmethod connection-clear-data-cache
     ((connection rehome-connection) iden1 iden2)
-  (delete-remote-trees (data-pathname (datadir connection) iden1 iden2)))
+  (delete-remote-trees
+   (data-pathname (rehome-datadir connection) iden1 iden2)))
 
 (defmethod get-remote-cached-prerequisite-data
     ((connection rehome-connection))
-  (get-local-cached-prerequisite-data (datadir connection)))
+  (get-local-cached-prerequisite-data (rehome-datadir connection)))
