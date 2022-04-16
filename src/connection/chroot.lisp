@@ -120,7 +120,7 @@ should be the mount point, without the chroot's root prefixed.")
 (defmethod post-fork ((connection chroot.fork-connection))
   (with-slots (into) connection
     #+linux
-    (progn (unshare +CLONE_NEWNS+)
+    (progn (unshare CLONE_NEWNS)
            (mrun "mount" "--make-rslave"
                  (stripln (run "findmnt" "-nro" "TARGET" "-T" into)))
            (linux-chroot-mounts connection))

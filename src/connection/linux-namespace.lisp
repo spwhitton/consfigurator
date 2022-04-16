@@ -236,15 +236,15 @@ setgroups(2) is denied in the namespace."
     (linux-namespace-connection init-hooks-connection) ())
 
 #+linux
-(define-constant +namespace-types+ `(("user"   . ,+CLONE_NEWUSER+)
-                                     ("cgroup" . ,+CLONE_NEWCGROUP+)
-                                     ("ipc"    . ,+CLONE_NEWIPC+)
-                                     ("uts"    . ,+CLONE_NEWUTS+)
-                                     ("net"    . ,+CLONE_NEWNET+)
-                                     ("pid"    . ,+CLONE_NEWPID+)
-                                     ("mnt"    . ,+CLONE_NEWNS+)
-                                     ,@(and (boundp '+CLONE_NEWTIME+)
-                                            `(("time" . ,+CLONE_NEWTIME+))))
+(define-constant +namespace-types+ `(("user"   . ,CLONE_NEWUSER)
+                                     ("cgroup" . ,CLONE_NEWCGROUP)
+                                     ("ipc"    . ,CLONE_NEWIPC)
+                                     ("uts"    . ,CLONE_NEWUTS)
+                                     ("net"    . ,CLONE_NEWNET)
+                                     ("pid"    . ,CLONE_NEWPID)
+                                     ("mnt"    . ,CLONE_NEWNS)
+                                     ,@(and (boundp 'CLONE_NEWTIME)
+                                            `(("time" . ,CLONE_NEWTIME))))
   :test #'equal)
 
 (define-error-retval-cfun () "setns" :int (fd :int) (type :int))
@@ -311,7 +311,7 @@ setgroups(2) is denied in the namespace."
                      ;; indicates that the namespace we tried to join belongs
                      ;; to a parent userns, in which case if we were ever
                      ;; going to join it would have to have been on 1st pass.
-                     if (and fd setuserns (not (eql type +CLONE_NEWUSER+)))
+                     if (and fd setuserns (not (eql type CLONE_NEWUSER)))
                        do (handler-case (setns fd type) (nix:eperm ()))
                      else if fd do (setns fd type))
                ;; If we entered new PID or time namespaces then need to fork

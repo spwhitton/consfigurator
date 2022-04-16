@@ -14,13 +14,13 @@
 
 #+linux
 (progn
-  (constant (+CLONE_NEWCGROUP+ "CLONE_NEWCGROUP"))
-  (constant (+CLONE_NEWIPC+    "CLONE_NEWIPC"))
-  (constant (+CLONE_NEWNET+    "CLONE_NEWNET"))
-  (constant (+CLONE_NEWNS+     "CLONE_NEWNS"))
-  (constant (+CLONE_NEWPID+    "CLONE_NEWPID"))
-  (constant (+CLONE_NEWTIME+   "CLONE_NEWTIME"))
-  (constant (+CLONE_NEWUSER+   "CLONE_NEWUSER"))
-  (constant (+CLONE_NEWUTS+    "CLONE_NEWUTS"))
+  (constant (CLONE_NEWCGROUP "CLONE_NEWCGROUP"))
+  (constant (CLONE_NEWIPC    "CLONE_NEWIPC"))
+  (constant (CLONE_NEWNET    "CLONE_NEWNET"))
+  (constant (CLONE_NEWNS     "CLONE_NEWNS"))
+  (constant (CLONE_NEWPID    "CLONE_NEWPID"))
+  (constant (CLONE_NEWTIME   "CLONE_NEWTIME"))
+  (constant (CLONE_NEWUSER   "CLONE_NEWUSER"))
+  (constant (CLONE_NEWUTS    "CLONE_NEWUTS"))
 
-  (constant (+NS_GET_OWNER_UID+ "NS_GET_OWNER_UID")))
+  (constant (NS_GET_OWNER_UID "NS_GET_OWNER_UID")))

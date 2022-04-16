@@ -88,16 +88,16 @@
            #:uid_t
            #:gid_t
 
-           #:+CLONE_NEWCGROUP+
-           #:+CLONE_NEWIPC+
-           #:+CLONE_NEWNET+
-           #:+CLONE_NEWNS+
-           #:+CLONE_NEWPID+
-           #:+CLONE_NEWTIME+
-           #:+CLONE_NEWUSER+
-           #:+CLONE_NEWUTS+
+           #:CLONE_NEWCGROUP
+           #:CLONE_NEWIPC
+           #:CLONE_NEWNET
+           #:CLONE_NEWNS
+           #:CLONE_NEWPID
+           #:CLONE_NEWTIME
+           #:CLONE_NEWUSER
+           #:CLONE_NEWUTS
 
-           #:+NS_GET_OWNER_UID+
+           #:NS_GET_OWNER_UID
 
            ;; util.lisp
            #:multiple-value-mapcan
@@ -343,12 +343,12 @@
            (:use #:cffi)
            (:export #:acl_type_t
                     #:acl_entry_t
-                    #:+ACL-USER+
-                    #:+ACL-GROUP+
-                    #:+ACL-TYPE-ACCESS+
-                    #:+ACL-TYPE-DEFAULT+
-                    #:+ACL-NEXT-ENTRY+
-                    #:+ACL-FIRST-ENTRY+
+                    #:ACL_USER
+                    #:ACL_GROUP
+                    #:ACL_TYPE_ACCESS
+                    #:ACL_TYPE_DEFAULT
+                    #:ACL_NEXT_ENTRY
+                    #:ACL_FIRST_ENTRY
 
                     #:with-acl-free
                     #:acl-get-file
@@ -358,48 +358,48 @@
                     #:acl-get-qualifier
                     #:acl-set-qualifier
 
-                    #:+CAP-CHOWN+
-                    #:+CAP-DAC-OVERRIDE+
-                    #:+CAP-DAC-READ-SEARCH+
-                    #:+CAP-FOWNER+
-                    #:+CAP-FSETID+
-                    #:+CAP-KILL+
-                    #:+CAP-SETGID+
-                    #:+CAP-SETUID+
+                    #:CAP_CHOWN
+                    #:CAP_DAC_OVERRIDE
+                    #:CAP_DAC_READ_SEARCH
+                    #:CAP_FOWNER
+                    #:CAP_FSETID
+                    #:CAP_KILL
+                    #:CAP_SETGID
+                    #:CAP_SETUID
 
-                    #:+CAP-SETPCAP+
-                    #:+CAP-LINUX-IMMUTABLE+
-                    #:+CAP-NET-BIND-SERVICE+
-                    #:+CAP-NET-BROADCAST+
-                    #:+CAP-NET-ADMIN+
-                    #:+CAP-NET-RAW+
-                    #:+CAP-IPC-LOCK+
-                    #:+CAP-IPC-OWNER+
-                    #:+CAP-SYS-MODULE+
-                    #:+CAP-SYS-RAWIO+
-                    #:+CAP-SYS-CHROOT+
-                    #:+CAP-SYS-PTRACE+
-                    #:+CAP-SYS-PACCT+
-                    #:+CAP-SYS-ADMIN+
-                    #:+CAP-SYS-BOOT+
-                    #:+CAP-SYS-NICE+
-                    #:+CAP-SYS-RESOURCE+
-                    #:+CAP-SYS-TIME+
-                    #:+CAP-SYS-TTY-CONFIG+
-                    #:+CAP-MKNOD+
-                    #:+CAP-LEASE+
-                    #:+CAP-AUDIT-WRITE+
-                    #:+CAP-AUDIT-CONTROL+
-                    #:+CAP-SETFCAP+
-                    #:+CAP-MAC-OVERRIDE+
-                    #:+CAP-MAC-ADMIN+
-                    #:+CAP-SYSLOG+
-                    #:+CAP-WAKE-ALARM+
-                    #:+CAP-BLOCK-SUSPEND+
-                    #:+CAP-AUDIT-READ+
-                    #:+CAP-PERFMON+
-                    #:+CAP-BPF+
-                    #:+CAP-CHECKPOINT-RESTORE+
+                    #:CAP_SETPCAP
+                    #:CAP_LINUX_IMMUTABLE
+                    #:CAP_NET_BIND_SERVICE
+                    #:CAP_NET_BROADCAST
+                    #:CAP_NET_ADMIN
+                    #:CAP_NET_RAW
+                    #:CAP_IPC_LOCK
+                    #:CAP_IPC_OWNER
+                    #:CAP_SYS_MODULE
+                    #:CAP_SYS_RAWIO
+                    #:CAP_SYS_CHROOT
+                    #:CAP_SYS_PTRACE
+                    #:CAP_SYS_PACCT
+                    #:CAP_SYS_ADMIN
+                    #:CAP_SYS_BOOT
+                    #:CAP_SYS_NICE
+                    #:CAP_SYS_RESOURCE
+                    #:CAP_SYS_TIME
+                    #:CAP_SYS_TTY_CONFIG
+                    #:CAP_MKNOD
+                    #:CAP_LEASE
+                    #:CAP_AUDIT_WRITE
+                    #:CAP_AUDIT_CONTROL
+                    #:CAP_SETFCAP
+                    #:CAP_MAC_OVERRIDE
+                    #:CAP_MAC_ADMIN
+                    #:CAP_SYSLOG
+                    #:CAP_WAKE_ALARM
+                    #:CAP_BLOCK_SUSPEND
+                    #:CAP_AUDIT_READ
+                    #:CAP_PERFMON
+                    #:CAP_BPF
+                    #:CAP_CHECKPOINT_RESTORE
 
                     #:posix-capability-p))
 

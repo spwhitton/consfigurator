@@ -114,8 +114,8 @@ CONSFIGURATOR.UTIL.LINUX-NAMESPACE:REDUCE-ID-MAPS and user_namespaces(7)."
                ;; Restore mode because chown wipes setuid/setgid.
                (nix:chmod file mode)
                ;; Now do the ACL shifts; directories have two.
-               (shift-acl file +ACL-TYPE-ACCESS+)
-               (when dirp (shift-acl file +ACL-TYPE-DEFAULT+)))
+               (shift-acl file ACL_TYPE_ACCESS)
+               (when dirp (shift-acl file ACL_TYPE_DEFAULT)))
              (when (and dirp (not linkp))
                (mapc #'shift (local-directory-contents file))))))
        (shift-acl (file type)
@@ -123,16 +123,16 @@ CONSFIGURATOR.UTIL.LINUX-NAMESPACE:REDUCE-ID-MAPS and user_namespaces(7)."
            (with-foreign-objects
                ((uid 'uid_t) (gid 'gid_t) (entry-p 'acl_entry_t))
              (loop with setp
-                   for etype = +ACL-FIRST-ENTRY+ then +ACL-NEXT-ENTRY+
+                   for etype = ACL_FIRST_ENTRY then ACL_NEXT_ENTRY
                    while (plusp (acl-get-entry acl etype entry-p))
                    for entry = (mem-ref entry-p 'acl_entry_t)
                    for tag-type = (acl-get-tag-type entry)
-                   when (= tag-type +ACL-USER+)
+                   when (= tag-type ACL_USER)
                      do (awhen
                             (funcall uidmap (acl-get-qualifier entry 'uid_t))
                           (setf setp t (mem-ref uid 'uid_t) it)
                           (acl-set-qualifier entry uid))
-                   when (= tag-type +ACL-GROUP+)
+                   when (= tag-type ACL_GROUP)
                      do (awhen
                             (funcall gidmap (acl-get-qualifier entry 'gid_t))
                           (setf setp t (mem-ref gid 'gid_t) it)
@@ -145,7 +145,7 @@ CONSFIGURATOR.UTIL.LINUX-NAMESPACE:REDUCE-ID-MAPS and user_namespaces(7)."
   (with-foreign-object (owner 'uid_t)
     (if (minusp
          (foreign-funcall
-          "ioctl" :int fd :unsigned-long +NS_GET_OWNER_UID+ :pointer owner
+          "ioctl" :int fd :unsigned-long NS_GET_OWNER_UID :pointer owner
                   :int))
         (error "Couldn't determine owner of target userns.")
         (mem-ref owner 'uid_t))))
@@ -153,7 +153,7 @@ CONSFIGURATOR.UTIL.LINUX-NAMESPACE:REDUCE-ID-MAPS and user_namespaces(7)."
 (defun setgroups-p ()
   "In a Lisp-type connection, do we have the ability to use setgroups(2)?"
   (and #-linux (zerop (nix:geteuid))
-       #+linux (posix-capability-p :cap-effective +CAP-SETGID+)
+       #+linux (posix-capability-p :cap-effective CAP_SETGID)
        #+linux (string= "allow"
                         (stripln
                          (read-file-string "/proc/thread-self/setgroups")))))
