@@ -26,6 +26,11 @@
 ;;; touch and delete the file under /var/lib/systemd/linger in the latter
 ;;; case, so that more configuration is applicable to unbooted chroots.
 
+;;; We might have a combinator which implies ':user-instance t' for any of the
+;;; following properties it contains.  The idea would be that within a
+;;; sequence of properties you probably want to affect only either the system
+;;; daemon or the user instance.
+
 (defun systemctl (fn user &rest args &aux (args (cons "systemctl" args)))
   (apply fn (if user (systemd-user-instance-args args) args)))
 
