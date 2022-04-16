@@ -23,18 +23,17 @@
 ;; these available instead.
 
 (defmethod install-bootloader-propspec
-    ((type (eql 'u-boot-install-rockchip)) volume running-on-target
+    ((type (eql 'install-rockchip)) volume running-on-target
      &rest args &key &allow-other-keys)
-  `(u-boot-installed-rockchip ,volume ,running-on-target ,@args))
+  `(installed-rockchip ,volume ,running-on-target ,@args))
 
 (defmethod install-bootloader-binaries-propspec
-    ((type (eql 'u-boot-install-rockchip)) volume &key &allow-other-keys)
+    ((type (eql 'install-rockchip)) volume &key &allow-other-keys)
   '(os:etypecase
        (debianlike
         (apt:installed "u-boot-rockchip"))))
 
-(defprop u-boot-installed-rockchip :posix
-    (volume running-on-target &key target)
+(defprop installed-rockchip :posix (volume running-on-target &key target)
   (:desc "Installed U-Boot using Debian scripts")
   (:hostattrs
    (os:required 'os:debianlike)

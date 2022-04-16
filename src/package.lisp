@@ -731,8 +731,8 @@
                  #:consfigurator.property.installer)
            (:local-nicknames (#:os        #:consfigurator.property.os)
                              (#:apt       #:consfigurator.property.apt))
-           (:export #:u-boot-install-rockchip
-                    #:u-boot-installed-rockchip))
+           (:export #:install-rockchip
+                    #:installed-rockchip))
 
   (package :consfigurator.property.hostname
            (:local-nicknames (#:cmd       #:consfigurator.property.cmd)
