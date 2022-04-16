@@ -41,7 +41,7 @@ See ccache(1) for the format of MAX-SIZE."
            (and max-files-supplied-p
                 (strcat "--max-files=" (or max-files "0")))))))
 
-(defpropspec group-cache :posix
+(defpropspec cache-for-group :posix
     (group &key (max-size nil max-size-supplied-p)
            (max-files nil max-files-supplied-p)
            &aux (dir (ensure-directory-pathname

@@ -117,7 +117,7 @@ To take advantage of the piuparts and autopkgtest support, add to your
 
        ;; ccache
        ,@(and use-ccache '((%sbuild-ccache-has-some-limits)
-                           (ccache:group-cache "sbuild")))
+                           (ccache:cache-for-group "sbuild")))
        (desc
         "ccache mounted in sbuild schroots"
         (file:contains-lines "/etc/schroot/sbuild/fstab"

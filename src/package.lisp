@@ -779,7 +779,7 @@
                              (#:apt       #:consfigurator.property.apt))
            (:export #:installed
                     #:has-limits
-                    #:group-cache))
+                    #:cache-for-group))
 
   (package :consfigurator.property.schroot
            (:local-nicknames (#:os        #:consfigurator.property.os)
