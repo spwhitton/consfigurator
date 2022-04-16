@@ -70,7 +70,7 @@
    #?"CREATE DATABASE ${db-name};"
    :unless  #?"SELECT 'yes' FROM pg_database WHERE datname = '${db-name}';"))
 
-(defproplist has-owner :posix (database owner)
+(defproplist database-has-owner :posix (database owner)
   (:desc #?"Postgres database ${database} has owner ${owner}")
   (%run-sql #?"ALTER DATABASE ${database} OWNER TO ${owner}"
             :unless  #?"select 'yes' from pg_database d, pg_authid a
@@ -85,7 +85,7 @@
                        where u.rolname='${user}' and g.rolname='${group}'
                        and m.member=u.oid and m.roleid=g.oid;"))
 
-(defproplist can-login :posix (user)
+(defproplist user-can-login :posix (user)
   "Ensure USER can login to Postgres."
   (:desc #?"Postgres role ${user} can login to database")
   (%run-sql #?"ALTER USER ${user} WITH LOGIN;"

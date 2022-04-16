@@ -932,9 +932,9 @@
                     #:superuser-is
                     #:has-role
                     #:has-database
-                    #:has-owner
+                    #:database-has-owner
                     #:has-group
-                    #:can-login))
+                    #:user-can-login))
 
   (package :consfigurator.connection.local
            (:export #:local-connection))
