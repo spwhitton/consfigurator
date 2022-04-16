@@ -826,7 +826,7 @@
            (:export #:system-job
                     #:nice-system-job
                     #:runs-consfigurator
-                    #:user-crontab))
+                    #:user-crontab-installed))
 
   (package :consfigurator.property.lets-encrypt
            (:local-nicknames (#:apt       #:consfigurator.property.apt)

@@ -111,7 +111,7 @@ of IMAGE-DUMPED."
      "${XDG_CACHE_HOME:-$HOME/.cache}/consfigurator/images/latest")
     :unapply (unapplied (system-job "consfigurator" when "" ""))))
 
-(defprop user-crontab :posix (env &rest jobs)
+(defprop user-crontab-installed :posix (env &rest jobs)
   "Set the contents of the current user's crontab.  ENV is like the ENV argument
 to RUN/MRUN, except that the environment variables will be set at the top of
 the generated crontab.  Each of JOBS is a line for the body of the crontab.
