@@ -89,7 +89,7 @@ is ~/.config."
 
         "[Install]"
         "WantedBy=default.target"))
-    (systemd:enabled "lxc-autostart" t)))
+    (systemd:enabled "lxc-autostart" :user-instance t)))
 
 (defprop usernet-veth-usable-by :posix
     (user &optional (interface "lxcbr0") (count 10))

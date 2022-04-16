@@ -29,66 +29,70 @@
 (defun systemctl (fn user &rest args &aux (args (cons "systemctl" args)))
   (apply fn (if user (systemd-user-instance-args args) args)))
 
-(defprop daemon-reloaded :posix (&optional user)
+(defprop daemon-reloaded :posix (&key user-instance)
   (:desc "Attempt to reload systemd manager configuration")
   (:apply (if (service:no-services-p)
               :no-change
-              (systemctl #'mrun user "daemon-reload"))))
+              (systemctl #'mrun user-instance "daemon-reload"))))
 
-(defprop started :posix (service &optional user)
+(defprop started :posix (service &key user-instance)
   (:desc #?"systemd service ${service} started")
-  (:check (or (service:no-services-p)
-              (zerop (systemctl #'mrun user :for-exit "is-active" service))))
-  (:apply (systemctl #'mrun user "start" service)))
+  (:check
+   (or (service:no-services-p)
+       (zerop (systemctl #'mrun user-instance :for-exit "is-active" service))))
+  (:apply (systemctl #'mrun user-instance "start" service)))
 
-(defprop stopped :posix (service &optional user)
+(defprop stopped :posix (service &key user-instance)
   (:desc #?"systemd service ${service} stopped")
-  (:check (or (service:no-services-p)
-              (plusp (systemctl #'mrun user :for-exit "is-active" service))))
-  (:apply (systemctl #'mrun user "stop" service)))
+  (:check
+   (or (service:no-services-p)
+       (plusp (systemctl #'mrun user-instance :for-exit "is-active" service))))
+  (:apply (systemctl #'mrun user-instance "stop" service)))
 
-(defprop restarted :posix (service &optional user)
+(defprop restarted :posix (service &key user-instance)
   (:desc #?"Attempt to restart systemd service ${service}")
   (:apply (if (service:no-services-p)
               :no-change
-              (systemctl #'mrun user "restart" service))))
+              (systemctl #'mrun user-instance "restart" service))))
 
-(defprop reloaded :posix (service &optional user)
+(defprop reloaded :posix (service &key user-instance)
   (:desc #?"Attempt to reload systemd service ${service}")
   (:apply (if (service:no-services-p)
               :no-change
-              (systemctl #'mrun user "reload" service))))
+              (systemctl #'mrun user-instance "reload" service))))
 
-(defprop enabled :posix (service &optional user)
+(defprop enabled :posix (service &key user-instance)
   (:desc #?"systemd service ${service} enabled")
-  (:check (or (and user (service:no-services-p))
-              (zerop (systemctl #'mrun user :for-exit "is-enabled" service))))
-  (:apply (systemctl #'mrun user "enable" service)))
+  (:check
+   (or (and user-instance (service:no-services-p))
+       (zerop
+        (systemctl #'mrun user-instance :for-exit "is-enabled" service))))
+  (:apply (systemctl #'mrun user-instance "enable" service)))
 
-(defprop disabled :posix (service &optional user)
+(defprop disabled :posix (service &key user-instance)
   (:desc #?"systemd service ${service} disabled")
   (:check
    (or
-    (and user (service:no-services-p))
+    (and user-instance (service:no-services-p))
     (let ((status
             (stripln
-             (systemctl #'run user :may-fail "is-enabled" service))))
+             (systemctl #'run user-instance :may-fail "is-enabled" service))))
       (or (string-prefix-p "linked" status)
           (string-prefix-p "masked" status)
           (memstr= status '("static" "disabled" "generated" "transient" "indirect"))))))
-  (:apply (systemctl #'mrun user "disable" service)))
+  (:apply (systemctl #'mrun user-instance "disable" service)))
 
-(defprop masked :posix (service &optional user)
+(defprop masked :posix (service &key user-instance)
   (:desc #?"systemd service ${service} masked")
   (:check
-   (or (and user (service:no-services-p))
+   (or (and user-instance (service:no-services-p))
        (string-prefix-p
         "masked"
-        (systemctl #'run user :may-fail "is-enabled" service))))
-  (:apply (systemctl #'mrun user "mask" service))
-  (:unapply (if (and user (service:no-services-p))
+        (systemctl #'run user-instance :may-fail "is-enabled" service))))
+  (:apply (systemctl #'mrun user-instance "mask" service))
+  (:unapply (if (and user-instance (service:no-services-p))
                 :no-change
-                (systemctl #'mrun user "unmask" service))))
+                (systemctl #'mrun user-instance "unmask" service))))
 
 (defprop lingering-enabled :posix (user)
   (:desc #?"User lingering enable for ${user}")
