@@ -32,12 +32,8 @@ Unlikely to be useful for hosts defined using DEFHOST."
 
 (defpropspec configured :posix
     (&optional (hostname (get-hostname) hostname-supplied-p)
-               (domain (domain hostname))
                &aux (short (car (split-string hostname :separator "."))))
-  "Set the hostname in the standard Debian way.
-When HOSTNAME is an FQDN, DOMAIN is the domain part of the hostname,
-defaulting to everything after the first dot.  (For some hosts, the domain
-should rather be the whole hostname.)"
+  "Set the hostname in the standard Debian way."
   (:desc "Hostname configured")
   `(seqprops
     ,@(and hostname-supplied-p `((is ,hostname)))
@@ -46,7 +42,7 @@ should rather be the whole hostname.)"
         (cmd:single ,(strcat "hostname " short))))
     (file:contains-conf-tab
      "/etc/hosts"
-     ,@(and (plusp (length domain))
+     ,@(and (position #\. hostname)
             `("127.0.1.1" ,(strcat hostname " " short)))
      "127.0.0.1" "localhost")))
 
