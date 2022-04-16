@@ -534,7 +534,7 @@
 
   (package :consfigurator.property.package
            (:local-nicknames (#:apt #:consfigurator.property.apt))
-           (:export #:*consfigurator-system-dependencies*
+           (:export #:+consfigurator-system-dependencies+
                     #:package-manager-not-found
                     #:installed))
 

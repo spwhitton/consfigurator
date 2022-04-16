@@ -39,7 +39,7 @@ recommended."))
   (unless (and package-manager-supplied-p (not package-manager))
     (handler-case (package:installed
                    package-manager '(:apt "sbcl")
-                   package:*consfigurator-system-dependencies*)
+                   package:+consfigurator-system-dependencies+)
       ;; If we couldn't find any package manager on PATH, just proceed in the
       ;; hope that everything we need is already installed; we'll find out
       ;; whether it's actually a problem pretty quickly, when the remote SBCL

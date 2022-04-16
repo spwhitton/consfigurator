@@ -18,8 +18,9 @@
 (in-package :consfigurator.property.package)
 (named-readtables:in-readtable :consfigurator)
 
-(defparameter *consfigurator-system-dependencies*
-  '(:apt ("build-essential" "libacl1-dev" "libcap-dev")))
+(define-constant +consfigurator-system-dependencies+
+    '(:apt ("build-essential" "libacl1-dev" "libcap-dev"))
+  :test #'equal)
 
 (defgeneric %command (package-manager)
   (:documentation
@@ -54,7 +55,7 @@ particular package manager; otherwise, see what we can find on PATH.
 
 Each of PACKAGE-LISTS is a plist where the keys identify package managers, and
 where the values are lists of package names to install using that package
-manager.  See PACKAGE:*CONSFIGURATOR-SYSTEM-DEPENDENCIES* for an example.
+manager.  See PACKAGE:+CONSFIGURATOR-SYSTEM-DEPENDENCIES+ for an example.
 
 This property should not typically be applied to hosts.  It is preferable to
 use an operating system-specific property, such as APT:INSTALLED.  This
