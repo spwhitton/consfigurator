@@ -285,7 +285,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
 
        ;; Remount (mainly virtual) filesystems that other properties we will
        ;; apply might require (esp. relevant for installing bootloaders).
-       (dolist (mount mount:*linux-basic-vfs*)
+       (dolist (mount mount:+linux-basic-vfs+)
          (unless (preservedp (ensure-directory-pathname (lastcar mount)))
            (apply #'system "mount" mount)))
        (when efi-system-partition-mount-args

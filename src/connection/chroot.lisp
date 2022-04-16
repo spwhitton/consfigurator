@@ -61,11 +61,11 @@ should be the mount point, without the chroot's root prefixed.")
         (chroot-mount connection "--bind" into "/"))
       ;; Now set up the usual bind mounts.  Help here from arch-chroot(8).
       (mount:assert-devtmpfs-udev-/dev)
-      (dolist (mount mount:*linux-basic-vfs*)
+      (dolist (mount mount:+linux-basic-vfs+)
         (apply #'chroot-mount connection mount))
       (chroot-mount connection "--bind" "/run" "/run")
       (when (remote-exists-p "/sys/firmware/efi/efivars")
-        (apply #'chroot-mount connection mount:*linux-efivars-vfs*)))))
+        (apply #'chroot-mount connection mount:+linux-efivars-vfs+)))))
 
 (defmethod propagate-connattr
     ((type (eql :opened-volumes)) connattr (connection chroot-connection))
