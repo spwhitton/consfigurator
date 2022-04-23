@@ -698,7 +698,8 @@
 
   (package :consfigurator.property.reboot
            (:local-nicknames (#:container #:consfigurator.property.container))
-           (:export #:rebooted-at-end))
+           (:shadow #:at-end)
+           (:export #:at-end))
 
   (package :consfigurator.property.installer
            (:use #:consfigurator.property.disk #:cffi)

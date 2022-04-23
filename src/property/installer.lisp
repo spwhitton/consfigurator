@@ -162,8 +162,8 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
 ;;; that the AT-END functions get run even when there's a nonlocal exit from
 ;;; %CONSFIGURE's call to APPLY-PROPAPP; perhaps we could pass a second
 ;;; argument to the AT-END functions indicating whether there was a non-local
-;;; transfer of control.  REBOOT:REBOOTED-AT-END might only reboot when there
-;;; was a normal return from APPLY-PROPAPP, whereas the cleanup forms from
+;;; transfer of control.  REBOOT:AT-END might only reboot when there was a
+;;; normal return from APPLY-PROPAPP, whereas the cleanup forms from
 ;;; SERVICES:WITHOUT-STARTING-SERVICES would always be evaluated.
 
 (defprop %root-filesystems-flipped :lisp (new-os old-os)
@@ -400,4 +400,4 @@ live system and use Consfigurator to install to the host's usual storage."
     (%root-filesystems-flipped "/new-os" "/old-os")
     ;; Prevent boot issues caused by disabled shadow passwords.
     (cmd:single "shadowconfig" "on")
-    (reboot:rebooted-at-end)))
+    (reboot:at-end)))
