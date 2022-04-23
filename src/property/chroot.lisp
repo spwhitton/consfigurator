@@ -30,12 +30,12 @@
   (:apply
    (destructuring-bind
        (&key (apt.proxy (get-hostattrs-car :apt.proxy host))
-          (apt.mirror (get-hostattrs-car :apt.mirror host))
+          (apt.mirror (get-hostattrs-car :apt.mirrors host))
         &allow-other-keys
         &aux (os (get-hostattrs-car :os host))
           (args (list "debootstrap"
                       (plist-to-long-options
-                       (remove-from-plist options :apt.proxy :apt.mirror))
+                       (remove-from-plist options :apt.proxy :apt.mirrors))
                       (strcat "--arch=" (os:debian-architecture os))
                       (os:debian-suite os)
                       root)))

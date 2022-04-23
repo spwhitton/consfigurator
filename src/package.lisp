@@ -516,7 +516,7 @@
                     #:autoremoved
                     #:periodic-updates
                     #:unattended-upgrades
-                    #:mirror
+                    #:mirrors
                     #:uses-parent-mirrors
                     #:proxy
                     #:uses-parent-proxy

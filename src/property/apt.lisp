@@ -190,17 +190,14 @@ only upgrade Debian stable."
    (file:does-not-exist "/etc/apt/apt.conf.d/50unattended-upgrades.ucf-dist")
    :unapply (removed "unattended-upgrades")))
 
-(defprop mirror :posix (uri)
-  (:desc #?"${uri} apt mirror selected")
+(defprop mirrors :posix (&rest uris)
+  (:desc (format nil "apt mirror~P ~{~A~^, ~} selected" (length uris) uris))
   (:hostattrs
-   (pushnew-hostattr :apt.mirror uri)))
+   (pushnew-hostattrs :apt.mirrors uris)))
 
 (defpropspec uses-parent-mirrors :posix ()
   (:desc #?"Uses parent's apt mirror(s), if any")
-  (let ((mirrors (get-parent-hostattrs :apt-mirror)))
-    (and mirrors
-         `(eseqprops
-           ,@(loop for mirror in mirrors collect `(mirror ,mirror))))))
+  (aand (get-parent-hostattrs :apt.mirrors) `(mirrors ,@it)))
 
 (defprop proxy :posix (uri)
   (:desc #?"${uri} apt proxy selected")
@@ -221,7 +218,7 @@ only upgrade Debian stable."
   (proxy "http://[::1]:3142"))
 
 (defun get-mirrors ()
-  (or (get-hostattrs :apt.mirror)
+  (or (get-hostattrs :apt.mirrors)
       (get-default-mirrors (get-hostattrs-car :os))))
 
 (defmethod get-default-mirrors ((os os:debian))

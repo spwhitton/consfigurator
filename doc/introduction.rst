@@ -42,7 +42,7 @@ Try it out / quick start
           "Web and file server."
 	  (os:debian-stable "buster" :amd64)
 
-	  (apt:mirror "http://my.local.mirror.example.com/")
+	  (apt:mirrors "http://my.local.mirror.example.com/")
 	  (apt:uses-local-cacher) ; sets up apt-cacher-ng
 	  (apt:standard-sources.list)
 

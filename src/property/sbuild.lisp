@@ -73,7 +73,7 @@ Example usage:
 
     (os:debian-stable \"bullseye\" :amd64)
     (apt:uses-local-cacher)
-    (apt:mirror \"...\")
+    (apt:mirrors \"...\")
     (sbuild:usable-by \"spwhitton\")
     (schroot:overlays-in-tmpfs)
     (periodic:at-most :monthly \"sbuild sid schroot rebuilt\"

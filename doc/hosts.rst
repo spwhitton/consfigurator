@@ -41,8 +41,8 @@ keyword symbols.  The semantics of these attributes are documented here:
 
 - ``:OS``: the operating system of the host
 
-- ``:APT.MIRROR``: for hosts running Debian or a Debian derivative, the host's
-  preferred apt mirror
+- ``:APT.MIRRORS``: for hosts running Debian or a Debian derivative, the
+  host's preferred apt mirrors
 
 Host designators
 ----------------
