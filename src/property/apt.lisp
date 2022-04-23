@@ -169,6 +169,8 @@ EOF))
   (:unapply
    (file:does-not-exist "/etc/apt/apt.conf.d/02periodic")))
 
+;; We might add keyword arguments so that the user could disable running the
+;; cron daemon and configuring mailing root.
 (defproplist unattended-upgrades :posix ()
   "Enable unattended upgrades.
 
