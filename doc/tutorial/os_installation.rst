@@ -71,8 +71,8 @@ could then use::
              (live-installer-built-for test.example.com))
 
 Then once the live system has booted on the target host, you'd use the
-DISK:HOST-VOLUMES-CREATED and INSTALLER:CHROOT-INSTALLED-TO-VOLUMES properties
-to complete the installation.
+DISK:HOST-VOLUMES-CREATED and INSTALLER:CHROOT-INSTALLED-TO-VOLUMES-FOR
+properties to complete the installation.
 
 To prepare a live image that is capable of installing more than one system
 without an Internet connection, you'd probably need to investigate including

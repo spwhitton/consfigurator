@@ -48,11 +48,11 @@ BOOTLOADER-TYPE to VOLUME."))
 
 ;; At :HOSTATTRS time we don't have the OPENED-VOLUME values required by the
 ;; :APPLY subroutines which actually install the bootloaders.  So we call
-;; GET-PROPSPECS twice: (in CHROOT-INSTALLED-TO-VOLUMES) at :HOSTATTRS time to
-;; generate propspecs for the sake of running :HOSTATTRS subroutines, and then
-;; at :APPLY time where we can get at the OPENED-VOLUME values, we ignore the
-;; previously generated propspecs and call GET-PROPSPECS again.  This approach
-;; should work for any sensible VOLUME<->OPENED-VOLUME pairs.
+;; GET-PROPSPECS twice: (in CHROOT-INSTALLED-TO-VOLUMES-FOR) at :HOSTATTRS
+;; time to generate propspecs for the sake of running :HOSTATTRS subroutines,
+;; and then at :APPLY time where we can get at the OPENED-VOLUME values, we
+;; ignore the previously generated propspecs and call GET-PROPSPECS again.
+;; This approach should work for any sensible VOLUME<->OPENED-VOLUME pairs.
 (define-function-property-combinator
     %install-bootloaders (running-on-target &rest propapps)
   (:retprop
@@ -80,7 +80,7 @@ BOOTLOADER-TYPE to VOLUME."))
         (strcat (unix-namestring chroot) "/")
         (strcat (unix-namestring target) "/"))))
 
-(defpropspec chroot-installed-to-volumes :lisp
+(defpropspec chroot-installed-to-volumes-for :lisp
     (host chroot volumes &key running-on-target)
   "Where CHROOT contains the root filesystem of HOST and VOLUMES is a list of
 volumes, recursively open the volumes and rsync in the contents of CHROOT.

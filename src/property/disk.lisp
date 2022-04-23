@@ -941,7 +941,7 @@ filesystems will be incrementally updated when other properties change."
                              (caches-cleaned)))
                  (%raw-image-created
                   ,volumes :chroot ,chroot :rebuild ,rebuild))
-       (consfigurator.property.installer:chroot-installed-to-volumes
+       (consfigurator.property.installer:chroot-installed-to-volumes-for
         ,host ,chroot ,volumes))))
 
 (defprop %squashfsed :posix (chroot image &optional (compression "xz"))

@@ -712,7 +712,7 @@
                              (#:crypttab  #:consfigurator.property.crypttab))
            (:export #:install-bootloader-propspec
                     #:install-bootloader-binaries-propspec
-                    #:chroot-installed-to-volumes
+                    #:chroot-installed-to-volumes-for
                     #:bootloader-binaries-installed
                     #:bootloaders-installed
                     #:cleanly-installed-once))
