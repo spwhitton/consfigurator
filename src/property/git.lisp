@@ -25,7 +25,7 @@
     (debianlike (apt:installed "git"))))
 
 (defprop snapshot-extracted :posix
-    (directory snapshot-name
+    (snapshot-name directory
                &key replace
                &aux (dest
                      (merge-pathnames snapshot-name

@@ -58,7 +58,7 @@ disk, copy in the contents of the prebuilt chroot, and update /etc/fstab and
       (disk:debian-live-iso-built. nil "/srv/live/installer.iso"
         (os:debian-stable "bullseye" :amd64)
         (apt:installed "task-english" "live-config" "lvm2" "cryptsetup")
-        (git:snapshot-extracted "/etc/skel/src/cl" "consfig")
+        (git:snapshot-extracted "consfig" "/etc/skel/src/cl")
         (chroot:os-bootstrapped-for
          nil
          (merge-pathnames (get-hostname with-chroot-for) "/srv/chroot/")
