@@ -182,7 +182,7 @@ only upgrade Debian stable."
      (reconfigured
       "unattended-upgrades"
       '("unattended-upgrades/enable_auto_updates" "boolean" "true")))
-   (service:running "cron")
+   (service-installed-running "cron")
    (desc "unattended-upgrades will mail root"
          (file:contains-lines "/etc/apt/apt.conf.d/50unattended-upgrades"
                               "Unattended-Upgrade::Mail \"root\";"))
