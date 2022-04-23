@@ -39,7 +39,7 @@
   "Use grub-install(8) to install grub to VOLUME."
   (:desc "GRUB installed")
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (mrun :inform "update-initramfs" "-u")
    (let ((os-prober (and (not running-on-target)
                          (remote-exists-p "/etc/grub.d/30_os-prober"))))

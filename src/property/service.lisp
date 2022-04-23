@@ -32,11 +32,11 @@
 
 (defprop %policy-rc.d :posix ()
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (file:has-content +policyrcd+ '("#!/bin/sh" "exit 101"))
    (file:has-mode +policyrcd+ #o755))
   (:unapply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (file:does-not-exist +policyrcd+)))
 
 (defproplist no-services :posix ()

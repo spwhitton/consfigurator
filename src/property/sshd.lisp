@@ -41,7 +41,7 @@ To prevent lockouts, also enables logging in as root with an SSH key, and
 refuses to proceed if root has no authorized_keys."
   (:desc "SSH passwords disabled")
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (unless (and (remote-exists-p ".ssh/authorized_keys")
                 (plusp (length (read-remote-file ".ssh/authorized_keys"))))
      (failed-change "root has no authorized_keys"))

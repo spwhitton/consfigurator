@@ -513,7 +513,7 @@ We do not specify what logical volumes it contains."))
   (:desc "Host LVM logical volumes all exist")
   (:hostattrs (os:required 'os:linux))
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (let* ((existing-lvs
             (loop for (lv vg) in (mapcar #'words (cdr (runlines "lvs")))
                   collect (cons lv vg)))

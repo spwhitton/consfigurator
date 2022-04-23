@@ -26,7 +26,7 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
   (:check
    (user-exists username))
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (mrun "useradd" "-m" username)))
 
 (defprop %has-uid-gid :posix (username uid gid)
@@ -61,7 +61,7 @@ that group, and ~USERNAME and its contents are owned by UID:GID."
    (subsetp groups (cddr (split-string (stripln (run "groups" username))))
             :test #'string=))
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (mrun "usermod" "-a" "-G" groups* username)))
 
 (defparameter *desktop-groups*
@@ -113,10 +113,10 @@ and then this property will do nothing."
   (:desc #?"${username} has a locked password")
   (:hostattrs (os:required 'os:debianlike))
   (:check
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (string= "L" (cadr (split-string (run "passwd" "-S" username)))))
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (mrun "passwd" "--lock" username)))
 
 (defun %getent-entry (n name-or-id &optional (database "passwd"))

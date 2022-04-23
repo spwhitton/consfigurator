@@ -25,7 +25,7 @@ the mount is not actually active."
   (:desc #?"${target} mounted")
   (:hostattrs (os:required 'os:linux))
   (:check (zerop (mrun :for-exit "findmnt" target)))
-  (:apply (assert-euid-root)
+  (:apply (assert-remote-euid-root)
           (file:directory-exists target)
           (mrun "mount" target)))
 

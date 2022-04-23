@@ -107,7 +107,7 @@ Typically used with the ON-CHANGE combinator."
    (declare (ignore package triples))
    (os:required 'os:debianlike))
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (run
     :input (unlines
             (loop for triple in triples collect #?"${package} @{triple}"))

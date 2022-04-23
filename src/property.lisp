@@ -592,7 +592,7 @@ PATH if PATH already has the specified CONTENT and MODE."
       (apply #'write-remote-file
              path content (and mode-supplied-p `(:mode ,mode)))))
 
-(defun assert-euid-root ()
+(defun assert-remote-euid-root ()
   "Assert that the remote user has uid 0 (root)"
   (unless (zerop (get-connattr :remote-uid))
     (aborted-change "Property requires root to apply")))

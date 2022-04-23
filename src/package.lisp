@@ -217,7 +217,7 @@
            #:require-data
            #:failed-change
            #:aborted-change
-           #:assert-euid-root
+           #:assert-remote-euid-root
            #:maybe-write-remote-file-string
            #:with-change-if-changes-file
            #:with-change-if-changes-files

@@ -21,7 +21,7 @@
 (defprop %available :posix (locale)
   (:desc (declare (ignore locale)) "/etc/locale.gen updated")
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (file:map-remote-file-lines
     "/etc/locale.gen"
     (lambda (lines)

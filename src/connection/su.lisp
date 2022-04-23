@@ -21,7 +21,7 @@
 (defmethod establish-connection ((type (eql :su)) remaining &key to)
   (declare (ignore remaining))
   ;; We don't support using su with a password.  Use :SUDO for that.
-  (assert-euid-root)
+  (assert-remote-euid-root)
   (informat 1 "~&Switching to user ~A" to)
   (make-instance 'su-connection :user to))
 

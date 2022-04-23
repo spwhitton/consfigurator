@@ -70,7 +70,7 @@ BOOTLOADER-TYPE to VOLUME."))
 (defprop %update-target-from-chroot :posix (chroot target)
   (:desc #?"Updated ${target} from ${chroot}")
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (run "rsync" "-PSavx" "--delete"
         (loop for volume
                 in (mapcan (curry #'subvolumes-of-type 'mounted-filesystem)
@@ -169,7 +169,7 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
 (defprop %root-filesystems-flipped :lisp (new-os old-os)
   (:hostattrs (os:required 'os:linux))
   (:apply
-   (assert-euid-root)
+   (assert-remote-euid-root)
    (let ((new-os (ensure-directory-pathname new-os))
          (old-os
            (ensure-directories-exist (ensure-directory-pathname old-os)))
