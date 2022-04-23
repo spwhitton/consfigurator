@@ -876,19 +876,19 @@
                              (#:os          #:consfigurator.property.os)
                              (#:service     #:consfigurator.property.service))
            (:export #:installed
-                    #:service
-                    #:policy
-                    #:zone
+                    #:knows-service
+                    #:has-policy
+                    #:has-zone-xml
                     #:has-zone
-                    #:zone-target
+                    #:zone-has-target
                     #:default-route-zoned-once
                     #:zone-has-interface
                     #:zone-has-source
                     #:zone-has-service
-                    #:zone-masquerade
-                    #:zone-rich-rule
-                    #:direct-rule
-                    #:default-zone))
+                    #:zone-has-masquerade
+                    #:zone-has-rich-rule
+                    #:has-direct-rule
+                    #:has-default-zone))
 
   (package :consfigurator.property.timezone
            (:local-nicknames (#:file         #:consfigurator.property.file)

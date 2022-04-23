@@ -114,15 +114,15 @@
       (file:exists-with-content #?"/etc/firewalld/${type}/${name}.xml" xml)
     (%reloaded)))
 
-(defproplist service :posix (service xml)
+(defproplist knows-service :posix (service xml)
   (:desc #?"firewalld knows service ${service}")
   (%setxml "services" service xml))
 
-(defproplist policy :posix (policy xml)
+(defproplist has-policy :posix (policy xml)
   (:desc #?"firewalld has policy ${policy}")
   (%setxml "policies" policy xml))
 
-(defproplist zone :posix (zone xml)
+(defproplist has-zone-xml :posix (zone xml)
   "Set the whole XML configuration for zone ZONE.
 
 In preference to using this property, it is usually best to incrementally
@@ -135,8 +135,8 @@ firewall configuration themselves, to render the things that those properties
 set up appropriately accessible and inaccessible.
 
 (By contrast, for defining services and policies we take the simpler approach
-of just setting the whole XML configuration, using FIREWALLD:SERVICE and
-FIREWALLD:POLICY.)"
+of just setting the whole XML configuration, using FIREWALLD:KNOWS-SERVICE and
+FIREWALLD:HAS-POLICY.)"
   ;; Another option might be to push all the settings to hostattrs and then at
   ;; :APPLY time, generate the whole .xml / run commands to set all the XML.
   (:desc #?"firewalld has zone configuration for ${zone}")
@@ -160,7 +160,7 @@ properties which add services, interfaces etc. to zones."
                                   :apply #?"--delete-zone=${zone}"))
     (%reloaded)))
 
-(defproplist zone-target :posix (zone target)
+(defproplist zone-has-target :posix (zone target)
   (:desc #?"firewalld zone ${zone} has target ${target}")
   (:check (if (service:no-services-p)
               (string= target
@@ -205,9 +205,9 @@ an interface to a zone once, as the default route might later be changed
 temporarily by something like a VPN connection, and in such a case the
 firewall should not be reconfigured.
 
-Typically you will apply both this property and FIREWALLD:DEFAULT-ZONE,
+Typically you will apply both this property and FIREWALLD:HAS-DEFAULT-ZONE,
 passing the same zone name to each.  If you have Network Manager, you need
-only FIREWALLD:DEFAULT-ZONE."
+only FIREWALLD:HAS-DEFAULT-ZONE."
   (with-flagfile "/etc/consfigurator/firewalld/default-route-zoned"
     (installed)
     (has-zone zone)
@@ -263,7 +263,7 @@ only FIREWALLD:DEFAULT-ZONE."
      :offline-apply
      `(,#?"--zone=${zone}" ,#?"--remove-service-from-zone=${service}"))))
 
-(defproplist zone-masquerade :posix (zone)
+(defproplist zone-has-masquerade :posix (zone)
   (:desc #?"firewalld zone ${zone} has masquerade")
   (with-unapply
     (installed)
@@ -277,7 +277,7 @@ only FIREWALLD:DEFAULT-ZONE."
                      :check `(,#?"--zone=${zone}" "--query-masquerade")
                      :apply `(,#?"--zone=${zone}" "--remove-masquerade"))))
 
-(defproplist zone-rich-rule :posix (zone rule)
+(defproplist zone-has-rich-rule :posix (zone rule)
   (:desc #?"firewalld zone ${zone} has rich rule \"${rule}\"")
   (with-unapply
     (installed)
@@ -299,7 +299,7 @@ only FIREWALLD:DEFAULT-ZONE."
 ;; Note that direct rules will be deprecated as of firewalld 1.0.0, as
 ;; policies and rich rules should be able to cover all uses of direct rules.
 ;;     <https://firewalld.org/2021/06/the-upcoming-1-0-0>
-(defpropspec direct-rule :posix (&rest rule-args)
+(defpropspec has-direct-rule :posix (&rest rule-args)
   (:desc #?"firewalld has direct rule \"@{rule-args}\"")
   `(with-unapply
      (installed)
@@ -312,7 +312,7 @@ only FIREWALLD:DEFAULT-ZONE."
                       :check ("--direct" "--query-rule" ,@rule-args)
                       :apply ("--direct" "--remove-rule" ,@rule-args))))
 
-(defproplist default-zone :posix (zone)
+(defproplist has-default-zone :posix (zone)
   (:desc #?"firewalld default zone is ${zone}")
   (installed)
   (has-zone zone)
