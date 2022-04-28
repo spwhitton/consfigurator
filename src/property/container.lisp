@@ -41,6 +41,12 @@ CHROOT:OS-BOOTSTRAPPED, rather than being added to DEFHOST forms."
                  contained))
   (:hostattrs (push-hostattrs 'iscontained contained)))
 
+(defun contained-p (&rest contained)
+  "Return non-nil if we are outside of any container, or when each of CONTAINED,
+a list of symbols, is contained by this container type."
+  (alet (get-hostattrs 'iscontained)
+    (or (not it) (loop for factor in contained always (member factor it)))))
+
 (defmacro when-contained ((&rest contained) &body propapps)
   "Macro property combinator.  Apply each of PROPAPPS only when outside of any
 container, or when each of CONTAINED, a list of symbols, is contained by this
@@ -51,12 +57,7 @@ container type."
 
 (define-function-property-combinator when-contained* (contained propapp)
   (macrolet ((check-contained (form)
-               `(let ((host-contained (get-hostattrs 'iscontained)))
-                  (if (or (not host-contained)
-                            (loop for factor in contained
-                                  always (member factor host-contained)))
-                      ,form
-                      :no-change))))
+               `(if (apply #'contained-p contained) ,form :no-change)))
     (:retprop :type (propapp-type propapp)
               :hostattrs (lambda-ignoring-args
                            (propapp-attrs propapp))

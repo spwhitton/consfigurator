@@ -469,6 +469,7 @@
 
   (package :consfigurator.property.container
            (:export #:contained
+                    #:contained-p
                     #:when-contained))
 
   (package :consfigurator.property.periodic
