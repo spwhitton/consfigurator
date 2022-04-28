@@ -20,6 +20,14 @@
 
 ;;;; Bootloaders
 
+;;; The basic reason VOLUME-BOOTLOADERS is not just a propspec but a
+;;; specification for a propspec is that we need to pass an OPENED-VOLUME to
+;;; the property that will install the bootloader.  But maybe we could have
+;;; INSTALL-BOOTLOADER-PROPSPEC but not INSTALL-BOOTLOADER-BINARIES-PROPSPEC.
+;;; The installation of the bootloader binaries would always be done just
+;;; before installing the bootloader, and the user would not need to
+;;; separately apply BOOTLOADER-BINARIES-INSTALLED.
+
 (defgeneric install-bootloader-propspec (bootloader-type volume &key)
   (:documentation
    "Return a propspec expression which installs bootloader of type
