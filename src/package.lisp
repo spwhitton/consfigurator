@@ -767,7 +767,7 @@
            (:export #:installed
                     #:default-network-started
                     #:default-network-autostarted
-                    #:defined
+                    #:defined-for
                     #:started
                     #:destroyed
                     #:when-started

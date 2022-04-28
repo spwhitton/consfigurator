@@ -68,7 +68,7 @@ On Debian, it is not started by default after installation of libvirt."
 
 (defmethod os-variant (os))
 
-(defprop defined :posix (host &rest arguments)
+(defprop defined-for :posix (host &rest arguments)
   "Define a libvirt domain for HOST by providing ARGUMENTS to virt-install(1).
 With the current implementation, if ARGUMENTS changes, virt-install(1) will
 not be run again.  You will need to either unapply and reapply this property,
@@ -195,7 +195,7 @@ OPTIONS is a plist of keyword parameters.
   - :APPEND -- String to append to the kernel command line.
 
 If the :VCPUS, :MEMORY, :AUTOSTART or :VIRT-OPTIONS parameters change,
-virt-install(1) will not be rerun; see LIBVIRT:DEFINED.
+virt-install(1) will not be rerun; see LIBVIRT:DEFINED-FOR.
 
 Sample usage:
 
@@ -283,7 +283,7 @@ your preferred VM networking setup and corresponding DEPLOYS propapp."
              `((with-flagfile ,flagfile
                  (chroot:os-bootstrapped-for
                   ,chroot-options ,chroot ,host ,additional-properties))))
-       (defined ,host*
+       (defined-for ,host*
            ,(format nil "--vcpus=~D" vcpus) ,(format nil "--memory=~D" memory)
          "--filesystem"
          ,(format
@@ -303,7 +303,7 @@ your preferred VM networking setup and corresponding DEPLOYS propapp."
        ,@(and autostart `((started ,host)))
        :unapply
        (destroyed ,host*)
-       (unapplied (defined ,host*))
+       (unapplied (defined-for ,host*))
        (unapplied
         (with-flagfile ,flagfile
           (chroot:os-bootstrapped-for
