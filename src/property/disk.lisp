@@ -667,7 +667,7 @@ order in which they should be closed.  MOUNT-BELOW specifies a pathname to
 prefix to mount points when opening FILESYSTEM volumes.
 
 Calling this function can be useful for testing at the REPL, but code should
-normally use WITH-OPEN-VOLUMES or WITH-THESE-OPEN-VOLUMES.
+normally use WITH-OPEN-VOLUMES or WITH-OPENED-VOLUMES.
 
 If an error is signalled while the attempt to open volumes is in progress, a
 single attempt will be made to close all volumes opened up to that point."
@@ -731,7 +731,7 @@ populate /etc/fstab and /etc/crypttab.  Do not modify this list."
          (mrun "sync")
          (mapc #'close-volume ,opened-volumes)))))
 
-(defmacro with-these-open-volumes
+(defmacro with-opened-volumes
     ((volumes &key (mount-below nil mount-below-supplied-p)) &body propapps)
   "Macro property combinator.  Where each of VOLUMES is a VOLUME which may be
 opened by calling OPEN-VOLUME with NIL as the second argument, recursively
@@ -742,12 +742,12 @@ MOUNT-BELOW specifies a pathname to prefix to mount points when opening
 FILESYSTEM volumes.  During the application of PROPAPPS, all :OPENED-VOLUMES
 connattrs are replaced with a list of the volumes that were opened; this list
 must not be modified."
-  `(with-these-open-volumes*
+  `(with-opened-volumes*
      ',volumes
      ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))
      ,@(and mount-below-supplied-p `(:mount-below ,mount-below))))
 
-(define-function-property-combinator with-these-open-volumes*
+(define-function-property-combinator with-opened-volumes*
     (volumes propapp &key (mount-below nil mount-below-supplied-p))
   (:retprop
    :type (propapp-type propapp)

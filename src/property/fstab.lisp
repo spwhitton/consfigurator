@@ -102,7 +102,7 @@ specified with DISK:HAS-VOLUMES."
                           (or volumes (get-hostattrs :volumes))))))))
 
 ;; TODO This is broken for fat32 partitions.  MOUNTED-FAT32-FILESYSTEM objects
-;; are pushed directly to the connattr by DISK:WITH-THESE-OPEN-VOLUMES, rather
+;; are pushed directly to the connattr by DISK:WITH-OPENED-VOLUMES, rather
 ;; than appearing within OPENED-PARTITION objects.  Then the call to
 ;; SUBVOLUMES-OF-TYPE here never finds any parents, returning as a second
 ;; value a list containing only NIL.  Thus the specialisers in the

@@ -623,7 +623,7 @@
                     #:crypttab-keyfile
                     #:linux-swap
 
-                    #:with-these-open-volumes
+                    #:with-opened-volumes
 
                     #:has-volumes
                     #:raw-image-built-for

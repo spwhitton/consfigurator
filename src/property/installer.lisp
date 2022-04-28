@@ -100,7 +100,7 @@ Also update the fstab and crypttab, and try to install bootloader(s)."
             (drop-trailing-slash
              (unix-namestring (ensure-directory-pathname chroot)))
             ".target"))))
-    `(with-these-open-volumes (,volumes :mount-below ,target)
+    `(with-opened-volumes (,volumes :mount-below ,target)
        (%update-target-from-chroot ,chroot ,target)
        (chroot:deploys-these
         ,target ,host
