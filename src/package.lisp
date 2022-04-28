@@ -584,7 +584,7 @@
                     #:volume-label
                     #:volume-contents
                     #:volume-size
-                    #:volume-bootloader
+                    #:volume-bootloaders
                     #:subvolumes-of-type
                     #:all-subvolumes
                     #:copy-volume-and-contents

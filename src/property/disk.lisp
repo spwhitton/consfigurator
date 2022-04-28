@@ -50,13 +50,13 @@ containing this one.
 
 If a larger size is required to accommodate the VOLUME-CONTENTS of the volume
 plus any metadata (e.g. partition tables), this value will be ignored.")
-   (volume-bootloader
-    :type list :initarg :boots-with :accessor volume-bootloader
+   (volume-bootloaders
+    :type list :initarg :boots-with :accessor volume-bootloaders
     :documentation
-    "List specifying a bootloader to be installed to this volume.  The first
-element is a symbol identifying the type of bootloader, and the remaining
-elements are a plist of keyword arguments to be passed to the implementation
-of INSTALLER:INSTALL-BOOTLOADER for that bootloader type.
+    "List or list of lists specifying bootloaders to be installed to this volume.
+The first element of each list is a symbol identifying the type of bootloader,
+and the remaining elements are a plist of keyword arguments to be passed to
+the implementation of INSTALLER:INSTALL-BOOTLOADER for that bootloader type.
 
 Typically only the top level PHYSICAL-DISK of a host's volumes will have this
 slot bound."))

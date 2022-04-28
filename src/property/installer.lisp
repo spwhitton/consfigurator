@@ -41,10 +41,12 @@ BOOTLOADER-TYPE to VOLUME."))
 
 (defun get-propspecs (volumes running-on-target)
   (loop for volume in (mapcan #'all-subvolumes volumes)
-        when (slot-boundp volume 'volume-bootloader)
-          collect (destructuring-bind (type . args) (volume-bootloader volume)
-                    (apply #'install-bootloader-propspec
-                           type volume running-on-target args))))
+        when (slot-boundp volume 'volume-bootloaders)
+          nconc (loop with bls = (volume-bootloaders volume)
+                      for bootloader in (if (listp (car bls)) bls (list bls))
+                      collect (destructuring-bind (type . args) bootloader
+                                (apply #'install-bootloader-propspec
+                                       type volume running-on-target args)))))
 
 ;; At :HOSTATTRS time we don't have the OPENED-VOLUME values required by the
 ;; :APPLY subroutines which actually install the bootloaders.  So we call
@@ -124,9 +126,12 @@ install a package providing /usr/sbin/grub-install, but it won't execute it."
   (:desc "Bootloader binaries installed")
   (loop
     for volume in (mapcan #'all-subvolumes (get-hostattrs :volumes))
-    when (slot-boundp volume 'volume-bootloader)
-      collect (destructuring-bind (type . args) (volume-bootloader volume)
-                (apply #'install-bootloader-binaries-propspec type volume args))
+    when (slot-boundp volume 'volume-bootloaders)
+      nconc (loop with bls = (volume-bootloaders volume)
+                  for bootloader in (if (listp (car bls)) bls (list bls))
+                  collect (destructuring-bind (type . args) bootloader
+                            (apply #'install-bootloader-binaries-propspec
+                                   type volume args)))
         into propspecs
     finally
        (setq propspecs (delete-duplicates propspecs :test #'tree-equal))
