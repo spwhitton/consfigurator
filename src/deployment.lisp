@@ -238,7 +238,7 @@ for testing properties at the REPL.  See also EVALS."
                        (make-host :hostattrs `(:hostname (,,hostname))
                                   :propspec (make-propspec :systems nil)))))
        (deploy-these*
-        `((:sudo :as ,(format nil "~A@~A" ,username ,hostname)))
+        `((:sudo :from ,(format nil "~A@~A" ,username ,hostname)))
         ,host
         (let ((*host* (shallow-copy-host ,host)))
           (make-propspec :propspec (props eseqprops ,@properties)))))))
