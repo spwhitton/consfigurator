@@ -68,7 +68,7 @@ should be the mount point, without the chroot's root prefixed.")
         (apply #'chroot-mount connection mount:+linux-efivars-vfs+)))))
 
 (defmethod propagate-connattr
-    ((type (eql :opened-volumes)) connattr (connection chroot-connection))
+    ((type (eql 'disk:opened-volumes)) connattr (connection chroot-connection))
   (with-slots (into) connection
     (loop for volume in connattr
           when (and (subtypep (type-of volume) 'disk:filesystem)

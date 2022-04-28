@@ -84,4 +84,4 @@ This is used when building disk images and installing operating systems."
    (apply #'has-entries
           (mapcar #'volume-to-entry
                   (mapcan (curry #'subvolumes-of-type 'opened-luks-container)
-                          (get-connattr :opened-volumes))))))
+                          (get-connattr 'disk:opened-volumes))))))

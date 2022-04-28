@@ -623,6 +623,7 @@
                     #:crypttab-keyfile
                     #:linux-swap
 
+                    #:opened-volumes
                     #:with-opened-volumes
 
                     #:has-volumes
@@ -637,7 +638,8 @@
   (package :consfigurator.property.fstab
            (:use #:consfigurator.property.disk)
            (:local-nicknames (#:os    #:consfigurator.property.os)
-                             (#:file  #:consfigurator.property.file))
+                             (#:file  #:consfigurator.property.file)
+                             (#:disk  #:consfigurator.property.disk))
            (:export #:volume-to-entry
                     #:has-entries
                     #:has-entries-for-volumes
@@ -647,7 +649,8 @@
            (:use #:consfigurator.property.disk)
            (:local-nicknames (#:re    #:cl-ppcre)
                              (#:os    #:consfigurator.property.os)
-                             (#:file  #:consfigurator.property.file))
+                             (#:file  #:consfigurator.property.file)
+                             (#:disk  #:consfigurator.property.disk))
            (:export #:volume-to-entry
                     #:has-entries-for-opened-volumes))
 
@@ -711,7 +714,8 @@
                              (#:mount     #:consfigurator.property.mount)
                              (#:fstab     #:consfigurator.property.fstab)
                              (#:reboot    #:consfigurator.property.reboot)
-                             (#:crypttab  #:consfigurator.property.crypttab))
+                             (#:crypttab  #:consfigurator.property.crypttab)
+                             (#:disk      #:consfigurator.property.disk))
            (:export #:install-bootloader-propspec
                     #:install-bootloader-binaries-propspec
                     #:chroot-installed-to-volumes-for

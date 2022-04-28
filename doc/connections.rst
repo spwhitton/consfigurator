@@ -81,8 +81,7 @@ Reserved names for connection attributes
 
 The semantics of connattrs identified by keywords are documented here.
 
-- ``:OPENED-VOLUMES``: instances of ``DISK:OPENED-VOLUME``.  Bound by
-  ``DISK:WITH-OPENED-VOLUMES`` property combinator.
+[list incomplete]
 
 Notes on particular connection types
 ------------------------------------

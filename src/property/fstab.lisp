@@ -119,4 +119,4 @@ This is used when building disk images and installing operating systems."
                  (multiple-value-list
                   (multiple-value-mapcan
                    (curry #'subvolumes-of-type 'mounted-filesystem)
-                   (get-connattr :opened-volumes)))))))
+                   (get-connattr 'disk:opened-volumes)))))))

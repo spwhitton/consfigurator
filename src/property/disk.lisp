@@ -739,9 +739,9 @@ open each of VOLUMES and any contents thereof, apply PROPAPPS, and close all
 volumes that were opened.
 
 MOUNT-BELOW specifies a pathname to prefix to mount points when opening
-FILESYSTEM volumes.  During the application of PROPAPPS, all :OPENED-VOLUMES
-connattrs are replaced with a list of the volumes that were opened; this list
-must not be modified."
+FILESYSTEM volumes.  During the application of PROPAPPS, all
+'DISK:OPENED-VOLUMES connattrs are replaced with a list of the volumes that
+were opened; this list must not be modified."
   `(with-opened-volumes*
      ',volumes
      ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))
@@ -756,13 +756,13 @@ must not be modified."
                 (propapp-attrs propapp))
    :apply
    (lambda-ignoring-args
-     (with-connattrs (:opened-volumes
+     (with-connattrs ('opened-volumes
                       (apply #'open-volumes-and-contents
                              `(,volumes ,@(and mount-below-supplied-p
                                                `(:mount-below ,mount-below)))))
        (unwind-protect (apply-propapp propapp)
          (mrun "sync")
-         (mapc #'close-volume (get-connattr :opened-volumes)))))
+         (mapc #'close-volume (get-connattr 'opened-volumes)))))
    :args (cdr propapp)))
 
 (defun create-volumes-and-contents (volumes &optional files)

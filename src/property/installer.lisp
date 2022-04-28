@@ -70,7 +70,7 @@ BOOTLOADER-TYPE to VOLUME."))
    :hostattrs (lambda () (mapc #'propapp-attrs propapps))
    :apply
    (lambda ()
-     (mapc #'consfigure (get-propspecs (get-connattr :opened-volumes)))
+     (mapc #'consfigure (get-propspecs (get-connattr 'disk:opened-volumes)))
      (mrun "sync"))))
 
 
@@ -83,7 +83,7 @@ BOOTLOADER-TYPE to VOLUME."))
    (run "rsync" "-PSavx" "--delete"
         (loop for volume
                 in (mapcan (curry #'subvolumes-of-type 'mounted-filesystem)
-                           (get-connattr :opened-volumes))
+                           (get-connattr 'disk:opened-volumes))
               collect (strcat "--exclude="
                               (unix-namestring (mount-point volume))))
         (strcat (unix-namestring chroot) "/")
