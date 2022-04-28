@@ -23,9 +23,8 @@
 ;; these available instead.
 
 (defmethod install-bootloader-propspec
-    ((type (eql 'install-rockchip)) volume running-on-target
-     &rest args &key &allow-other-keys)
-  `(installed-rockchip ,volume ,running-on-target ,@args))
+    ((type (eql 'install-rockchip)) volume &rest args &key &allow-other-keys)
+  `(installed-rockchip ,volume ,@args))
 
 (defmethod install-bootloader-binaries-propspec
     ((type (eql 'install-rockchip)) volume &key &allow-other-keys)
@@ -33,15 +32,14 @@
        (debianlike
         (apt:installed "u-boot-rockchip"))))
 
-(defprop installed-rockchip :posix (volume running-on-target &key target)
+(defprop installed-rockchip :posix (volume &key target)
   (:desc "Installed U-Boot using Debian scripts")
   (:hostattrs
    (os:required 'os:debianlike)
-   (or running-on-target target
+   (or (container:contained-p :physical-disks) target
        (inapplicable-property
         "Must specify TARGET for u-boot-install-rockchip(8) unless running on device.")))
   (:apply
-   (declare (ignore running-on-target))
    (let ((args (list "u-boot-install-rockchip" (device-file volume))))
      (if target
          (apply #'mrun :env `(:TARGET ,target) args)

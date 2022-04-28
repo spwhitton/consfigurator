@@ -724,7 +724,8 @@
                  #:consfigurator.property.installer)
            (:local-nicknames (#:os        #:consfigurator.property.os)
                              (#:file      #:consfigurator.property.file)
-                             (#:apt       #:consfigurator.property.apt))
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:container #:consfigurator.property.container))
            (:export #:grub
                     #:grub-installed))
 
@@ -732,7 +733,8 @@
            (:use #:consfigurator.property.disk
                  #:consfigurator.property.installer)
            (:local-nicknames (#:os        #:consfigurator.property.os)
-                             (#:apt       #:consfigurator.property.apt))
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:container #:consfigurator.property.container))
            (:export #:install-rockchip
                     #:installed-rockchip))
 

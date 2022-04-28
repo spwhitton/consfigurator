@@ -20,18 +20,19 @@
 
 ;;;; Bootloaders
 
-(defgeneric install-bootloader-propspec
-    (bootloader-type volume running-on-target &key)
+(defgeneric install-bootloader-propspec (bootloader-type volume &key)
   (:documentation
    "Return a propspec expression which installs bootloader of type
 BOOTLOADER-TYPE to VOLUME.
 The propapp yielded by the propspec may be of type :POSIX or of type :LISP.
 
-RUNNING-ON-TARGET indicates whether the host to which we are connected is the
-host the bootloader will boot.  For example, it is NIL when building disk
-images, and T when installing a host from a live environment.  Bootloader
-installation might behave differently when RUNNING-ON-TARGET is NIL, or error
-out."))
+The property can call CONTAINER:CONTAINED-P with relevant factors to determine
+whether the host to which we are connected is the host the bootloader will
+boot.  For example, (container:contained-p :efi-nvram) returns NIL when
+building disk images, and T when installing a host from a live environment.
+Bootloader installation might behave differently when certain factors are not
+contained, or error out.  For examples, see GRUB:GRUB-INSTALLED and
+U-BOOT:INSTALLED-ROCKCHIP."))
 
 (defgeneric install-bootloader-binaries-propspec (bootloader-type volume &key)
   (:documentation
@@ -39,14 +40,14 @@ out."))
 fetches/installs whatever binaries/packages need to be available to install
 BOOTLOADER-TYPE to VOLUME."))
 
-(defun get-propspecs (volumes running-on-target)
+(defun get-propspecs (volumes)
   (loop for volume in (mapcan #'all-subvolumes volumes)
         when (slot-boundp volume 'volume-bootloaders)
           nconc (loop with bls = (volume-bootloaders volume)
                       for bootloader in (if (listp (car bls)) bls (list bls))
                       collect (destructuring-bind (type . args) bootloader
                                 (apply #'install-bootloader-propspec
-                                       type volume running-on-target args)))))
+                                       type volume args)))))
 
 ;; At :HOSTATTRS time we don't have the OPENED-VOLUME values required by the
 ;; :APPLY subroutines which actually install the bootloaders.  So we call
@@ -55,15 +56,13 @@ BOOTLOADER-TYPE to VOLUME."))
 ;; and then at :APPLY time where we can get at the OPENED-VOLUME values, we
 ;; ignore the previously generated propspecs and call GET-PROPSPECS again.
 ;; This approach should work for any sensible VOLUME<->OPENED-VOLUME pairs.
-(define-function-property-combinator
-    %install-bootloaders (running-on-target &rest propapps)
+(define-function-property-combinator %install-bootloaders (&rest propapps)
   (:retprop
    :type :lisp
    :hostattrs (lambda () (mapc #'propapp-attrs propapps))
    :apply
    (lambda ()
-     (mapc #'consfigure
-           (get-propspecs (get-connattr :opened-volumes) running-on-target))
+     (mapc #'consfigure (get-propspecs (get-connattr :opened-volumes)))
      (mrun "sync"))))
 
 
@@ -82,8 +81,7 @@ BOOTLOADER-TYPE to VOLUME."))
         (strcat (unix-namestring chroot) "/")
         (strcat (unix-namestring target) "/"))))
 
-(defpropspec chroot-installed-to-volumes-for :lisp
-    (host chroot volumes &key running-on-target)
+(defpropspec chroot-installed-to-volumes-for :lisp (host chroot volumes)
   "Where CHROOT contains the root filesystem of HOST and VOLUMES is a list of
 volumes, recursively open the volumes and rsync in the contents of CHROOT.
 Also update the fstab and crypttab, and try to install bootloader(s)."
@@ -116,8 +114,7 @@ Also update the fstab and crypttab, and try to install bootloader(s)."
                    (fstab:has-entries-for-opened-volumes)
                    (crypttab:has-entries-for-opened-volumes))))
             (%install-bootloaders
-             ,running-on-target
-             ,@(get-propspecs (get-hostattrs :volumes) running-on-target))))))))
+             ,@(get-propspecs (get-hostattrs :volumes)))))))))
 
 (defpropspec bootloader-binaries-installed :posix ()
   "Install whatever binaries/packages need to be available to install the host's
@@ -138,14 +135,14 @@ install a package providing /usr/sbin/grub-install, but it won't execute it."
        (return
          (if (cdr propspecs) (cons 'eseqprops propspecs) (car propspecs)))))
 
-(defpropspec bootloaders-installed :lisp (&key (running-on-target t))
+(defpropspec bootloaders-installed :lisp ()
   "Install the host's bootloaders to its volumes.
 Intended to be attached to properties like INSTALLER:CLEANLY-INSTALLED-ONCE
 using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
   (:desc "Bootloaders installed")
   `(eseqprops
     (bootloader-binaries-installed)
-    ,@(get-propspecs (get-hostattrs :volumes) running-on-target)))
+    ,@(get-propspecs (get-hostattrs :volumes))))
 
 
 ;;;; Live replacement of GNU/Linux distributions
