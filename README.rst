@@ -77,7 +77,8 @@ regarding the reporting of bugs and submission of patches/pull requests.
 License
 =======
 
-Copyright (C) 2020-2021  Sean Whitton
+Copyright (C) 2015-2018, 2020-2022 Sean Whitton
+Copyright (C) 2021-2022 David Bremner
 
 Consfigurator is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
