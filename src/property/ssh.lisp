@@ -42,6 +42,18 @@
                    `(file:secret-uploaded ,iden1 ,dest ,dest)
                    `(file:host-secret-uploaded ,dest))))
 
+(defun get-host-public-keys (host &key short-hostname (aliases t)
+                                    (ips t) additional-names)
+  (let* ((host (preprocess-host host))
+         (hostname (get-hostname host))
+         (short (and short-hostname (list (get-short-hostname host))))
+         (aliases (and aliases (get-hostattrs :aliases host)))
+         (ips (and ips (append (get-hostattrs :ipv6 host)
+                               (get-hostattrs :ipv4 host)))))
+    (cons (format nil "~{~A~^,~}"
+                  (cons hostname (append aliases short ips additional-names)))
+          (mapcar #'cdr (get-hostattrs 'sshd:host-public-keys host)))))
+
 (defprop %update-known-hosts :posix
     (file host &key short-hostname (aliases t) (ips t) additional-names)
   (:apply
@@ -50,7 +62,7 @@
     (lambda (lines)
       (loop with host = (preprocess-host host)
             with (identifier . keys)
-              = (sshd:get-host-public-keys
+              = (get-host-public-keys
                  host :aliases aliases :short-hostname short-hostname
                  :ips ips :additional-names additional-names)
             and hostname = (get-hostname host)
@@ -71,7 +83,7 @@
                               collect (format nil "~A ~A" identifier key))))))))
   (:unapply
    (destructuring-bind (identifier . keys)
-       (sshd:get-host-public-keys
+       (get-host-public-keys
         host :aliases aliases :short-hostname short-hostname
         :ips ips :additional-names additional-names)
      (file:lacks-lines file

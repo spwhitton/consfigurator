@@ -678,7 +678,7 @@
            (:export #:installed
                     #:configured
                     #:no-passwords
-                    #:get-host-public-keys
+                    #:host-public-keys
                     #:has-host-public-key
                     #:has-host-key))
 

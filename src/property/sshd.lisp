@@ -54,7 +54,7 @@ refuses to proceed if root has no authorized_keys."
 (defprop has-host-public-key :posix (type public-key)
   "Records an SSH public key of type TYPE as identifying this host."
   (:desc #?"Has SSH host key of type ${type}")
-  (:hostattrs (push-hostattr 'host-public-key (cons type public-key))))
+  (:hostattrs (push-hostattr 'host-public-keys (cons type public-key))))
 
 (defproplist has-host-key :posix (type public-key)
   "Installs the host key whose public part is PUBLIC-KEY and is of type TYPE.
@@ -66,15 +66,3 @@ The private key is obtained as an item of prerequisite data."
     public-key)
   (file:host-secret-uploaded (merge-pathnames (strcat "ssh_host_" type "_key")
                                               #P"/etc/ssh/")))
-
-(defun get-host-public-keys (host &key short-hostname (aliases t)
-                                    (ips t) additional-names)
-  (let* ((host (preprocess-host host))
-         (hostname (get-hostname host))
-         (short (and short-hostname (list (get-short-hostname host))))
-         (aliases (and aliases (get-hostattrs :aliases host)))
-         (ips (and ips (append (get-hostattrs :ipv6 host)
-                               (get-hostattrs :ipv4 host)))))
-    (cons (format nil "~{~A~^,~}"
-                  (cons hostname (append aliases short ips additional-names)))
-          (mapcar #'cdr (get-hostattrs 'host-public-key host)))))
