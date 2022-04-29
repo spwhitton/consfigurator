@@ -451,7 +451,6 @@
            (:shadow #:typecase #:etypecase)
            (:export #:unixlike
                     #:linux
-                    #:linux-architecture
                     #:debianlike
                     #:debian
                     #:debian-stable
@@ -460,6 +459,7 @@
                     #:debian-experimental
                     #:debian-suite
                     #:debian-architecture
+                    #:debian-architecture-string
                     #:typecase
                     #:host-typecase
                     #:etypecase

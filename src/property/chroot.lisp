@@ -36,7 +36,7 @@
           (args (list "debootstrap"
                       (plist-to-long-options
                        (remove-from-plist options :apt.proxy :apt.mirrors))
-                      (strcat "--arch=" (os:debian-architecture os))
+                      (strcat "--arch=" (os:debian-architecture-string os))
                       (os:debian-suite os)
                       root)))
        options
@@ -72,9 +72,11 @@
         ;; %DEBOOTSTRAP-MANUALLY-INSTALLED for the case where the
         ;; architectures do not match because ensuring that debootstrap(8)
         ;; will be able to bootstrap a foreign arch is more involved.
-        ,@(and (not (os:supports-arch-p
-                     (get-hostattrs-car :os) (os:linux-architecture
-                                              (get-hostattrs-car :os host))))
+        ,@(and (compute-applicable-methods
+                #'os:supports-arch-p
+                (list (get-hostattrs-car :os) (get-hostattrs-car :os host)))
+               (not (os:supports-arch-p
+                     (get-hostattrs-car :os) (get-hostattrs-car :os host)))
                '((os:etypecase
                    (debianlike (apt:installed "qemu-user-static")))))))))
 

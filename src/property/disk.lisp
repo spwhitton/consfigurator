@@ -983,7 +983,7 @@ Currently only BIOS boot is implemented."
                      "live-boot" "task-laptop" "libnss-myhostname"
                      "syslinux-common" "isolinux")
                     (caches-cleaned))))))
-         (host-arch (os:linux-architecture (get-hostattrs-car :os host))))
+         (host-arch (os:debian-architecture (get-hostattrs-car :os host))))
       options
     (unless (member host-arch '(:amd64))
       (inapplicable-property

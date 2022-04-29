@@ -52,7 +52,7 @@ exist, so that the user can easily override this default."
                           (debianlike (apt:installed "eatmydata" "ccache"))))))))
              (os (get-hostattrs-car :os host))
              (suite (os:debian-suite os))
-             (arch (os:debian-architecture os)))
+             (arch (os:debian-architecture-string os)))
   "Build and configure a schroot for use with sbuild.
 For convenience we set up several enhancements, such as ccache and eatmydata.
 In the case of Debian, we assume you are building for Debian stretch or newer,
@@ -156,8 +156,9 @@ EOF :mode #o755)
               ;; to avoid more than one schroot getting the same aliases, we
               ;; only do this if the arch of the chroot equals the host arch.
               ,@(and (string= suite "unstable")
-                     (string= arch (os:debian-architecture
-                                    (get-hostattrs-car :os)))
+                     (string=
+                      arch
+                      (os:debian-architecture-string (get-hostattrs-car :os)))
                      `(("aliases"
                         ,(format
                           nil "~@{~A~^,~}"
@@ -172,7 +173,7 @@ EOF :mode #o755)
                           "UNRELEASED"
                           ;; The following is for dgit compatibility.
                           (strcat "UNRELEASED-"
-                                  (os:debian-architecture os)
+                                  (os:debian-architecture-string os)
                                   "-sbuild")))))
 
               ("command-prefix"

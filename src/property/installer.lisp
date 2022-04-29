@@ -303,18 +303,17 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
          (apply #'mrun "mount" efi-system-partition-mount-args))))))
 
 (defproplist cleanly-installed-once :lisp
-    (original-os-architecture
-     &optional options
-     &aux (minimal-new-host
-	   (make-host :hostattrs (list :os (get-hostattrs :os))))
-     (original-host
-      (make-host
-       :propspec
-       (make-propspec
-        :propspec
-        `(eseqprops
-          (os:linux ,original-os-architecture)
-          (chroot:os-bootstrapped-for ,options "/new-os" ,minimal-new-host))))))
+    (&optional options original-os
+               &aux
+               (new (make-host :hostattrs `(:os ,(get-hostattrs :os))))
+               (original-host
+                (make-host
+                 :propspec
+                 (make-propspec
+                  :propspec
+                  `(eseqprops
+                    ,(or original-os '(os:linux))
+                    (chroot:os-bootstrapped-for ,options "/new-os" ,new))))))
   "Replaces whatever operating system the host has with a clean installation of
 the OS that the host is meant to have, and reboot, once.  This is intended for
 freshly launched machines in faraway datacentres, where your provider has
@@ -326,17 +325,19 @@ but not captured by your consfig.  This property's approach can fail and leave
 the system unbootable, but it's an time-efficient way to ensure that you're
 starting from a truly clean slate for those cases in which it works.
 
-ORIGINAL-OS-ARCHITECTURE is the architecture of the original OS as would be
-supplied to the OS:LINUX property, e.g. :AMD64.  OPTIONS will be passed on to
-CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+OPTIONS will be passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+ORIGINAL-OS, if supplied, is a propapp specifying the old OS, as you would
+apply to a host with that OS.
 
-The internal property CHROOT::%OS-BOOTSTRAPPER-INSTALLED will attempt to use
-PACKAGE:INSTALLED to install the OS bootstrapper (e.g. debootstrap(8) for
-Debian).  Alternatively, you can install the bootstrapper manually before
-running Consfigurator; this is useful for original OSs whose package managers
-Consfigurator doesn't yet know how to drive.  You might apply an OS-agnostic
-property before this one which manually downloads the bootstrapper and puts it
-on PATH.
+The internal property CHROOT::%OS-BOOTSTRAPPER-INSTALLED will attempt to
+install the OS bootstrapper (e.g. debootstrap(8) for Debian).  If ORIGINAL-OS
+is supplied then installation will use a package manager property for that OS.
+Otherwise, CHROOT::%OS-BOOTSTRAPPER-INSTALLED will fall back to trying
+PACKAGE:INSTALLED.  Alternatively, you can install the bootstrapper manually
+before running Consfigurator and not supply ORIGINAL-OS.  This is useful for
+original OSs whose package managers Consfigurator doesn't yet know how to
+drive.  You might apply an OS-agnostic property before this one which manually
+downloads the bootstrapper and puts it on PATH.
 
 The files from the old OS will be left in '/old-os'.  Typically you will need
 to perform some additional configuration before rebooting to increase the

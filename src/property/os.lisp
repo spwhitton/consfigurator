@@ -22,22 +22,22 @@
 
 (defclass unixlike () ())
 
-(defclass linux (unixlike)
-  ((architecture
-    :initarg :arch :reader linux-architecture
-    :documentation
-    "Keyword whose name is Debian's name for this architecture, e.g. :AMD64")))
+(defclass linux (unixlike) ())
 
-(defprop linux :posix (architecture)
+(defprop linux :posix ()
   (:desc "Host kernel is Linux")
-  (:hostattrs (push-hostattr :os (make-instance 'linux :arch architecture))))
+  (:hostattrs (push-hostattr :os (make-instance 'linux))))
 
 (define-simple-print-object linux)
 
 (defclass debianlike (linux) ())
 
 (defclass debian (debianlike)
-  ((suite :initarg :suite
+  ((architecture
+    :initarg :arch :reader debian-architecture
+    :documentation
+    "Keyword whose name is Debian's name for this architecture, e.g. :AMD64")
+   (suite :initarg :suite
           :reader debian-suite
           :initform (error "Must provide suite"))))
 
@@ -81,9 +81,9 @@
 (defclass debian-experimental (debian)
   ((suite :initform "experimental")))
 
-(defmethod debian-architecture ((os linux))
+(defmethod debian-architecture-string ((os debian))
   "Return a string representing the architecture of OS as used by Debian."
-  (string-downcase (symbol-name (linux-architecture os))))
+  (string-downcase (symbol-name (debian-architecture os))))
 
 
 ;;;; Property combinators
@@ -144,12 +144,12 @@ Used in property :HOSTATTRS subroutines."
     (unless (and os (subtypep os type))
       (inapplicable-property #?"Property requires OS of type ${type}"))))
 
-(defun supports-arch-p (os arch)
-  "Can binaries of type ARCH run on OS?"
-  (let ((same (eq (linux-architecture os) arch)))
-    (cl:typecase os
-      (debian (or same
-                  (member arch (assoc (linux-architecture os)
-                                      '((:amd64 :i386)
-                                        (:i386  :amd64))))))
-      (linux same))))
+(defgeneric supports-arch-p (target-os binary-os)
+  (:documentation "Can binaries for BINARY-OS run on TARGET-OS?"))
+
+(defmethod supports-arch-p ((target-os debian) (binary-os debian))
+  (let ((target (debian-architecture target-os))
+        (binary (debian-architecture binary-os)))
+    (or (eq target binary)
+        (member binary (assoc target '((:amd64 :i386)
+                                       (:i386  :amd64)))))))
