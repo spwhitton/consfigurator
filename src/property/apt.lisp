@@ -283,6 +283,14 @@ after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
 
 ;;;; Pinning
 
+(defmethod suite-specifier-to-os ((suite-specifier os:debian))
+  suite-specifier)
+
+(defmethod suite-specifier-to-os ((suite-specifier cons))
+  (destructuring-bind (type &optional (suite nil suite-supplied-p))
+      suite-specifier
+    (apply #'make-instance type (and suite-supplied-p `(:suite ,suite)))))
+
 (defmethod suite-pin ((os os:debian-stable))
   (strcat "n=" (os:debian-suite os)))
 
@@ -296,22 +304,27 @@ after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
     ,(format nil "Pin-Priority: ~D" pin-priority)))
 
 (defpropspec suites-available-pinned :posix (&rest pairs)
-  "Where PAIRS is a list of even length of alternating instances of OS:DEBIAN
-and apt pin priorities, add an apt source for the instance of OS:DEBIAN and
+  "Where PAIRS is a list of even length of alternating Debian suite specifiers
+and apt pin priorities, add an apt source for the specified Debian suite and
 pin that suite to a given pin value (see apt_preferences(5)).  Unapply to drop
 the source and unpin the suite.
+
+A Debian suite specifier is either an instance of a subclass of OS:DEBIANLIKE
+or a list (TYPE &optional SUITE) where TYPE names a subclass of OS:DEBIANLIKE
+and SUITE is a string.  For example, '(os:debian-stable \"bullseye\").
 
 If the OS:DEBIAN is the host's OS, the suite is pinned, but no source is
 added.  That apt source should already be available, or you can use a property
 like APT:STANDARD-SOURCES.LIST."
   (:desc (loop for (os pin) on pairs by #'cddr
-               for suite = (os:debian-suite os)
+               for suite = (os:debian-suite (suite-specifier-to-os os))
                collect #?{Debian "${suite}" pinned, priority ${pin}}
                  into accum
                finally (return (format nil "~{~A~^; ~}" accum))))
   (:hostattrs (os:required 'os:debian))
   `(eseqprops
-    ,@(loop for (os pin) on pairs by #'cddr
+    ,@(loop for (suite-specifier pin) on pairs by #'cddr
+            for os = (suite-specifier-to-os suite-specifier)
             for suite = (os:debian-suite os)
             do (check-type pin integer)
             collect `(file:exists-with-content
@@ -333,8 +346,12 @@ like APT:STANDARD-SOURCES.LIST."
 (defpropspec pinned :posix (preferences &rest pairs)
   "Pins a list of packages, package wildcards and/or regular expressions,
 PREFERENCES, to a list of suites and corresponding pin priorities.  Unapply to
-unpin.  PAIRS is a list of even length of alternating instances of OS:DEBIAN
+unpin.  PAIRS is a list of even length of alternating Debian suite specifiers
 and apt pin priorities.
+
+A Debian suite specifier is either an instance of a subclass of OS:DEBIANLIKE
+or a list (TYPE &optional SUITE) where TYPE names a subclass of OS:DEBIANLIKE
+and SUITE is a string.  For example, '(os:debian-stable \"bullseye\").
 
 Each package, package wildcard or regular expression will be pinned to all of
 the specified suites.  Each of PREFERENCES is the name of a package, a glob to
@@ -356,7 +373,7 @@ in testing, you could use:
                 (os:debian-testing)  100
                 (os:debian-unstable) 50)"
   (:desc (loop for (os pin) on pairs by #'cddr
-               for suite = (os:debian-suite os)
+               for suite = (os:debian-suite (suite-specifier-to-os os))
                collect #?{Debian "${suite}", priority ${pin}} into accum
                finally (return (format nil "~{~A~^, ~} pinned to ~{~A~^; ~}"
                                        preferences accum))))
@@ -370,7 +387,8 @@ in testing, you could use:
                              ".pref")
                      (nbutlast
                       (loop for (os pin) on pairs by #'cddr
-                            nconc (suite-pin-block preference os pin)
+                            nconc (suite-pin-block
+                                   preference (suite-specifier-to-os os) pin)
                             collect ""))))))
 
 

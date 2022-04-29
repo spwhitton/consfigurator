@@ -45,9 +45,6 @@
 
 (defclass debian-stable (debian) ())
 
-(defun debian-stable (suite)
-  (make-instance 'debian-stable :suite suite))
-
 (defprop debian-stable :posix (suite architecture)
   (:desc
    (declare (ignore architecture))
@@ -59,9 +56,6 @@
 
 (defclass debian-testing (debian)
   ((suite :initform "testing")))
-
-(defun debian-testing ()
-  (make-instance 'debian-testing))
 
 (defprop debian-testing :posix (architecture)
   (:desc
@@ -75,9 +69,6 @@
 (defclass debian-unstable (debian)
   ((suite :initform "unstable")))
 
-(defun debian-unstable ()
-  (make-instance 'debian-unstable))
-
 (defprop debian-unstable :posix (architecture)
   (:desc
    (declare (ignore architecture))
@@ -89,9 +80,6 @@
 
 (defclass debian-experimental (debian)
   ((suite :initform "experimental")))
-
-(defun debian-experimental ()
-  (make-instance 'debian-experimental))
 
 (defmethod debian-architecture ((os linux))
   "Return a string representing the architecture of OS as used by Debian."
