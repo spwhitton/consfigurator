@@ -688,8 +688,8 @@
            (:export #:authorized-keys
                     #:has-user-key
                     #:known-host
-                    #:globally-known-host
-                    #:parent-is-globally-known-host))
+                    #:system-known-host
+                    #:parent-is-system-known-host))
 
   (package :consfigurator.property.locale
            (:local-nicknames (#:re        #:cl-ppcre)

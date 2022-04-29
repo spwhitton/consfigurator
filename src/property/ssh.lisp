@@ -102,23 +102,23 @@ identifying HOST, to simplify refreshing keys."
                        :aliases aliases :short-hostname short-hostname
                        :ips ips :additional-names additional-names))
 
-(defproplist globally-known-host :posix (host &key short-hostname (aliases t)
-                                              (ips t) additional-names)
+(defproplist system-known-host :posix (host &key short-hostname (aliases t)
+                                            (ips t) additional-names)
   "Ensures that SSH host keys of HOST are stored in /etc/ssh/ssh_known_hosts.
 If SHORT-HOSTNAME, include the part of HOST's hostname before the first dot as
 one of the hostnames identifying HOST.  Removes any other host keys
 identifying HOST, to simplify refreshing keys."
-  (:desc #?"${(get-hostname host)} is globally known host to ssh client")
+  (:desc #?"${(get-hostname host)} is system known host to ssh client")
   (%update-known-hosts
    "/etc/ssh/ssh_known_hosts" host
    :aliases aliases :short-hostname short-hostname
    :ips ips :additional-names additional-names))
 
-(defproplist parent-is-globally-known-host :posix
+(defproplist parent-is-system-known-host :posix
     (&key short-hostname (aliases t) (ips t) additional-names)
   "Ensures that the SSH host keys of the parent host are stored in
-/etc/ssh/ssh_known_hosts; SHORT-HOSTNAME is as for SSH:GLOBALLY-KNOWN-HOST."
-  (:desc "Parent host is globally known host to ssh client")
+/etc/ssh/ssh_known_hosts; SHORT-HOSTNAME is as for SSH:SYSTEM-KNOWN-HOST."
+  (:desc "Parent host is system known host to ssh client")
   (%update-known-hosts
    "/etc/ssh/ssh_known_hosts" (make-host :hostattrs
                                          (get-hostattrs :parent-hostattrs))
