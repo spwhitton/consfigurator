@@ -76,11 +76,3 @@ Core
   that hosts implicitly defined inline using dotted propapp notation are
   accessible via their parents, so that a property which gathers up DNS
   information about all hosts, for example, would be able to find them.
-
-Project & packaging
--------------------
-
-- Start actually announcing releases to sgo-software-announce.  Take the
-  opportunity to review whole public API for good choices of names and
-  sensible separation of responsibilities.  Increment major version number
-  from zero to one, and from then on start updating news.rst.
