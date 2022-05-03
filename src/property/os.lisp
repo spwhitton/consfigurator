@@ -94,10 +94,12 @@
 (defun case-host (host fn)
   (funcall fn (if host (get-hostattrs-car :os host) (get-hostattrs-car :os))))
 
-(defun case-choose (host cases reader pred)
+(defun case-choose (host cases reader pred &optional default)
   (loop with slot = (case-host host reader)
         for (case propapp) on cases by #'cddr
-        when (funcall pred slot case) return propapp))
+        when (or (and default (eql case t))
+                 (funcall pred slot case))
+          return propapp))
 
 (defmacro define-host-case-combinators
     (name ename reader pred convert-key error-control)
@@ -112,7 +114,7 @@
       `(progn
          (define-choosing-property-combinator ,case* (host &rest cases)
            :type (cases-type cases)
-           :choose (case-choose host cases ,reader ,pred))
+           :choose (case-choose host cases ,reader ,pred t))
 
          (define-choosing-property-combinator ,ecase* (host &rest cases)
            :type (cases-type cases)
