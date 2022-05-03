@@ -88,50 +88,60 @@
 
 ;;;; Property combinators
 
-(defun typecase-type (cases)
+(defun cases-type (cases)
   (combine-propapp-types (loop for pa in (cdr cases) by #'cddr collect pa)))
 
-(defun typecase-host (host)
-  (class-of (if host
-                (get-hostattrs-car :os host)
-                (get-hostattrs-car :os))))
+(defun case-host (host fn)
+  (funcall fn (if host (get-hostattrs-car :os host) (get-hostattrs-car :os))))
 
-(defun typecase-choose (host cases)
-  (loop with os = (typecase-host host)
-        for (type propapp) on cases by #'cddr
-        when (subtypep os type) return propapp))
+(defun case-choose (host cases reader pred)
+  (loop with slot = (case-host host reader)
+        for (case propapp) on cases by #'cddr
+        when (funcall pred slot case) return propapp))
 
-(define-choosing-property-combinator os-typecase* (host &rest cases)
-  :type (typecase-type cases)
-  :choose (typecase-choose host cases))
+(defmacro define-host-case-combinators
+    (name ename reader pred convert-key error-control)
+  (with-gensyms (host cases key forms)
+    (let ((case* (symbolicate name 'case*))
+          (ecase* (symbolicate ename 'case*))
+          (flatten `(loop for (,key . ,forms) in ,cases
+                          collect (funcall ,convert-key ,key)
+                          collect (if (cdr ,forms)
+                                      `(eseqprops ,@,forms)
+                                      (car ,forms)))))
+      `(progn
+         (define-choosing-property-combinator ,case* (host &rest cases)
+           :type (cases-type cases)
+           :choose (case-choose host cases ,reader ,pred))
 
-(define-choosing-property-combinator os-etypecase* (host &rest cases)
-  :type (typecase-type cases)
-  :choose
-  (or (typecase-choose host cases)
-      (inapplicable-property
-       "Host's OS ~S fell through OS:ETYPECASE." (typecase-host host))))
+         (define-choosing-property-combinator ,ecase* (host &rest cases)
+           :type (cases-type cases)
+           :choose
+           (or (case-choose host cases ,reader ,pred)
+               (inapplicable-property ,error-control (case-host host ,reader))))
 
-(defmacro host-typecase* (macro host &body cases)
-  `(,macro
-    ,host
-    ,@(loop for case in cases
-            collect `',(intern (symbol-name (car case))
-                               (find-package :consfigurator.property.os))
-            collect (let ((forms (cdr case)))
-                      (if (cdr forms) `(eseqprops ,@forms) (car forms))))))
+         (defmacro ,(symbolicate name 'case) (&body ,cases)
+           `(,',case* nil ,@,flatten))
 
-(defmacro typecase (&body cases)
-  `(host-typecase* os-typecase* nil ,@cases))
+         (defmacro ,(symbolicate ename 'case) (&body ,cases)
+           `(,',ecase* nil ,@,flatten))
 
-(defmacro etypecase (&body cases)
-  `(host-typecase* os-etypecase* nil ,@cases))
+         (defmacro ,(symbolicate 'host- name 'case) (,host &body ,cases)
+           `(,',case* ,,host ,@,flatten))
 
-(defmacro host-typecase (host &body cases)
-  `(host-typecase* os-typecase* ,host ,@cases))
+         (defmacro ,(symbolicate 'host- ename 'case) (,host &body ,cases)
+           `(,',ecase* ,,host ,@,flatten))))))
 
-(defmacro host-etypecase (host &body cases)
-  `(host-typecase* os-etypecase* ,host ,@cases))
+(define-host-case-combinators type etype
+  #'class-of #'subtypep
+  (lambda (key)
+    `',(intern (symbol-name key)
+               (find-package :consfigurator.property.os)))
+  "Host's OS ~S fell through OS:ETYPECASE.")
+
+(define-host-case-combinators debian-suite- debian-suite-e
+  #'debian-suite #'string= #'identity
+  "Host's Debian suite ~S fell through OS:DEBIAN-SUITE-ECASE.")
 
 
 ;;;; Utilities

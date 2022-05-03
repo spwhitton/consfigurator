@@ -460,10 +460,17 @@
                     #:debian-suite
                     #:debian-architecture
                     #:debian-architecture-string
+
                     #:typecase
                     #:host-typecase
                     #:etypecase
                     #:host-etypecase
+
+                    #:debian-suite-case
+                    #:host-debian-suite-case
+                    #:debian-suite-ecase
+                    #:host-debian-suite-ecase
+
                     #:required
                     #:supports-arch-p))
 
