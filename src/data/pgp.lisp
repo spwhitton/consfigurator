@@ -51,20 +51,15 @@
       (cons #'check #'extract))))
 
 (defun read-store (location)
-  (handler-case
-      (safe-read-from-string
-       (run-program
-        (sh-escape (list "gpg" "--decrypt" location)) :output :string))
-    (subprocess-error (error)
-      (missing-data-source "While attempt to decrypt, gpg exited with ~A"
-			   (uiop:subprocess-error-code error)))))
+  (safe-read-from-string
+   (gpg-file-as-string location)))
 
 (defun put-store (location data)
-  (run-program (list "gpg" "--encrypt")
-               :input (make-string-input-stream
-                       (with-standard-io-syntax
-                         (prin1-to-string data)))
-               :output (unix-namestring location)))
+  (gpg '("--encrypt")
+       :input (make-string-input-stream
+               (with-standard-io-syntax
+                 (prin1-to-string data)))
+       :output (unix-namestring location)))
 
 (defun data-assoc (iden1 iden2 data)
   (assoc (cons iden1 iden2) data

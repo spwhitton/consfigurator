@@ -323,6 +323,7 @@
            #:wrap-passphrase
            #:unwrap-passphrase
            #:get-data-protected-string
+           #:*data-source-gnupghome*
 
            ;; image.lisp
            #:eval-in-grandchild
@@ -1003,11 +1004,12 @@
                              (#:lxc  #:consfigurator.property.lxc)))
 
   (package :consfigurator.data.util
-           (:export #:literal-data-pathname))
+           (:export #:literal-data-pathname #:gpg-file-as-string #:gpg))
 
   (package :consfigurator.data.asdf)
 
   (package :consfigurator.data.pgp
+           (:use  #:consfigurator.data.util)
            (:export #:list-data #:get-data #:set-data #:set-data-from-file))
 
   (package :consfigurator.data.git-snapshot)

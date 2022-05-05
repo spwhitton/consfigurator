@@ -510,3 +510,9 @@ chance of those passwords showing up in the clear in the Lisp debugger."
       (print-unreadable-object (passphrase stream)
         (format stream "PASSPHRASE")))
   passphrase)
+
+(defvar *data-source-gnupghome* nil
+  "Home directory for gnupg when used in a data source.
+
+Because gnupg uses Unix domain sockets internally, this path should be short
+enough to avoid the 108 char limit on socket paths.")

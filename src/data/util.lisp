@@ -1,6 +1,7 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
 ;;; Copyright (C) 2022  David Bremner <david@tethera.net>
+;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -38,3 +39,26 @@ may contain '/' characters to map into multiple levels of directory."
       (uiop:relativize-pathname-directory
        (ensure-directory-pathname iden1))
       base-dir))))
+
+(defun gpg (args &key input output)
+  "Run gnupg, taking homedir from *DATA-SOURCE-GNUPGHOME* if set.
+
+INPUT and OUTPUT have the same meaning as for RUN-PROGRAM, except that OUTPUT
+defaults to :STRING.  The default return value is thus the output from gnupg,
+as a string."
+  (run-program
+   `("gpg"
+     ,@(and *data-source-gnupghome*
+            (list "--homedir" (namestring *data-source-gnupghome*)))
+     ,@args)
+   :input  input
+   :output (or output :string)))
+
+(defun gpg-file-as-string (location)
+  "Decrypt the contents of a gpg encrypted file at LOCATION, return as a
+string."
+  (handler-case
+      (gpg (list "--decrypt" (unix-namestring location)))
+    (subprocess-error (error)
+      (missing-data-source "While attempt to decrypt ~A, gpg exited with ~A"
+			   location (uiop:subprocess-error-code error)))))
