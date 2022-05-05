@@ -23,6 +23,10 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
-..
-   1.0.1 (unreleased)
-   ------------------
+1.0.1 (unreleased)
+------------------
+
+- New data source to fetch passphrases from a `pass(1)`_ data store, thanks to
+  David Bremner.
+
+.. _pass(1): https://www.passwordstore.org/
