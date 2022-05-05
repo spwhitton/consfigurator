@@ -54,11 +54,27 @@ This is mainly useful when there is a single primary key."
        (run-program "gpgconf" "--homedir" *data-source-gnupghome*
                     "--kill" "all"))))
 
+(defparameter *test-pgp-file* nil)
+
+(defmacro with-test-pgp-source (base-dir &rest body)
+  "Run BODY with *TEST-PGP-FILE* defined and a corresponding pgp data source
+registered and populated."
+  `(let ((*test-pgp-file* (merge-pathnames "pgp-secrets.gpg" ,base-dir)))
+     (populate-data-pgp)
+     (handler-case
+         (try-register-data-source :pgp :location *test-pgp-file*)
+       (missing-data-source ()
+         (error "Test setup failure for pgp file ~a" *test-pgp-file*)))
+     ,@body))
+
 (defun runner ()
   "Run tests via (sb-)rt, with setup and teardown."
   (with-local-temporary-directory (test-home)
     (with-test-gnupg-home test-home
-      (do-tests))))
+      (with-reset-data-sources
+        (with-test-pgp-source test-home
+          (do-tests))))))
+
 
 ;;;; tests for test runner machinery
 (deftest runner.0 (not *data-source-gnupghome*) nil)
@@ -70,3 +86,5 @@ This is mainly useful when there is a single primary key."
   1)
 
 (deftest runner.2 (not *test-gnupg-fingerprint*) nil)
+
+(deftest runner.3 (not *test-pgp-file*) nil)

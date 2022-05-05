@@ -110,6 +110,7 @@
                (:feature (:not :sbcl) #:rt))
   :components ((:file "tests/package")
                (:file "tests/runner")
+               (:file "tests/data/pgp")
                (:file "tests/data/util")
                (:file "tests/util")
                (:file "tests/property/file"))
