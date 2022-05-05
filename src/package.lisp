@@ -17,6 +17,7 @@
                           #:subprocess-error
                           #:stripln
                           #:unix-namestring
+                          #:parse-unix-namestring
                           #:pathname-directory-pathname
                           #:pathname-parent-directory-pathname
                           #:resolve-symlinks
@@ -28,6 +29,7 @@
                           #:subpathp
                           #:relative-pathname-p
                           #:absolute-pathname-p
+                          #:directory-pathname-p
                           #:getenv
                           #:subdirectories
                           #:directory-files
@@ -57,6 +59,7 @@
            #:subprocess-error
            #:stripln
            #:unix-namestring
+           #:parse-unix-namestring
            #:pathname-directory-pathname
            #:pathname-parent-directory-pathname
            #:resolve-symlinks
@@ -68,6 +71,7 @@
            #:subpathp
            #:relative-pathname-p
            #:absolute-pathname-p
+           #:directory-pathname-p
            #:getenv
            #:subdirectories
            #:directory-files

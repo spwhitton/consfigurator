@@ -29,12 +29,12 @@ pathname components are removed.
 The intended use case is to map IDEN1 and IDEN2 to files in a user-maintained
 hierarchy under BASE-PATH.  In particular IDEN2 and (if prefixed by '_') IDEN1
 may contain '/' characters to map into multiple levels of directory."
-  (let ((base-dir (uiop:parse-unix-namestring base-path :ensure-directory t)))
-    (unless (uiop:directory-pathname-p base-dir)
+  (let ((base-dir (parse-unix-namestring base-path :ensure-directory t)))
+    (unless (directory-pathname-p base-dir)
       (simple-program-error "~A does not specify a directory" base-dir))
     (merge-pathnames
      (uiop:relativize-pathname-directory
-      (uiop:parse-unix-namestring iden2 :type type))
+      (parse-unix-namestring iden2 :type type))
      (merge-pathnames
       (uiop:relativize-pathname-directory
        (ensure-directory-pathname iden1))
