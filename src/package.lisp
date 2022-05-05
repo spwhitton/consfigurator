@@ -105,6 +105,7 @@
            #:unlines
            #:words
            #:unwords
+           #:strip-prefix
            #:memstr=
            #:define-simple-error
            #:plist-to-long-options

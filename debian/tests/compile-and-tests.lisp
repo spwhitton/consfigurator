@@ -11,7 +11,7 @@
 ;; whether any tests failed.  We have to switch the package back and forth as
 ;; CL-USER has no *CONSFIG*.
 (let ((*package* (find-package :consfigurator/tests)))
-  (unless (consfigurator/tests::do-tests)
+  (unless (consfigurator/tests::runner)
     (uiop:quit 2)))
 
 (fresh-line)

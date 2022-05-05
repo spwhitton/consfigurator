@@ -72,6 +72,11 @@
 (defun unwords (words)
   (format nil "~{~A~^ ~}" words))
 
+(defun strip-prefix (prefix string)
+  "If STRING is prefixed by PREFIX, return the rest of STRING,
+otherwise return NIL."
+  (nth-value 1 (starts-with-subseq prefix string :return-suffix t)))
+
 (defun memstr= (string list)
   (member string list :test #'string=))
 
