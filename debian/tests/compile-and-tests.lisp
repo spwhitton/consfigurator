@@ -11,6 +11,8 @@
 ;; whether any tests failed.  We have to switch the package back and forth as
 ;; CL-USER has no *CONSFIG*.
 (let ((*package* (find-package :consfigurator/tests)))
+  ;; Set TMPDIR so UIOP temporary file utilities use AUTOPKGTEST_TMP.
+  (setf (uiop:getenv "TMPDIR") (uiop:getenv "AUTOPKGTEST_TMP"))
   (unless (consfigurator/tests::runner)
     (uiop:quit 2)))
 

@@ -2,6 +2,7 @@ consfigurator (1.0.1-1) UNRELEASED; urgency=medium
 
   * New upstream release.
   * Add autopkgtest deps on gpg and pass.
+  * d/tests/compile-and-tests.lisp: Set TMPDIR to AUTOPKGTEST_TMP.
 
  -- Sean Whitton <spwhitton@spwhitton.name>  Thu, 05 May 2022 12:10:53 -0700
 
