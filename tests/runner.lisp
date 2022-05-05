@@ -67,13 +67,35 @@ registered and populated."
          (error "Test setup failure for pgp file ~a" *test-pgp-file*)))
      ,@body))
 
+(defparameter *test-pass-dir* nil
+  "pass(1) store for use in test suite.")
+
+(defun pass (args &key input)
+  (run-program `("env" ,#?"GNUPGHOME=${*data-source-gnupghome*}"
+                       ,#?"PASSWORD_STORE_DIR=${*test-pass-dir*}" "pass"
+                       ,@args)
+               :input (if input (make-string-input-stream input) nil)
+               :output :string :error-output :output))
+
+(defmacro with-test-pass-source (test-home &rest body)
+  "Run BODY with pass(1) data source in TEST-HOME populated and registed."
+  `(let ((*test-pass-dir* (merge-pathnames #P"password-store/" ,test-home)))
+     (pass (list "init" *test-gnupg-fingerprint*))
+     (populate-data-pass)
+     (handler-case
+         (try-register-data-source :pass :location *test-pass-dir*)
+       (missing-data-source ()
+         (error "Test setup failure for pass directory ~a" *test-pass-dir*)))
+     ,@body))
+
 (defun runner ()
   "Run tests via (sb-)rt, with setup and teardown."
   (with-local-temporary-directory (test-home)
     (with-test-gnupg-home test-home
       (with-reset-data-sources
         (with-test-pgp-source test-home
-          (do-tests))))))
+          (with-test-pass-source test-home
+            (do-tests)))))))
 
 
 ;;;; tests for test runner machinery
@@ -88,3 +110,5 @@ registered and populated."
 (deftest runner.2 (not *test-gnupg-fingerprint*) nil)
 
 (deftest runner.3 (not *test-pgp-file*) nil)
+
+(deftest runner.4 (nth-value 2 (pass '("list"))) 0)

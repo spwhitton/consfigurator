@@ -326,6 +326,7 @@
            #:get-data-protected-string
            #:*data-source-gnupghome*
            #:with-reset-data-sources
+           #:missing-data
 
            ;; image.lisp
            #:eval-in-grandchild
