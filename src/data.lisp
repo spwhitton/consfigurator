@@ -143,6 +143,15 @@ This function is typically called at the REPL."
         *data-sources* nil
         *data-source-registrations* nil))
 
+(defmacro with-reset-data-sources (&body body)
+  "Run BODY with initially empty data sources and string data.
+
+This macro is typically used for testing or debugging."
+  `(let ((*string-data* (make-hash-table))
+         *data-sources*
+         *data-source-registrations*)
+     ,@body))
+
 (defun get-data-string (iden1 iden2)
   "Return the content of an item of prerequisite data as a string.
 

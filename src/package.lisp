@@ -325,6 +325,7 @@
            #:unwrap-passphrase
            #:get-data-protected-string
            #:*data-source-gnupghome*
+           #:with-reset-data-sources
 
            ;; image.lisp
            #:eval-in-grandchild
