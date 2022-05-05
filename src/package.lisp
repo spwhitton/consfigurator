@@ -1002,6 +1002,9 @@
            (:local-nicknames (#:user #:consfigurator.property.user)
                              (#:lxc  #:consfigurator.property.lxc)))
 
+  (package :consfigurator.data.util
+           (:export #:literal-data-pathname))
+
   (package :consfigurator.data.asdf)
 
   (package :consfigurator.data.pgp
@@ -1016,4 +1019,5 @@
 
   (package :consfigurator.data.local-file)
 
-  (package :consfigurator.data.files-tree))
+  (package :consfigurator.data.files-tree
+           (:use  #:consfigurator.data.util)))

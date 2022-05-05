@@ -37,20 +37,12 @@ IDEN2 an an absolute or relative path are all supported."
     (unless (directory-exists-p base-path)
       (missing-data-source
        "~A does not exist, or is not a directory." base-path))
-    (labels ((%make-path (iden1 iden2)
-               (merge-pathnames
-                (uiop:relativize-pathname-directory
-                 iden2)
-                (merge-pathnames
-                 (uiop:relativize-pathname-directory
-                  (ensure-directory-pathname iden1))
-                 base-path)))
-             (check (iden1 iden2)
-               (let ((file-path (%make-path iden1 iden2)))
+    (labels ((check (iden1 iden2)
+               (let ((file-path (literal-data-pathname base-path iden1 iden2)))
                  (and (file-exists-p file-path)
                       (file-write-date file-path))))
              (extract (iden1 iden2)
-               (let ((file-path (%make-path iden1 iden2)))
+               (let ((file-path (literal-data-pathname base-path iden1 iden2)))
                  (and (file-exists-p file-path)
                       (make-instance 'file-data
                                      :file file-path
