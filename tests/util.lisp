@@ -36,10 +36,10 @@
     (valid-hostname-p (format nil "~64@{a~}a" nil))
   nil)
 
-;; valid use of `-'
+;; valid use of '-'
 (deftest valid-hostname-p.6 (valid-hostname-p "host-name.example.com") t)
 
-;; invalid use of `-'
+;; invalid use of '-'
 (deftest valid-hostname-p.7 (valid-hostname-p "-hostname.example.com") nil)
 
 ;; invalid character
