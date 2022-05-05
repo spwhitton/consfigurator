@@ -22,6 +22,10 @@ perl -pi -we's/^;; Version: .+/;; Version: '$version'/' \
      emacs/consfigurator.el.in
 perl -pi -we"s/release = '.+'/release = '$version'/" doc/conf.py
 
+perl -MPOSIX=strftime -pi \
+     -we's/^\Q'$version' (unreleased)\E$/
+           strftime "'$version' (%Y-%m-%d)", localtime/e' doc/news.rst
+
 dist=$(dpkg-parsechangelog -SDistribution)
 if [ "$dist" = "UNRELEASED" ]; then
     dch -v$version-1 ""
@@ -30,7 +34,7 @@ else
 fi
 dch -r
 
-changed_files="consfigurator.asd emacs/consfigurator.el.in doc/conf.py debian/changelog"
+changed_files="consfigurator.asd emacs/consfigurator.el.in doc/conf.py doc/news.rst debian/changelog"
 
 if ! dpkg-parsechangelog | grep -q "New upstream release."; then
     echo >&2 'Debian changelog lacks line "New upstream release."'
