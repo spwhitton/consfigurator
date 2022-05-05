@@ -1023,5 +1023,8 @@
 
   (package :consfigurator.data.local-file)
 
+  (package :consfigurator.data.pass
+           (:use  #:consfigurator.data.util))
+
   (package :consfigurator.data.files-tree
            (:use  #:consfigurator.data.util)))

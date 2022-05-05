@@ -95,6 +95,7 @@
 	       (:file "src/data/gpgpubkeys")
                (:file "src/data/ssh-askpass")
                (:file "src/data/local-file")
+               (:file "src/data/pass")
                (:file "src/data/files-tree"))
   :in-order-to ((test-op (test-op "consfigurator/tests"))))
 
