@@ -1,5 +1,7 @@
 Test-Command: sbcl --script debian/tests/compile-and-tests.lisp
 Depends:
+ gpg,
+ pass,
  sbcl,
  @,
 Restrictions: allow-stderr, superficial
