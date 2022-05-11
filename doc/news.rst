@@ -26,6 +26,8 @@ you should review this document and see if your consfig needs updating.
 1.0.1 (unreleased)
 ------------------
 
+- Some enhancements to OS combinators.
+
 - New data source to fetch passphrases from a `pass(1)`_ data store, thanks to
   David Bremner.
 
