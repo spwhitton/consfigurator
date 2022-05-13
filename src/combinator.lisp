@@ -347,9 +347,8 @@ applies the elements of PROPAPPS appearing after :UNAPPLY.
 Analogously to how DEFPROPLIST/DEFPROPSPEC allow you to define a property
 which works by calling other properties, this combinator allows you to define
 an :UNAPPLY subroutine for a property which works by calling other properties."
-  (let* ((apply (loop for propapp in propapps
-                      until (eql propapp :unapply) collect propapp))
-         (unapply (member :unapply propapps))
+  (let* ((unapply (member :unapply propapps))
+         (apply (ldiff propapps unapply))
          (apply-propapp
            (if (cdr apply) (apply #'eseqprops apply) (car apply)))
          (unapply-propapp (if (cddr unapply)
