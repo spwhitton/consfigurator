@@ -326,12 +326,9 @@ Connection attributes, by contrast, are propagated as usual."
      (setf (getf (slot-value host 'hostattrs) :data) nil)
      (setq host (preprocess-host host))
      (doplist (k v (hostattrs host))
-       (loop with root = (get-hostattrs k)
-             for cell on v until (eq cell root)
-             collect (car cell) into accum
-             finally (if (eql k :data)
-                         (pushnew-hostattrs :data (nreverse accum))
-                         (push-hostattrs k (nreverse accum)))))
+       (case k
+         (:data (pushnew-hostattrs :data v))
+         (t (setf (getf (slot-value *host* 'hostattrs) k) v))))
      (dolist (system (propspec-systems (host-propspec host)))
        (pushnew system (slot-value (host-propspec *host*) 'systems)))
      (setf (getf properties :host) host)))
