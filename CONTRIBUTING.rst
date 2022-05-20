@@ -16,7 +16,7 @@ small free software projects:
 - sgo-software-announce --
   <https://www.chiark.greenend.org.uk/mailman/listinfo/sgo-software-announce>
 
-  For release announcements.
+  For release announcements (typically only those with entries in doc/news.rst).
 
 - sgo-software-discuss --
   <https://www.chiark.greenend.org.uk/mailman/listinfo/sgo-software-discuss>
