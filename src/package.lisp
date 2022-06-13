@@ -128,6 +128,9 @@
            #:parse-cidr
            #:random-alphanumeric
            #:valid-hostname-p
+           #:prog-changes
+           #:add-change
+           #:return-changes
 
            #:*consfigurator-debug-level*
            #:with-indented-inform

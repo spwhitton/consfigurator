@@ -148,86 +148,83 @@ apply the elements of REQUIREMENTS in reverse order."
      &aux
        (buffer (make-array
                 '(0) :element-type 'character :fill-pointer 0 :adjustable t))
-       (return-value :no-change)
        ;; Remove any null propapps because we don't want to print anything for
        ;; those, and applying them will do nothing.
        (propapps (remove nil (if unapply (reverse propapps) propapps))))
-  (dolist (propapp propapps return-value)
-    (let* ((combinator (get (car propapp) 'combinator))
-           (announce
-             (and (not silent)
-                  (or (> *consfigurator-debug-level* 2)
-                      (not (get combinator 'inline-combinator)))
-                  ;; We don't announce properties whose names begin with '%'
-                  ;; and which have no description; these are typically
-                  ;; DEFPROPs which exist only for use within a
-                  ;; DEFPROPLIST/DEFPROPSPEC defining an exported property.
-                  (not (and (< *consfigurator-debug-level* 3)
-                            (char= #\% (char (symbol-name (car propapp)) 0))
-                            (not (get (car propapp) 'desc)))))))
-      (flet ((accumulate (result)
-               (unless (eql result :no-change) (setq return-value result)))
-             (post-apply (status)
-               (when propapp
-                 (when (and (plusp (length buffer))
-                            (or silent
-                                (> *consfigurator-debug-level* 1)
-                                (not (string= status "ok"))))
-                   (fresh-line)
-                   (princ buffer))
-                 (when announce
-                   (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
-                             (get-hostname) (propapp-desc propapp) status))
-                 ;; Ensure POST-APPLY called exactly once for each propapp.
-                 (setq propapp nil)))
+  (prog-changes
+    (dolist (propapp propapps)
+      (let* ((combinator (get (car propapp) 'combinator))
+             (announce
+               (and (not silent)
+                    (or (> *consfigurator-debug-level* 2)
+                        (not (get combinator 'inline-combinator)))
+                    ;; We don't announce properties whose names begin with '%'
+                    ;; and which have no description; these are typically
+                    ;; DEFPROPs which exist only for use within a
+                    ;; DEFPROPLIST/DEFPROPSPEC defining an exported property.
+                    (not (and (< *consfigurator-debug-level* 3)
+                              (char= #\% (char (symbol-name (car propapp)) 0))
+                              (not (get (car propapp) 'desc)))))))
+        (flet ((post-apply (status)
+                 (when propapp
+                   (when (and (plusp (length buffer))
+                              (or silent
+                                  (> *consfigurator-debug-level* 1)
+                                  (not (string= status "ok"))))
+                     (fresh-line)
+                     (princ buffer))
+                   (when announce
+                     (informat t "~&~@[~A :: ~]~@[~A ... ~]~A~%"
+                               (get-hostname) (propapp-desc propapp) status))
+                   ;; Ensure POST-APPLY called exactly once for each propapp.
+                   (setq propapp nil)))
 
-             (test (c) (subtypep (type-of c) 'aborted-change))
-             (ntest (c) (not (subtypep (type-of c) 'aborted-change)))
+               (test (c) (subtypep (type-of c) 'aborted-change))
+               (ntest (c) (not (subtypep (type-of c) 'aborted-change)))
 
-             (pareport (s)
-               (format s "Skip (~{~S~^ ~})"
-                       (cons (car propapp) (propapp-args propapp))))
-             (seqreport (s)
-               (format s "Skip remainder of sequence containing (~{~S~^ ~})"
-                       (cons (car propapp) (propapp-args propapp)))))
-        (unwind-protect
-             ;; Establish restarts to be invoked by WITH-SKIP-FAILED-CHANGES
-             ;; or possibly interactively by the user.  There are two of each
-             ;; because we want to handle ABORTED-CHANGE specially.
-             (restart-case
-                 (alet (if announce
-                           (with-output-to-string (*standard-output* buffer)
-                             (with-indented-inform
-                               (if unapply
-                                   (unapply-propapp propapp)
-                                   (apply-propapp propapp))))
-                           (if unapply
-                               (unapply-propapp propapp)
-                               (apply-propapp propapp)))
-                   (accumulate it)
-                   (post-apply (if (eql it :no-change) "ok" "done")))
-               ;; Standard restarts for skipping over sequence entries.
-               (skip-property () :test ntest :report pareport
-                 (signal 'skipped-properties) (post-apply "failed")
-                 (accumulate nil))
-               (skip-property () :test test :report pareport
-                 (signal 'skipped-properties) (post-apply "failed")
-                 (accumulate :no-change))
-               ;; Special restarts for the whole sequence which return from
-               ;; the enclosing DOLIST based on the kind of error.  If
-               ;; ABORTED-CHANGE, we assume that applying the current propapp
-               ;; made no change, so we return a value indicating whether
-               ;; properties earlier in PROPAPPS made a change.  Otherwise, we
-               ;; assume that some change was made.
-               (skip-sequence () :test ntest :report seqreport
-                 (signal 'skipped-properties) (post-apply "failed")
-                 (return))
-               (skip-sequence () :test test :report seqreport
-                 (signal 'skipped-properties) (post-apply "failed")
-                 (return return-value)))
-          ;; Ensure we print out the buffer contents if due to a non-local
-          ;; exit neither of the other calls to POST-APPLY have been made.
-          (post-apply "failed"))
+               (pareport (s)
+                 (format s "Skip (~{~S~^ ~})"
+                         (cons (car propapp) (propapp-args propapp))))
+               (seqreport (s)
+                 (format s "Skip remainder of sequence containing (~{~S~^ ~})"
+                         (cons (car propapp) (propapp-args propapp)))))
+          (unwind-protect
+               ;; Establish restarts to be invoked by WITH-SKIP-FAILED-CHANGES
+               ;; or possibly interactively by the user.  There are two of
+               ;; each because we want to handle ABORTED-CHANGE specially.
+               (restart-case
+                   (alet (add-change
+                          (if announce
+                              (with-output-to-string (*standard-output* buffer)
+                                (with-indented-inform
+                                  (if unapply
+                                      (unapply-propapp propapp)
+                                      (apply-propapp propapp))))
+                              (if unapply
+                                  (unapply-propapp propapp)
+                                  (apply-propapp propapp))))
+                     (post-apply (if (eql it :no-change) "ok" "done")))
+                 ;; Standard restarts for skipping over sequence entries.
+                 (skip-property () :test ntest :report pareport
+                   (signal 'skipped-properties) (post-apply "failed")
+                   (add-change))
+                 (skip-property () :test test :report pareport
+                   (signal 'skipped-properties) (post-apply "failed"))
+                 ;; Special restarts for the whole sequence which return from
+                 ;; the enclosing DOLIST based on the kind of error.  If
+                 ;; ABORTED-CHANGE, we assume that applying the current
+                 ;; propapp made no change, so we return a value indicating
+                 ;; whether properties earlier in PROPAPPS made a change.
+                 ;; Otherwise, we assume that some change was made.
+                 (skip-sequence () :test ntest :report seqreport
+                   (signal 'skipped-properties) (post-apply "failed")
+                   (return-from prog-changes))
+                 (skip-sequence () :test test :report seqreport
+                   (signal 'skipped-properties) (post-apply "failed")
+                   (return-changes)))
+            ;; Ensure we print out the buffer contents if due to a non-local
+            ;; exit neither of the other calls to POST-APPLY have been made.
+            (post-apply "failed")))
         (setf (fill-pointer buffer) 0)))))
 
 (defmacro unapply (form)

@@ -415,6 +415,20 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
                    (re:scan "^[a-zA-Z0-9][a-zA-Z0-9-]*$" part)))
             parts))))
 
+(defmacro prog-changes (&body body)
+  (with-gensyms (result)
+    `(let ((,result :no-change))
+       (block prog-changes
+         (flet ((add-change (&optional result)
+                  (case result
+                    (:no-change result)
+                    (t (setq ,result result))))
+                (return-changes ()
+                  (return-from prog-changes ,result)))
+           (declare (ignorable #'return-changes))
+           ,@body
+           ,result)))))
+
 
 ;;;; Progress & debug printing
 
