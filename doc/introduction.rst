@@ -61,7 +61,7 @@ Try it out / quick start
 	  (file:has-content "/etc/foo"
 	    "Here is my file content.
 	It's multiline.  CL-INTERPOL and CL-HEREDOC are also available; the
-	latter is particularly useful for shell scripts.})
+	latter is particularly useful for shell scripts.")
 	  (file:has-content "/etc/bar" '("or" "specify" "a" "list" "of" "lines""))
 	  (file:contains-lines "/etc/some.conf" "FOO=bar") ; preserve rest of file contents
 
