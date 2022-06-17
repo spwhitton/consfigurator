@@ -414,14 +414,6 @@
 
                     #:posix-capability-p))
 
-  (package :consfigurator.util.linux-namespace
-           (:use #:consfigurator.util.posix1e #:cffi)
-           (:export #:get-ids-offset
-                    #:reduce-id-maps
-                    #:shift-ids
-                    #:setgroups-p
-                    #:get-userns-owner))
-
   (package :consfigurator.property.cmd
            (:export #:single))
 
@@ -571,7 +563,17 @@
 	            #:has-login-shell
                     #:has-enabled-password
                     #:has-locked-password
-	            #:passwd-field))
+	            #:passwd-field
+                    #:user-info))
+
+  (package :consfigurator.util.linux-namespace
+           (:use #:consfigurator.util.posix1e #:cffi)
+           (:local-nicknames (#:user #:consfigurator.property.user))
+           (:export #:get-ids-offset
+                    #:reduce-id-maps
+                    #:shift-ids
+                    #:setgroups-p
+                    #:get-userns-owner))
 
   (package :consfigurator.property.chroot
            (:local-nicknames (#:service   #:consfigurator.property.service)

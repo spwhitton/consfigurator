@@ -141,3 +141,23 @@ properties not strictly POSIX-compatible."
 
 (defun user-exists (username)
   (zerop (mrun :for-exit "getent" "passwd" username)))
+
+(defun user-info (username-or-uid)
+  "Return passwd database entry for USERNAME-OR-UID as an alist.
+
+Falls back to getent(1), which is not specified in POSIX, so use of this
+function makes properties not strictly POSIX-compatible."
+  ;; getpwnam(3) and getpwuid(3) can fail to load the required NSS modules if
+  ;; we have chrooted or similar.  In that case, it appears as though the user
+  ;; does not exist.  So fall back to getent(1).
+  (or (and (lisp-connection-p) (osicat:user-info username-or-uid))
+      (aand (runlines "getent" "passwd" (aetypecase username-or-uid
+                                          (string it)
+                                          (number (write-to-string it))))
+            (destructuring-bind (name password uid gid &rest rest)
+                (split-string (car it) :separator '(#\:))
+              (declare (ignore password))
+              (list* (cons :name name)
+                     (cons :user-id (parse-integer uid))
+                     (cons :group-id (parse-integer gid))
+                     (pairlis '(:gecos :home :shell) rest))))))

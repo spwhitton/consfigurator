@@ -277,6 +277,8 @@ setgroups(2) is denied in the namespace."
                  (let ((owner (get-userns-owner (caar ns-fds))))
                    (if (zerop owner)
                        (nix:setgroups nil)
+                       ;; We can't use USER:USER-INFO here because we can't
+                       ;; run commands using RUNLINES.
                        (alet (osicat:user-info owner)
                          ;; As a precaution, we could also setuid & setgid to
                          ;; OWNER here.  However, it ought to be meaningless
@@ -330,6 +332,8 @@ setgroups(2) is denied in the namespace."
                (nix:fchdir root-fd) (chroot ".")))
         (mapc #'nix:close opened-fds))
       (when uid
+        ;; We similarly can't use USER:USER-INFO here because we still can't
+        ;; run commands using RUNLINES.
         (alet (or (osicat:user-info uid)
                   (error "~&Could not look up user info for UID ~A." uid))
           (setf user (cdr (assoc :name it)))

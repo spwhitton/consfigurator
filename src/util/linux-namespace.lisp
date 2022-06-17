@@ -24,7 +24,7 @@
 numerical subordinate ID and numerical subordinate ID count for the first
 entry in FILE for IDENTIFIER."
   (with-open-file (file file)
-    (loop with info = (osicat:user-info identifier)
+    (loop with info = (user:user-info identifier)
           with fields
             = (list (cdr (assoc :name info))
                     (write-to-string (cdr (assoc :user-id info))))
