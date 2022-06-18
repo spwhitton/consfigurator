@@ -474,10 +474,13 @@ removed, and semicolon comment chars will be replaced with '#'."
          (let ((new-lines
                  (loop with current-section
                        for line in lines
-                       for sec = (etypecase line
-                                   (list (cadr line))
-                                   (string (re:regex-replace
-                                            parse-section line #?/\1/)))
+                       for sec
+                         = (etypecase line
+                             (list (cadr line))
+                             (string
+                              (multiple-value-bind (match groups)
+                                  (re:scan-to-strings parse-section line)
+                                (and match (elt groups 0)))))
                        and key = (and (listp line) (caddr line))
                        for pair = (cons sec key)
                        for val = (and (listp line) (gethash pair keys))
