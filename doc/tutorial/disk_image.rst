@@ -19,7 +19,7 @@ Here is a minimal definition of the host for which we can build a disk image:::
       (partitioned-volume
        ((partition
          :partition-typecode #xEF00
-         (fat32-filesystem :volume-size 512 :mount-point #P"/boot/efi"))
+         (fat32-filesystem :volume-size 512 :mount-point #P"/boot/efi/"))
         (partition
          (ext4-filesystem :extra-space 400 :mount-point #P"/"))))))
     (installer:bootloader-binaries-installed)
