@@ -558,6 +558,7 @@
                              (#:os    #:consfigurator.property.os))
            (:export #:has-account
                     #:has-account-with-uid
+                    #:group-exists
                     #:has-groups
                     #:has-desktop-groups
 	            #:has-login-shell

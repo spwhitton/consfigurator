@@ -52,6 +52,16 @@ that group, and ~USERNAME and its contents are owned by UID:GID."
   (has-account username)
   (%has-uid-gid username uid gid))
 
+(defprop group-exists :posix (groupname)
+  "Ensure there is a group GROUPNAME.
+Note that this uses getent(1) and so is not strictly POSIX-compatible."
+  (:desc #?"Group ${groupname} exists")
+  (:check
+   (zerop (mrun :for-exit "getent" "group" groupname)))
+  (:apply
+   (assert-remote-euid-root)
+   (mrun "groupadd" groupname)))
+
 (defprop has-groups :posix
     (username &rest groups &aux (groups* (format nil "~{~A~^,~}" groups)))
   "Ensure that USERNAME is a member of secondary groups GROUPS."
