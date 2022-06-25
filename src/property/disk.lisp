@@ -672,15 +672,14 @@ normally use WITH-OPEN-VOLUMES or WITH-OPENED-VOLUMES.
 
 If an error is signalled while the attempt to open volumes is in progress, a
 single attempt will be made to close all volumes opened up to that point."
-  (let (opened-volumes all-parents filesystems *latest-parent*)
-    (declare (special *latest-parent*))
+  (let (opened-volumes all-parents filesystems)
     (handler-case
         (labels
-            ((open-volume-and-contents (volume file)
+            ((open-volume-and-contents (volume file parent)
                ;; Postpone filesystems until the end so that we can sort
                ;; them before mounting, to avoid unintended shadowing.
                (if (subtypep (type-of volume) 'filesystem)
-                   (push (list *latest-parent* volume file) filesystems)
+                   (push (list parent volume file) filesystems)
                    (multiple-value-bind (opened opened-contents)
                        (open-volume volume file)
                      (let ((opened-contents-parents
@@ -698,15 +697,14 @@ single attempt will be made to close all volumes opened up to that point."
                                          (cons opened opened-volumes))
                                  all-parents
                                  (nconc opened-contents-parents
-                                        (cons *latest-parent* all-parents)))))
+                                        (cons parent all-parents)))))
                      (dolist (opened-volume (or opened-contents `(,opened)))
                        (when (slot-boundp opened-volume 'volume-contents)
-                         (let ((*latest-parent* opened-volume))
-                           (declare (special *latest-parent*))
-                           (open-volume-and-contents
-                            (volume-contents opened-volume)
-                            (device-file opened-volume)))))))))
-          (mapc (rcurry #'open-volume-and-contents nil) volumes)
+                         (open-volume-and-contents
+                          (volume-contents opened-volume)
+                          (device-file opened-volume)
+                          opened-volume)))))))
+          (mapc (rcurry #'open-volume-and-contents nil nil) volumes)
           ;; Note that filesystems never have any VOLUME-CONTENTS to open.
           (with-mount-below
               (dolist (filesystem
