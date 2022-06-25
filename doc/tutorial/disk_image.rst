@@ -23,7 +23,8 @@ Here is a minimal definition of the host for which we can build a disk image:::
         (partition
          (ext4-filesystem :extra-space 400 :mount-point #P"/"))))))
     (installer:bootloader-binaries-installed)
-    (apt:installed "linux-image-amd64"))
+    (apt:installed "linux-image-amd64")
+    (user:has-enabled-password "root"))
 
 - The ``DISK:HAS-VOLUMES`` property is like the ``OS:DEBIAN-STABLE`` property
   in that both simply set hostattrs on the host -- they establish metadata to
@@ -96,8 +97,7 @@ Here's a quick way to test what we've built:::
   % qemu-system-x86_64 -m 2G -drive file=tmp/test.img,format=raw \
       -drive "if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd"
 
-It should boot up but you probably won't get a login prompt, since the root
-account's password is locked and we debootstrapped a very minimal system.
+It should boot up and you can login as root, password "changeme".
 
 Uses for the disk image
 -----------------------
