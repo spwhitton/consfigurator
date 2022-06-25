@@ -67,10 +67,9 @@ should be the mount point, without the chroot's root prefixed.")
       (when (remote-exists-p "/sys/firmware/efi/efivars")
         (apply #'chroot-mount connection mount:+linux-efivars-vfs+)))))
 
-(defmethod propagate-connattr
-    ((type (eql 'disk:opened-volumes)) connattr (connection chroot-connection))
+(defun copy-and-update-volumes (volumes connection)
   (with-slots (into) connection
-    (loop for volume in connattr
+    (loop for volume in volumes
           when (and (subtypep (type-of volume) 'disk:filesystem)
                     (slot-boundp volume 'disk:mount-point)
                     (subpathp (disk:mount-point volume) into))
@@ -78,6 +77,14 @@ should be the mount point, without the chroot's root prefixed.")
                       (setf (disk:mount-point it)
                             (in-chroot-pathname (disk:mount-point it) into)))
           else collect volume)))
+
+(defmethod propagate-connattr
+    ((type (eql 'disk:opened-volumes)) connattr (connection chroot-connection))
+  (copy-and-update-volumes connattr connection))
+
+(defmethod propagate-connattr
+    ((type (eql 'disk:opened-volume-parents)) connattr (connection chroot-connection))
+  (copy-and-update-volumes connattr connection))
 
 (defmethod propagate-connattr
     ((type (eql :remote-uid)) connattr (connection chroot-connection))

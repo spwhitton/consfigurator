@@ -663,37 +663,49 @@ explicitly request one."
   "Where each of VOLUMES is a VOLUME which may be opened by calling OPEN-VOLUME
 with NIL as the second argument, recursively open each of VOLUMES and any
 contents thereof, and return a list of the volumes that were opened, in the
-order in which they should be closed.  MOUNT-BELOW specifies a pathname to
-prefix to mount points when opening FILESYSTEM volumes.
+order in which they should be closed, and as a second value, a corresponding
+list of the immediate parents of each opened volume.  MOUNT-BELOW specifies a
+pathname to prefix to mount points when opening FILESYSTEM volumes.
 
 Calling this function can be useful for testing at the REPL, but code should
 normally use WITH-OPEN-VOLUMES or WITH-OPENED-VOLUMES.
 
 If an error is signalled while the attempt to open volumes is in progress, a
 single attempt will be made to close all volumes opened up to that point."
-  (let (opened-volumes filesystems)
+  (let (opened-volumes all-parents filesystems *latest-parent*)
+    (declare (special *latest-parent*))
     (handler-case
         (labels
             ((open-volume-and-contents (volume file)
                ;; Postpone filesystems until the end so that we can sort
                ;; them before mounting, to avoid unintended shadowing.
                (if (subtypep (type-of volume) 'filesystem)
-                   (push (list volume file) filesystems)
+                   (push (list *latest-parent* volume file) filesystems)
                    (multiple-value-bind (opened opened-contents)
                        (open-volume volume file)
-                     (setq opened-volumes
-                           (append
-                            opened-contents
-                            ;; Don't queue for closure volumes which were
-                            ;; already open before we began.
-                            (if (subtypep (class-of volume) 'opened-volume)
-                                opened-volumes
-                                (cons opened opened-volumes))))
+                     (let ((opened-contents-parents
+                             (make-list (length opened-contents)
+                                        :initial-element volume)))
+                       ;; Don't queue for closure volumes which were already
+                       ;; open before we began.
+                       (if (subtypep (class-of volume) 'opened-volume)
+                           (setq opened-volumes
+                                 (append opened-contents opened-volumes)
+                                 all-parents
+                                 (nconc opened-contents-parents all-parents))
+                           (setq opened-volumes
+                                 (append opened-contents
+                                         (cons opened opened-volumes))
+                                 all-parents
+                                 (nconc opened-contents-parents
+                                        (cons *latest-parent* all-parents)))))
                      (dolist (opened-volume (or opened-contents `(,opened)))
                        (when (slot-boundp opened-volume 'volume-contents)
-                         (open-volume-and-contents
-                          (volume-contents opened-volume)
-                          (device-file opened-volume))))))))
+                         (let ((*latest-parent* opened-volume))
+                           (declare (special *latest-parent*))
+                           (open-volume-and-contents
+                            (volume-contents opened-volume)
+                            (device-file opened-volume)))))))))
           (mapc (rcurry #'open-volume-and-contents nil) volumes)
           ;; Note that filesystems never have any VOLUME-CONTENTS to open.
           (with-mount-below
@@ -702,9 +714,10 @@ single attempt will be made to close all volumes opened up to that point."
                         (sort filesystems #'subpathp
                               :key (compose #'ensure-directory-pathname
                                             #'mount-point
-                                            #'car))))
+                                            #'cadr))))
+                (push (pop filesystem) all-parents)
                 (push (apply #'open-volume filesystem) opened-volumes)))
-          opened-volumes)
+          (values opened-volumes all-parents))
       (serious-condition (condition)
         (unwind-protect (mapc #'close-volume opened-volumes)
           (error condition))))))
@@ -740,8 +753,9 @@ volumes that were opened.
 
 MOUNT-BELOW specifies a pathname to prefix to mount points when opening
 FILESYSTEM volumes.  During the application of PROPAPPS, all
-'DISK:OPENED-VOLUMES connattrs are replaced with a list of the volumes that
-were opened; this list must not be modified."
+'DISK:OPENED-VOLUMES and 'DISK:OPENED-VOLUME-PARENTS connattrs are replaced
+with lists of the volumes that were opened and corresponding immediate parent
+volumes; the former must not be modified."
   `(with-opened-volumes*
      ',volumes
      ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))
@@ -756,13 +770,15 @@ were opened; this list must not be modified."
                 (propapp-attrs propapp))
    :apply
    (lambda-ignoring-args
-     (with-connattrs ('opened-volumes
-                      (apply #'open-volumes-and-contents
-                             `(,volumes ,@(and mount-below-supplied-p
-                                               `(:mount-below ,mount-below)))))
-       (unwind-protect (apply-propapp propapp)
-         (mrun "sync")
-         (mapc #'close-volume (get-connattr 'opened-volumes)))))
+     (multiple-value-bind (opened-volumes parents)
+         (apply #'open-volumes-and-contents
+                `(,volumes ,@(and mount-below-supplied-p
+                                  `(:mount-below ,mount-below))))
+       (with-connattrs ('opened-volumes opened-volumes
+                        'opened-volume-parents parents)
+         (unwind-protect (apply-propapp propapp)
+           (mrun "sync")
+           (mapc #'close-volume (get-connattr 'opened-volumes))))))
    :args (cdr propapp)))
 
 (defun create-volumes-and-contents (volumes &optional files)

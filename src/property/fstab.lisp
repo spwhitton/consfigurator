@@ -101,22 +101,14 @@ specified with DISK:HAS-VOLUMES."
                           (curry #'subvolumes-of-type 'filesystem)
                           (or volumes (get-hostattrs :volumes))))))))
 
-;; TODO This is broken for fat32 partitions.  MOUNTED-FAT32-FILESYSTEM objects
-;; are pushed directly to the connattr by DISK:WITH-OPENED-VOLUMES, rather
-;; than appearing within OPENED-PARTITION objects.  Then the call to
-;; SUBVOLUMES-OF-TYPE here never finds any parents, returning as a second
-;; value a list containing only NIL.  Thus the specialisers in the
-;; implementation of FS-SPEC for MOUNTED-FAT32-FILESYSTEM are never satisfied.
 (defprop has-entries-for-opened-volumes :posix ()
   "Add or update entries in /etc/fstab for currently open volumes.
 
 This is used when building disk images and installing operating systems."
   (:desc "fstab entries for opened volumes")
   (:hostattrs (os:required 'os:linux))
-  (:apply
-   (apply #'has-entries
-          (apply #'mapcar #'volume-to-entry
-                 (multiple-value-list
-                  (multiple-value-mapcan
-                   (curry #'subvolumes-of-type 'mounted-filesystem)
-                   (get-connattr 'disk:opened-volumes)))))))
+  (:apply (loop for volume in (get-connattr 'disk:opened-volumes)
+                and parent in (get-connattr 'disk:opened-volume-parents)
+                when (subtypep (type-of volume) 'disk:filesystem)
+                  collect (volume-to-entry volume parent) into entries
+                finally (apply #'has-entries entries))))

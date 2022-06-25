@@ -645,6 +645,7 @@
                     #:linux-swap
 
                     #:opened-volumes
+                    #:opened-volume-parents
                     #:with-opened-volumes
 
                     #:has-volumes
