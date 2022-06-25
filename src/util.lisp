@@ -20,20 +20,23 @@
 
 (defun multiple-value-mapcan (function &rest lists)
   "Variant of MAPCAN which preserves multiple return values."
-  (let ((lists (copy-list lists))
-        (results (make-array '(2) :initial-element nil :adjustable t)))
-    (loop for new-results
-            = (multiple-value-list
-               (apply function
-                      (loop for list on lists
-                            if (car list)
-                              collect (pop (car list))
-                            else do (return-from multiple-value-mapcan
-                                      (values-list (coerce results 'list))))))
-          do (adjust-array results (max (length results) (length new-results))
-                           :initial-element nil)
-             (loop for result in new-results and i upfrom 0
-                   do (nconcf (aref results i) result)))))
+  (loop with lists = (copy-list lists)
+        with results = (make-array '(2) :initial-element nil :adjustable t)
+        for new = (multiple-value-list
+                   (apply function
+                          (maplist (lambda (lists)
+                                     (if (endp (car lists))
+                                         (return
+                                           (values-list
+                                            (map 'list #'nreverse results)))
+                                         (pop (car lists))))
+                                   lists)))
+        do (loop
+             initially
+                (adjust-array results (max (length results) (length new))
+                              :initial-element nil)
+             for result in new and i upfrom 0 do
+               (setf (aref results i) (nreconc result (aref results i))))))
 
 (defun lines (text &optional trimfun (trimchars '(#\Space #\Tab)))
   (with-input-from-string (stream text)
