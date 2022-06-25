@@ -302,18 +302,25 @@ using a combinator like ON-CHANGE, or applied manually with DEPLOY-THESE."
          (ensure-directories-exist #P"/boot/efi/")
          (apply #'mrun "mount" efi-system-partition-mount-args))))))
 
-(defproplist cleanly-installed-once :lisp
-    (&optional options original-os
-               &aux
-               (new (make-host :hostattrs `(:os ,(get-hostattrs :os))))
-               (original-host
-                (make-host
-                 :propspec
-                 (make-propspec
-                  :propspec
-                  `(eseqprops
-                    ,(or original-os '(os:linux))
-                    (chroot:os-bootstrapped-for ,options "/new-os" ,new))))))
+(defproplist %cleanly-installed-once :lisp
+    (options original-os
+             &aux
+             (new (make-host :hostattrs `(:os ,(get-hostattrs :os))))
+             (original-host
+              (make-host
+               :propspec
+               (make-propspec
+                :propspec
+                `(eseqprops
+                  ,(or original-os '(os:linux))
+                  (chroot:os-bootstrapped-for ,options "/new-os" ,new))))))
+  (with-flagfile "/etc/consfigurator/os-cleanly-installed"
+    (deploys :local original-host)
+    (%root-filesystems-flipped "/new-os" "/old-os")
+    ;; Prevent boot issues caused by disabled shadow passwords.
+    (cmd:single "shadowconfig" "on")))
+
+(defproplist cleanly-installed-once :lisp (&optional options original-os)
   "Replaces whatever operating system the host has with a clean installation of
 the OS that the host is meant to have, and reboot, once.  This is intended for
 freshly launched machines in faraway datacentres, where your provider has
@@ -360,28 +367,19 @@ whereas if you don't have that information, you would want something like
       (file:is-copy-of \"/etc/resolv.conf\" \"/old-os/etc/resolv.conf\"))
     (network:preserve-static-once)
 
-Here are some other propapps you might want to attach to the application of
-this property with ON-CHANGE:
-
-    (bootloaders-installed)
-    (fstab:has-entries-for-volumes
-     (disk:volumes
-       (mounted-ext4-filesystem :mount-point #P\"/\")
-       (partition (mounted-fat32-filesystem :mount-point #P\"/boot/efi/\"))))
-    (file:is-copy-of \"/root/.ssh/authorized_keys\"
-                     \"/old-os/root/.ssh/authorized_keys\")
-    (mount:unmounted-below-and-removed \"/old-os\")
-
 You will probably need to install a kernel, bootloader, sshd etc. in the list
-of properties subsequent to this one.  A more complete example:
+of properties subsequent to this one.  A more complete example, using the
+combinator INSTALLER:WITH-CLEANLY-INSTALLED-ONCE, which see:
 
     (os:debian-stable \"bullseye\" :amd64)
     (disk:has-volumes
      (physical-disk
       :device-file #P\"/dev/sda\"
       :boots-with '(grub:grub :target \"x86_64-efi\")))
-    (on-change (installer:cleanly-installed-once
-                nil '(os:debian-stable \"buster\" :amd64))
+    (installer:with-cleanly-installed-once
+        (nil '(os:debian-stable \"buster\" :amd64))
+
+      :post-install
       ;; Clear out the old OS's EFI system partition contents.
       (file:directory-does-not-exist \"/boot/efi/EFI\")
 
@@ -395,10 +393,23 @@ of properties subsequent to this one.  A more complete example:
           (mounted-fat32-filesystem :mount-point #P\"/boot/efi/\"))))
 
       (file:is-copy-of \"/etc/resolv.conf\" \"/old-os/etc/resolv.conf\")
-      (mount:unmounted-below-and-removed \"/old-os\"))
-    (network:static ...)
-    (sshd:installed)
-    (swap:has-swap-file \"2G\")
+      (mount:unmounted-below-and-removed \"/old-os\")
+
+      :always
+      (network:static ...)
+      (sshd:installed)
+      (swap:has-swap-file \"2G\"))
+
+Here are some other propapps you might want in the :POST-INSTALL list:
+
+    (bootloaders-installed)
+    (fstab:has-entries-for-volumes
+     (disk:volumes
+       (mounted-ext4-filesystem :mount-point #P\"/\")
+       (partition (mounted-fat32-filesystem :mount-point #P\"/boot/efi/\"))))
+    (file:is-copy-of \"/root/.ssh/authorized_keys\"
+                     \"/old-os/root/.ssh/authorized_keys\")
+    (mount:unmounted-below-and-removed \"/old-os\")
 
 If the system is not freshly provisioned, you couldn't easily recover from the
 system becoming unbootable, or you have physical access to the machine, it is
@@ -406,9 +417,89 @@ probably better to use Consfigurator to build a disk image, or boot into a
 live system and use Consfigurator to install to the host's usual storage."
   (:desc "OS cleanly installed once")
   (:hostattrs (os:required 'os:linux))
-  (with-flagfile "/etc/consfigurator/os-cleanly-installed"
-    (deploys :local original-host)
-    (%root-filesystems-flipped "/new-os" "/old-os")
-    ;; Prevent boot issues caused by disabled shadow passwords.
-    (cmd:single "shadowconfig" "on")
-    (reboot:at-end)))
+  (on-change (%cleanly-installed-once options original-os) (reboot:at-end)))
+
+(defmacro with-cleanly-installed-once
+    ((&optional options original-os) &body propapps)
+  "Apply INSTALLER:CLEANLY-INSTALLED-ONCE, passing along OPTIONS and
+ORIGINAL-OS, and attach to that application, using other property combinators,
+the application of PROPAPPS.
+
+PROPAPPS is a concatenation of three lists of propapps delimited by keywords:
+
+    '(:post-install
+      (propapp1) (propapp2) ...
+
+      :always
+      (propapp3) (propapp4) ...
+
+      :post-first-reboot
+      (propapp5) (propapp6) ...)
+
+Any of the keywords and their propapps may be absent, but the three lists must
+appear in this order.  The :POST-INSTALL propapps are applied only if this
+deployment performed the clean reinstallation, right after that.  The :ALWAYS
+propapps are applied next, whether or not this deployment performed the clean
+reinstallation.  Finally, the :POST-FIRST-REBOOT propapps are applied, only if
+this deployment did not perform the clean reinstallation.
+
+This mechanism handles common usages of INSTALLER:CLEANLY-INSTALLED-ONCE.  For
+example:
+
+    (installer:with-cleanly-installed-once (...)
+      :post-install
+      (installer:bootloaders-installed)
+      (file:is-copy-of \"/etc/resolv.conf\" \"/old-os/etc/resolv.conf\")
+      (mount:unmounted-below-and-removed \"/old-os\")
+
+      :always
+      (apt:installed \"openssh-server\")
+      (ssh:authorized-keys ...)
+      (network:static \"enp1s0\" ...)
+
+      :post-first-reboot
+      (my-cool-web-service)
+      (apache:https-vhost ...))
+
+Properties that should be applied only once, or that rely on accessing files
+from /old-os, are applied under :POST-INSTALL.  Networking and shell access
+are established before the first reboot, so we don't lock ourselves out.
+However, as these properties are part of the usual definition of the host,
+they go under :ALWAYS, not :POST-INSTALL, so that Consfigurator checks they
+are still applied each deployment.  Finally, we defer setting up the host's
+sites and services until after the first reboot, in case there are any
+problems setting those up when it's still the old OS's kernel that's running."
+  `(with-cleanly-installed-once*
+       (%cleanly-installed-once ,options ,original-os) ,@propapps))
+
+(define-function-property-combinator with-cleanly-installed-once*
+    (cleanly-installed-once-propapp &rest propapps)
+  (let* ((post-first-reboot (member :post-first-reboot propapps))
+         (always-kw (member :always propapps))
+         (always (ldiff always-kw post-first-reboot))
+         (post-install (ldiff (member :post-install propapps)
+                              (or always-kw post-first-reboot)))
+
+         (post-install (apply #'eseqprops (cdr post-install)))
+         (always-before (apply #'eseqprops (cdr always)))
+
+         ;; Use SEQPROPS like DEFHOST does.
+         (always-after (apply #'seqprops (cdr always)))
+         (post-first-reboot (apply #'seqprops (cdr post-first-reboot))))
+    (:retprop :type :lisp
+              :hostattrs (lambda-ignoring-args
+                           (propapp-attrs cleanly-installed-once-propapp)
+                           (propapp-attrs post-install)
+                           (propapp-attrs always-after)
+                           (propapp-attrs post-first-reboot))
+              :apply (lambda-ignoring-args
+                       (case (apply-propapp cleanly-installed-once-propapp)
+                         (:no-change
+                          (prog-changes
+                            (add-change (apply-propapp always-after))
+                            (add-change (apply-propapp post-first-reboot))))
+                         (t
+                          (apply-propapp post-install)
+                          (apply-propapp always-before)
+                          (reboot:at-end)
+                          nil))))))

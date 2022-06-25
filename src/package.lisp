@@ -743,7 +743,8 @@
                     #:chroot-installed-to-volumes-for
                     #:bootloader-binaries-installed
                     #:bootloaders-installed
-                    #:cleanly-installed-once))
+                    #:cleanly-installed-once
+                    #:with-cleanly-installed-once))
 
   (package :consfigurator.property.grub
            (:use #:consfigurator.property.disk
