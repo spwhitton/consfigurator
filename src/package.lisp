@@ -131,6 +131,7 @@
            #:prog-changes
            #:add-change
            #:return-changes
+           #:sh-script-to-single-line
 
            #:*consfigurator-debug-level*
            #:with-indented-inform

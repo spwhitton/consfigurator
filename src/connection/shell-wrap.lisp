@@ -46,18 +46,16 @@
                                   path
                                   content
                                   mode)
-  (let ((cmd
-          (format
-           nil "set -e
-tmpf=$(~A)
-trap \"rm -f '$tmpf'\" EXIT HUP KILL TERM INT
-chmod ~O \"$tmpf\"
-cat >\"$tmpf\"
-mv \"$tmpf\" ~A"
-           (mkstemp-cmd
-            (merge-pathnames "tmp.XXXXXX" (pathname-directory-pathname path)))
-           mode
-           (sh-escape path))))
+  (let* ((mkstemp (mkstemp-cmd
+                   (merge-pathnames "tmp.XXXXXX"
+                                    (pathname-directory-pathname path))))
+         (cmd (sh-script-to-single-line
+               (format nil "set -e
+                            tmpf=$(~A)
+                            trap \"rm -f '$tmpf'\" EXIT HUP KILL TERM INT
+                            chmod ~O \"$tmpf\"
+                            cat >\"$tmpf\"
+                            mv \"$tmpf\" ~A" mkstemp mode (sh-escape path)))))
     (multiple-value-bind (out exit) (connection-run conn cmd content)
       (unless (zerop exit)
         (error "Failed to write ~A: ~A" path out)))))

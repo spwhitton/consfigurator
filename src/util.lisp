@@ -432,6 +432,21 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
            ,@body
            ,result)))))
 
+(defun sh-script-to-single-line (script)
+  "Attempt to convert a multiline POSIX sh script to a single line.
+
+The current implementation is naïve, and certainly unsuitable for converting
+arbitrary scripts.  Thus, this function is presently intended to be used only
+on simple scripts embedded in source code, written with newlines for the sake
+of maintainability.  Converting those scripts to single lines before they are
+executed improves Consfigurator's debug output, and also makes process names
+visible to remote commands like ps(1) more readable."
+  (re:regex-replace-all
+   #?/\s+/ (re:regex-replace-all "(then|else|elif|fi|case|in|;;|do|done);"
+                                 (format nil "~{~A~^; ~}" (lines script))
+                                 "\\1")
+   " "))
+
 
 ;;;; Progress & debug printing
 

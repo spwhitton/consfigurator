@@ -318,7 +318,8 @@ which will be cleaned up when BODY is finished."
   ;;
   ;; While GNU M4 mkstemp makes the temporary file at most readable and
   ;; writeable by its owner, POSIX doesn't require this, so set a umask.
-  #?"umask 077
+  (sh-script-to-single-line
+   #?"umask 077
 exec 3>&1
 if err=\$(if command -v m4 >/dev/null; then
               echo 'mkstemp(${template})' | m4 2>&1 1>&3
@@ -334,7 +335,7 @@ else
         ?*) printf >&2 \"%s\\n\" \"$err\" ;;
     esac
     exit 1
-fi")
+fi"))
 
 (defun mktemp (&key (connection *connection*) directory)
   "Make a temporary file on the remote side, in DIRECTORY, defaulting to /tmp."
