@@ -301,12 +301,13 @@ setgroups(2) is denied in the namespace."
                ;; errors only of type EPERM, and see below about EPERM in the
                ;; second pass.
                (when setuserns
-                 (loop for cell on (cdr ns-fds)
-                       do (handler-case (setns (caar cell) (cdar cell))
-                            (nix:eperm ())
-                            (:no-error (&rest ignore)
-                              (declare (ignore ignore))
-                              (rplaca (car cell) nil)))))
+                 (mapl (lambda (ns-fds)
+                         (handler-case (setns (caar ns-fds) (cdar ns-fds))
+                           (nix:eperm ())
+                           (:no-error (&rest ignore)
+                             (declare (ignore ignore))
+                             (rplaca (car ns-fds) nil))))
+                       (cdr ns-fds)))
                (loop for (fd . type) in ns-fds
                      ;; Accept failures due to insufficient capabilities which
                      ;; occur after we've entered the new userns, as that
