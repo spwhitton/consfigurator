@@ -19,11 +19,17 @@
 (named-readtables:in-readtable :consfigurator)
 
 (defprop %at-end :posix ()
-  (:apply (consfigurator:at-end
-           (lambda (result)
-             (declare (ignore result))
-             (mrun "shutdown" "-r" "+1")
-             (inform t "*** SYSTEM REBOOT SCHEDULED, one minute delay ***")))))
+  (:apply
+   (consfigurator:at-end
+    (lambda (result)
+      (declare (ignore result))
+      (handler-case (mrun "shutdown" "-r" "+1")
+        ;; Sometimes after INSTALLER::%ROOT-FILESYSTEMS-FLIPPED shutdown(8)
+        ;; can't schedule a future reboot, but an immediate one is fine.
+        (run-failed ()
+          (mrun "nohup" "sh" "-c"
+                "(sleep 60; shutdown -r now) </dev/null >/dev/null 2>&1 &")))
+      (inform t "*** SYSTEM REBOOT SCHEDULED, one minute delay ***")))))
 
 (defproplist at-end :posix ()
   "Schedule a reboot for the end of the current (sub)deployment.
