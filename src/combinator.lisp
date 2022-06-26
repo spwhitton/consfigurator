@@ -78,13 +78,14 @@ Usage notes:
                       when (eql (restart-name restart) ,restart)
                         collect restart)))
          (handler-bind
-             ((failed-change
+             ((condition
                 (lambda (c)
                   (when (subtypep (type-of c) ,condition)
-                    (with-indented-inform
-                      (apply #'informat t
-                             (simple-condition-format-control c)
-                             (simple-condition-format-arguments c)))
+                    (when (subtypep (type-of c) 'simple-condition)
+                      (with-indented-inform
+                        (apply #'informat t
+                               (simple-condition-format-control c)
+                               (simple-condition-format-arguments c))))
                     ;; We can't just use NSET-DIFFERENCE and take the
                     ;; LASTCAR because NSET-DIFFERENCE provides no ordering
                     ;; guarantees.
@@ -105,7 +106,8 @@ Usage notes:
 
 (define-function-property-combinator eseqprops-until (condition &rest propapps)
   "Like ESEQPROPS, but if CONDITION is signalled, handle it simply by skipping
-remaining elements of PROPAPPS.  CONDITION must subtype FAILED-CHANGE."
+remaining elements of PROPAPPS.  CONDITION usually names a subclass of
+FAILED-CHANGE."
   (:retprop :type (combine-propapp-types propapps)
             :hostattrs (lambda () (mapc #'propapp-attrs propapps))
             :apply (lambda ()
