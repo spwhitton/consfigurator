@@ -190,6 +190,13 @@ apply the elements of REQUIREMENTS in reverse order."
                (seqreport (s)
                  (format s "Skip remainder of sequence containing (~{~S~^ ~})"
                          (cons (car propapp) (propapp-args propapp)))))
+          ;; In both the restarts and the fallback cleanup form, we treat any
+          ;; non-local exit at all as though it were caused by the signalling
+          ;; of a condition subtyping FAILED-CHANGE.  One possible improvement
+          ;; might be to pass "failed" to POST-APPLY, and signal
+          ;; SKIPPED-PROPERTIES, only when the non-local exit is due to a
+          ;; condition subtyping ERROR.  Alternatively, maybe we could drop
+          ;; FAILED-CHANGE and make ABORTED-CHANGE a direct subclass of ERROR.
           (unwind-protect
                ;; Establish restarts to be invoked by WITH-SKIP-FAILED-CHANGES
                ;; or possibly interactively by the user.  There are two of
