@@ -472,39 +472,39 @@ removed, and semicolon comment chars will be replaced with '#'."
        :map
        (lambda (lines)
          (let ((new-lines
-                 (loop with current-section
-                       for line in lines
-                       for sec
-                         = (etypecase line
-                             (list (cadr line))
-                             (string
-                              (multiple-value-bind (match groups)
-                                  (re:scan-to-strings parse-section line)
-                                (and match (elt groups 0)))))
+                 (loop with current
+                       for (line . rest) on lines
+                       for upcoming
+                         = (loop for line in rest until (listp line)
+                                 finally
+                                    (alet (cadr line)
+                                      (return
+                                        (and (not (string= it current))
+                                             it))))
                        and key = (and (listp line) (caddr line))
-                       for pair = (cons sec key)
-                       for val = (and (listp line) (gethash pair keys))
-
-                       ;; If we've reached a new section insert any
-                       ;; remaining pairs in this section, as that's
-                       ;; better than inserting a new section with the
-                       ;; same name at the end of the file.
-                       if (and sec (not (string= sec current-section)))
-                         nconc (loop for pair being the hash-keys in keys
-                                       using (hash-value v)
-                                     for (s . k) = pair
-                                     when (and (string= current-section s)
-                                               (not (eql v :done)))
-                                       collect (list nil s k v)
-                                       and do (setf (gethash pair keys) :done))
-                         and do (setq current-section sec)
+                       for pair = (and key (cons (cadr line) key))
+                       for val  = (and key (gethash pair keys))
 
                        if (eql val :done)
                          collect (cons t (cdr line))
                        else if val
-                              collect (list nil sec key val)
+                              collect (list nil (cadr line) key val)
                               and do (setf (gethash pair keys) :done)
-                       else collect line)))
+                       else collect line
+
+                       ;; If we're about to reach a new section insert any
+                       ;; remaining pairs in this section, as that's better
+                       ;; than inserting a new section with the same name at
+                       ;; the end of the file.
+                       if upcoming
+                         nconc (loop for pair being the hash-keys in keys
+                                       using (hash-value v)
+                                     for (s . k) = pair
+                                     when (and (string= current s)
+                                               (not (eql v :done)))
+                                       collect (list nil s k v)
+                                       and do (setf (gethash pair keys) :done))
+                         and do (setq current upcoming))))
            (loop for pair being the hash-keys in keys using (hash-value v)
                  for (s . k) = pair
                  unless (eql v :done)
