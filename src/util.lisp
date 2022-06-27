@@ -21,7 +21,7 @@
 (defun multiple-value-mapcan (function &rest lists)
   "Variant of MAPCAN which preserves multiple return values."
   (loop with lists = (copy-list lists)
-        with results = (make-array '(2) :initial-element nil :adjustable t)
+        with results = (make-array '(1) :initial-element nil :adjustable t)
         for new = (multiple-value-list
                    (apply function
                           (maplist (lambda (lists)

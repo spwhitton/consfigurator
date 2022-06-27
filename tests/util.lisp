@@ -2,6 +2,27 @@
 (named-readtables:in-readtable :consfigurator)
 (in-consfig "consfigurator/tests")
 
+(deftest multiple-value-mapcan.1
+    (multiple-value-mapcan
+     (lambda (car1 car2 car3)
+       (values (list car1 car2 car3) (list car3 car2 car1)))
+     '(1 2 3 4) '(1 2 3) '(5 4 3 2 1))
+  (1 1 5 2 2 4 3 3 3) (5 1 1 4 2 2 3 3 3))
+
+(deftest multiple-value-mapcan.2
+    (multiple-value-mapcan #'list '(1 2 3 4 5))
+  (1 2 3 4 5))
+
+(deftest multiple-value-mapcan.3
+    (let ((n 0))
+      (multiple-value-mapcan
+       (lambda (car1 car2 car3)
+         (if (> (incf n) 2)
+             (list car2)
+             (values (list car1 car2 car3) (list car3))))
+       '(1 2 3 4) '(1 2 3) '(5 4 3 2 1)))
+  (1 1 5 2 2 4 3) (5 4))
+
 (deftest version<.1 (version< "1.0.1" "1.0.2") t)
 
 (deftest version<=.1 (version<= "1.0.1" "1.0.2") t)
