@@ -367,11 +367,11 @@ release of Debian from testing, falling back to sid if they're not available
 in testing, you could use:
 
     (os:debian-stable \"bullseye\" :amd64)
-    (apt:suites-available-pinned (os:debian-testing)  -10
-                                 (os:debian-unstable) -10)
+    (apt:suites-available-pinned '(os:debian-testing)  -10
+                                 '(os:debian-unstable) -10)
     (apt:pinned '(\"elpa-*\")
-                (os:debian-testing)  100
-                (os:debian-unstable) 50)"
+                '(os:debian-testing)  100
+                '(os:debian-unstable) 50)"
   (:desc (loop for (os pin) on pairs by #'cddr
                for suite = (os:debian-suite (suite-specifier-to-os os))
                collect #?{Debian "${suite}", priority ${pin}} into accum
