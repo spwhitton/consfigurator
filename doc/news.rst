@@ -23,6 +23,29 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.0.3 (unreleased)
+------------------
+
+- Wrap calls to OSICAT:USER-INFO with a fallback to use getent(1).  This fixes
+  cases where getpwnam(3) and getpwuid(3) can fail to load required NSS modules
+  because we have chrooted or similar.
+
+- Consfigurator now converts some of its internal shell script snippets to
+  single lines before executing them, which improves debug output and the
+  readability of process names visible to remote commands like ps(1).
+
+- Add PROG-CHANGES, USER:GROUP-EXISTS and INSTALLER:WITH-CLEANLY-INSTALLED-ONCE.
+
+- ESEQPROPS-UNTIL can now be used with any condition class, not just those
+  subtyping FAILED-CHANGE.
+
+- REBOOT:AT-END now falls back to shell ``sleep``-based scheduling when
+  shutdown(8) cannot schedule a reboot for the future.
+
+- Fix a few bugs in FILE:CONTAINS-INI-SETTINGS.
+
+- Fix FSTAB:HAS-ENTRIES-FOR-OPENED-VOLUMES for FAT32 filesystems.
+
 1.0.1 (2022-05-11)
 ------------------
 
