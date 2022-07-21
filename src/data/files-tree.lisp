@@ -28,10 +28,16 @@ contained in the subdirectory 'data/'.
 
 LOCATION, IDEN1 and IDEN2 are concatenated to locate files.  Thus, IDEN1
 specifies a (possibly nested) subdirectory under LOCATION and IDEN2 a relative
-path within that subdirectory.  For convenience IDEN1 and IDEN2 may be passed
-as absolute and will be converted to relative paths.  The usual cases of IDEN1
-as a hostname, IDEN1 as an underscore-prefixed identifier, and IDEN2 an an
-absolute or relative path are all supported."
+path within that subdirectory.
+
+Special characters in IDEN1 and IDEN2 are not encoded.  This means that each
+character in IDEN1 and IDEN2 must be permitted in filenames on this system,
+and that any slashes in IDEN1 and IDEN2 will probably act as path separators.
+
+For convenience IDEN1 and IDEN2 may be passed as absolute and will be
+converted to relative paths.  The usual cases of IDEN1 as a hostname, IDEN1 as
+an underscore-prefixed identifier, and IDEN2 an an absolute or relative path
+are all supported."
   (let ((base-path (if (symbolp location)
                         (asdf:system-relative-pathname location "data/")
                         (ensure-directory-pathname location))))
