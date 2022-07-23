@@ -751,11 +751,12 @@ populate /etc/fstab and /etc/crypttab.  Do not modify this list."
          (mapc #'close-volume ,opened-volumes)))))
 
 (defmacro with-opened-volumes
-    ((volumes &key (mount-below nil mount-below-supplied-p)) &body propapps)
+    ((volumes &key (mount-below nil mount-below-supplied-p) leave-open)
+     &body propapps)
   "Macro property combinator.  Where each of VOLUMES is a VOLUME which may be
 opened by calling OPEN-VOLUME with NIL as the second argument, recursively
-open each of VOLUMES and any contents thereof, apply PROPAPPS, and close all
-volumes that were opened.
+open each of VOLUMES and any contents thereof, apply PROPAPPS, and, unless
+LEAVE-OPEN, close all volumes that were opened.
 
 MOUNT-BELOW specifies a pathname to prefix to mount points when opening
 FILESYSTEM volumes.  During the application of PROPAPPS, all
@@ -765,10 +766,11 @@ volumes; the former must not be modified."
   `(with-opened-volumes*
      ',volumes
      ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))
-     ,@(and mount-below-supplied-p `(:mount-below ,mount-below))))
+     ,@(and mount-below-supplied-p `(:mount-below ,mount-below))
+     :leave-open ,leave-open))
 
 (define-function-property-combinator with-opened-volumes*
-    (volumes propapp &key (mount-below nil mount-below-supplied-p))
+    (volumes propapp &key (mount-below nil mount-below-supplied-p) leave-open)
   (:retprop
    :type (propapp-type propapp)
    :hostattrs (lambda-ignoring-args
@@ -784,7 +786,8 @@ volumes; the former must not be modified."
                         'opened-volume-parents parents)
          (unwind-protect (apply-propapp propapp)
            (mrun "sync")
-           (mapc #'close-volume (get-connattr 'opened-volumes))))))
+           (unless leave-open
+             (mapc #'close-volume (get-connattr 'opened-volumes)))))))
    :args (cdr propapp)))
 
 (defun create-volumes-and-contents (volumes &optional files)
