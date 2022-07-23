@@ -611,7 +611,6 @@ possible.  Ignored if VOLUME-SIZE is also bound."))
     "The value of the --type parameter to cryptsetup luksFormat.
 Note that GRUB2 older than 2.06 cannot open the default LUKS2 format, so
 specify \"luks1\" if this is needed.")
-   (luks-cipher :type string :initarg :luks-cipher :accessor luks-cipher)
    (crypttab-options
     :type list :initform '("luks" "discard" "initramfs")
     :initarg :crypttab-options :accessor crypttab-options)
@@ -639,8 +638,6 @@ specify \"luks1\" if this is needed.")
           "cryptsetup" "--type" luks-type
           (and (member luks-type '("luks" "luks2") :test #'string=)
                `("--label" ,volume-label))
-          (and (slot-boundp volume 'luks-cipher)
-               `("--cipher" ,(luks-cipher volume)))
           "luksFormat" file "-")))
 
 (defmethod close-volume ((volume opened-luks-container))
