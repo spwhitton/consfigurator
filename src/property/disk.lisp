@@ -915,6 +915,21 @@ the LVM physical volumes corresponding to those volume groups."
   (ensure-directory-pathname
    (strcat (unix-namestring image-pathname) ".chroot")))
 
+(defun host-volumes-just-one-physical-disk (host fun)
+  (loop
+    with found
+    for volume in (get-hostattrs :volumes (preprocess-host host))
+    for physical-disk-p = (subtypep (type-of volume) 'physical-disk)
+    if (and physical-disk-p (not found) (slot-boundp volume 'volume-contents))
+      do (setq found t)
+      and collect (aprog1 (copy-volume-and-contents volume) (funcall fun it))
+    else unless physical-disk-p
+           collect volume
+    finally
+       (unless found
+         (inapplicable-property
+          "Volumes list for host has no DISK:PHYSICAL-DISK with contents."))))
+
 (defpropspec raw-image-built-for :lisp
     (options host image-pathname &key rebuild)
   "Build a raw disk image for HOST at IMAGE-PATHNAME.
@@ -941,23 +956,10 @@ of the host's volumes changes, although the contents of the image's
 filesystems will be incrementally updated when other properties change."
   (:desc #?"Built image for ${(get-hostname host)} @ ${image-pathname}")
   (let ((chroot (image-chroot image-pathname))
-        (volumes
-          (loop
-            with found
-            for volume in (get-hostattrs :volumes (preprocess-host host))
-            for physical-disk-p = (subtypep (type-of volume) 'physical-disk)
-            if (and physical-disk-p (not found)
-                    (slot-boundp volume 'volume-contents))
-              do (setq found t)
-              and collect (aprog1 (copy-volume-and-contents volume)
-                            (change-class it 'raw-disk-image)
-                            (setf (image-file it) image-pathname))
-            else unless physical-disk-p
-                   collect volume
-            finally
-               (unless found
-                 (inapplicable-property
-                  "Volumes list for host has no DISK:PHYSICAL-DISK with contents.")))))
+        (volumes (host-volumes-just-one-physical-disk
+                  host (lambda (volume)
+                         (change-class volume 'raw-disk-image)
+                         (setf (image-file volume) image-pathname)))))
     `(on-change (eseqprops
                  ,(propapp (chroot:os-bootstrapped-for. options chroot host
                              (caches-cleaned)))
