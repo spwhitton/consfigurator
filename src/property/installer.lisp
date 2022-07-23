@@ -89,10 +89,13 @@ BOOTLOADER-TYPE to VOLUME."))
         (strcat (unix-namestring chroot) "/")
         (strcat (unix-namestring target) "/"))))
 
-(defpropspec chroot-installed-to-volumes-for :lisp (host chroot volumes)
+(defpropspec chroot-installed-to-volumes-for :lisp
+    (host chroot volumes &key leave-open)
   "Where CHROOT contains the root filesystem of HOST and VOLUMES is a list of
 volumes, recursively open the volumes and rsync in the contents of CHROOT.
-Also update the fstab and crypttab, and try to install bootloader(s)."
+Also update the fstab and crypttab, and try to install bootloader(s).
+
+LEAVE-OPEN is passed on to DISK:WITH-OPENED-VOLUMES, which see."
   (:desc #?"${chroot} installed to volumes")
   (let ((target
           (ensure-directory-pathname
@@ -100,7 +103,8 @@ Also update the fstab and crypttab, and try to install bootloader(s)."
             (drop-trailing-slash
              (unix-namestring (ensure-directory-pathname chroot)))
             ".target"))))
-    `(with-opened-volumes (,volumes :mount-below ,target)
+    `(with-opened-volumes
+         (,volumes :mount-below ,target :leave-open ,leave-open)
        (%update-target-from-chroot ,chroot ,target)
        (chroot:deploys-these
         ,target ,host
