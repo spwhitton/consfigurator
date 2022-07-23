@@ -978,8 +978,108 @@ filesystems will be incrementally updated when other properties change."
                              (caches-cleaned)))
                  (%raw-image-created
                   ,volumes :chroot ,chroot :rebuild ,rebuild))
-       (consfigurator.property.installer:chroot-installed-to-volumes-for
-        ,host ,chroot ,volumes))))
+       (consfigurator.property.installer:files-installed-to-volumes-for
+        nil ,host ,volumes :chroot ,chroot))))
+
+(defprop %volumes-created :lisp (volumes)
+  (:desc "Created host volumes")
+  (:hostattrs (os:required 'os:linux) (require-volumes-data volumes))
+  (:apply
+   (dolist (volume volumes)
+     (when (subtypep (type-of volume) 'physical-disk)
+       (setf (volume-size volume)
+             (floor (/ (parse-integer
+                        (stripln
+                         (run "blockdev" "--getsize64" (device-file volume))))
+                       1048576)))))
+   (create-volumes-and-contents volumes)))
+
+(defpropspec first-disk-installed-for :lisp
+    (options host device-file &key chroot)
+  "Install HOST to the DISK:PHYSICAL-DISK accessible at DEVICE-FILE.
+**THIS PROPERTY UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA,
+  EACH TIME IT IS APPLIED.**
+
+Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE.
+
+The DISK:VOLUME-CONTENTS of the first DISK:PHYSICAL-DISK entry in the host's
+volumes, as specified using DISK:HAS-VOLUMES, will be created at DEVICE-FILE;
+there must be at least one such DISK:PHYSICAL-DISK entry.  Other
+DISK:PHYSICAL-DISK entries will be ignored, so ensure that none of the
+properties of the host will write to areas of the filesystem where filesystems
+stored on other physical disks would normally be mounted.
+
+OPTIONS will be passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+
+In most cases you will need to ensure that HOST has properties which do at
+least the following:
+
+  - declare the host's OS
+
+  - install a kernel
+
+  - install the binaries/packages needed to install the host's bootloader to
+    its volumes (usually with INSTALLER:BOOTLOADER-BINARIES-INSTALLED).
+
+If CHROOT, an intermediate chroot is bootstrapped at CHROOT, and HOST's
+properties are applied to that.  Otherwise, HOST's OS is bootstrapped directly
+to DEVICE-FILE.  It's useful to supply CHROOT when you expect to install the
+same HOST to a number of physical disks.
+
+Applying this property is similar to applying DISK:RAW-IMAGE-BUILT-FOR and
+then immediately dd'ing out the image to DEVICE-FILE.  The advantage of this
+property is that there is no need to resize filesystems to fill the size of
+the host's actual physical disk upon first boot."
+  (:desc #?"Installed ${(get-hostname host)} to ${device-file}")
+  (let ((volumes (host-volumes-just-one-physical-disk
+                  host (lambda (v)
+                         (setf (device-file v)
+                               (parse-unix-namestring device-file))))))
+    `(eseqprops
+      (%volumes-created ,volumes)
+      ,@(and chroot
+             (list (propapp (chroot:os-bootstrapped-for. options chroot host
+                              (caches-cleaned)))))
+      (consfigurator.property.installer:files-installed-to-volumes-for
+       ,options ,host ,volumes :chroot ,chroot))))
+
+(defpropspec volumes-installed-for :lisp (options host &key chroot leave-open)
+  "Install HOST to its volumes, as specified using DISK:HAS-VOLUMES.
+**THIS PROPERTY UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA,
+  EACH TIME IT IS APPLIED.**
+
+Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE.
+
+OPTIONS will be passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+
+In most cases you will need to ensure that HOST has properties which do at
+least the following:
+
+  - declare the host's OS
+
+  - install a kernel
+
+  - install the binaries/packages needed to install the host's bootloader to
+    its volumes (usually with INSTALLER:BOOTLOADER-BINARIES-INSTALLED).
+
+If CHROOT, an intermediate chroot is bootstrapped at CHROOT, and HOST's
+properties are applied to that.  Otherwise, HOST's OS is bootstrapped directly
+to its volumes.  This parameter is useful for the case of installing HOST from
+a live system which might not have network access.  See \"Tutorial: OS
+installation\" in the Consfigurator user's manual.
+
+If LEAVE-OPEN, HOST's volumes will not be closed.  This allows you to inspect
+the result of the installation.  If you want to run this property again, you
+should first manually close all the volumes."
+  (:desc #?"Installed ${(get-hostname host)}")
+  (let ((volumes (get-hostattrs :volumes host)))
+    `(eseqprops
+      (%volumes-created ,volumes)
+      ,@(and chroot
+             (list (propapp (chroot:os-bootstrapped-for. options chroot host
+                              (caches-cleaned)))))
+      (consfigurator.property.installer:files-installed-to-volumes-for
+       ,options ,host ,volumes :chroot ,chroot :leave-open ,leave-open))))
 
 (defprop %squashfsed :posix (chroot image &optional (compression "xz"))
   (:apply
@@ -1085,15 +1185,6 @@ Currently only BIOS boot is implemented."
          "--eltorito-catalog" "isolinux/isolinux.cat"
 
          ,iso-root)))))
-
-(defprop host-volumes-created :lisp ()
-  "Recursively create the volumes as specified by DISK:HAS-VOLUMES.
-**THIS PROPERTY UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA,
-  EACH TIME IT IS APPLIED.**
-
-Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE."
-  (:desc "Host volumes created")
-  (:apply (create-volumes-and-contents (get-hostattrs :volumes))))
 
 ;; TODO Possibly we want (a version of) this to not fail, but just do nothing,
 ;; if the relevant volume groups etc. are inactive?

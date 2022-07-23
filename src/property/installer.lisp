@@ -59,11 +59,11 @@ BOOTLOADER-TYPE to VOLUME."))
 
 ;; At :HOSTATTRS time we don't have the OPENED-VOLUME values required by the
 ;; :APPLY subroutines which actually install the bootloaders.  So we call
-;; GET-PROPSPECS twice: (in CHROOT-INSTALLED-TO-VOLUMES-FOR) at :HOSTATTRS
-;; time to generate propspecs for the sake of running :HOSTATTRS subroutines,
-;; and then at :APPLY time where we can get at the OPENED-VOLUME values, we
-;; ignore the previously generated propspecs and call GET-PROPSPECS again.
-;; This approach should work for any sensible VOLUME<->OPENED-VOLUME pairs.
+;; GET-PROPSPECS twice: (in FILES-INSTALLED-TO-VOLUMES-FOR) at :HOSTATTRS time
+;; to generate propspecs for the sake of running :HOSTATTRS subroutines, and
+;; then at :APPLY time where we can get at the OPENED-VOLUME values, we ignore
+;; the previously generated propspecs and call GET-PROPSPECS again.  This
+;; approach should work for any sensible VOLUME<->OPENED-VOLUME pairs.
 (define-function-property-combinator %install-bootloaders (&rest propapps)
   (:retprop
    :type :lisp
@@ -89,44 +89,51 @@ BOOTLOADER-TYPE to VOLUME."))
         (strcat (unix-namestring chroot) "/")
         (strcat (unix-namestring target) "/"))))
 
-(defpropspec chroot-installed-to-volumes-for :lisp
-    (host chroot volumes &key leave-open)
+(defun chroot-target (chroot)
+  (ensure-directory-pathname
+   (strcat
+    (drop-trailing-slash (unix-namestring (ensure-directory-pathname chroot)))
+    ".target")))
+
+(defpropspec files-installed-to-volumes-for :lisp
+    (options host volumes &key chroot leave-open
+             (mount-below (if chroot (chroot-target chroot) #P"/target/")))
   "Where CHROOT contains the root filesystem of HOST and VOLUMES is a list of
 volumes, recursively open the volumes and rsync in the contents of CHROOT.
 Also update the fstab and crypttab, and try to install bootloader(s).
 
-LEAVE-OPEN is passed on to DISK:WITH-OPENED-VOLUMES, which see."
-  (:desc #?"${chroot} installed to volumes")
-  (let ((target
-          (ensure-directory-pathname
-           (strcat
-            (drop-trailing-slash
-             (unix-namestring (ensure-directory-pathname chroot)))
-            ".target"))))
-    `(with-opened-volumes
-         (,volumes :mount-below ,target :leave-open ,leave-open)
-       (%update-target-from-chroot ,chroot ,target)
-       (chroot:deploys-these
-        ,target ,host
-        ,(make-propspec
-          :propspec
-          `(eseqprops
-            ,(propapp
-              (os:etypecase
-                  (debianlike
-                   (file:lacks-lines
-                    "/etc/fstab" "# UNCONFIGURED FSTAB FOR BASE SYSTEM")
-                   ;; These will overwrite any custom mount options, etc.,
-                   ;; with values from VOLUMES.  Possibly it would be better
-                   ;; to use properties which only update the fs-spec/source
-                   ;; fields.  However, given that VOLUMES ultimately comes
-                   ;; from the volumes the user has declared for the host, it
-                   ;; is unlikely there are other properties setting mount
-                   ;; options etc. which are in conflict with VOLUMES.
-                   (fstab:has-entries-for-opened-volumes)
-                   (crypttab:has-entries-for-opened-volumes))))
-            (%install-bootloaders
-             ,@(get-propspecs (get-hostattrs :volumes)))))))))
+If CHROOT is NIL, bootstrap a root filesystem for HOST directly to VOLUMES.
+In that case, OPTIONS is passed on to CHROOT:OS-BOOTSTRAPPED-FOR, which see.
+
+MOUNT-BELOW and LEAVE-OPEN are passed on to WITH-OPENED-VOLUMES, which see."
+  (:desc (format nil "~A installed to volumes"
+                 (or chroot (get-hostname host))))
+  `(with-opened-volumes
+       (,volumes :mount-below ,mount-below :leave-open ,leave-open)
+     ,(if chroot
+          `(%update-target-from-chroot ,chroot ,mount-below)
+          `(chroot:os-bootstrapped-for ,options ,mount-below ,host))
+     (chroot:deploys-these
+      ,mount-below ,host
+      ,(make-propspec
+        :propspec
+        `(eseqprops
+          ,(propapp
+            (os:etypecase
+              (debianlike
+               (file:lacks-lines
+                "/etc/fstab" "# UNCONFIGURED FSTAB FOR BASE SYSTEM")
+               ;; These will overwrite any custom mount options, etc., with
+               ;; values from VOLUMES.  Possibly it would be better to use
+               ;; properties which only update the fs-spec/source fields.
+               ;; However, given that VOLUMES ultimately comes from the
+               ;; volumes the user has declared for the host, it is unlikely
+               ;; there are other properties setting mount options etc. which
+               ;; are in conflict with VOLUMES.
+               (fstab:has-entries-for-opened-volumes)
+               (crypttab:has-entries-for-opened-volumes))))
+          (%install-bootloaders
+           ,@(get-propspecs (get-hostattrs :volumes))))))))
 
 (defpropspec bootloader-binaries-installed :posix ()
   "Install whatever binaries/packages need to be available to install the host's

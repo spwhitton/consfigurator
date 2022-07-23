@@ -26,6 +26,16 @@ you should review this document and see if your consfig needs updating.
 1.1.0 (unreleased)
 ------------------
 
+- API change: DISK:HOST-VOLUMES-CREATED has been removed in favour of new
+  properties DISK:FIRST-DISK-INSTALLED-FOR and DISK:VOLUMES-INSTALLED-FOR.
+
+- API change: INSTALLED:CHROOT-INSTALLED-TO-VOLUMES-FOR has been renamed to
+  INSTALLER:FILES-INSTALLED-TO-VOLUMES-FOR, and will now bootstrap a root
+  filesystem directly to the volumes if not supplied a chroot.  The CHROOT
+  parameter has become a keyword parameter, and the required parameters have
+  changed from ``(HOST CHROOT VOLUMES)`` to ``(OPTIONS HOST VOLUMES)`` for
+  consistency with other property lambda lists.
+
 - API change: DISK:WITH-OPENED-VOLUMES now includes volumes that were already
   open, and their parents, in the connattrs.
 

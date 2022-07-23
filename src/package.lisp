@@ -651,9 +651,10 @@
 
                     #:has-volumes
                     #:raw-image-built-for
+                    #:first-disk-installed-for
+                    #:volumes-installed-for
                     #:debian-live-iso-built
                     #:debian-live-iso-built.
-                    #:host-volumes-created
                     #:host-logical-volumes-exist
 
                     #:volumes))
@@ -741,7 +742,7 @@
                              (#:disk      #:consfigurator.property.disk))
            (:export #:install-bootloader-propspec
                     #:install-bootloader-binaries-propspec
-                    #:chroot-installed-to-volumes-for
+                    #:files-installed-to-volumes-for
                     #:bootloader-binaries-installed
                     #:bootloaders-installed
                     #:cleanly-installed-once

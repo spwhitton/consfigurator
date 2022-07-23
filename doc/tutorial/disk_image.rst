@@ -15,6 +15,7 @@ Here is a minimal definition of the host for which we can build a disk image:::
     (os:debian-stable "bullseye" :amd64)
     (disk:has-volumes
      (physical-disk
+      :device-file #P"/dev/sda"
       :boots-with '(grub:grub :target "x86_64-efi" :force-extra-removable t)
       (partitioned-volume
        ((partition
