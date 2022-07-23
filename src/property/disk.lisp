@@ -611,6 +611,11 @@ possible.  Ignored if VOLUME-SIZE is also bound."))
     "The value of the --type parameter to cryptsetup luksFormat.
 Note that GRUB2 older than 2.06 cannot open the default LUKS2 format, so
 specify \"luks1\" if this is needed.")
+   (cryptsetup-options
+    :type list :initform nil :initarg :cryptsetup-options
+    :documentation
+    "Extra arguments to pass to cryptsetup(8) when creating the volume, such as
+'--cipher'.  Use the LUKS-TYPE slot for '--type'.")
    (crypttab-options
     :type list :initform '("luks" "discard" "initramfs")
     :initarg :crypttab-options :accessor crypttab-options)
@@ -632,12 +637,15 @@ specify \"luks1\" if this is needed.")
                         (merge-pathnames volume-label #P"/dev/mapper/"))))
 
 (defmethod create-volume ((volume luks-container) (file pathname))
-  (with-slots (luks-passphrase-iden1 volume-label luks-type) volume
+  (with-slots
+        (luks-passphrase-iden1 volume-label luks-type cryptsetup-options)
+      volume
     (mrun :inform
           :input (get-data-string luks-passphrase-iden1 (volume-label volume))
           "cryptsetup" "--type" luks-type
           (and (member luks-type '("luks" "luks2") :test #'string=)
                `("--label" ,volume-label))
+          cryptsetup-options
           "luksFormat" file "-")))
 
 (defmethod close-volume ((volume opened-luks-container))
