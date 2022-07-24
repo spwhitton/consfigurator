@@ -675,12 +675,16 @@ order in which they should be closed, and as a second value, a corresponding
 list of the immediate parents of each opened volume.  MOUNT-BELOW specifies a
 pathname to prefix to mount points when opening FILESYSTEM volumes.
 
+Also return as third and fourth values a list of volumes encountered that were
+already open and a corresponding list of their immediate parents.
+
 Calling this function can be useful for testing at the REPL, but code should
 normally use WITH-OPEN-VOLUMES or WITH-OPENED-VOLUMES.
 
 If an error is signalled while the attempt to open volumes is in progress, a
 single attempt will be made to close all volumes opened up to that point."
-  (let (opened-volumes all-parents filesystems)
+  (let
+      (opened-volumes opened-parents already-open already-parents filesystems)
     (handler-case
         (labels
             ((open-volume-and-contents (volume file parent)
@@ -698,14 +702,19 @@ single attempt will be made to close all volumes opened up to that point."
                        (if (subtypep (class-of volume) 'opened-volume)
                            (setq opened-volumes
                                  (append opened-contents opened-volumes)
-                                 all-parents
-                                 (nconc opened-contents-parents all-parents))
+                                 opened-parents
+                                 (nconc opened-contents-parents
+                                        opened-parents)
+                                 already-open
+                                 (cons volume already-open)
+                                 already-parents
+                                 (cons parent already-parents))
                            (setq opened-volumes
                                  (append opened-contents
                                          (cons opened opened-volumes))
-                                 all-parents
+                                 opened-parents
                                  (nconc opened-contents-parents
-                                        (cons parent all-parents)))))
+                                        (cons parent opened-parents)))))
                      (dolist (opened-volume (or opened-contents `(,opened)))
                        (when (slot-boundp opened-volume 'volume-contents)
                          (open-volume-and-contents
@@ -721,9 +730,9 @@ single attempt will be made to close all volumes opened up to that point."
                               :key (compose #'ensure-directory-pathname
                                             #'mount-point
                                             #'cadr))))
-                (push (pop filesystem) all-parents)
+                (push (pop filesystem) opened-parents)
                 (push (apply #'open-volume filesystem) opened-volumes)))
-          (values opened-volumes all-parents))
+          (values opened-volumes opened-parents already-open already-parents))
       (serious-condition (condition)
         (unwind-protect (mapc #'close-volume opened-volumes)
           (error condition))))))
@@ -761,8 +770,8 @@ LEAVE-OPEN, close all volumes that were opened.
 MOUNT-BELOW specifies a pathname to prefix to mount points when opening
 FILESYSTEM volumes.  During the application of PROPAPPS, all
 'DISK:OPENED-VOLUMES and 'DISK:OPENED-VOLUME-PARENTS connattrs are replaced
-with lists of the volumes that were opened and corresponding immediate parent
-volumes; the former must not be modified."
+with lists of the volumes that were opened/already open and corresponding
+immediate parent volumes."
   `(with-opened-volumes*
      ',volumes
      ,(if (cdr propapps) `(eseqprops ,@propapps) (car propapps))
@@ -778,16 +787,17 @@ volumes; the former must not be modified."
                 (propapp-attrs propapp))
    :apply
    (lambda-ignoring-args
-     (multiple-value-bind (opened-volumes parents)
+     (multiple-value-bind
+           (opened-volumes opened-parents already-open already-parents)
          (apply #'open-volumes-and-contents
                 `(,volumes ,@(and mount-below-supplied-p
                                   `(:mount-below ,mount-below))))
-       (with-connattrs ('opened-volumes opened-volumes
-                        'opened-volume-parents parents)
+       (with-connattrs
+           ('opened-volumes (append opened-volumes already-open)
+            'opened-volume-parents (append opened-parents already-parents))
          (unwind-protect (apply-propapp propapp)
            (mrun "sync")
-           (unless leave-open
-             (mapc #'close-volume (get-connattr 'opened-volumes)))))))
+           (unless leave-open (mapc #'close-volume opened-volumes))))))
    :args (cdr propapp)))
 
 (defun create-volumes-and-contents (volumes &optional files)
