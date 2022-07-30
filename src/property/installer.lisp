@@ -131,7 +131,8 @@ MOUNT-BELOW and LEAVE-OPEN are passed on to WITH-OPENED-VOLUMES, which see."
                ;; there are other properties setting mount options etc. which
                ;; are in conflict with VOLUMES.
                (fstab:has-entries-for-opened-volumes)
-               (crypttab:has-entries-for-opened-volumes))))
+               (on-change (crypttab:has-entries-for-opened-volumes)
+                 (cmd:single "update-initramfs" "-u")))))
           (%install-bootloaders
            ,@(get-propspecs (get-hostattrs :volumes))))))))
 
