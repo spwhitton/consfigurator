@@ -48,7 +48,7 @@
        (mrun :inform "update-grub")
        (when os-prober (file:has-mode "/etc/grub.d/30_os-prober" #o755)))
      (mrun :inform "grub-install" (strcat "--target=" target)
-           (and (string-suffix-p target "-efi") running-on-target
+           (and (string-suffix-p target "-efi") (not running-on-target)
                 "--no-nvram")
            (and force-extra-removable "--force-extra-removable")
            (device-file volume)))))
