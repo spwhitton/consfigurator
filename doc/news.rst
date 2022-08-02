@@ -23,7 +23,7 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
-1.1.0 (unreleased)
+1.1.0 (2022-08-02)
 ------------------
 
 - API change: DISK:HOST-VOLUMES-CREATED has been removed in favour of new
