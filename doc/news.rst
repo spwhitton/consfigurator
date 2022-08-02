@@ -36,8 +36,20 @@ you should review this document and see if your consfig needs updating.
   changed from ``(HOST CHROOT VOLUMES)`` to ``(OPTIONS HOST VOLUMES)`` for
   consistency with other property lambda lists.
 
+  The new property also includes a bugfix: we now rebuild the initramfs after
+  populating the crypttab.
+
 - API change: DISK:WITH-OPENED-VOLUMES now includes volumes that were already
   open, and their parents, in the connattrs.
+
+- DISK:LUKS-CONTAINER: Add support for passing arbitrary options to
+  cryptsetup(8) when creating volumes, such as ``--cipher``.
+
+- DISK:WITH-OPENED-VOLUMES, INSTALLER:FILES-INSTALLED-TO-VOLUMES-FOR and
+  DISK:VOLUMES-INSTALLED-FOR support a new ``LEAVE-OPEN`` argument to request
+  that opened volumes are not closed.  This is useful for inspecting the
+  result of an installation, but must be used with caution: the next
+  deployment will assume the volumes have been manually closed.
 
 1.0.3 (2022-06-29)
 ------------------
