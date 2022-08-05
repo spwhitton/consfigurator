@@ -436,6 +436,7 @@
                     #:host-secret-uploaded
                     #:data-cache-purged
                     #:contains-conf-equals
+                    #:contains-conf-unspaced
                     #:contains-conf-space
                     #:contains-conf-tab
                     #:contains-conf-shell
