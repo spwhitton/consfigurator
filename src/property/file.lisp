@@ -224,7 +224,12 @@ Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
 
 (defprop symlinked :posix (&key from to)
   "Ensure FROM is a symlink to TO.  Symbolic links are overwritten; it is an
-error if FROM is another kind of file, except when unapplying."
+error if FROM is another kind of file, except when unapplying.
+
+The link target, TO, is literal: if it is a relative path, then it is not
+relative to the remote home directory, but instead relative to the directory
+that contains FROM.  To create a link with a target under the remote home
+directory, you can use one or more '../', or an absolute path."
   (:desc #?"Symlinked ${from} -> ${to}")
   (:apply
    (unless (and from to)
