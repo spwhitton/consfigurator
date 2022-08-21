@@ -44,19 +44,20 @@
   (:desc #?"apt installed @{packages}")
   (:preprocess (flatten packages))
   (:hostattrs (os:required 'os:debianlike))
-  (:check (all-installed-p packages))
   (:apply
-   (with-maybe-update (apt-get :inform "-y" "install" packages))))
+   (with-maybe-update
+       (with-changes-dpkg-status
+         (apt-get :inform "-y" "install" packages)))))
 
 (defprop installed-minimally :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are installed, without recommends."
   (:desc #?"apt installed @{packages}")
   (:preprocess (flatten packages))
   (:hostattrs (os:required 'os:debianlike))
-  (:check (all-installed-p packages))
   (:apply
    (with-maybe-update
-       (apt-get :inform "-y" "--no-install-recommends" "install" packages))))
+       (with-changes-dpkg-status
+        (apt-get :inform "-y" "--no-install-recommends" "install" packages)))))
 
 (defun install-backports (args packages)
   (with-maybe-update
@@ -93,10 +94,8 @@ each of those dependencies in PACKAGES."
   (:hostattrs
    (declare (ignore packages))
    (os:required 'os:debianlike))
-  (:check
-   (none-installed-p packages))
   (:apply
-   (apt-get :inform "-y" "remove" packages)))
+   (with-changes-dpkg-status (apt-get :inform "-y" "remove" packages))))
 
 (defprop reconfigured :posix (package &rest triples)
   "Where each of TRIPLES is a list of three strings, a debconf template, type
