@@ -104,7 +104,15 @@
   (with-some-errors-are-failed-change
     (if (aand (get prop 'check) (apply it args))
         :no-change
-        (apply (get prop 'papply (constantly :no-change)) args))))
+        (aif (get prop 'papply)
+             (apply it args)
+             (if (get prop 'hostattrs)
+                 :no-change
+                 (aborted-change
+                  "~S has neither an :APPLY nor a :HOSTATTRS subroutine.
+
+(Have you added a new .lisp file but not yet listed it in the relevant .asd?)"
+                  prop))))))
 
 (defun apply-propapp (propapp)
   (if propapp
