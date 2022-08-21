@@ -399,6 +399,8 @@ in testing, you could use:
   :test #'string=)
 
 (defun all-installed-p (&rest packages)
+  "Return true if all of PACKAGES, a list of non-virtual packages, are
+installed."
   (loop with n = 0
         with packages* = (flatten packages)
         for line in (apt-cache-policy packages*)
@@ -407,6 +409,8 @@ in testing, you could use:
         finally (return (= n (length packages*)))))
 
 (defun none-installed-p (&rest packages)
+  "Returns true if none of PACKAGES, a list of non-virtual packages, are
+installed."
   (loop for line in (apt-cache-policy (flatten packages))
         never (re:scan apt-cache-policy-installed line)))
 
