@@ -23,7 +23,7 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
-1.1.1 (unreleased)
+1.1.1 (2022-09-18)
 ------------------
 
 - Add FILE:CONTAINS-CONF-UNSPACED.
