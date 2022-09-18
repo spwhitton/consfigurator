@@ -62,7 +62,7 @@ Try it out / quick start
 	    "Here is my file content.
 	It's multiline.  CL-INTERPOL and CL-HEREDOC are also available; the
 	latter is particularly useful for shell scripts.")
-	  (file:has-content "/etc/bar" '("or" "specify" "a" "list" "of" "lines""))
+	  (file:has-content "/etc/bar" '("or" "specify" "a" "list" "of" "lines"))
 	  (file:contains-lines "/etc/some.conf" "FOO=bar") ; preserve rest of file contents
 
 	  ;; This will call debootstrap(1) in a way which respects the apt
