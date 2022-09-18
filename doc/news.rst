@@ -23,6 +23,23 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.1.1 (unreleased)
+------------------
+
+- Add FILE:CONTAINS-CONF-UNSPACED.
+
+- PROPAPPLY now signals an error if asked to apply a property that has neither
+  ``:APPLY`` nor ``:HOSTATTRS`` subroutines.  This is primarily intended to
+  catch cases where the property is defined in a ``.lisp`` file that you
+  haven't yet added to your consfig's ``.asd`` file.
+
+- APT:PROXY is now unapplicable.
+
+- APT:INSTALLED, APT:INSTALLED-MINIMALLY and APT:REMOVED now always execute
+  apt-get(8).  Previously they tried to determine whether the packages were
+  already installed or removed by parsing output from apt-cache(8), but the
+  implementation sometimes gave the wrong answer.
+
 1.1.0 (2022-08-02)
 ------------------
 
