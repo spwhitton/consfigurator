@@ -516,7 +516,8 @@
                              (#:file       #:consfigurator.property.file)
                              (#:os         #:consfigurator.property.os)
                              (#:service    #:consfigurator.property.service))
-           (:export #:installed
+           (:export #:known-installed-removed-packages-reset
+                    #:installed
                     #:installed-minimally
                     #:backports-installed
                     #:backports-installed-minimally

@@ -39,15 +39,62 @@
 
 ;;;; Properties
 
+;; Cache what we've installed and removed this deployment, rather than
+;; checking over and over again.  We assume, then, that no other properties
+;; add or remove packages in a way that could invalidate assumptions made by
+;; implementations of properties subsequently to be applied.
+;; To be safe, user properties that install or remove packages by calling
+;; apt-get(8) or dpkg(1) directly should invalidate the cache by calling
+;; APT:KNOWN-INSTALLED-REMOVED-PACKAGES-RESET.
+(defun install-remove
+    (args packages check-against add-to remove-from &aux all)
+  "Unless each of PACKAGES appears in the union of the connattrs named by the
+elements of CHECK-AGAINST, execute apt-get(8) on ARGS.
+Then add each of PACKAGES to each of the connattrs named by the elements of
+ADD-TO and remove each of PACKAGES from each of the connattrs named by the
+elements of REMOVE-FROM."
+  (if (subsetp packages (reduce (lambda (x y)
+                                  (union x (get-connattr y) :test #'string=))
+                                (ensure-list check-against)
+                                :initial-value nil)
+               :test #'string=)
+      :no-change
+      (prog1 (with-maybe-update
+                 (with-changes-dpkg-status (apt-get :inform args)))
+        ;; We cache just what we've explicitly installed or removed, but other
+        ;; packages may have been installed or removed too.
+        (dolist (connattr (ensure-list add-to))
+          (unionf (get-connattr connattr) packages :test #'string=)
+          (push connattr all))
+        (dolist (connattr (ensure-list remove-from))
+          (setf (get-connattr connattr)
+                (nset-difference (get-connattr connattr) packages
+                                 :test #'string=))
+          (push connattr all))
+        (apply #'informat 3
+               "~&~@{~@[Known ~(~A~) packages now: ~{~A~^, ~}~%~]~}"
+               (loop for connattr in all
+                     collect connattr
+                     collect (get-connattr connattr))))))
+
+(defprop known-installed-removed-packages-reset :posix ()
+  "Reset the lists of known-installed and known-removed Debian packages.
+You should call this in custom properties that manually manipulate what
+packages are installed in order to ensure that subsequent applications of APT
+properties do not assume that their work has already been done."
+  (:desc "Lists of installed and removed packages reset")
+  (:apply (setf (get-connattr 'installed) nil
+                (get-connattr 'removed) nil
+                (get-connattr 'installed-backports) nil)))
+
 (defprop installed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are installed."
   (:desc #?"apt installed @{packages}")
   (:preprocess (flatten packages))
   (:hostattrs (os:required 'os:debianlike))
   (:apply
-   (with-maybe-update
-       (with-changes-dpkg-status
-         (apt-get :inform "-y" "install" packages)))))
+   (install-remove (list* "-y" "install" packages) packages
+                   '(installed installed-backports) 'installed 'removed)))
 
 (defprop installed-minimally :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are installed, without recommends."
@@ -55,17 +102,18 @@
   (:preprocess (flatten packages))
   (:hostattrs (os:required 'os:debianlike))
   (:apply
-   (with-maybe-update
-       (with-changes-dpkg-status
-        (apt-get :inform "-y" "--no-install-recommends" "install" packages)))))
+   (install-remove (list* "-y" "--no-install-recommends" "install" packages)
+                   packages
+                   '(installed installed-backports) 'installed 'removed)))
 
 (defun install-backports (args packages)
-  (with-maybe-update
-      (with-changes-dpkg-status
-        (apt-get :inform args "install"
-                 (loop with suite = (os:debian-suite (get-hostattrs-car :os))
-                       for pkg in packages
-                       collect (format nil "~A/~A-backports" pkg suite))))))
+  (install-remove
+   (append args '("install")
+           (loop with suite = (os:debian-suite (get-hostattrs-car :os))
+                 for pkg in packages
+                 collect (format nil "~A/~A-backports" pkg suite)))
+   packages
+   'installed-backports 'installed-backports '(installed removed)))
 
 (defprop backports-installed :posix (&rest packages)
   "Ensure all of the apt packages PACKAGES are installed from stable-backports.
@@ -95,7 +143,8 @@ each of those dependencies in PACKAGES."
    (declare (ignore packages))
    (os:required 'os:debianlike))
   (:apply
-   (with-changes-dpkg-status (apt-get :inform "-y" "remove" packages))))
+   (install-remove (list* "-y" "remove" packages) packages
+                   'removed 'removed '(installed installed-backports))))
 
 (defprop reconfigured :posix (package &rest triples)
   "Where each of TRIPLES is a list of three strings, a debconf template, type

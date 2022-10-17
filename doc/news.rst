@@ -23,6 +23,17 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.2.0 (unreleased)
+------------------
+
+- APT properties now cache what packages have been explicitly installed and
+  removed this deployment.  This should significantly speed up many
+  deployments.  User properties which install or remove packages by calling
+  apt-get(8) or dpkg(1) directly might inadvertedly render the lists of
+  properties installed and removed invalid.  Such properties should be changed
+  to call or apply the new APT:KNOWN-INSTALLED-REMOVED-PACKAGES-RESET property
+  to invalidate the cache.
+
 1.1.1 (2022-09-18)
 ------------------
 
