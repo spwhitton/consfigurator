@@ -550,8 +550,8 @@ PATH may be any kind of file, including directories."
                              when (cdr path) collect "-a")))
 
 (defun remote-file-stats (path)
-  "Get the numeric mode, size in bytes and mtime of PATH, or NIL if it does not
-exist.
+  "Get the numeric mode, size in bytes, mtime, owner and group of PATH, or NIL if
+it does not exist.
 
 The mtime is only accurate to the nearest UTC day, rounding down, if the file
 was modified in the past six months or its mtime is in the future, and only
@@ -593,7 +593,9 @@ specification of POSIX ls(1))."
                             date month (nth-value 5 (get-decoded-time))
                             0))
                          (encode-universal-time
-                          0 0 0 date month (parse-integer (nth 7 ls)) 0))))))))
+                          0 0 0 date month (parse-integer (nth 7 ls)) 0)))
+                   (nth 2 ls)
+                   (nth 3 ls))))))
 
 (defun remote-last-reboot ()
   "Get the time of the last reboot, rounded down to the nearest minute."

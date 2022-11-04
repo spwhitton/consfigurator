@@ -111,11 +111,17 @@ any of the regular expressions PATTERNS."
   (:hostattrs
    (unless (or user group)
      (inapplicable-property "Not enough arguments.")))
+  ;; We don't want to execute chown(1) unless we're sure it's needed because
+  ;; in some circumstances doing so also changes the file mode.
+  (:check (multiple-value-bind (mode size mtime owner gowner)
+              (remote-file-stats path)
+            (declare (ignore mode size mtime))
+            (and (or (not user) (string= user owner))
+                 (or (not group) (string= group gowner)))))
   (:apply
-   (with-change-if-changes-file (path)
-     (if user
-         (mrun "chown" "-h" (format nil "~A~:[~;:~:*~A~]" user group) path)
-         (mrun "chgrp" "-h" group path)))))
+   (if user
+       (mrun "chown" "-h" (format nil "~A~:[~;:~:*~A~]" user group) path)
+       (mrun "chgrp" "-h" group path))))
 
 (defprop does-not-exist :posix (&rest paths)
   "Ensure that files do not exist."
