@@ -249,8 +249,12 @@ directory, you can use one or more '../', or an absolute path."
        (failed-change "~A exists but is not a symbolic link." from))
      (if (and link (string= (remote-link-target from) to))
          :no-change
-         (progn
-           (containing-directory-exists from) (mrun "ln" "-sf" to from)))))
+         (progn (containing-directory-exists from)
+                ;; With at least GNU ln(1), passing -f, but not also -T, does
+                ;; not replace an existing link in some cases.
+                ;; -T is not POSIX, so we just remove any existing link first.
+                (does-not-exist from)
+                (mrun "ln" "-sf" to from)))))
   (:unapply
    (declare (ignore to))
    (if (remote-test "-L" from)
