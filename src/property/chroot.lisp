@@ -25,7 +25,7 @@
    ;; check whether a previous debootstrap failed partway through
    (if (remote-test "-d" (merge-pathnames "debootstrap/"
                                           (ensure-directory-pathname root)))
-       (progn (delete-remote-trees root) nil)
+       (progn (empty-remote-directory root) nil)
        (remote-exists-p (chroot-pathname "/usr/lib/os-release" root))))
   (:apply
    (destructuring-bind
