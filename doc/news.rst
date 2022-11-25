@@ -34,6 +34,9 @@ you should review this document and see if your consfig needs updating.
   to call or apply the new APT:KNOWN-INSTALLED-REMOVED-PACKAGES-RESET property
   to invalidate the cache.
 
+- Fix a bug in FILE:DOES-NOT-EXIST which meant that it did nothing if only
+  some of the files that should not exist needed to be deleted.
+
 1.1.1 (2022-09-18)
 ------------------
 

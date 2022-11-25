@@ -128,7 +128,7 @@ any of the regular expressions PATTERNS."
   (:desc (if (cdr paths)
              #?"@{paths} do not exist"
              #?"${(car paths)} does not exist"))
-  (:check (not (apply #'remote-exists-p paths)))
+  (:check (not (apply #'remote-exists-some-p paths)))
   (:apply (mrun "rm" "-f" paths)))
 
 (defprop directory-does-not-exist :posix
