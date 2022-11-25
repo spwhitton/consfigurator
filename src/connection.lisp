@@ -542,12 +542,25 @@ subclass to the :HOSTATTRS subroutine of properties calling this."
   (alet (sh-escape (drop-trailing-slash (unix-namestring directory)))
     (mrun (format nil "rm -rf -- ~A/* ~A/.[!.]* ~A/..?*" it it it))))
 
-(defun remote-exists-p (&rest paths)
-  "Does each of PATHS exists?
-PATH may be any kind of file, including directories."
+(defun remote-test-multiple (operator paths connective)
   (apply #'remote-test (loop for path on paths
-                             nconc (list "-e" (car path))
-                             when (cdr path) collect "-a")))
+                             nconc (list operator (car path))
+                             when (cdr path) collect connective)))
+
+(defun remote-exists-p (&rest paths)
+  "Does each of PATHS exist?
+PATH may be any kind of file, including directories."
+  (remote-test-multiple "-e" paths "-a"))
+
+(defun remote-exists-every-p (&rest paths)
+  "Does each of PATHS exist?
+PATH may be any kind of file, including directories."
+  (remote-test-multiple "-e" paths "-a"))
+
+(defun remote-exists-some-p (&rest paths)
+  "Do any of PATHS exist?
+PATH may be any kind of file, including directories."
+  (remote-test-multiple "-e" paths "-o"))
 
 (defun remote-file-stats (path)
   "Get the numeric mode, size in bytes, mtime, owner and group of PATH, or NIL if

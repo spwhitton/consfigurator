@@ -188,6 +188,8 @@
            #:runlines
            #:remote-test
            #:remote-exists-p
+           #:remote-exists-every-p
+           #:remote-exists-some-p
            #:remote-file-stats
            #:remote-last-reboot
            #:remote-executable-find
