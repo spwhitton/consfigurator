@@ -34,8 +34,15 @@ you should review this document and see if your consfig needs updating.
   to call or apply the new APT:KNOWN-INSTALLED-REMOVED-PACKAGES-RESET property
   to invalidate the cache.
 
+- Fix a bug in FILE:SYMLINKED that meant that with at least GNU ln(1), the
+  property would fail to overwrite existing symbolic links in some cases.
+
 - Fix a bug in FILE:DOES-NOT-EXIST which meant that it did nothing if only
   some of the files that should not exist needed to be deleted.
+
+- When recovering from a failed debootstrap, instead of just recursively
+  deleting the target directory, we now call EMPTY-REMOTE-DIRECTORY, to empty
+  it, instead.  This is better when the target directory is a mount point.
 
 1.1.1 (2022-09-18)
 ------------------
