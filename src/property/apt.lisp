@@ -30,7 +30,8 @@
 (defmacro with-changes-dpkg-status (&body forms)
   `(with-change-if-changes-file-content ("/var/lib/dpkg/status") ,@forms))
 
-(define-constant +sections+ '("main" "contrib" "non-free") :test #'equal)
+(define-constant +sections+ '("main" "contrib" "non-free-firmware" "non-free")
+  :test #'equal)
 
 (define-constant +noninteractive-env+ '(:DEBIAN_FRONTEND "noninteractive"
                                         :APT_LISTCHANGES_FRONTEND "none")

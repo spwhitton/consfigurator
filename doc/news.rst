@@ -23,6 +23,13 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.2.2 (unreleased)
+------------------
+
+- APT properties: add ``non-free-firmware`` section to generated sources
+  lists.  On Debian bullseye and older this will cause apt updates to emit
+  harmless warnings.
+
 1.2.0 (2022-11-29)
 ------------------
 
