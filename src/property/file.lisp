@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2020-2022  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2020-2023  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -145,6 +145,24 @@ any of the regular expressions PATTERNS."
              #?"${(car directories)} does not exist"))
   (:check (not (apply #'remote-exists-p directories)))
   (:apply (mrun "rm" "-rf" directories)))
+
+(defprop empty-directory-does-not-exist :posix (&rest directories)
+  "Ensure that none of DIRECTORIES exist as empty directories."
+  (:desc #?"@{directories} removed if empty")
+  (:apply
+   (aif (runlines
+         :input (unlines directories)
+         #.(sh-script-to-single-line
+            "set -e; while read -r dir; do
+                 if [ -d \"$dir\" ]; then
+                     ( cd \"$dir\"
+                       if [ -z \"$(find . ! -name . -print -prune)\" ]; then
+                           echo \"$dir\"
+                       fi )
+                 fi
+             done"))
+        (mrun "rmdir" it)
+        :no-change)))
 
 (defprop data-uploaded :posix (iden1 iden2 destination)
   (:desc #?"${destination} installed")

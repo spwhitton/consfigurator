@@ -432,6 +432,7 @@
                     #:has-ownership
                     #:does-not-exist
                     #:directory-does-not-exist
+                    #:empty-directory-does-not-exist
                     #:data-uploaded
                     #:host-data-uploaded
                     #:secret-uploaded
