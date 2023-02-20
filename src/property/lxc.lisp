@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021, 2023  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -44,6 +44,13 @@ HOST is a HOST value, start the container whose name is HOST's hostname.)"
   (:desc #?"LXC container ${(get-hostname host)} started")
   (:check (or (service:no-services-p) (user-container-active-p host owner)))
   (:apply (lxc-cmd owner "lxc-unpriv-start" "-n" (get-hostname host))))
+
+(defprop user-container-stopped :posix (host &optional owner)
+  "Ensure the LXC unprivileged container for the host designated by HOST owned
+by OWNER, defaulting to the current user, is stopped."
+  (:desc #?"LXC container ${(get-hostname host)} stopped")
+  (:check (not (user-container-active-p host owner)))
+  (:apply (lxc-cmd owner "lxc-stop" "-n" (get-hostname host))))
 
 (defmacro when-user-container-running ((host &key owner) &body propapps)
   "Apply PROPAPPS only when the unprivileged LXC for the host designated by HOST

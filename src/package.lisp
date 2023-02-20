@@ -951,6 +951,7 @@
                              (#:systemd     #:consfigurator.property.systemd))
            (:export #:installed
                     #:user-container-started
+                    #:user-container-stopped
                     #:when-user-container-running
                     #:user-containers-autostart
                     #:usernet-veth-usable-by
