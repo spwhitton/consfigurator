@@ -256,53 +256,73 @@ implications."
            (merge-pathnames (get-hostname host*) ".local/share/lxc/")))
          (rootfs (merge-pathnames "rootfs/" directory))
          (uid-maps (if (listp (car uid-maps)) uid-maps (list uid-maps)))
-         (gid-maps (if (listp (car gid-maps)) gid-maps (list gid-maps))))
+         (uid-maps-lines
+          (loop for (inside outside count) in uid-maps
+                collect (format nil "~A:~D:~D" user outside count)))
+         (gid-maps (if (listp (car gid-maps)) gid-maps (list gid-maps)))
+         (gid-maps-lines
+          (loop for (inside outside count) in gid-maps
+                collect (format nil "~A:~D:~D" user outside count)))
+         (flagfile (merge-pathnames "rootfs.bootstrapped" directory)))
       options
-    `(eseqprops
-      (installed)
-      (user:has-account ,user)
-      (systemd:lingering-enabled ,user) ; required for lxc-ls(1) to work at all
-      ,@(aand (loop for (inside outside count) in uid-maps
-                    collect (format nil "~A:~D:~D" user outside count))
+    `(with-unapply
+       (installed)
+       (user:has-account ,user)
+       (systemd:lingering-enabled ,user) ; required for lxc-ls(1) to work at all
+       ,@(and uid-maps-lines
               `((desc ,#?"/etc/subuid has mappings for ${(get-hostname host*)}"
-                      (file:contains-lines "/etc/subuid" ,@it))))
-      ,@(aand (loop for (inside outside count) in gid-maps
-                    collect (format nil "~A:~D:~D" user outside count))
+                      (file:contains-lines "/etc/subuid" ,@uid-maps-lines))))
+       ,@(and gid-maps-lines
               `((desc ,#?"/etc/subgid has mappings for ${(get-hostname host*)}"
-                      (file:contains-lines "/etc/subgid" ,@it))))
-      ,(propapp (desc "Base directory for container exists"
-                      (as user (file:directory-exists directory))))
-      (with-homedir (:user ,user)
-        (with-flagfile ,(merge-pathnames "rootfs.bootstrapped" directory)
-          ;; It would be nice to branch here such that if we are about to
-          ;; start up the container and enter it, just bootstrap a minimal
-          ;; root filesystem, and only otherwise get all the other properties
-          ;; applied before the ID shifting.  I.e.
-          ;;
-          ;;     (chroot:os-bootstrapped-for
-          ;;      ,chroot-options ,rootfs
-          ;;      ,@(if autostart
-          ;;            `(,(make-host :hostattrs
-          ;;                          (list :os (get-hostattrs :os host*))))
-          ;;            `(,host ,additional-properties)))
-          ;;
-          ;; However, it might be that we need to apply the other properties
-          ;; in order that the container is startable; for example, getting
-          ;; systemd installed.
-          (chroot:os-bootstrapped-for
-           ,chroot-options ,rootfs ,host ,additional-properties)
-          (%ids-shifted-for ,user ,directory ,uid-maps ,gid-maps)))
-      ,(propapp
-        (desc "Container configuration file populated"
-              (as user
-                (%container-config-populated
-                 prelude-lines user uid-maps gid-maps directory autostart
-                 (car (split-string (get-hostname host*) :separator "."))
-                 additional-lines))))
-      ,@(and autostart `((user-container-started ,host ,user)))
-      (when-user-container-running (,host :owner ,user)
-        (deploys ((:lxc :owner ,user :name ,(get-hostname host*)))
-                 ,host ,additional-properties)))))
+                      (file:contains-lines "/etc/subgid" ,@gid-maps-lines))))
+       ,(propapp (desc "Base directory for container exists"
+                       (as user (file:directory-exists directory))))
+       (with-homedir (:user ,user)
+         (with-flagfile ,flagfile
+           ;; It would be nice to branch here such that if we are about to
+           ;; start up the container and enter it, just bootstrap a minimal
+           ;; root filesystem, and only otherwise get all the other properties
+           ;; applied before the ID shifting.  I.e.
+           ;;
+           ;;     (chroot:os-bootstrapped-for
+           ;;      ,chroot-options ,rootfs
+           ;;      ,@(if autostart
+           ;;            `(,(make-host :hostattrs
+           ;;                          (list :os (get-hostattrs :os host*))))
+           ;;            `(,host ,additional-properties)))
+           ;;
+           ;; However, it might be that we need to apply the other properties
+           ;; in order that the container is startable; for example, getting
+           ;; systemd installed.
+           (chroot:os-bootstrapped-for
+            ,chroot-options ,rootfs ,host ,additional-properties)
+           (%ids-shifted-for ,user ,directory ,uid-maps ,gid-maps)))
+       ,(propapp
+         (desc "Container configuration file populated"
+               (as user
+                 (%container-config-populated
+                  prelude-lines user uid-maps gid-maps directory autostart
+                  (car (split-string (get-hostname host*) :separator "."))
+                  additional-lines))))
+       ,@(and autostart `((user-container-started ,host ,user)))
+       (when-user-container-running (,host :owner ,user)
+         (deploys ((:lxc :owner ,user :name ,(get-hostname host*)))
+                  ,host ,additional-properties))
+       :unapply
+       (user-container-stopped ,host ,user)
+       ,@(and uid-maps-lines
+              `((desc ,#?"/etc/subuid mappings for ${(get-hostname host*)} cleaned up"
+                      (file:lacks-lines "/etc/subuid" ,@uid-maps-lines))))
+       ,@(and gid-maps-lines
+              `((desc ,#?"/etc/subgid mappings for ${(get-hostname host*)} cleaned up"
+                      (file:lacks-lines "/etc/subgid" ,@gid-maps-lines))))
+       (with-homedir (:user ,user)
+         (file:does-not-exist ,(merge-pathnames "config" directory))
+         (unapplied
+          (with-flagfile ,flagfile
+            (chroot:os-bootstrapped-for
+             ,chroot-options ,rootfs ,host ,additional-properties)))
+         (file:empty-directory-does-not-exist ,directory)))))
 
 (defproplist user-container :lisp (options user properties)
   "Like LXC:USER-CONTAINER-FOR but define a new host using PROPERTIES."

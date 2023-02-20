@@ -30,6 +30,8 @@ you should review this document and see if your consfig needs updating.
   lists.  On Debian bullseye and older this will cause apt updates to emit
   harmless warnings.
 
+- LXC:USER-CONTAINER and LXC:USER-CONTAINER-FOR are now unapplicable.
+
 - Add LXC:USER-CONTAINER-STOPPED and FILE:EMPTY-DIRECTORY-DOES-NOT-EXIST.
 
 1.2.0 (2022-11-29)
