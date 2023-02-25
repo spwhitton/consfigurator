@@ -500,6 +500,8 @@ UPLOAD-ALL-PREREQUISITE-DATA.")
        ,@(loop for system in (propspec-systems (host-propspec *host*))
                collect `(asdf:load-system ,system)))))
 
+(defpackage :consfigurator.cl-user (:use #:cl))
+
 (defgeneric continue-deploy*-program (remaining-connections asdf-requirements)
   (:documentation
    "Return a program to complete the work of an enclosing call to DEPLOY*.
@@ -586,7 +588,14 @@ Preprocessing must occur in the root Lisp."))
                  (%consfigure ',remaining-connections ,*host*))))
         (handler-case
             (with-standard-io-syntax
-              (let ((*allow-printing-passphrases* t))
+              (let ((*allow-printing-passphrases* t)
+                    ;; Avoid generating programs that remote Lisp images will
+                    ;; misread because the generating Lisp's CL-USER has
+                    ;; symbols from packages other than COMMON-LISP imported,
+                    ;; e.g. by the user's runtime config for the root Lisp.
+                    ;; This way, all symbols except those from COMMON-LISP
+                    ;; should be printed qualified by their package names.
+                    (*package* (find-package :consfigurator.cl-user)))
                 ;; need line breaks in between so that packages exist before we
                 ;; try to have remote Lisp read sexps containing symbols from
                 ;; those packages
