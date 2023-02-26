@@ -1,3 +1,9 @@
+consfigurator (1.2.3-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Sean Whitton <spwhitton@spwhitton.name>  Sun, 26 Feb 2023 10:30:49 -0700
+
 consfigurator (1.2.2-1) unstable; urgency=medium
 
   * New upstream release.

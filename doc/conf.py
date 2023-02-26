@@ -22,7 +22,7 @@ copyright = '2020-2022, Sean Whitton'
 author = 'Sean Whitton'
 
 # The full version, including alpha/beta/rc tags
-release = '1.2.2'
+release = '1.2.3'
 
 
 # -- General configuration ---------------------------------------------------
