@@ -284,6 +284,19 @@ simple collections of readably-printable values."
       (re:scan-to-strings "^uid=[0-9]+\\(([^)]+)" output)
     (and match (elt groups 0))))
 
+(defun abbreviate-consfigurator-package (name)
+  (with-standard-io-syntax
+    (let* ((*package* (find-package :consfigurator))
+           (name (etypecase name
+                   (string name)
+                   (package (package-name name))
+                   (symbol (prin1-to-string name)))))
+      (cond ((string-prefix-p "CONSFIGURATOR.PROPERTY." name)
+             (subseq name 23))
+            ((string-prefix-p "CONSFIGURATOR.DATA." name)
+             (subseq name 14))
+            (t name)))))
+
 ;; not DEFCONSFIG because a consfig is a system not a package
 (defmacro defpackage-consfig (name &body forms)
   "Convenience wrapper around DEFPACKAGE for consfigs.
@@ -295,12 +308,10 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
           (cons :local-nicknames
                 (loop for package in (list-all-packages)
                       for name = (package-name package)
-                      if (string-prefix-p "CONSFIGURATOR.PROPERTY." name)
-                        collect (list (make-symbol (subseq name 23))
-                                      (make-symbol name))
-                      else if (string-prefix-p "CONSFIGURATOR.DATA." name)
-                             collect (list (make-symbol (subseq name 14))
-                                           (make-symbol name))))))
+                      for abbrevd = (abbreviate-consfigurator-package name)
+                      unless (string= abbrevd name)
+                        collect (list (make-symbol abbrevd)
+                                      (make-symbol name))))))
     (if-let ((form (loop for form on forms
                          when (and (listp (car form))
                                    (eql :local-nicknames (caar form)))
