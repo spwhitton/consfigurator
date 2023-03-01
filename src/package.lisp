@@ -16,6 +16,7 @@
                           #:slurp-stream-string
                           #:subprocess-error
                           #:stripln
+                          #:println
                           #:unix-namestring
                           #:parse-unix-namestring
                           #:pathname-directory-pathname
@@ -58,6 +59,7 @@
            #:slurp-stream-string
            #:subprocess-error
            #:stripln
+           #:println
            #:unix-namestring
            #:parse-unix-namestring
            #:pathname-directory-pathname

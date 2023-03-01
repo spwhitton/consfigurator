@@ -21,10 +21,10 @@
 ;;; A number of techniques here are from Propellor's Cron properties module.
 
 (defpropspec system-job :posix (desc when user shell-command)
-  "Installs a cronjob running SHELL-COMMAND as USER to /etc/cron.*.
+  "Installs a cronjob running SHELL-COMMAND as USER to ``/etc/cron.*``.
 DESC must be unique, as it will be used as a filename for a script.  WHEN is
 either :DAILY, WEEKLY, :MONTHLY or a string formatted according to crontab(5),
-e.g. \"0 3 * * *\".
+e.g. ``0 3 * * *``.
 
 The output of the cronjob will be mailed only if the job exits nonzero."
   (:desc #?"Cronned ${desc}")

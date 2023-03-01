@@ -1,5 +1,5 @@
-Tutorial: OS installation
-=========================
+OS installation
+===============
 
 Consfigurator implements a number of methods for installing operating systems.
 

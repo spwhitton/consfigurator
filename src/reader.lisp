@@ -21,3 +21,7 @@
   (:merge :standard)
   (:dispatch-macro-char #\# #\? #'cl-interpol:interpol-reader)
   (:dispatch-macro-char #\# #\> #'cl-heredoc:read-heredoc))
+
+(named-readtables:defreadtable :consfigurator.without-read-eval
+  (:merge :consfigurator)
+  (:dispatch-macro-char #\# #\. (constantly nil)))

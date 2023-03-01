@@ -998,7 +998,7 @@ filesystems will be incrementally updated when other properties change."
     (options host device-file &key chroot)
   "Install HOST to the DISK:PHYSICAL-DISK accessible at DEVICE-FILE.
 **THIS PROPERTY UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA,
-  EACH TIME IT IS APPLIED.**
+EACH TIME IT IS APPLIED.**
 
 Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE.
 
@@ -1046,7 +1046,7 @@ the host's actual physical disk upon first boot."
 (defpropspec volumes-installed-for :lisp (options host &key chroot leave-open)
   "Install HOST to its volumes, as specified using DISK:HAS-VOLUMES.
 **THIS PROPERTY UNCONDITIONALLY FORMATS DISKS, POTENTIALLY DESTROYING DATA,
-  EACH TIME IT IS APPLIED.**
+EACH TIME IT IS APPLIED.**
 
 Do not apply in DEFHOST.  Apply with DEPLOY-THESE/HOSTDEPLOY-THESE.
 
@@ -1233,28 +1233,28 @@ specifications.  This becomes the VOLUME-CONTENTS of the VOLUME.
 
 The following keys in INITARGS are handled specially:
 
-    - :VOLUME-SIZE -- may be a string like \"100M\", \"2G\", \"1T\" which will
-      be converted into a whole number of mebibytes.  \"M\", \"G\", and \"T\"
-      are currently supported.
+  - :VOLUME-SIZE -- may be a string like \"100M\", \"2G\", \"1T\" which will
+    be converted into a whole number of mebibytes.  \"M\", \"G\", and \"T\"
+    are currently supported.
 
 Example usage:
 
-  (volumes
-    (physical-disk
-     (partitioned-volume
-      ((partition
-        :partition-typecode #xef00
-        (fat32-filesystem
-         :volume-size \"512M\"
-         :mount-point #P\"/boot/efi\"))
-       (partition
-        (luks-container
-         (lvm-physical-volume
-          :volume-group \"vg_laptop\"))))))
-    (lvm-logical-volume
-       :volume-group \"vg_laptop\"
-       :volume-label \"lv_laptop_root\"
-       (ext4-filesystem :mount-point #P\"/\")))"
+    (volumes
+      (physical-disk
+       (partitioned-volume
+        ((partition
+          :partition-typecode #xef00
+          (fat32-filesystem
+           :volume-size \"512M\"
+           :mount-point #P\"/boot/efi\"))
+         (partition
+          (luks-container
+           (lvm-physical-volume
+            :volume-group \"vg_laptop\"))))))
+      (lvm-logical-volume
+         :volume-group \"vg_laptop\"
+         :volume-label \"lv_laptop_root\"
+         (ext4-filesystem :mount-point #P\"/\")))"
   (labels
       ((parse (spec)
          (unless (listp spec)

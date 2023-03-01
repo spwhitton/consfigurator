@@ -1,3 +1,15 @@
 /doc/_build/
 /emacs/put-forms.el
 /emacs/consfigurator.el
+
+/doc/connection.rst
+/doc/property.rst
+/doc/propspec.rst
+/doc/host.rst
+/doc/combinator.rst
+/doc/deployment.rst
+/doc/data.rst
+/doc/image.rst
+/doc/property/*.rst
+/doc/util.rst
+/doc/util/*.rst

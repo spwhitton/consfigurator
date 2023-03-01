@@ -100,7 +100,7 @@
                              ,(propspec-props propspec))))))
 
 (defproplist deploys :lisp (root host &optional additional-properties)
-  "Like DEPLOYS with first argument `((:chroot :into ,root)), but disable
+  "Like DEPLOYS with first argument ```((:chroot :into ,root))``, but disable
 starting services in the chroot, and set up access to parent hostattrs."
   (:desc #?"Subdeployment of ${root}")
   (consfigurator:deploys
@@ -108,8 +108,9 @@ starting services in the chroot, and set up access to parent hostattrs."
    (%make-child-host (union-propspec-into-host host additional-properties))))
 
 (defproplist deploys-these :lisp (root host properties)
-  "Like DEPLOYS-THESE with first argument `((:chroot :into ,root)), but disable
-starting services in the chroot, and set up access to parent hostattrs."
+  "Like DEPLOYS-THESE with first argument ```((:chroot :into ,root))``, but
+disable starting services in the chroot, and set up access to parent
+hostattrs."
   (:desc #?"Subdeployment of ${root}")
   (consfigurator:deploys
    `((:chroot :into ,root))

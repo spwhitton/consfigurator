@@ -1,5 +1,5 @@
-Tutorial: building disk images
-==============================
+Building disk images
+====================
 
 In this tutorial we will show you what properties you need to use to build
 bootable disk images.

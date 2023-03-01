@@ -3,20 +3,47 @@ Consfigurator user's manual
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
 
    introduction
    installation
-   tutorial/disk_image
-   tutorial/os_installation
-   connections
-   properties
-   hosts
-   propspecs
-   data
    pitfalls
    news
    ideas
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorials
+
+   tutorial/disk_image
+   tutorial/os_installation
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Core
+
+   connection
+   property
+   propspec
+   host
+   combinator
+   deployment
+   data
+   image
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Properties packages
+   :glob:
+
+   property/*
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Utilities packages
+   :glob:
+
+   util
+   util/*
 
 Indices and search
 ==================

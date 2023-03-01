@@ -203,6 +203,152 @@
       (when indent
         (setf (get sym 'indent) indent)))))
 
+(defun docstring-to-rst (docstring)
+  ;; Unsurprisingly this gets a lot of cases wrong, so turned off for now.
+  ;; The block capitals already make them easy to pick out.
+  ;; (setq docstring
+  ;;       (re:regex-replace-all #?/(?<!\S)[A-Z:]*[A-Z]+[A-Z:-]*(?!\w)/
+  ;;                             docstring "``\\&``"))
+
+  ;; Format indented code examples for rST.
+  (do* ((lines (lines docstring) (cdr lines))
+        (line (car lines) (car lines))
+        indented accum)
+       ((null lines)
+        (stripln (unlines (nreverse accum))))
+    (acond
+      ((and (or indented (and accum (zerop (length (car accum)))))
+            (strip-prefix "    " line))
+       (unless indented
+         (unless (string= "" (car accum))
+           (push "" accum))
+         (push (if (or (char= #\( (first-char line))
+                       (string-prefix-p "'(" line))
+                   "::" ".. code-block:: none")
+               accum)
+         (push "" accum)
+         (setq indented t))
+       (push (strcat "  " it) accum))
+      ((and indented (zerop (length line))
+            (string-prefix-p "    " (cadr lines)))
+       (push "  " accum))
+      (t (push line accum)
+         (setq indented nil)))))
+
+(defparameter *defining-form-info-alist*
+  (flet ((docgetf (l) (getf l :documentation))
+         (docassoc (l) (cadr (assoc :documentation l)))
+         (numbers-to-functions (field)
+           (cond ((and (numberp field) (zerop field))
+                  (constantly nil))
+                 ((numberp field)
+                  (lambda (form)
+                    (values (nth field form) t)))
+                 ((functionp field)
+                  (lambda (form)
+                    (values (funcall field form) t)))
+                 (t field))))
+    (mapcar
+     (lambda (entry) (mapcar #'numbers-to-functions entry))
+     `((define-constant  "Constant"         0 ,(compose #'docgetf  #'cdddr))
+       (defgeneric       "Generic function" 2 ,(compose #'docassoc #'cdddr))
+       (defclass         "Class"            0 ,(compose #'docassoc #'cddddr))
+       (define-condition "Condition class"  0 ,(compose #'docassoc #'cddddr))
+
+       (defvar                              "Variable"             0 3)
+       (defparameter                        "Variable"             0 3)
+       (defun                               "Function"             2 3)
+       (defmacro                            "Macro"                2 3)
+       (defprop                             "Property"             3 4)
+       (defpropspec                         "Property"             3 4)
+       (defproplist                         "Property"             3 4)
+       (define-simple-error                 "Simple error"         4 3)
+       (define-function-property-combinator "Fn. prop. combinator" 2 3)))))
+
+(defun build-manual-rst
+    (target-rst &aux (target-rst
+                      (ensure-directories-exist
+                       (ensure-pathname target-rst
+                                        :want-file t :want-relative t)))
+                  (input-rst (make-pathname :type "rst.in"
+                                            :defaults target-rst))
+                  (input-lisp
+                   (make-pathname :type "lisp"
+                                  :defaults (merge-pathnames target-rst
+                                                             #P"../src/"))))
+  "Write TARGET-RST manual page based on input .rst.in and .lisp files."
+  (with-safe-io-syntax ()
+    (with-open-file (*standard-input* input-lisp :if-does-not-exist :error)
+      (with-open-file (*standard-output* target-rst :direction :output
+                                                    :if-exists :supersede)
+        (let* ((first-form (read))
+               (second-form (read))
+               (package (if (eql (car first-form) 'in-package)
+                            (find-package (cadr first-form))
+                            (error "First form of ~S is not IN-PACKAGE."
+                                   input-lisp)))
+               (package-exts (aprog1 (make-hash-table :test #'eq)
+                               (do-external-symbols (s package)
+                                 (setf (gethash s it) t))))
+               (input-rst-p (file-exists-p input-rst))
+               ;; We cannot have an anonymous first subsection of the API
+               ;; reference with Sphinx.
+               (section-heading "General"))
+          (labels ((println-heading (heading char)
+                     (loop initially (println heading)
+                           repeat (length heading) do (write-char char)
+                           finally (terpri)))
+                   (println-entry
+                       (form &aux
+                             (type (and (gethash (cadr form) package-exts)
+                                        (assoc (car form)
+                                               *defining-form-info-alist*)))
+                             (name (and type (abbreviate-consfigurator-package
+                                              (cadr form)))))
+                     (when type
+                       (when section-heading
+                         (terpri)
+                         (println-heading section-heading #\~)
+                         (setq section-heading nil))
+                       (terpri)
+                       (println-heading (format nil "~A: ``~A``"
+                                                (cadr type) name)
+                                        #\^)
+                       (multiple-value-bind (params paramsp)
+                           (funcall (caddr type) form)
+                         (when paramsp
+                           (format t "~%``~((~A~{ ~A~})~)``~&"
+                                   name
+                                   (mapcar #'ensure-car
+                                           (ldiff params
+                                                  (member '&aux params))))))
+                       (when-let ((docstring (funcall (cadddr type) form)))
+                         (when (stringp docstring)
+                           (terpri)
+                           (println (docstring-to-rst docstring)))))))
+            (unless (equal second-form
+                           '(named-readtables:in-readtable :consfigurator))
+              (error "Second form of ~S is not our IN-READTABLE." input-lisp))
+            (if input-rst-p
+                (with-open-file (input input-rst)
+                  (copy-stream-to-stream input *standard-output*)
+                  (terpri))
+                (println-heading (format nil "``~A``" (package-name package))
+                                 #\=))
+            (println-heading "API reference" #\-)
+            (let ((*package* package)
+                  (*readtable* (named-readtables:find-readtable
+                                :consfigurator.without-read-eval)))
+              (loop (handler-case
+                        ;; Read a line or a form depending on what's next.
+                        (if (char= #\( (peek-char t))
+                            (println-entry (read))
+                            ;; Don't print section heading yet in case it
+                            ;; doesn't contain any defns for exported symbols.
+                            (awhen (strip-prefix ";;;; " (read-line))
+                              (setq section-heading it)))
+                      (end-of-file () (return)))))))))))
+
 (defmacro with-*host*-*consfig* (&body forms)
   `(progv `(,(intern "*CONSFIG*"))
        `(,(propspec-systems (host-propspec *host*)))
@@ -632,11 +778,11 @@ PATH if PATH already has the specified CONTENT and MODE."
 
 (defmacro with-change-if-changes-file ((file) &body forms)
   "Execute FORMS and yield :NO-CHANGE if FILE does not change.
-Since stat(1) is not POSIX, this is implemented by calling `ls -dlL' and
+Since stat(1) is not POSIX, this is implemented by calling ``ls -dlL`` and
 cksum(1), and seeing if any of the information reported there, except for the
 number of links, has changed.  Thus, you should not use this macro to detect
-changes in properties which will change the file but not the output of `ls
--dlL' and cksum(1)."
+changes in properties which will change the file but not the output of
+``ls -dlL`` and cksum(1)."
   (with-gensyms (before)
     `(let* ((,before (ls-cksum ,file))
             (result (progn ,@forms)))
