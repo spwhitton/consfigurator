@@ -14,6 +14,7 @@ Consfigurator user's manual
    :maxdepth: 1
    :caption: Tutorials
 
+   tutorial/properties
    tutorial/disk_image
    tutorial/os_installation
 
