@@ -92,7 +92,9 @@ different bootloaders.
 Testing the image
 -----------------
 
-Here's a quick way to test what we've built:::
+Here's a quick way to test what we've built:
+
+.. code-block:: none
 
   % sudo chown $USER tmp/test.img
   % qemu-system-x86_64 -m 2G -drive file=tmp/test.img,format=raw \

@@ -120,7 +120,9 @@ with ``DEFHOST``, you can evaluate::
 Regex replace a file across hosts
 +++++++++++++++++++++++++++++++++
 
-With ``*ALL-MY-SERVERS*`` as in the previous example,::
+With ``*ALL-MY-SERVERS*`` as in the previous example,
+
+.. code-block:: none
 
   (dolist (server *all-my-servers*)
     (deploy-these :ssh server
