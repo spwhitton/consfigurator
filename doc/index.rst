@@ -23,7 +23,7 @@ Consfigurator user's manual
 
    connection
    property
-   propspec
+   Property application specifications <propspec>
    host
    combinator
    deployment
