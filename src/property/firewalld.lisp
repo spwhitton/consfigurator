@@ -54,7 +54,9 @@
               apply (offline-apply apply) (--permanent t)
               &aux (check-fn (if complement-check #'plusp #'zerop)))
   (:apply
-   (setq check (ensure-list check) apply (ensure-list apply))
+   (setq check (ensure-list check)
+         apply (ensure-list apply)
+         offline-apply (ensure-list offline-apply))
    (labels ((search-warning (output)
               (and warning (search output warning) :no-change))
             (permanent-change ()
