@@ -3,7 +3,8 @@
 ;; Author: Sean Whitton <spwhitton@spwhitton.name>
 ;; Version: 1.2.3
 
-;; Copyright (C) 2021  Sean Whitton
+;; Copyright (C) 2021, 2023  Sean Whitton
+;; Copyright (C) 2002-2023  Free Software Foundation, Inc.
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -19,6 +20,9 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
+
+(require 'lisp-mode)
+(require 'perl-mode)
 
 ;;;###autoload
 (defun activate-consfigurator-indentation-hints ()
@@ -36,6 +40,101 @@ corresponding to the final dot-delimited component of their names."
   (put 'with-unapply 'common-lisp-indent-function '(&body))
   (put 'os:typecase 'common-lisp-indent-function '(&rest (&whole 2 &rest 1)))
   (put 'os:etypecase 'common-lisp-indent-function '(&rest (&whole 2 &rest 1))))
+
+;; Based on `perl-syntax-propertize-special-constructs', which see.
+(defun consfigurator--finish-propertize-qq (limit)
+  (let ((state (syntax-ppss)))
+    ;; Check we're within our special quotation.
+    (unless (or (not (nth 3 state))
+		(and (characterp (nth 3 state))
+		     (null (get-text-property (nth 8 state) 'syntax-table))))
+      (let* ((startpos (point))
+	     (twoargs
+	      (save-excursion
+		(let (parse-sexp-lookup-properties)
+		  (goto-char (nth 8 state))
+		  (skip-syntax-backward "w ")
+		  (member
+		   (buffer-substring (point) (progn (forward-word-strictly 1)
+						    (point)))
+		   '("tr" "s" "y")))))
+	     (char (char-after (nth 8 state)))
+	     middle
+	     (close (cdr (assq char perl-quote-like-pairs)))
+	     (st (perl-quote-syntax-table char)))
+	(when (with-syntax-table st
+		(if close
+		    (condition-case nil
+			(progn (goto-char (1+ (nth 8 state)))
+			       (up-list 1)
+			       t)
+		      (scan-error (goto-char startpos) nil))
+		  (not (or (nth 8 (parse-partial-sexp
+				   (if twoargs (1+ (nth 8 state)) (point))
+				   limit nil nil state 'syntax-table))
+			   (and twoargs (not close)
+				(setq middle (point))
+				(nth 8 (parse-partial-sexp
+					(point) limit
+					nil nil state 'syntax-table)))))))
+	  (if (and middle (eq char ?\"))
+	      (put-text-property (1- middle) middle 'syntax-table
+				 (string-to-syntax "."))
+	    (put-text-property (1- (point)) (point) 'syntax-table
+			       (if close (string-to-syntax "|")
+				 (string-to-syntax "\""))))
+	  (put-text-property (nth 8 state) (point) 'syntax-multiline t)
+	  (when (and twoargs close (< (point) limit))
+	    (put-text-property (point) (1+ (point)) 'syntax-table
+			       (if (assq (char-after) perl-quote-like-pairs)
+				   (string-to-syntax "|")
+				 (string-to-syntax "\"")))
+	    (forward-char 1)
+	    (consfigurator--finish-propertize-qq limit)))))))
+
+(defun consfigurator-syntax-propertize-function (start end)
+  "`syntax-propertize-function' for (some of) Consfigurator's readtable.
+
+Modes that use this should add `syntax-propertize-multiline' to
+`syntax-propertize-extend-region-functions'."
+  (goto-char start)
+  (consfigurator--finish-propertize-qq end)
+  (cl-flet ((in-string-or-comment-p ()
+	      (nth 8 (save-excursion (syntax-ppss (match-beginning 1))))))
+    (let (case-fold-search)
+      (funcall
+       (syntax-propertize-rules
+	;; Also recognise Let Over Lambda's #~ and a #!~ negated version.
+	;; We might want to add these to Consfigurator's readtable.
+	((rx (group-n 1
+	       (: ?# (| (: ?? (group-n 2 (opt (| "rx" "r" "x"))))
+			(: (opt ?!) ?~ (group-n 2 (opt (| "tr" ?m ?s ?y)))))))
+	     (group-n 3 nonl))
+	 (1 (and (not (in-string-or-comment-p)) (string-to-syntax "'")))
+	 ;; Based on code in one branch of `perl-syntax-propertize-function'.
+	 (3 (ignore
+	     (or (in-string-or-comment-p)
+		 (let* ((beg (match-beginning 3))
+			(char (char-after beg))
+			(prop
+			 (cond ((assq char perl-quote-like-pairs)
+				(string-to-syntax "|"))
+			       ((and (eq char ?\")
+				     (member (match-string 2) '("" "m")))
+				nil)
+			       (t
+				(string-to-syntax "\"")))))
+		   (put-text-property beg (1+ beg) 'syntax-table prop)
+		   (consfigurator--finish-propertize-qq-heredoc end)))))))
+       (point) end))))
+
+;;;###autoload
+(define-derived-mode consfigurator-lisp-mode lisp-mode "Lisp"
+  "Derivative of `lisp-mode' for files using Consfigurator's readtable."
+  (add-hook 'syntax-propertize-extend-region-functions
+            #'syntax-propertize-multiline t t)
+  (setq-local syntax-propertize-function
+	      #'consfigurator-syntax-propertize-function))
 
 (provide 'consfigurator)
 
