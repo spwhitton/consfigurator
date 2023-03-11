@@ -1,4 +1,4 @@
-;;; consfigurator.el --- Utilities for working with Consfigurator consfigs
+;;; consfigurator.el --- Utilities for Consfigurator consfigs  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2021, 2023  Sean Whitton
 ;; Copyright (C) 2002-2023  Free Software Foundation, Inc.
