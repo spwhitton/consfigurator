@@ -59,7 +59,8 @@ corresponding to the final dot-delimited component of their names."
 	   (when (search-forward ender limit t)
 	     (let ((char (- (point) (length ender))))
 	       (put-text-property (1- char) char 'syntax-table
-				  (string-to-syntax "!"))
+				  (eval-when-compile
+				    (string-to-syntax "!")))
 	       (put-text-property (- (nth 8 state) (length ender) 3) (point)
 				  'syntax-multiline t))))
 	  ;; Based on `perl-syntax-propertize-special-constructs', which see.
@@ -99,17 +100,22 @@ corresponding to the final dot-delimited component of their names."
 					     state 'syntax-table)))))))
 	       (if (and middle (eq char ?\"))
 		   (put-text-property (1- middle) middle 'syntax-table
-				      (string-to-syntax "."))
+				      (eval-when-compile
+					(string-to-syntax ".")))
 		 (put-text-property (1- (point)) (point) 'syntax-table
-				    (if close (string-to-syntax "|")
-				      (string-to-syntax "\""))))
+				    (if close (eval-when-compile
+						(string-to-syntax "|"))
+				      (eval-when-compile
+					(string-to-syntax "\"")))))
 	       (put-text-property (nth 8 state) (point) 'syntax-multiline t)
 	       (when (and twoargs close (< (point) limit))
 		 (put-text-property (point) (1+ (point)) 'syntax-table
 				    (if (assq (char-after)
 					      perl-quote-like-pairs)
-					(string-to-syntax "|")
-				      (string-to-syntax "\"")))
+					(eval-when-compile
+					  (string-to-syntax "|"))
+				      (eval-when-compile
+					(string-to-syntax "\""))))
 		 (forward-char 1)
 		 (consfigurator--finish-propertize-qq limit))))))))
 
@@ -131,7 +137,8 @@ Modes that use this should add `syntax-propertize-multiline' to
 		 (let ((beg (match-beginning 2))
 		       (ender (match-string 1)))
 		   (put-text-property beg (1+ beg) 'syntax-table
-				      (cons (car (string-to-syntax "!"))
+				      (cons (eval-when-compile
+					      (car (string-to-syntax "!")))
 					    ender))
 		   (consfigurator--finish-propertize-qq-heredoc end))))))
 	;; Also recognise Let Over Lambda's #~ and a #!~ negated version.
@@ -140,7 +147,8 @@ Modes that use this should add `syntax-propertize-multiline' to
 	       (: ?# (| (: ?? (group-n 2 (opt (| "rx" "r" "x"))))
 			(: (opt ?!) ?~ (group-n 2 (opt (| "tr" ?m ?s ?y)))))))
 	     (group-n 3 nonl))
-	 (1 (and (not (in-string-or-comment-p)) (string-to-syntax "'")))
+	 (1 (and (not (in-string-or-comment-p))
+		 (eval-when-compile (string-to-syntax "'"))))
 	 ;; Based on code in one branch of `perl-syntax-propertize-function'.
 	 (3 (ignore
 	     (or (in-string-or-comment-p)
@@ -148,12 +156,13 @@ Modes that use this should add `syntax-propertize-multiline' to
 			(char (char-after beg))
 			(prop
 			 (cond ((assq char perl-quote-like-pairs)
-				(string-to-syntax "|"))
+				(eval-when-compile (string-to-syntax "|")))
 			       ((and (eq char ?\")
 				     (member (match-string 2) '("" "m")))
 				nil)
 			       (t
-				(string-to-syntax "\"")))))
+				(eval-when-compile
+				  (string-to-syntax "\""))))))
 		   (put-text-property beg (1+ beg) 'syntax-table prop)
 		   (consfigurator--finish-propertize-qq-heredoc end)))))))
        (point) end))))
