@@ -1024,7 +1024,8 @@ least the following:
 If CHROOT, an intermediate chroot is bootstrapped at CHROOT, and HOST's
 properties are applied to that.  Otherwise, HOST's OS is bootstrapped directly
 to DEVICE-FILE.  It's useful to supply CHROOT when you expect to install the
-same HOST to a number of physical disks.
+same HOST to a number of physical disks.  It also makes it faster to try
+deploying again if failures occur during the application of HOST's properties.
 
 Applying this property is similar to applying DISK:RAW-IMAGE-BUILT-FOR and
 then immediately dd'ing out the image to DEVICE-FILE.  The advantage of this
