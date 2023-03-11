@@ -50,69 +50,90 @@ corresponding to the final dot-delimited component of their names."
   (put 'os:typecase 'common-lisp-indent-function '(&rest (&whole 2 &rest 1)))
   (put 'os:etypecase 'common-lisp-indent-function '(&rest (&whole 2 &rest 1))))
 
-;; Based on `perl-syntax-propertize-special-constructs', which see.
-(defun consfigurator--finish-propertize-qq (limit)
-  (let ((state (syntax-ppss)))
-    ;; Check we're within our special quotation.
-    (unless (or (not (nth 3 state))
-		(and (characterp (nth 3 state))
-		     (null (get-text-property (nth 8 state) 'syntax-table))))
-      (let* ((startpos (point))
-	     (twoargs
-	      (save-excursion
-		(let (parse-sexp-lookup-properties)
-		  (goto-char (nth 8 state))
-		  (skip-syntax-backward "w ")
-		  (member
-		   (buffer-substring (point) (progn (forward-word-strictly 1)
-						    (point)))
-		   '("tr" "s" "y")))))
-	     (char (char-after (nth 8 state)))
-	     middle
-	     (close (cdr (assq char perl-quote-like-pairs)))
-	     (st (perl-quote-syntax-table char)))
-	(when (with-syntax-table st
-		(if close
-		    (condition-case nil
-			(progn (goto-char (1+ (nth 8 state)))
-			       (up-list 1)
-			       t)
-		      (scan-error (goto-char startpos) nil))
-		  (not (or (nth 8 (parse-partial-sexp
-				   (if twoargs (1+ (nth 8 state)) (point))
-				   limit nil nil state 'syntax-table))
-			   (and twoargs (not close)
-				(setq middle (point))
-				(nth 8 (parse-partial-sexp
-					(point) limit
-					nil nil state 'syntax-table)))))))
-	  (if (and middle (eq char ?\"))
-	      (put-text-property (1- middle) middle 'syntax-table
-				 (string-to-syntax "."))
-	    (put-text-property (1- (point)) (point) 'syntax-table
-			       (if close (string-to-syntax "|")
-				 (string-to-syntax "\""))))
-	  (put-text-property (nth 8 state) (point) 'syntax-multiline t)
-	  (when (and twoargs close (< (point) limit))
-	    (put-text-property (point) (1+ (point)) 'syntax-table
-			       (if (assq (char-after) perl-quote-like-pairs)
-				   (string-to-syntax "|")
-				 (string-to-syntax "\"")))
-	    (forward-char 1)
-	    (consfigurator--finish-propertize-qq limit)))))))
+(defun consfigurator--finish-propertize-qq-heredoc (limit)
+  (let ((state (syntax-ppss))
+	ender)
+    (cond ((and (nth 4 state)
+		(setq ender
+		      (cdr (get-text-property (nth 8 state) 'syntax-table))))
+	   (when (search-forward ender limit t)
+	     (let ((char (- (point) (length ender))))
+	       (put-text-property (1- char) char 'syntax-table
+				  (string-to-syntax "!"))
+	       (put-text-property (- (nth 8 state) (length ender) 3) (point)
+				  'syntax-multiline t))))
+	  ;; Based on `perl-syntax-propertize-special-constructs', which see.
+	  ((and (nth 3 state)
+		(or (not (characterp (nth 3 state)))
+		    (get-text-property (nth 8 state) 'syntax-table)))
+	   (let* ((startpos (point))
+		  (twoargs
+		   (save-excursion
+		     (let (parse-sexp-lookup-properties)
+		       (goto-char (nth 8 state))
+		       (skip-syntax-backward "w ")
+		       (member
+			(buffer-substring (point)
+					  (progn (forward-word-strictly 1)
+						 (point)))
+			'("tr" "s" "y")))))
+		  (char (char-after (nth 8 state)))
+		  middle
+		  (close (cdr (assq char perl-quote-like-pairs)))
+		  (st (perl-quote-syntax-table char)))
+	     (when (with-syntax-table st
+		     (if close
+			 (condition-case nil
+			     (progn (goto-char (1+ (nth 8 state)))
+				    (up-list 1)
+				    t)
+			   (scan-error (goto-char startpos) nil))
+		       (not (or (nth 8 (parse-partial-sexp
+					(if twoargs (1+ (nth 8 state))
+					  (point))
+					limit nil nil state 'syntax-table))
+				(and twoargs (not close)
+				     (setq middle (point))
+				     (nth 8 (parse-partial-sexp
+					     (point) limit nil nil
+					     state 'syntax-table)))))))
+	       (if (and middle (eq char ?\"))
+		   (put-text-property (1- middle) middle 'syntax-table
+				      (string-to-syntax "."))
+		 (put-text-property (1- (point)) (point) 'syntax-table
+				    (if close (string-to-syntax "|")
+				      (string-to-syntax "\""))))
+	       (put-text-property (nth 8 state) (point) 'syntax-multiline t)
+	       (when (and twoargs close (< (point) limit))
+		 (put-text-property (point) (1+ (point)) 'syntax-table
+				    (if (assq (char-after)
+					      perl-quote-like-pairs)
+					(string-to-syntax "|")
+				      (string-to-syntax "\"")))
+		 (forward-char 1)
+		 (consfigurator--finish-propertize-qq limit))))))))
 
 (defun consfigurator-syntax-propertize-function (start end)
-  "`syntax-propertize-function' for (some of) Consfigurator's readtable.
+  "`syntax-propertize-function' for Consfigurator's readtable.
 
 Modes that use this should add `syntax-propertize-multiline' to
 `syntax-propertize-extend-region-functions'."
   (goto-char start)
-  (consfigurator--finish-propertize-qq end)
+  (consfigurator--finish-propertize-qq-heredoc end)
   (cl-flet ((in-string-or-comment-p ()
-	      (nth 8 (save-excursion (syntax-ppss (match-beginning 1))))))
+	      (nth 8 (save-excursion (syntax-ppss (match-beginning 0))))))
     (let (case-fold-search)
       (funcall
        (syntax-propertize-rules
+	("#>\\([^>]+\\)>\\(.\\)"
+	 (2 (ignore
+	     (or (in-string-or-comment-p)
+		 (let ((beg (match-beginning 2))
+		       (ender (match-string 1)))
+		   (put-text-property beg (1+ beg) 'syntax-table
+				      (cons (car (string-to-syntax "!"))
+					    ender))
+		   (consfigurator--finish-propertize-qq-heredoc end))))))
 	;; Also recognise Let Over Lambda's #~ and a #!~ negated version.
 	;; We might want to add these to Consfigurator's readtable.
 	((rx (group-n 1
