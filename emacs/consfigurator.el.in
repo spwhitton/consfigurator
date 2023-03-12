@@ -158,7 +158,8 @@ Modes that use this should add `syntax-propertize-multiline' to
 			 (cond ((assq char perl-quote-like-pairs)
 				(eval-when-compile (string-to-syntax "|")))
 			       ((and (eq char ?\")
-				     (member (match-string 2) '("" "m")))
+				     (not (member (match-string 2)
+						  '("tr" "s" "y"))))
 				nil)
 			       (t
 				(eval-when-compile
