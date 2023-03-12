@@ -144,9 +144,10 @@ Modes that use this should add `syntax-propertize-multiline' to
 	;; Also recognise Let Over Lambda's #~ and a #!~ negated version.
 	;; We might want to add these to Consfigurator's readtable.
 	((rx (group-n 1
-	       (: ?# (| (: ?? (group-n 2 (opt (| "rx" ?r ?x))))
-			(: (opt ?!) ?~ (group-n 2 (opt (| "tr" ?m ?s ?y)))))))
-	     (group-n 3 nonl))
+	       ?# (| (: ?? (group-n 2 (opt (| "rx" ?r ?x)))
+			(group-n 3 (not (in alnum ?\\))))
+		     (: (opt ?!) ?~ (group-n 2 (opt (| "tr" ?m ?s ?y)))
+			(group-n 3 nonl)))))
 	 (1 (and (not (in-string-or-comment-p))
 		 (eval-when-compile (string-to-syntax "'"))))
 	 ;; Based on code in one branch of `perl-syntax-propertize-function'.
