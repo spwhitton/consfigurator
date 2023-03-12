@@ -23,6 +23,19 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.2.4 (unreleased)
+------------------
+
+- New tutorial, "Defining new properties".
+
+- Extract docstrings and use them to generate API references in the manual.
+  It should now be possible to know what properties are available for your use
+  without having to read the source of properties modules.
+
+- New Emacs major mode, ``consfigurator-lisp-mode``.  This takes care of
+  informing Emacs that parts of the buffer are CL-INTERPOL and CL-HEREDOC
+  strings, fixing SLIME's C-c C-c in certain cases.
+
 1.2.2 (2023-02-20)
 ------------------
 
