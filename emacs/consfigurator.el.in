@@ -25,8 +25,8 @@
 ;;; Commentary:
 
 ;; Utilities for working with Consfigurator consfigs from Emacs.
-;; Please see <https://spwhitton.name/doc/consfigurator/> for more information
-;; about Consfigurator.
+;; Please see <https://spwhitton.name/tech/code/consfigurator/> for more
+;; information about Consfigurator.
 
 ;;; Code:
 
