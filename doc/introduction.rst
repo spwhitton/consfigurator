@@ -30,6 +30,11 @@ Try it out / quick start
         (consfigurator:defpackage-consfig :com.example.consfig
           (:use #:cl #:alexandria #:consfigurator))
 
+    If you use Emacs and you have ``consfigurator.el`` installed, it will help
+    to activate our major mode in ~/common-lisp/consfig/.dir-locals.el::
+
+        ((auto-mode-alist . (("\\.lisp\\'" . consfigurator-lisp-mode))))
+
 4. Define some hosts and deployments.
 
     ~/common-lisp/consfig/consfig.lisp::
