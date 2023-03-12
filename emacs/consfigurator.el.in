@@ -131,7 +131,7 @@ Modes that use this should add `syntax-propertize-multiline' to
     (let (case-fold-search)
       (funcall
        (syntax-propertize-rules
-	("#>\\([^>]+\\)>\\(.\\)"
+	("#>\\([^>]+\\)>\\([^z-a]\\)"
 	 (2 (ignore
 	     (or (in-string-or-comment-p)
 		 (let ((beg (match-beginning 2))
