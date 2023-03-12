@@ -26,6 +26,15 @@ you should review this document and see if your consfig needs updating.
 1.2.4 (unreleased)
 ------------------
 
+- New reader macro ``#>>EOF>>`` which is like ``#>EOF>`` except that it skips
+  over the remainder of the current line and its newline.  This is more like
+  how heredocs work in other languages.  For the sake of future extension, the
+  remainder of the line after the ``#>>EOF>>`` should not contain anything
+  other than a single-line comment.
+
+  (This is not a breaking change because the existing implementation for
+  ``#>EOF>`` does not permit using terminators beginning with ``>``.)
+
 - New tutorial, "Defining new properties".
 
 - Extract docstrings and use them to generate API references in the manual.
