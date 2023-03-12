@@ -9,9 +9,12 @@ Debian and Debian derivatives
 The most recent tagged release of Consfigurator is usually included in `Debian
 unstable`_, and the .deb there should work fine on Debian stable and testing,
 and derivatives like Ubuntu.  After adding an apt source for unstable if
-necessary, ``apt-get install cl-consfigurator/unstable``.
+necessary, ``apt-get install cl-consfigurator/unstable``.  During Debian's
+pre-release freezes, the newest release of Consfigurator might be available in
+`Debian experimental`_ instead of unstable.
 
 .. _Debian unstable: https://www.debian.org/doc/manuals/debian-faq/choosing.en.html
+.. _Debian experimental: https://wiki.debian.org/DebianExperimental
 
 Quicklisp
 ---------
