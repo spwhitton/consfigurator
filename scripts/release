@@ -32,7 +32,7 @@ if [ "$dist" = "UNRELEASED" ]; then
 else
     dch -v$version-1 New upstream release.
 fi
-dch -r
+dch -r --distribution experimental
 
 changed_files="consfigurator.asd emacs/consfigurator.el.in doc/conf.py doc/news.rst debian/changelog"
 
@@ -42,9 +42,9 @@ if ! dpkg-parsechangelog | grep -q "New upstream release."; then
     exit 1
 fi
 
-msg="release Consfigurator $version (-1 to Debian unstable)"
+msg="release Consfigurator $version (-1 to Debian experimental)"
 git commit -s -m"$msg" -- $changed_files
 git tag -s -m"$msg" v$version
 
 git deborig
-dgit sbuild --run-piuparts --run-autopkgtest
+dgit sbuild -d unstable --run-piuparts --run-autopkgtest
