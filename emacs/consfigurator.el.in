@@ -33,6 +33,17 @@
 (require 'lisp-mode)
 (require 'perl-mode)
 
+(defgroup consfigurator nil
+  "Options for Consfigurator Emacs utilities."
+  :group 'tools)
+
+(defcustom consfigurator-auto-activate-indentation-hints t
+  "Whether `consfigurator-lisp-mode' should call
+`consfigurator-activate-indentation-hints'.
+Activation of the indentation hints is not buffer-local."
+  :type 'boolean
+  :group 'consfigurator)
+
 ;;;###autoload
 (defun activate-consfigurator-indentation-hints ()
   "Activate indentation hints for Consfigurator properties.
@@ -175,7 +186,9 @@ Modes that use this should add `syntax-propertize-multiline' to
   (add-hook 'syntax-propertize-extend-region-functions
             #'syntax-propertize-multiline t t)
   (setq-local syntax-propertize-function
-	      #'consfigurator-syntax-propertize-function))
+	      #'consfigurator-syntax-propertize-function)
+  (when consfigurator-auto-activate-indentation-hints
+    (activate-consfigurator-indentation-hints)))
 
 (provide 'consfigurator)
 
