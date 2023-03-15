@@ -128,7 +128,7 @@ corresponding to the final dot-delimited component of their names."
 				      (eval-when-compile
 					(string-to-syntax "\""))))
 		 (forward-char 1)
-		 (consfigurator--finish-propertize-qq limit))))))))
+		 (consfigurator--finish-propertize-qq-heredoc limit))))))))
 
 (defun consfigurator-syntax-propertize-function (start end)
   "`syntax-propertize-function' for Consfigurator's readtable.
