@@ -23,17 +23,32 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
-1.2.4 (unreleased)
+1.3.0 (unreleased)
 ------------------
 
 - New reader macro ``#>>EOF>>`` which is like ``#>EOF>`` except that it skips
   over the remainder of the current line and its newline.  This is more like
-  how heredocs work in other languages.  For the sake of future extension, the
-  remainder of the line after the ``#>>EOF>>`` should not contain anything
-  other than a single-line comment.
+  how heredocs work in other languages.
 
-  (This is not a breaking change because the existing implementation for
-  ``#>EOF>`` does not permit using terminators beginning with ``>``.)
+- Support for indented heredocs, where the indentation of the lines of the
+  heredoc is stripped.  This mode is activated by prefixing a tilde to the
+  heredoc terminator.  For example:
+
+  .. code-block:: none
+
+    (foo "argument 1" #>>~EOF>>
+	 My line 1.
+	 My line 2.
+	 EOF)
+
+  The function receives ``"My line 1.\nMy line 2."``
+
+  This is a minor breaking change because heredoc terminators may no longer
+  begin with a tilde.
+
+- New manual section "Reader macros" discussing Consfigurator's named
+  readtable, including some usage reservations for the sake of future
+  extension.
 
 - New tutorial, "Defining new properties".
 

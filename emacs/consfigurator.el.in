@@ -142,7 +142,7 @@ Modes that use this should add `syntax-propertize-multiline' to
     (let (case-fold-search)
       (funcall
        (syntax-propertize-rules
-	("#\\(>>?\\)\\(.+?\\)\\1\\([^z-a]\\)"
+	("#\\(>>?\\)~?\\(.+?\\)\\1\\([^z-a]\\)"
 	 (3 (ignore
 	     (or (in-string-or-comment-p)
 		 (let ((beg (match-beginning 3))

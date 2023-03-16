@@ -30,6 +30,7 @@ Consfigurator user's manual
    deployment
    data
    image
+   reader
 
 .. toctree::
    :maxdepth: 1

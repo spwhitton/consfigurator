@@ -123,17 +123,17 @@ To take advantage of the piuparts and autopkgtest support, add to your
         (file:contains-lines "/etc/schroot/sbuild/fstab"
           "/var/cache/ccache-sbuild /var/cache/ccache-sbuild none rw,bind 0 0"))
        ;; Script from <https://wiki.debian.org/sbuild>.
-       (file:has-content "/var/cache/ccache-sbuild/sbuild-setup"
-#>EOF>#!/bin/sh
+       (file:has-content "/var/cache/ccache-sbuild/sbuild-setup" #>>~EOF>>
+                         #!/bin/sh
 
-export CCACHE_DIR=/var/cache/ccache-sbuild
-export CCACHE_UMASK=002
-export CCACHE_COMPRESS=1
-unset CCACHE_HARDLINK
-export PATH="/usr/lib/ccache:$PATH"
+                         export CCACHE_DIR=/var/cache/ccache-sbuild
+                         export CCACHE_UMASK=002
+                         export CCACHE_COMPRESS=1
+                         unset CCACHE_HARDLINK
+                         export PATH="/usr/lib/ccache:$PATH"
 
-exec "$@"
-EOF :mode #o755)
+                         exec "$@"
+                         EOF :mode #o755)
 
        ;; schroot
        (chroot:os-bootstrapped-for ,chroot-options ,chroot ,host)

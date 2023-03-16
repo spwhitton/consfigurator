@@ -44,22 +44,22 @@ Implicitly sets SCHROOT:USES-OVERLAYS.
 Shell script from <https://wiki.debian.org/sbuild>."
   (:desc "schroot overlays in tmpfs")
   (:hostattrs (push-hostattr 'uses-overlays t))
-  (:apply (file:has-content "/etc/schroot/setup.d/04tmpfs"
-#>EOF>#!/bin/sh
+  (:apply
+   (file:has-content "/etc/schroot/setup.d/04tmpfs" #>>~EOF>>
+                     #!/bin/sh
 
-set -e
+                     set -e
 
-. "$SETUP_DATA_DIR/common-data"
-. "$SETUP_DATA_DIR/common-functions"
-. "$SETUP_DATA_DIR/common-config"
+                     . "$SETUP_DATA_DIR/common-data"
+                     . "$SETUP_DATA_DIR/common-functions"
+                     . "$SETUP_DATA_DIR/common-config"
 
-
-if [ $STAGE = "setup-start" ]; then
-  mount -t tmpfs overlay /var/lib/schroot/union/overlay
-elif [ $STAGE = "setup-recover" ]; then
-  mount -t tmpfs overlay /var/lib/schroot/union/overlay
-elif [ $STAGE = "setup-stop" ]; then
-  umount -f /var/lib/schroot/union/overlay
-fi
-EOF :mode #o755))
+                     if [ $STAGE = "setup-start" ]; then
+                         mount -t tmpfs overlay /var/lib/schroot/union/overlay
+                     elif [ $STAGE = "setup-recover" ]; then
+                         mount -t tmpfs overlay /var/lib/schroot/union/overlay
+                     elif [ $STAGE = "setup-stop" ]; then
+                         umount -f /var/lib/schroot/union/overlay
+                     fi
+                     EOF :mode #o755))
   (:unapply (file:does-not-exist "/etc/schroot/setup.d/04tmpfs")))

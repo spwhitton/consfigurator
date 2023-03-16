@@ -38,37 +38,6 @@
              for result in new and i upfrom 0 do
                (setf (aref results i) (nreconc result (aref results i))))))
 
-(defun lines (text &optional trimfun (trimchars '(#\Space #\Tab)))
-  (with-input-from-string (stream text)
-    (let (bolp buffer)
-      (flet ((trim (line)
-               (if trimfun (funcall trimfun trimchars line) line))
-             (reset ()
-               (setq bolp t
-                     buffer (make-array 0 :fill-pointer 0
-                                          :element-type 'character))))
-        ;; Split on either <CR>, <LF> or <CR><LF>; <LF><CR> would mean split
-        ;; with a blank line in between.  Drop a single trailing blank line.
-        (loop initially (reset)
-              for char = (read-char stream nil nil)
-              if char
-                if (member char '(#\Return #\Newline) :test #'char=)
-                  collect (trim buffer)
-                  and do (reset)
-                         (when (char= char #\Return)
-                           (when-let ((next (peek-char nil stream nil nil)))
-                             (when (char= next #\Newline)
-                               (read-char stream))))
-                else do (setq bolp nil)
-                        (vector-push-extend char buffer)
-                end
-              else
-                unless bolp collect (trim buffer) end
-                and do (loop-finish))))))
-
-(defun unlines (lines)
-  (format nil "~{~A~%~}" lines))
-
 (defun words (text)
   (delete "" (split-string text) :test #'string=))
 

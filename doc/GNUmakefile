@@ -13,6 +13,8 @@ all: html info
 html info: $(PAGES) conf.py $(wildcard *.rst */*.rst)
 	sphinx-build -M $@ . _build
 
+reader.rst:
+
 $(PAGES) &: $(wildcard *.rst.in */*.rst.in) $(LISP)
 	$(SBCL) --eval "(mapc #'consfigurator::build-manual-rst \
 		              uiop:*command-line-arguments*)" --quit $(PAGES)

@@ -209,12 +209,12 @@ packages.  Does not do any automatic upgrades."
   (:desc "apt periodic updates")
   (:hostattrs (os:required 'os:debianlike))
   (:apply
-   (file:has-content "/etc/apt/apt.conf.d/02periodic"
-#>EOF>APT::Periodic::Enable "1";
-APT::Periodic::Update-Package-Lists "1";
-APT::Periodic::Download-Upgradeable-Packages "1";
-APT::Periodic::Verbose "1";
-EOF))
+   (file:has-content "/etc/apt/apt.conf.d/02periodic" #>>~EOF>>
+                     APT::Periodic::Enable "1";
+                     APT::Periodic::Update-Package-Lists "1";
+                     APT::Periodic::Download-Upgradeable-Packages "1";
+                     APT::Periodic::Verbose "1";
+                     EOF))
   (:unapply
    (file:does-not-exist "/etc/apt/apt.conf.d/02periodic")))
 
