@@ -179,13 +179,29 @@ Modes that use this should add `syntax-propertize-multiline' to
 		   (consfigurator--finish-propertize-qq-heredoc end)))))))
        (point) end))))
 
+(defun consfigurator--lisp-indent-function (indent-point state)
+  ;; Don't indent to below trailing modifiers like the 'g' in '#~/foo/g'.
+  (or (save-excursion
+	(goto-char (1+ (nth 1 state)))
+	(and (looking-at "#[[:digit:]]*!?~") (current-column)))
+      (common-lisp-indent-function indent-point state)))
+
+;; `slime-lisp-mode-hook' runs the hooks for `slime-mode' and only then sets
+;; `lisp-indent-function', so I can't see a cleaner way to override it.
+(defun consfigurator--slime-lisp-mode-hook ()
+  (when (derived-mode-p 'consfigurator-lisp-mode)
+    (setq-local lisp-indent-function #'consfigurator--lisp-indent-function)))
+(advice-add 'slime-lisp-mode-hook
+	    :after #'consfigurator--slime-lisp-mode-hook)
+
 ;;;###autoload
 (define-derived-mode consfigurator-lisp-mode lisp-mode "Lisp"
   "Derivative of `lisp-mode' for files using Consfigurator's readtable."
   (add-hook 'syntax-propertize-extend-region-functions
             #'syntax-propertize-multiline t t)
   (setq-local syntax-propertize-function
-	      #'consfigurator-syntax-propertize-function)
+	      #'consfigurator-syntax-propertize-function
+	      lisp-indent-function #'consfigurator--lisp-indent-function)
   (when consfigurator-auto-activate-indentation-hints
     (activate-consfigurator-indentation-hints)))
 
