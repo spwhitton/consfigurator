@@ -35,9 +35,12 @@ This provides an abbreviation for shell- and Perl-style regexp matching:
       => ("two" "four" "six")
 
 Any delimiters supported by ``CL-INTERPOL`` may be used, and the ``m`` is
-always optional.  Trailing options ``g``, ``i``, ``m``, ``s`` and ``x`` are
-meaningful.  The return value depends on the numeric argument before the
-tilde:
+always optional.  Standard trailing options ``g``, ``i``, ``m``, ``s`` and
+``x`` are meaningful.  There is also ``p``, which means to attempt to parse
+the matched strings and substrings as numbers; if a substring cannot be parsed
+as a number, it is returned unmodified.
+
+The return value depends on the numeric argument before the tilde:
 
 - ``#~m//``, with no argument, returns a vector of the substrings
   corresponding to the capture groups, or if there were no capture groups,
@@ -65,8 +68,9 @@ This provides an abbreviation for shell- and Perl-style regexp substitution:
   (mapcar #~s/:.+:/`\&`/ '(":Hello:" ":Goodbye:")) => ("`:Hello:`" "`:Goodbye:`")
 
 Again, any delimiters supported by ``CL-INTERPOL`` may be used, and the same
-trailing options are meaningful.  This is ``CL-PPCRE:REGEX-REPLACE`` or
-``CL-PPCRE:REGEX-REPLACE-ALL``, which see regarding return values.
+trailing options, except for ``p``, are meaningful.  This is
+``CL-PPCRE:REGEX-REPLACE`` or ``CL-PPCRE:REGEX-REPLACE-ALL``, which see
+regarding return values.
 
 ``#>EOF>`` and ``#>>EOF>>``: Heredocs
 -------------------------------------

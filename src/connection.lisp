@@ -216,17 +216,11 @@ connattr, or nil if nothing should be propagated.")
 
 (defmethod connection-connattr
     ((connection connection) (k (eql :remote-uid)))
-  (multiple-value-bind (match groups)
-      (re:scan-to-strings "^uid=([0-9]+)"
-                          (connection-connattr connection 'id))
-    (and match (parse-integer (elt groups 0)))))
+  (#1~/^uid=(\d+)/p (connection-connattr connection 'id)))
 
 (defmethod connection-connattr
     ((connection connection) (k (eql :remote-gid)))
-  (multiple-value-bind (match groups)
-      (re:scan-to-strings "\\) gid=([0-9]+)"
-                          (connection-connattr connection 'id))
-    (and match (parse-integer (elt groups 0)))))
+  (#1~/\) gid=(\d+)/p (connection-connattr connection 'id)))
 
 (defmethod connection-connattr
     ((connection connection) (k (eql :remote-home)))
@@ -614,16 +608,11 @@ specification of POSIX ls(1))."
   "Get the time of the last reboot, rounded down to the nearest minute."
   ;; The '-b' option to who(1) is specified in POSIX, though not the output
   ;; format; this parse is based on GNU coreutils who(1).
-  (multiple-value-bind (match groups)
-      (re:scan-to-strings
-       "([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2})"
-       (car (runlines :env '(:TZ "UTC") "who" "-b")))
-    (if match
-        (let ((groups (map 'vector #'parse-integer groups)))
-          (encode-universal-time 0 (elt groups 4) (elt groups 3)
-                                 (elt groups 2) (elt groups 1) (elt groups 0)
-                                 0))
-        (failed-change "Could not determine time of remote's last reboot."))))
+  (aif (#~/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})/p
+        (car (runlines :env '(:TZ "UTC") "who" "-b")))
+       (encode-universal-time 0 (elt it 4) (elt it 3) (elt it 2) (elt it 1)
+                              (elt it 0) 0)
+       (failed-change "Could not determine time of remote's last reboot.")))
 
 (defun remote-executable-find (executable)
   (zerop (mrun :for-exit "command" "-v" executable)))

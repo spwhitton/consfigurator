@@ -151,6 +151,7 @@ indented heredoc; see perlop(1)."
              (modes (loop for next = (read-char stream t :eof t)
                           while (alpha-char-p next) collect next
                           finally (unread-char next stream)))
+             (try-parse (find #\p modes))
              (scanner-args
                (list first-arg
                      :case-insensitive-mode (and (find #\i modes) t)
@@ -167,7 +168,13 @@ indented heredoc; see perlop(1)."
                (ecase op
                  (#\m
                   (cond ((member #\g modes)
-                         `(re:all-matches-as-strings ,scanner target-string))
+                         (let ((form
+                                 `(re:all-matches-as-strings ,scanner
+                                                             target-string)))
+                           (if try-parse
+                               `(aand ,form
+                                      (map-into it #'try-parse-number it))
+                               form)))
                         ((not arg)
                          ;; The number of capture groups is constant if
                          ;; FIRST-ARG is constant, so could we self-replace
@@ -177,14 +184,31 @@ indented heredoc; see perlop(1)."
                             ;; We could (coerce rest 'list) for use with
                             ;; DESTRUCTURING-BIND.  But there is already
                             ;; CL-PPCRE:REGISTER-GROUPS-BIND.
-                            (if (zerop (length rest)) zeroth rest)))
+                            (if (zerop (length rest))
+                                ,(if try-parse
+                                     '(try-parse-number zeroth)
+                                     'zeroth)
+                                ,(if try-parse
+                                     '(map-into rest #'try-parse-number rest)
+                                     'rest))))
                         ((zerop arg)
-                         `(re:scan-to-strings ,scanner target-string))
+                         (let ((form `(re:scan-to-strings ,scanner
+                                                          target-string)))
+                           (if try-parse
+                               `(multiple-value-bind (match groups) ,form
+                                  (values (try-parse-number match)
+                                          (map-into groups #'try-parse-number
+                                                    groups)))
+                               form)))
                         (t              ; ARG is a positive integer
                          `(aand
                            (nth-value 1 (re:scan-to-strings ,scanner
                                                             target-string))
-                           (values (aref it ,(1- arg)) it)))))
+                           ,(if try-parse
+                                `(values (try-parse-number
+                                          (aref it ,(1- arg)))
+                                         (map-into it #'try-parse-number it))
+                                `(values (aref it ,(1- arg)) it))))))
                  (#\s `(,(if (member #\g modes)
                              're:regex-replace-all
                              're:regex-replace)

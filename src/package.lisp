@@ -46,6 +46,7 @@
                           #:safe-read-from-string
                           #:compile-file*
                           #:compile-file-pathname*)
+  (:shadowing-import-from #:parse-number #:parse-number)
   (:export ;; re-export from UIOP
            #:strcat
            #:string-prefix-p
@@ -89,6 +90,9 @@
            #:safe-read-from-string
            #:compile-file*
            #:compile-file-pathname*
+
+           ;; re-export from PARSE-NUMBER
+           #:parse-number
 
            ;; libc.lisp
            #:uid_t

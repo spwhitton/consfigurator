@@ -1207,16 +1207,14 @@ Currently only handling of LVM logical volumes is implemented."
 
 (defun parse-volume-size (volume-size-specification)
   (if (stringp volume-size-specification)
-      (multiple-value-bind (match groups)
-          (re:scan-to-strings #?/\A([0-9]+)([MGT])?\z/ volume-size-specification)
-        (unless match
-          (simple-program-error
-           "~A is not a valid volume size." volume-size-specification))
-        (* (parse-integer (elt groups 0))
-           (eswitch ((elt groups 1) :test #'string=)
-             ("M" 1)
-             ("G" 1024)
-             ("T" 1048576))))
+      (aif (#~/\A(\d+)([MGT])?\z/p volume-size-specification)
+           (* (elt it 0)
+              (eswitch ((elt it 1) :test #'string=)
+                ("M" 1)
+                ("G" 1024)
+                ("T" 1048576)))
+           (simple-program-error "~A is not a valid volume size."
+                                 volume-size-specification))
       volume-size-specification))
 
 (defmacro volumes (&body volume-specifications)

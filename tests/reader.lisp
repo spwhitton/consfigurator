@@ -108,3 +108,39 @@ line 2
 (deftest perl-tilde-reader.18
     (#~s'foo'${bar}' "foo")
   "${bar}" t)
+
+(deftest perl-tilde-reader.19
+    (#~/\d+/p "1234")
+  1234)
+
+(deftest perl-tilde-reader.19
+    (#~/(\d+)/p "1234")
+  #(1234))
+
+(deftest perl-tilde-reader.21
+    (#~/\d+/gp "1234 6789")
+  (1234 6789))
+
+(deftest perl-tilde-reader.22
+    (#0~/aa (\d+)/p "aa 1234")
+  "aa 1234" #(1234))
+
+(deftest perl-tilde-reader.22
+    (#0~/aa (.+)/p "aa bbbb")
+  "aa bbbb" #("bbbb"))
+
+(deftest perl-tilde-reader.24
+    (#0~/(\d+)../p "1234")
+  1234 #(12))
+
+(deftest perl-tilde-reader.25
+    (#1~/(\d+)../p "1234")
+  12 #(12))
+
+(deftest perl-tilde-reader.26
+    (#1~/(..)../p "aabb")
+  "aa" #("aa"))
+
+(deftest perl-tilde-reader.27
+    (#~/d(.)?$/p "d")
+  #(nil))

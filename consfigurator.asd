@@ -18,6 +18,7 @@
                #:closer-mop
                #:named-readtables
                #:osicat
+               #:parse-number
                (:feature :sbcl (:require #:sb-posix))
                #:trivial-backtrace)
   :components ((:file "src/package")

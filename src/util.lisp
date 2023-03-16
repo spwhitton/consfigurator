@@ -333,6 +333,11 @@ expansion as a starting point for your own DEFPACKAGE form for your consfig."
                                        else do (princ #\: s)
                                                (loop-finish)))))))))
 
+(defun try-parse-number (string &rest args &key &allow-other-keys)
+  (and string
+       (handler-case (apply #'parse-number string args)
+         (parse-error () string))))
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (define-constant +alphanum+
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
