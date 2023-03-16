@@ -22,6 +22,52 @@ Sharp-question mark is the well-known CL-INTERPOL_ reader macro.
 
 .. _CL-INTERPOL: https://edicl.github.io/cl-interpol/
 
+``#~m//``: PCRE matching
+------------------------
+
+This provides an abbreviation for shell- and Perl-style regexp matching:
+
+.. code-block:: none
+
+  (#~m/b.+b/i "FooBarBaz") => "BarB"
+  (#~m/b(.+)b/i "FooBarBaz") => #("ar")
+  (mapcar #3~m/(\w+)(\W+)(\w+)/ '("one two" "three four" "five six"))
+      => ("two" "four" "six")
+
+Any delimiters supported by ``CL-INTERPOL`` may be used, and the ``m`` is
+always optional.  Trailing options ``g``, ``i``, ``m``, ``s`` and ``x`` are
+meaningful.  The return value depends on the numeric argument before the
+tilde:
+
+- ``#~m//``, with no argument, returns a vector of the substrings
+  corresponding to the capture groups, or if there were no capture groups,
+  just the whole matched string.
+
+- ``#0~m//`` returns two values: the whole matched string, and a vector of
+  capture group substrings.  (This is plain ``CL-PPCRE:SCAN-TO-STRINGS``.)
+
+- ``#n~m//`` returns two values: the nth capture group's substring, and a
+  vector of all the capture group substrings.
+
+``#!~m//``: PCRE negative matching
+----------------------------------
+
+Equivalent to ``(not #~m//)``.
+
+``#~s///``: PCRE substitution
+-----------------------------
+
+This provides an abbreviation for shell- and Perl-style regexp substitution:
+
+.. code-block:: none
+
+  (#~s/foo/bar/ "foobarbaz") => "foofoobaz"
+  (mapcar #~s/:.+:/`\&`/ '(":Hello:" ":Goodbye:")) => ("`:Hello:`" "`:Goodbye:`")
+
+Again, any delimiters supported by ``CL-INTERPOL`` may be used, and the same
+trailing options are meaningful.  This is ``CL-PPCRE:REGEX-REPLACE`` or
+``CL-PPCRE:REGEX-REPLACE-ALL``, which see regarding return values.
+
 ``#>EOF>`` and ``#>>EOF>>``: Heredocs
 -------------------------------------
 
@@ -55,3 +101,7 @@ See also
 - `perlop(1) <https://perldoc.perl.org/perlop>`_
 
 - `inferior-shell <https://cliki.net/inferior-shell>`_
+
+- `Let Over Lambda ch. 4
+  <https://letoverlambda.com/index.cl/guest/chap4.html>`_, which originally
+  inspired ``#~m//`` and ``#~s///``.

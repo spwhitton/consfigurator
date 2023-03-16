@@ -76,10 +76,130 @@ indented heredoc; see perlop(1)."
                 finally (return (unlines accum)))
           heredoc))))
 
+;; Originally inspired by some ideas of Doug Hoyt in his *Let Over Lambda*.
+(defun perl-tilde-reader (stream char arg)
+  (flet ((readerr (&rest args)
+           (apply #'simple-reader-error stream args)))
+    (let ((negated (and (char= #\! char)
+                        (or (char= #\~ (read-char stream t :eof t))
+                            (readerr "Expected \"~~\" following \"!\"."))))
+          first-delim op)
+      (loop for next = (read-char stream t :eof t)
+            while (alpha-char-p next) collect next into accum
+            finally (setq first-delim next
+                          op (cond ((null accum) #\m)
+                                   ((= (length accum) 1) (car accum))
+                                   ((string= (coerce accum 'string) "tr") #\y)
+                                   (t (readerr "Unknown regexp operator ~S."
+                                               (coerce accum 'string))))))
+      (let* ((cl-interpol:*inner-delimiters*
+               (and (not (eql first-delim #\'))
+                    ;; This is the same as CL-INTERPOL's regexp mode, but we
+                    ;; don't turn that on for SECOND-ARG.
+                    '((#\{ . #\}))))
+             (first-arg
+               (cl-interpol:interpol-reader
+                (make-concatenated-stream
+                 (make-string-input-stream (format nil "r~A" first-delim))
+                 stream)
+                #\? nil))
+             (second-delim
+               (and (member op '(#\s #\y))
+                    (if (atom (find first-delim cl-interpol:*outer-delimiters*
+                                    :key #'ensure-car))
+                        first-delim
+                        (read-char stream t :eof t))))
+             (second-closer
+               (aand (find second-delim cl-interpol:*outer-delimiters*
+                           :key #'ensure-car)
+                     (consp it) (cdr it)))
+             (second-arg
+               ;; Here we have to do our own pass before calling
+               ;; CL-INTERPOL:INTERPOL-READER because we need to additionally
+               ;; preserve \`, \& and \', and its regexp mode doesn't do that.
+               ;; We do want to use CL-INTERPOL:INTERPOL-READER too, because
+               ;; interpolating into replacement strings is useful.
+               (and second-delim
+                    (loop
+                      with escaped and depth = 0
+                      and result = (make-array 1 :fill-pointer 1
+                                                 :element-type 'character
+                                                 ;; Use our own delimiter to
+                                                 ;; ensure no regexp mode.
+                                                 :initial-element #\#)
+                      for next = (read-char stream t :eof t)
+                      for extra-escape = (if escaped
+                                             (or (digit-char-p next)
+                                                 (member next '(#\` #\& #\')))
+                                             (eql next #\#))
+                      if escaped do (setq escaped nil)
+                        else do (switch (next)
+                                  (second-delim (if second-closer
+                                                    (incf depth)
+                                                    (loop-finish)))
+                                  (second-closer (if (zerop depth)
+                                                     (loop-finish)
+                                                     (decf depth)))
+                                  (#\\ (setq escaped t)))
+                      when extra-escape
+                        do (vector-push-extend #\\ result)
+                      do (vector-push-extend next result)
+                      finally (vector-push-extend #\# result)
+                              (return (cl-interpol:interpol-reader
+                                       (make-string-input-stream result)
+                                       #\? nil)))))
+             (modes (loop for next = (read-char stream t :eof t)
+                          while (alpha-char-p next) collect next
+                          finally (unread-char next stream)))
+             (scanner-args
+               (list first-arg
+                     :case-insensitive-mode (and (find #\i modes) t)
+                     :multi-line-mode (and (find #\m modes) t)
+                     :single-line-mode (and (find #\s modes) t)
+                     ;; We're choosing not to use CL-INTERPOL's own extended
+                     ;; mode because CL-PPCRE's is closer to Perl's.
+                     :extended-mode (and (find #\x modes) t)))
+             (scanner (if (constantp first-arg)
+                          `(load-time-value
+                            (re:create-scanner ,@scanner-args))
+                          `(re:create-scanner ,@scanner-args)))
+             (body
+               (ecase op
+                 (#\m
+                  (cond ((member #\g modes)
+                         `(re:all-matches-as-strings ,scanner target-string))
+                        ((not arg)
+                         ;; The number of capture groups is constant if
+                         ;; FIRST-ARG is constant, so could we self-replace
+                         ;; on first execution / otherwise memoise?
+                         `(multiple-value-bind (zeroth rest)
+                              (re:scan-to-strings ,scanner target-string)
+                            ;; We could (coerce rest 'list) for use with
+                            ;; DESTRUCTURING-BIND.  But there is already
+                            ;; CL-PPCRE:REGISTER-GROUPS-BIND.
+                            (if (zerop (length rest)) zeroth rest)))
+                        ((zerop arg)
+                         `(re:scan-to-strings ,scanner target-string))
+                        (t              ; ARG is a positive integer
+                         `(aand
+                           (nth-value 1 (re:scan-to-strings ,scanner
+                                                            target-string))
+                           (values (aref it ,(1- arg)) it)))))
+                 (#\s `(,(if (member #\g modes)
+                             're:regex-replace-all
+                             're:regex-replace)
+                        ,scanner target-string ,second-arg))
+                 (#\y (readerr "Transliteration unimplemented.")))))
+        `(lambda (target-string)
+           ,(if negated `(not ,body) body))))))
+
 (named-readtables:defreadtable :consfigurator
   (:merge :standard)
   (:dispatch-macro-char #\# #\? #'cl-interpol:interpol-reader)
-  (:dispatch-macro-char #\# #\> #'read-heredoc))
+  (:dispatch-macro-char #\# #\> #'read-heredoc)
+
+  (:dispatch-macro-char #\# #\~ #'perl-tilde-reader)
+  (:dispatch-macro-char #\# #\! #'perl-tilde-reader))
 
 (named-readtables:defreadtable :consfigurator.without-read-eval
   (:merge :consfigurator)

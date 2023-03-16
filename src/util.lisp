@@ -249,9 +249,7 @@ simple collections of readably-printable values."
 
 (defun parse-username-from-id (output)
   "Where OUTPUT is the output of the id(1) command, extract the username."
-  (multiple-value-bind (match groups)
-      (re:scan-to-strings "^uid=[0-9]+\\(([^)]+)" output)
-    (and match (elt groups 0))))
+  (#1~/^uid=[0-9]+\(([^)]+)/ output))
 
 (defun abbreviate-consfigurator-package (name)
   (with-standard-io-syntax
@@ -421,11 +419,9 @@ on simple scripts embedded in source code, written with newlines for the sake
 of maintainability.  Converting those scripts to single lines before they are
 executed improves Consfigurator's debug output, and also makes process names
 visible to remote commands like ps(1) more readable."
-  (re:regex-replace-all
-   #?/\s+/ (re:regex-replace-all "(then|else|elif|fi|case|in|;;|do|done);"
-                                 (format nil "~{~A~^; ~}" (lines script))
-                                 "\\1")
-   " "))
+  (#~s/\s+/ /g
+   (#~s/(then|else|elif|fi|case|in|;;|do|done);/\1/g
+    (format nil "~{~A~^; ~}" (lines script)))))
 
 
 ;;;; Progress & debug printing

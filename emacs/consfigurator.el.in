@@ -152,12 +152,11 @@ Modes that use this should add `syntax-propertize-multiline' to
 					      (car (string-to-syntax "!")))
 					    ender))
 		   (consfigurator--finish-propertize-qq-heredoc end))))))
-	;; Also recognise Let Over Lambda's #~ and a #!~ negated version.
-	;; We might want to add these to Consfigurator's readtable.
 	((rx (| (: (group-n 1 "#?" (group-n 2 (opt (| "rx" ?r ?x))))
 		   (group-n 3 (not (in alnum ?\\))))
-		(: (group-n 1 ?# (opt ?!) ?~ (group-n 2
-					       (opt (| "tr" ?m ?s ?y))))
+		(: (group-n 1
+		     ?# (0+ digit) (opt ?!) ?~ (group-n 2
+						 (opt (| "tr" ?m ?s ?y))))
 		   (group-n 3 nonl))))
 	 (1 (and (not (in-string-or-comment-p))
 		 (eval-when-compile (string-to-syntax "'"))))

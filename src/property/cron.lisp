@@ -135,7 +135,7 @@ directory."
           (old (runlines :may-fail "crontab" "-l"))
           (new
             (mapcar
-             (lambda (line) (re:regex-replace-all #?/\$HOME/ line home))
+             #~s/\$HOME/${home}/g
              (nconc
               (list "# Automatically updated by Consfigurator; do not edit" "")
               (loop for (k v) on env by #'cddr

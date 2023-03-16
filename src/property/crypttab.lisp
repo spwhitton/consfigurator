@@ -25,10 +25,9 @@
     (if (string= val "") nil val)))
 
 (defun get-device-parent (device)
-  (multiple-value-bind (match groups)
-      (re:scan-to-strings #?/^1\s+dependencies\s*:\s*\((\S+)\)$/
-                          (run "dmsetup" "deps" "-o" "blkdevname" device))
-    (and match (merge-pathnames (elt groups 0) #P"/dev/"))))
+  (aand (#1~/^1\s+dependencies\s*:\s*\((\S+)\)$/
+         (run "dmsetup" "deps" "-o" "blkdevname" device))
+        (merge-pathnames it #P"/dev/")))
 
 (defmethod ct-target ((volume opened-luks-container))
   (volume-label volume))

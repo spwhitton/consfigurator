@@ -26,6 +26,9 @@ you should review this document and see if your consfig needs updating.
 1.3.0 (unreleased)
 ------------------
 
+- New reader macros ``#~m//`` and ``#~s///`` for shell- and Perl-style regular
+  expression matching and replacement.
+
 - New reader macro ``#>>EOF>>`` which is like ``#>EOF>`` except that it skips
   over the remainder of the current line and its newline.  This is more like
   how heredocs work in other languages.
@@ -57,8 +60,8 @@ you should review this document and see if your consfig needs updating.
   without having to read the source of properties modules.
 
 - New Emacs major mode, ``consfigurator-lisp-mode``.  This takes care of
-  informing Emacs that parts of the buffer are CL-INTERPOL and CL-HEREDOC
-  strings, fixing SLIME's C-c C-c in certain cases.
+  informing Emacs that parts of the buffer are CL-INTERPOL, CL-HEREDOC and our
+  ``#~m//`` and ``#~s///`` strings, fixing SLIME's C-c C-c in certain cases.
 
 1.2.2 (2023-02-20)
 ------------------
