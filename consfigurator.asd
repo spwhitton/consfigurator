@@ -5,20 +5,20 @@
   :licence "GPL-3+"
   :serial t
   :defsystem-depends-on (#:cffi-grovel)
-  :depends-on (#:anaphora
+  :depends-on (#:agnostic-lizard
                #:alexandria
+               #:anaphora
                #:babel
                #:babel-streams
                #:bordeaux-threads
-               #:cl-ppcre
+               #:cffi
                #:cl-heredoc
                #:cl-interpol
+               #:cl-ppcre
+               #:closer-mop
                #:named-readtables
-               #:cffi
                #:osicat
                (:feature :sbcl (:require #:sb-posix))
-               #:closer-mop
-               #:agnostic-lizard
                #:trivial-backtrace)
   :components ((:file "src/package")
                (:file "src/reader")
