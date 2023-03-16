@@ -1,0 +1,8 @@
+One convenient way to run tests in development is to evaluate
+
+    (setq #+sbcl sb-rt:*do-tests-when-defined*
+	  #-sbcl regression-test:*do-tests-when-defined*
+	  t)
+
+and then use SLIME's C-c C-c to run individual tests and its C-c C-k to run
+all tests in the current file.  You'll get REPL output if any fail.
