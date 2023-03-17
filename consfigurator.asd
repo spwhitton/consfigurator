@@ -115,6 +115,7 @@
                (:file "tests/data/pass")
                (:file "tests/data/pgp")
                (:file "tests/data/util")
+               (:file "tests/reader")
                (:file "tests/util")
                (:file "tests/property/file"))
   :perform (test-op (o c) (symbol-call :consfigurator/tests '#:runner)))
