@@ -56,7 +56,9 @@ line 2
   t)
 
 (deftest perl-tilde-reader.6
-    (handler-case (read-from-string "(#!/bar/ \"foo\")")
+    (handler-case (let ((*readtable*
+                          (named-readtables:find-readtable :consfigurator)))
+                    (read-from-string "(#!/bar/ \"foo\")"))
       (simple-reader-error (err)
         (format nil (simple-condition-format-control err))))
   "Expected \"~\" following \"!\".")
