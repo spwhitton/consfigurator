@@ -36,7 +36,7 @@ you should review this document and see if your consfig needs updating.
     more like how heredocs work in other languages.
 
   - Support for indented heredocs, where the indentation of the lines of the
-    heredoc is stripped.  This mode is activated by prefixing a tilde to the
+    heredoc is stripped.  This mode is activated by prepending a tilde to the
     heredoc terminator.  For example:
 
     .. code-block:: none
