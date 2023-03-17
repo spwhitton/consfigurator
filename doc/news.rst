@@ -26,42 +26,49 @@ you should review this document and see if your consfig needs updating.
 1.3.0 (unreleased)
 ------------------
 
-- New reader macros ``#~m//`` and ``#~s///`` for shell- and Perl-style regular
-  expression matching and replacement.
+- Readtable:
 
-- New reader macro ``#>>EOF>>`` which is like ``#>EOF>`` except that it skips
-  over the remainder of the current line and its newline.  This is more like
-  how heredocs work in other languages.
+  - New reader macros ``#~m//`` and ``#~s///`` for shell- and Perl-style
+    regular expression matching and replacement.
 
-- Support for indented heredocs, where the indentation of the lines of the
-  heredoc is stripped.  This mode is activated by prefixing a tilde to the
-  heredoc terminator.  For example:
+  - New reader macro ``#>>EOF>>`` which is like ``#>EOF>`` except that it
+    skips over the remainder of the current line and its newline.  This is
+    more like how heredocs work in other languages.
 
-  .. code-block:: none
+  - Support for indented heredocs, where the indentation of the lines of the
+    heredoc is stripped.  This mode is activated by prefixing a tilde to the
+    heredoc terminator.  For example:
 
-    (foo "argument 1" #>>~EOF>>
-	 My line 1.
-	 My line 2.
-	 EOF)
+    .. code-block:: none
 
-  The function receives ``"My line 1.\nMy line 2."``
+      (foo "argument 1" #>>~EOF>>
+	   My line 1.
+	   My line 2.
+	   EOF)
 
-  This is a minor breaking change because heredoc terminators may no longer
-  begin with a tilde.
+    The function receives ``"My line 1.\nMy line 2."``
 
-- New manual section "Reader macros" discussing Consfigurator's named
-  readtable, including some usage reservations for the sake of future
-  extension.
+    This is a minor breaking change because heredoc terminators may no longer
+    begin with a tilde.
 
-- New tutorial, "Defining new properties".
+- Documentation:
 
-- Extract docstrings and use them to generate API references in the manual.
-  It should now be possible to know what properties are available for your use
-  without having to read the source of properties modules.
+   - New manual section "Reader macros" discussing Consfigurator's named
+     readtable, including some usage reservations for the sake of future
+     extension.
 
-- New Emacs major mode, ``consfigurator-lisp-mode``.  This takes care of
-  informing Emacs that parts of the buffer are CL-INTERPOL, CL-HEREDOC and our
-  ``#~m//`` and ``#~s///`` strings, fixing SLIME's C-c C-c in certain cases.
+   - New tutorial, "Defining new properties".
+
+   - Extract docstrings and use them to generate API references in the manual.
+     It should now be possible to know what properties are available for your
+     use without having to read the source of properties modules.
+
+- Miscellaneous:
+
+   - New Emacs major mode, ``consfigurator-lisp-mode``.  This takes care of
+     informing Emacs that parts of the buffer are CL-INTERPOL, CL-HEREDOC and
+     our ``#~m//`` and ``#~s///`` strings, fixing SLIME's C-c C-c in certain
+     cases.
 
 1.2.2 (2023-02-20)
 ------------------
