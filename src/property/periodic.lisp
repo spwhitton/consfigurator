@@ -20,7 +20,7 @@
 
 ;; Use of this combinator requires always supplying a description, to reduce
 ;; the chance of accidental description clashes.
-(defmacro at-most (period desc &rest propapps)
+(defmacro at-most (period desc &body propapps)
   "Only attempt to apply PROPAPPS at most every PERIOD.  Supported values for
 PERIOD are :each-reboot, :hourly, :daily, :weekly, :monthly, :yearly.  It is
 assumed that a month has 30 days and a year has 365.25 days.
