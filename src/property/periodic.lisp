@@ -67,3 +67,16 @@ user."
                            (file:containing-directory-exists flagfile)
                            (mrun "touch" flagfile)))
                 :args args))))
+
+(defmacro reapplied-at-most (period desc &body propapps)
+  "Apply PROPAPPS; only every PERIOD, also unapply them before applying them.
+
+This is useful to periodically redo the application of PROPAPPS.
+For example, you can use this to occasionally completely rebuild a
+CHROOT:OS-BOOTSTRAPPED chroot instead of only ever updating its contents.
+
+PERIOD and DESC are as for PERIODIC:AT-MOST, which see."
+  (let ((propapp (if (cdr propapps) `(eseqprops ,@propapps) (car propapps))))
+    `(eseqprops (desc ,(format nil "Unapplied ~(~A~): ~A" period desc)
+                      (at-most* ,period ,desc (unapplied ,propapp)))
+                (desc ,desc ,propapp))))

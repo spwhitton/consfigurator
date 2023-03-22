@@ -262,6 +262,7 @@
            #:silent-seqprops
            #:unapply
            #:unapplied
+           #:reapplied
            #:desc
            #:on-change
            #:on-apply-change
@@ -495,7 +496,8 @@
 
   (package :consfigurator.property.periodic
            (:local-nicknames (#:file  #:consfigurator.property.file))
-           (:export #:at-most))
+           (:export #:at-most
+                    #:reapplied-at-most))
 
   (package :consfigurator.property.mount
            (:local-nicknames (#:os    #:consfigurator.property.os)

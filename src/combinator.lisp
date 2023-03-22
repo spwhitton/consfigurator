@@ -261,6 +261,16 @@ property instead of applying it."
               :unapply (get psym 'papply)
               :args args)))
 
+(define-function-property-combinator reapplied (propapp)
+  (:retprop :type (proptype (car propapp))
+            :lambda (proplambda (car propapp))
+            :desc (lambda-ignoring-args
+                    (strcat "Reapplied: " (propapp-desc propapp)))
+            :hostattrs (lambda-ignoring-args (propapp-attrs propapp))
+            :apply (lambda-ignoring-args
+                     (unapply-propapp propapp)
+                     (apply-propapp propapp))))
+
 (define-function-property-combinator desc (desc propapp)
   (:retprop :type (propapp-type propapp)
             :desc (lambda () desc)

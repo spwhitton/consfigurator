@@ -76,13 +76,12 @@ Example usage:
     (apt:mirrors \"...\")
     (sbuild:usable-by \"spwhitton\")
     (schroot:overlays-in-tmpfs)
-    (periodic:at-most :monthly \"sbuild sid schroot rebuilt\"
-      (unapplied (sbuild:built. nil (os:debian-unstable :amd64))))
-    (sbuild:built. nil
-      (os:debian-unstable :amd64)
-      (sbuild:standard-debian-schroot)
-      (apt:uses-parent-proxy)
-      (apt:uses-parent-mirrors))
+    (periodic:reapplied-at-most :monthly \"sbuild sid schroot (re)built\"
+      (sbuild:built. nil
+        (os:debian-unstable :amd64)
+        (sbuild:standard-debian-schroot)
+        (apt:uses-parent-proxy)
+        (apt:uses-parent-mirrors)))
 
 To take advantage of the piuparts and autopkgtest support, add to your
 ~/.sbuildrc:
