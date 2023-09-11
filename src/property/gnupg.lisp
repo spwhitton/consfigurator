@@ -63,4 +63,4 @@ integer."
      (declare (ignore err))
      (and (zerop exit) (re:scan #?/^sec\s/ out))))
   (:apply (mrun :input (get-data-stream "--pgp-seckey" fingerprint)
-                "gpg" "--import")))
+                "gpg" "--batch" "--no-tty" "--import")))
