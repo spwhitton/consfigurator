@@ -23,6 +23,13 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.3.2 (unreleased)
+------------------
+
+- Fix a bug in DISK:HOST-LOGICAL-VOLUMES-EXIST that meant it would try to add
+  ``/etc/fstab`` entries for each logical volume it created rather than for
+  each filesystem it tries to mount.
+
 1.3.1 (2023-06-12)
 ------------------
 

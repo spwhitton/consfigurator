@@ -534,7 +534,7 @@ We do not specify what logical volumes it contains."))
      (if to-create
          (prog2
              (ignoring-hostattrs
-              (consfigurator.property.fstab:has-entries-for-volumes to-create))
+              (consfigurator.property.fstab:has-entries-for-volumes to-mount))
              (create-volumes-and-contents to-create)
            (dolist (volume to-create)
              (open-volume volume nil))
