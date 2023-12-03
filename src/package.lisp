@@ -805,7 +805,8 @@
                              (#:service   #:consfigurator.property.service)
                              (#:file      #:consfigurator.property.file)
                              (#:chroot    #:consfigurator.property.chroot)
-                             (#:apt       #:consfigurator.property.apt))
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:disk      #:consfigurator.property.disk))
            (:export #:installed
                     #:default-network-started
                     #:default-network-autostarted
@@ -817,6 +818,10 @@
                     #:kvm-boots-chroot-for.
                     #:kvm-boots-chroot
                     #:kvm-boots-chroot.
+                    #:kvm-boots-lvm-lv-for
+                    #:kvm-boots-lvm-lv-for.
+                    #:kvm-boots-lvm-lv
+                    #:kvm-boots-lvm-lv.
                     #:virsh-get-columns))
 
   (package :consfigurator.property.ccache

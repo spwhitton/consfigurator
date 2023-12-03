@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2018, 2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2018, 2021, 2023  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -319,6 +319,87 @@ your preferred VM networking setup and corresponding DEPLOYS propapp."
   "Like LIBVIRT:KVM-BOOTS-CHROOT-FOR but define a new host using PROPERTIES."
   (:desc #?"libvirt KVM VM for chroot defined")
   (kvm-boots-chroot-for options (make-host :propspec properties)))
+
+(defpropspec kvm-boots-lvm-lv-for :lisp
+    (options host &optional additional-properties
+             &aux (host (%make-child-host host additional-properties))
+             (host* (preprocess-host host)))
+  "Install HOST to an LVM LV and boot it as a libvirt KVM virtual machine.
+
+OPTIONS is a plist of keyword parameters.  :VCPUS, :MEMORY, :AUTOSTART,
+:VIRT-OPTIONS and :CHROOT-OPTIONS are as with LIBVIRT:KVM-BOOTS-CHROOT-FOR,
+which see.  This property also accepts:
+
+  - :VOLUME-GROUP -- The LVM VG in which to create the LVM LV for HOST.
+    Defaults to \"vg_PARENT\" where PARENT is the hypervisor's short hostname.
+
+  - :LOGICAL-VOLUME -- The name of the LVM LV to create for HOST.
+    Defaults to \"lv_PARENT_CHILD\" where PARENT is the hypervisor's short
+    hostname and CHILD is the short hostname of HOST.  Must be unique!
+
+    **ANY EXISTING CONTENTS OF THE NAMED LOGICAL VOLUME WILL BE OVERWRITTEN.**
+
+    You will probably want to apply DISK:HOST-LOGICAL-VOLUMES-EXIST before
+    this property, to create the logical volume.  Unapplying this property
+    does not currently remove the logical volume.
+
+  - :VOLUME-SIZE -- The size of the LVM LV to create for HOST.
+    Required to be specified.
+
+HOST should have an application of DISK:HAS-VOLUMES specifying how it should
+be installed to the LVM logical volume.  A minimal example for BIOS boot:
+
+    (libvirt:kvm-boots-lvm-lv. (:volume-size \"5G\")
+      (os:debian-stable \"bookworm\" :amd64)
+      (disk:has-volumes
+       (physical-disk :boots-with '(grub:grub)
+                      (partitioned-volume
+                       ((partition :partition-typecode #xEF02 :volume-size 1)
+                        (partition (ext4-filesystem :mount-point #P\"/\"))))))
+      (hostname:configured \"subbox\")
+      (installer:bootloader-binaries-installed)
+      (apt:installed \"linux-image-amd64\"))
+
+See also \"Building disk images\" in the Consfigurator user's manual."
+  (%check-child-hn host*)
+  (destructuring-bind
+      (&key (vcpus 1) (memory 1024) autostart virt-options chroot-options
+         (volume-group (strcat "vg_" (get-short-hostname)))
+         (logical-volume (format nil "lv_~A_~A"
+                                 (get-short-hostname)
+                                 (get-short-hostname host*)))
+         (volume-size
+          (inapplicable-property ":VOLUME-SIZE parameter is required."))
+       &aux (flagfile
+             (merge-pathnames (strcat (get-hostname host*) ".installed")
+                              #P"/var/lib/libvirt/images/")))
+      options
+    `(with-unapply
+       (installed)
+       ,(propapp (disk:has-volumes
+                  (lvm-logical-volume :volume-group volume-group
+                                      :volume-label logical-volume
+                                      :volume-size volume-size)))
+       (with-flagfile ,flagfile
+         (disk:first-disk-installed-for ,chroot-options ,host
+                                        ,(format nil "/dev/~A/~A"
+                                                 volume-group logical-volume)))
+       (defined-for ,host*
+           ,(format nil "--vcpus=~D" vcpus) ,(format nil "--memory=~D" memory)
+         "--disk" ,(format nil "path=/dev/~A/~A" volume-group logical-volume)
+         ,@(and autostart '("--autostart"))
+         ,@virt-options)
+       ,@(and autostart `((started ,host)))
+       :unapply
+       (destroyed ,host*)
+       (unapplied (defined-for ,host*))
+       ;; We don't call lvremove(8) because we didn't create the LV, either.
+       (file:does-not-exist ,flagfile))))
+
+(defproplist kvm-boots-lvm-lv :lisp (options properties)
+  "Like LIBVIRT:KVM-BOOTS-LVM-LV-FOR but define a new host using PROPERTIES."
+  (:desc #?"libvirt KVM VM for LVM LV defined")
+  (kvm-boots-lvm-lv-for options (make-host :propspec properties)))
 
 (defun virsh-get-columns (&rest arguments)
   "Run a virsh command that is expected to yield tabular output, with the given
