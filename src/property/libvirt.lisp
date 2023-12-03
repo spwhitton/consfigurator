@@ -133,14 +133,22 @@ already running, for a VM which is not always booted, e.g. on a laptop."
 ;; Another possible approach would be to convert DISK:VOLUME values to --disk
 ;; arguments to virt-install(1).
 
+(defun %make-child-host (host additional-properties)
+  (make-child-host
+   :hostattrs (hostattrs host)
+   :propspec (host-propspec
+              (union-propspec-into-host host additional-properties))))
+
+(defun %check-child-hn (child)
+  ;; Same hostname probably means that the VM HOST inherited the hypervisor
+  ;; HOST's hostname as one was not explicitly set; probably a mistake.
+  (when (string= (get-hostname child) (get-hostname))
+    (failed-change "KVM VM has same hostname as hypervisor host.")))
+
 (defpropspec kvm-boots-chroot-for :lisp
     (options host &optional additional-properties
              &aux (host* (preprocess-host
-                          (make-child-host
-                           :hostattrs (hostattrs host)
-                           :propspec (host-propspec
-                                      (union-propspec-into-host
-                                       host additional-properties))))))
+                          (%make-child-host host additional-properties))))
   "Build a chroot for HOST and boot it as a libvirt KVM virtual machine.
 Virtio-FS and direct kernel boot are used to avoid the need for either a
 bootloader or an intermediary disk image.  That makes this property suitable
@@ -244,10 +252,7 @@ Sample usage:
 There's repetition here, and you might like to use DEFPROPSPEC to establish
 your preferred VM networking setup and corresponding DEPLOYS propapp."
   (:desc #?"libvirt KVM VM for ${(get-hostname host*)} defined")
-  ;; Same hostname probably means that the VM HOST inherited the hypervisor
-  ;; HOST's hostname as one was not explicitly set; probably a mistake.
-  (when (string= (get-hostname host*) (get-hostname))
-    (failed-change "KVM VM has same hostname as hypervisor host."))
+  (%check-child-hn host*)
   (destructuring-bind
       (&key (vcpus 1) (memory 1024) autostart
          virt-options chroot-options always-deploys
