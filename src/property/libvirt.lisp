@@ -143,7 +143,7 @@ already running, for a VM which is not always booted, e.g. on a laptop."
   ;; Same hostname probably means that the VM HOST inherited the hypervisor
   ;; HOST's hostname as one was not explicitly set; probably a mistake.
   (when (string= (get-hostname child) (get-hostname))
-    (failed-change "KVM VM has same hostname as hypervisor host.")))
+    (aborted-change "KVM VM has same hostname as hypervisor host.")))
 
 (defpropspec kvm-boots-chroot-for :lisp
     (options host &optional additional-properties
