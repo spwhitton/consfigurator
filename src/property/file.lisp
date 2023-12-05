@@ -173,13 +173,15 @@ any of the regular expressions PATTERNS."
    (containing-directory-exists destination)
    (maybe-write-remote-file-data destination iden1 iden2)))
 
-(defproplist host-data-uploaded :posix
-    (destination
-     ;; Require an absolute path because we don't know the remote home
-     ;; directory at hostattrs time, so can't resolve it ourselves.
-     &aux (destination (unix-namestring
-                        (ensure-pathname destination :want-absolute t))))
-  (data-uploaded (get-hostname) destination destination))
+(defpropspec host-data-uploaded :posix (&rest destinations)
+  (loop with hn = (get-hostname)
+        for destination in destinations
+        ;; Require absolute paths because we don't know the remote home
+        ;; directory at hostattrs time, so can't resolve it ourselves.
+        for destination* = (unix-namestring
+                            (ensure-pathname destination :want-absolute t))
+        collect `(data-uploaded ,hn ,destination* ,destination*) into propapps
+        finally (return (cons 'seqprops propapps))))
 
 (defprop secret-uploaded :posix (iden1 iden2 destination)
   (:desc #?"${destination} installed")
@@ -189,12 +191,15 @@ any of the regular expressions PATTERNS."
   (:apply
    (maybe-write-remote-file-data destination iden1 iden2 :mode #o600)))
 
-(defproplist host-secret-uploaded :posix
-    (destination
-     ;; Require an absolute path like with HOST-DATA-UPLOADED.
-     &aux (destination (unix-namestring
-                        (ensure-pathname destination :want-absolute t))))
-  (secret-uploaded (get-hostname) destination destination))
+(defpropspec host-secret-uploaded :posix (&rest destinations)
+  (loop with hn = (get-hostname)
+        for destination in destinations
+        ;; Require absolute paths like with HOST-DATA-UPLOADED.
+        for destination* = (unix-namestring
+                            (ensure-pathname destination :want-absolute t))
+        collect `(secret-uploaded ,hn ,destination* ,destination*)
+          into propapps
+        finally (return (cons 'seqprops propapps))))
 
 (defprop data-cache-purged :posix ()
   "Ensure that any prerequisite data cached in the remote home directory is removed."

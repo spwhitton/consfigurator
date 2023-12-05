@@ -32,6 +32,9 @@ you should review this document and see if your consfig needs updating.
   ``/etc/fstab`` entries for each logical volume it created rather than for
   each filesystem it tries to mount.
 
+- FILE:HOST-DATA-UPLOADED and FILE:HOST-SECRET-UPLOADED can now upload
+  multiple files.
+
 1.3.1 (2023-06-12)
 ------------------
 
