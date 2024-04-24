@@ -28,6 +28,9 @@ you should review this document and see if your consfig needs updating.
 
 - Add LIBVIRT:KVM-BOOTS-LVM-LV and LIBVIRT:KVM-BOOTS-LVM-LV-FOR.
 
+- Pass ``--batch`` and ``--no-tty`` to gpg(1) to avoid some tty issues.
+  Thanks to David Bremner.
+
 - Fix a bug in DISK:HOST-LOGICAL-VOLUMES-EXIST that meant it would try to add
   ``/etc/fstab`` entries for each logical volume it created rather than for
   each filesystem it tries to mount.
