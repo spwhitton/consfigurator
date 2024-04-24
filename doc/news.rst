@@ -23,7 +23,7 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
-1.3.2 (unreleased)
+1.3.2 (2024-04-24)
 ------------------
 
 - Add LIBVIRT:KVM-BOOTS-LVM-LV and LIBVIRT:KVM-BOOTS-LVM-LV-FOR.
