@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021, 2024  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -137,6 +137,13 @@ restart Apache."
                      ,@initial
                      "RewriteEngine On"
                      "RewriteRule ^/.well-known/acme-challenge.* - [L]"
+                     ,(format nil "<Directory ~A>"
+                              (unix-namestring
+                               (merge-pathnames
+                                #P".well-known/acme-challenge/"
+                                (ensure-directory-pathname htdocs))))
+                     "Require all granted"
+                     "</Directory>"
                      ,@additional-config
                      ;; redirect everything else to https
                      "RewriteRule (.*) https://%{SERVER_NAME}$1 [R=301,L,NE]"

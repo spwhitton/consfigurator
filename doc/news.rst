@@ -23,6 +23,13 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.3.3 (unreleased)
+------------------
+
+- APACHE:HTTPS-VHOST now adds an Apache ``<Directory>`` directive which
+  ensures that HTTP access to the ``.well-known/acme-challenge/`` subdirectory
+  of the document root is granted.
+
 1.3.2 (2024-04-24)
 ------------------
 
