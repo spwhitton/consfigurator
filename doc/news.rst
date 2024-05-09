@@ -23,7 +23,7 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
-1.4.0 (unreleased)
+1.4.0 (2024-05-09)
 ------------------
 
 - APACHE:HTTPS-VHOST now adds an Apache ``<Directory>`` directive which
