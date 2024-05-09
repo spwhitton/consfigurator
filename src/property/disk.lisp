@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021-2022  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021-2024  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -364,7 +364,13 @@ The default value of 0 means the next free sector.")
 
 (defmethod create-volume ((volume partitioned-volume) (file pathname))
   (with-slots (volume-contents) volume
+    ;; See https://bugs.launchpad.net/ironic-python-agent/+bug/1737556.
+    ;; We don't take sgdisk upstream's suggestion there to ignore the exit
+    ;; code of --zap-all because we do want to assert somehow that a
+    ;; successful zeroing-out of any old partition tables has occurred.
+    (mrun :may-fail "sgdisk" "--clear" file)
     (mrun :inform "sgdisk" "--zap-all" file)
+
     (mrun :inform "sgdisk"
           ;; Turn off partition alignment when specific start sectors have
           ;; been specified, so that we can be sure they will be respected.
