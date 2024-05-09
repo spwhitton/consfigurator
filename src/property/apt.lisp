@@ -284,13 +284,14 @@ only upgrade Debian stable."
                        (mapcar (lambda (m)
                                  (list* m #?"${suite}-updates" +sections+))
                                (get-mirrors))))
+         (old-suite-p (memstr= suite '("stretch" "jessie" "buster")))
          (backports (and (subtypep (type-of os) 'os:debian-stable)
+                         (not old-suite-p)
                          (mapcar (lambda (m)
                                    (list* m #?"${suite}-backports" +sections+))
                                  (get-mirrors))))
-         (security-suite (if (memstr= suite '("stretch" "jessie" "buster"))
-                             #?"${suite}/updates"
-                             #?"${suite}-security"))
+         (security-suite
+           (if old-suite-p #?"${suite}/updates" #?"${suite}-security"))
          (security (and (or (subtypep (type-of os) 'os:debian-stable)
                             (subtypep (type-of os) 'os:debian-testing))
                         (list
