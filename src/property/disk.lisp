@@ -364,7 +364,7 @@ The default value of 0 means the next free sector.")
 
 (defmethod create-volume ((volume partitioned-volume) (file pathname))
   (with-slots (volume-contents) volume
-    ;; See https://bugs.launchpad.net/ironic-python-agent/+bug/1737556.
+    ;; See <https://bugs.launchpad.net/ironic-python-agent/+bug/1737556>.
     ;; We don't take sgdisk upstream's suggestion there to ignore the exit
     ;; code of --zap-all because we do want to assert somehow that a
     ;; successful zeroing-out of any old partition tables has occurred.
