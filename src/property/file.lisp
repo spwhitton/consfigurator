@@ -236,8 +236,8 @@ Uses CL-PPCRE:REGEX-REPLACE, which see for the syntax of REPLACE."
    ;; likewise assume it was already there
    :no-change))
 
-;; readlink(1) is not POSIX.  This is a safe parse of ls(1) output given its
-;; POSIX specification.
+;; readlink(1) is not POSIX until the 2024 update to the standard.
+;; This is a safe parse of ls(1) output given its POSIX specification.
 (defun remote-link-target (symlink)
   (loop with s = (stripln (run :env '(:LC_ALL "C") "ls" "-ld" symlink))
         and found = 0 and just-found
