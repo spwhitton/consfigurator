@@ -193,6 +193,17 @@ in sbuild schroots for other operating systems.
 
 Includes replacing use of sbuild-update(1)."
   (:desc "Standard Debian sbuild properties")
+  (:hostattrs (os:required 'os:debian))
   `(eseqprops (apt:standard-sources.list)
-              (periodic:at-most ,upgrade "sbuild schroot updated"
+              (periodic:at-most ,upgrade
+                  ;; For normal use we don't require a unique description in
+                  ;; order to ensure that we properly track the updating of
+                  ;; each of multiple Debian build schroots on one machine.
+                  ;; That's because each schroot is its own host.
+                  ;; Nonetheless, it is helpful to have the suite and
+                  ;; architecture present in Consfigurator's output.
+                  ,(alet (get-hostattrs-car :os)
+                     (format nil "sbuild schroot for ~A/~A updated"
+                             (os:debian-suite it)
+                             (os:debian-architecture-string it)))
                 (apt:updated) (apt:upgraded) (apt:autoremoved))))
