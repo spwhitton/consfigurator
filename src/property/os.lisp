@@ -85,6 +85,38 @@
   "Return a string representing the architecture of OS as used by Debian."
   (string-downcase (symbol-name (debian-architecture os))))
 
+(defclass freebsd (unixlike)
+  ((architecture
+    :initarg :arch :reader freebsd-architecture
+    :documentation
+    "Keyword whose name is FreeBSD's name for this architecture, e.g. :AMD64")))
+
+(defclass freebsd-release (freebsd)
+  ((version :initarg :version
+            :type string
+            :reader freebsd-version
+            :initform (error "Must provide version")
+            :documentation "The numeric part of the version, e.g. 14.1")))
+
+(define-simple-print-object freebsd-release)
+
+(defprop freebsd-release :posix (version architecture)
+  (:desc #?"Host runs FreeBSD ${version}-RELEASE")
+  (:hostattrs
+   (push-hostattr :os (make-instance 'freebsd-release
+                                     :arch architecture :version version))))
+
+(defclass freebsd-devel (freebsd) ()
+  (:documentation
+   "An unreleased version of FreeBSD: -CURRENT, -STABLE, -ALPHA, -BETA etc."))
+
+(define-simple-print-object freebsd-devel)
+
+(defprop freebsd-devel :posix (architecture)
+  (:desc #?"Host runs development version of FreeBSD")
+  (:hostattrs
+   (push-hostattr :os (make-instance 'freebsd-devel :arch architecture))))
+
 
 ;;;; Property combinators
 

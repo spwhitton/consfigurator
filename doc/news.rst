@@ -30,6 +30,8 @@ you should review this document and see if your consfig needs updating.
   ``sgdisk --clear`` before ``sgdisk --zap-all`` to avoid certain failures to
   clear out the block device.
 
+- Add OS types for FreeBSD.
+
 1.4.0 (2024-05-09)
 ------------------
 

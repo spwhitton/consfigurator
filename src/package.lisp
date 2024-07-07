@@ -475,6 +475,11 @@
                     #:debian-suite
                     #:debian-architecture
                     #:debian-architecture-string
+                    #:freebsd
+                    #:freebsd-release
+                    #:freebsd-devel
+                    #:freebsd-architecture
+                    #:freebsd-version
 
                     #:typecase
                     #:host-typecase
