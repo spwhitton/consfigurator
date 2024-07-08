@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021-2022  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021-2022, 2024  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -429,14 +429,15 @@ of CONNECTION, where each entry is of the form
     '(iden1 iden2 version)."))
 
 (defmethod get-remote-cached-prerequisite-data ((connection connection))
-  (let ((*connection* connection))
+  (let* ((*connection* connection)
+         (dir (unix-namestring
+               (merge-pathnames "data/" (get-connattr :consfigurator-cache))))
+         (drop (1- (length (split-string dir :separator "/")))))
     (mapcar (lambda (line)
-              (mapcar #'filename-to-string (split-string line :separator "/")))
+              (mapcar #'filename-to-string
+                      (nthcdr drop (split-string line :separator "/"))))
             (multiple-value-bind (out exit)
-                (mrun :may-fail "find" (merge-pathnames
-                                        "data/"
-                                        (get-connattr :consfigurator-cache))
-                      "-type" "f" "-printf" "%P\\n")
+                (mrun :may-fail "find" dir "-type" "f")
               (and (zerop exit) (lines out))))))
 
 
