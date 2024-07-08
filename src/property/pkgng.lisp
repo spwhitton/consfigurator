@@ -29,7 +29,7 @@
 (defun get-installed-packages ()
   (or (get-connattr 'installed-packages)
       (setf (get-connattr 'installed-packages)
-            (mapcar #1~/^(\S+)-[^-]+?\s/ (runlines "pkg" "info" "-a")))))
+            (mapcar #1~/^(\S+)-[^-]+?\s/ (lines (mrun-pkg "info" "-a"))))))
 
 (defprop installed :posix (&rest packages)
   "Ensure all of the pkg(8) packages PACKAGES are installed."
