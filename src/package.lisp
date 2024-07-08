@@ -572,7 +572,8 @@
                     #:cache-emptied))
 
   (package :consfigurator.property.package
-           (:local-nicknames (#:apt #:consfigurator.property.apt))
+           (:local-nicknames (#:apt   #:consfigurator.property.apt)
+                             (#:pkgng #:consfigurator.property.pkgng))
            (:export #:+consfigurator-system-dependencies+
                     #:package-manager-not-found
                     #:installed))

@@ -30,6 +30,9 @@ manager identified by PACKAGE-MANAGER is available."))
 (defmethod %command ((package-manager (eql :apt)))
   "apt-get")
 
+(defmethod %command ((package-manager (eql :pkgng)))
+  "pkg")
+
 (defgeneric %installed (package-manager packages)
   (:documentation
    "Install each of PACKAGES using the system package manager identified by
@@ -38,12 +41,15 @@ PACKAGE-MANAGER.
 Implementations should not fail just because we are not root, or otherwise
 privileged, if the package is already installed."))
 
+;; Call APPLY-PROPAPP directly because we want the :CHECK subroutine run, but
+;; it doesn't make sense to run :HOSTATTRS because *HOST* doesn't necessarily
+;; correspond to the host on which we're attempting to install packages.
+
 (defmethod %installed ((package-manager (eql :apt)) packages)
-  ;; Call APPLY-PROPAPP directly because we want the :CHECK subroutine run,
-  ;; but it does not make sense to run the :HOSTATTRS subroutine because
-  ;; *HOST* does not necessarily correspond to the host we're attempting to
-  ;; install packages on.
   (apply-propapp `(apt:installed ,@packages)))
+
+(defmethod %installed ((package-manager (eql :pkgng)) packages)
+  (apply-propapp `(pkgng:installed ,@packages)))
 
 (define-simple-error package-manager-not-found (aborted-change))
 

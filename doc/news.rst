@@ -34,6 +34,8 @@ you should review this document and see if your consfig needs updating.
 
 - Add some properties for FreeBSD's pkg(8).
 
+- :SBCL Lisp-type connections can now be established to FreeBSD hosts.
+
 1.4.0 (2024-05-09)
 ------------------
 

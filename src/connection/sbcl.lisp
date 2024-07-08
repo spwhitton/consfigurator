@@ -38,7 +38,7 @@ recommended."))
   ;; perhaps because they know they're already manually installed.
   (unless (and package-manager-supplied-p (not package-manager))
     (handler-case (package:installed
-                   package-manager '(:apt "sbcl")
+                   package-manager '(:apt "sbcl" :pkgng "sbcl")
                    package:+consfigurator-system-dependencies+)
       ;; If we couldn't find any package manager on PATH, just proceed in the
       ;; hope that everything we need is already installed; we'll find out
