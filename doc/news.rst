@@ -32,6 +32,8 @@ you should review this document and see if your consfig needs updating.
 
 - Add OS types for FreeBSD.
 
+- Add some properties for FreeBSD's pkg(8).
+
 1.4.0 (2024-05-09)
 ------------------
 

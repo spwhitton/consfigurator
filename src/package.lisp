@@ -562,6 +562,15 @@
                     #:pinned
                     #:no-pdiffs))
 
+  (package :consfigurator.property.pkgng
+           (:local-nicknames (#:os      #:consfigurator.property.os))
+           (:export #:installed
+                    #:deleted
+                    #:upgraded
+                    #:autoremoved
+                    #:cache-cleaned
+                    #:cache-emptied))
+
   (package :consfigurator.property.package
            (:local-nicknames (#:apt #:consfigurator.property.apt))
            (:export #:+consfigurator-system-dependencies+
