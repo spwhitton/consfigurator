@@ -32,7 +32,7 @@ you should review this document and see if your consfig needs updating.
 
 - Add OS types for FreeBSD.
 
-- Add some properties for FreeBSD's pkg(8).
+- Add some properties for FreeBSD's pkg(8) and rc.conf(5).
 
 - :SBCL Lisp-type connections can now be established to FreeBSD hosts.
 

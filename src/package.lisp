@@ -494,6 +494,15 @@
                     #:required
                     #:supports-arch-p))
 
+  (package :consfigurator.property.rc.conf
+           (:local-nicknames (#:os  #:consfigurator.property.os))
+           (:export #:contains
+                    #:file-contains
+                    #:ws-list-contains
+                    #:ws-list-lacks
+                    #:file-ws-list-contains
+                    #:file-ws-list-lacks))
+
   (package :consfigurator.property.container
            (:export #:contained
                     #:contained-p
