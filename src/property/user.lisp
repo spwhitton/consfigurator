@@ -101,7 +101,7 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (string= (passwd-field 6 username) shell))
   (:apply
    (file:contains-lines "/etc/shells" shell)
-   (mrun "chsh" "--shell" shell username)))
+   (mrun "chsh" "-s" shell username)))
 
 (defprop has-enabled-password :posix
     (username &key (initial-password "changeme"))
