@@ -27,7 +27,11 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (user-exists username))
   (:apply
    (assert-remote-euid-root)
-   (mrun "useradd" "-m" username)))
+   (typecase (get-hostattrs-car :os)
+     (os:freebsd
+      (mrun "pw" "useradd" username "-m"))
+     (t
+      (mrun "useradd" "-m" username)))))
 
 (defprop %has-uid-gid :posix (username uid gid)
   (:check
