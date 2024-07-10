@@ -62,17 +62,28 @@ Note that this uses getent(1) and so is not strictly POSIX-compatible."
    (assert-remote-euid-root)
    (mrun "groupadd" groupname)))
 
-(defprop has-groups :posix
-    (username &rest groups &aux (groups* (format nil "~{~A~^,~}" groups)))
+(defun get-secondary-groups (username)
+  (etypecase (get-hostattrs-car :os)
+    (os:freebsd
+     (cdr (words (stripln (run "id" "-Gn" username)))))
+    (os:debianlike
+     (cdddr (words (stripln (run "groups" username)))))))
+
+(defprop has-groups :posix (username &rest groups)
   "Ensure that USERNAME is a member of secondary groups GROUPS."
-  (:desc (format nil "~A in group~P ~A" username (length groups) groups*))
-  (:check
-   (declare (ignore groups*))
-   (subsetp groups (cddr (split-string (stripln (run "groups" username))))
-            :test #'string=))
+  (:desc (format nil "~A in group~P ~A" username (length groups)
+                 (format nil "~{~A~^,~}" groups)))
+  (:check (subsetp groups (get-secondary-groups username) :test #'string=))
   (:apply
    (assert-remote-euid-root)
-   (mrun "usermod" "-a" "-G" groups* username)))
+   (typecase (get-hostattrs-car :os)
+     (os:freebsd
+      (mrun "pw" "usermod" username
+            "-G" (format nil "~{~A~^,~}"
+                         (union (get-secondary-groups username) groups
+                                :test #'string=))))
+     (t
+      (mrun "usermod" "-a" "-G" (format nil "~{~A~^,~}" groups) username)))))
 
 (defparameter *desktop-groups*
   '("audio" "cdrom" "dip" "floppy" "video" "plugdev" "netdev" "scanner"
