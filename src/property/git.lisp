@@ -22,7 +22,8 @@
   "Ensures that git(1) is installed."
   (:desc "Git installed")
   (os:etypecase
-    (debianlike (apt:installed "git"))))
+    (debianlike (apt:installed "git"))
+    (freebsd (pkgng:installed "git"))))
 
 (defprop snapshot-extracted :posix
     (snapshot-name directory

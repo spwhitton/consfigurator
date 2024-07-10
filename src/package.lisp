@@ -723,7 +723,8 @@
   (package :consfigurator.property.git
            (:local-nicknames (#:os        #:consfigurator.property.os)
                              (#:file      #:consfigurator.property.file)
-                             (#:apt       #:consfigurator.property.apt))
+                             (#:apt       #:consfigurator.property.apt)
+                             (#:pkgng     #:consfigurator.property.pkgng))
            (:export #:installed
                     #:snapshot-extracted
                     #:cloned
