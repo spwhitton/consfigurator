@@ -76,3 +76,6 @@ Core
   that hosts implicitly defined inline using dotted propapp notation are
   accessible via their parents, so that a property which gathers up DNS
   information about all hosts, for example, would be able to find them.
+
+- At debug level 2, when WRITE-REMOTE-FILE makes a change, it could print a
+  diff/patch to show what it did.
