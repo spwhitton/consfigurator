@@ -46,7 +46,8 @@ refuses to proceed if root has no authorized_keys."
                 (plusp (length (read-remote-file ".ssh/authorized_keys"))))
      (failed-change "root has no authorized_keys"))
    (configured "PermitRootLogin" "prohibit-password"
-               "PasswordAuthentication" "no")))
+               "PasswordAuthentication" "no"
+               "KbdInteractiveAuthentication" "no")))
 
 
 ;;;; Host keys
