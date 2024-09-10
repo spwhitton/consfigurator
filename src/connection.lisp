@@ -395,8 +395,8 @@ UIOP:WITH-CURRENT-DIRECTORY."
            for k = (string-upcase (symbol-name (pop env)))
            for v = (pop env)
            if v
-             collect (format nil "export ~A=~A" k (sh-escape v))
-               into accum
+             collect (format nil "~A=~A" k (sh-escape v)) into accum
+             and collect (format nil "export ~A" k) into accum
            else
              collect (format nil "unset -v ~A" k) into accum
            finally
@@ -417,7 +417,7 @@ UIOP:WITH-CURRENT-DIRECTORY."
      ;; implementations of connection types which actually require it for
      ;; simplicity, particularly to avoid having to check whether the connattr
      ;; is set yet, because setting it requires working CONNECTION-RUN.
-     (setq cmd (format nil "export HOME=~A; cd ~A; ~A"
+     (setq cmd (format nil "HOME=~A; export HOME; cd ~A; ~A"
                        (sh-escape (drop-trailing-slash
                                    (unix-namestring
                                     (get-connattr :remote-home))))
