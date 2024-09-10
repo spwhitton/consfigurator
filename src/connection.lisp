@@ -537,24 +537,24 @@ subclass to the :HOSTATTRS subroutine of properties calling this."
     (mrun (format nil "rm -rf -- ~A/* ~A/.[!.]* ~A/..?*" it it it))))
 
 (defun remote-test-multiple (operator paths connective)
-  (apply #'remote-test (loop for path on paths
-                             nconc (list operator (car path))
-                             when (cdr path) collect connective)))
+  (zerop (mrun :for-exit
+               (format nil #?"~{[ ${operator} ~A ]~^ ${connective} ~}"
+                       (mapcar #'sh-escape paths)))))
 
 (defun remote-exists-p (&rest paths)
   "Does each of PATHS exist?
 PATH may be any kind of file, including directories."
-  (remote-test-multiple "-e" paths "-a"))
+  (remote-test-multiple "-e" paths "&&"))
 
 (defun remote-exists-every-p (&rest paths)
   "Does each of PATHS exist?
 PATH may be any kind of file, including directories."
-  (remote-test-multiple "-e" paths "-a"))
+  (remote-test-multiple "-e" paths "&&"))
 
 (defun remote-exists-some-p (&rest paths)
   "Do any of PATHS exist?
 PATH may be any kind of file, including directories."
-  (remote-test-multiple "-e" paths "-o"))
+  (remote-test-multiple "-e" paths "||"))
 
 (defun remote-file-stats (path)
   "Get the numeric mode, size in bytes, mtime, owner and group of PATH, or NIL if
