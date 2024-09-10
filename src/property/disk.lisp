@@ -282,16 +282,19 @@ directly writing out with dd(1)."))
 
 (defmethod create-volume ((volume raw-disk-image) (file null))
   "Ensure that a raw disk image exists.  Will overwrite only regular files."
-  (let ((file (image-file volume)))
-    (when (remote-test "-L" file "-o" "-e" file "-a" "!" "-f" file)
-      (failed-change "~A already exists and is not a regular file." file))
+  (let ((f (image-file volume)))
+    (when (zerop
+           (mrun :for-exit
+                 ;; && and || have equal precedence in shell.
+                 #?'[ -L "${f}" ] || { [ -e "${f}" ] && [ ! -f "${f}" ]; }'))
+      (failed-change "~A already exists and is not a regular file." f))
     ;; Here, following Propellor, we want to ensure that the disk image size
     ;; is a multiple of 4096 bytes, so that the size is aligned to the common
     ;; sector sizes of both 512 and 4096.  But since we currently only support
     ;; volume sizes in whole mebibytes, we know it's already aligned.
-    (file:does-not-exist file)
-    (mrun
-     "fallocate" "-l" (format nil "~DM" (volume-minimum-size volume)) file)))
+    (file:does-not-exist f)
+    (mrun "fallocate" "-l" (format nil "~DM" (volume-minimum-size volume))
+          f)))
 
 
 ;;;; Partitioned block devices and their partitions
