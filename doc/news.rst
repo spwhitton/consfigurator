@@ -29,6 +29,8 @@ you should review this document and see if your consfig needs updating.
 - APT:UPDATED: Continue to try to execute ``apt-get update`` even if
   ``dpkg --configure --pending`` fails.
 
+- All APT properties: Pass ``-o DPkg::Lock::Timeout=60`` to apt-get(8).
+
 1.4.1 (2024-07-10)
 ------------------
 

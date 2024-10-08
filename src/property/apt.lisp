@@ -37,6 +37,8 @@
                                         :APT_LISTCHANGES_FRONTEND "none")
   :test #'equal)
 
+(defconstant +dpkg-lock-timeout+ 60)
+
 
 ;;;; Properties
 
@@ -187,10 +189,14 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
    (all-configured)
    (os:etypecase
      (debian-stable
-      (cmd:single :env +noninteractive-env+ :inform "apt-get" "update"))
+      (cmd:single :env +noninteractive-env+ :inform "apt-get"
+                  "-o" #?"DPkg::Lock::Timeout=${+dpkg-lock-timeout+}"
+                  "update"))
      (debian
       (cmd:single :env +noninteractive-env+ :inform
-                  "apt-get" "update" "--allow-releaseinfo-change")))))
+                  "apt-get"
+                  "-o" #?"DPkg::Lock::Timeout=${+dpkg-lock-timeout+}"
+                  "update" "--allow-releaseinfo-change")))))
 
 (defprop upgraded :posix ()
   (:desc "apt upgraded")
@@ -469,4 +475,5 @@ installed."
 ;;;; Utilities
 
 (defun apt-get (&rest args)
-  (apply #'run :env +noninteractive-env+ "apt-get" args))
+  (apply #'run :env +noninteractive-env+
+         "apt-get" "-o" #?"DPkg::Lock::Timeout=${+dpkg-lock-timeout+}" args))
