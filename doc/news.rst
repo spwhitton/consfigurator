@@ -23,6 +23,12 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.4.4 (unreleased)
+------------------
+
+- APT:UPDATED: Continue to try to execute ``apt-get update`` even if
+  ``dpkg --configure --pending`` fails.
+
 1.4.1 (2024-07-10)
 ------------------
 

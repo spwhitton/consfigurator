@@ -183,13 +183,14 @@ E.g. (APT:SERVICE-INSTALLED-RUNNING \"apache2\")."
 (defproplist updated :posix ()
   "Ensure the apt indexes are up-to-date."
   (:desc "apt-get update")
-  (all-configured)
-  (os:etypecase
-    (debian-stable
-     (cmd:single :env +noninteractive-env+ :inform "apt-get" "update"))
-    (debian
-     (cmd:single :env +noninteractive-env+ :inform
-                 "apt-get" "update" "--allow-releaseinfo-change"))))
+  (seqprops
+   (all-configured)
+   (os:etypecase
+     (debian-stable
+      (cmd:single :env +noninteractive-env+ :inform "apt-get" "update"))
+     (debian
+      (cmd:single :env +noninteractive-env+ :inform
+                  "apt-get" "update" "--allow-releaseinfo-change")))))
 
 (defprop upgraded :posix ()
   (:desc "apt upgraded")
