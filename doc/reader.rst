@@ -104,8 +104,6 @@ See also
 
 - `perlop(1) <https://perldoc.perl.org/perlop>`_
 
-- `inferior-shell <https://cliki.net/inferior-shell>`_
-
 - `Let Over Lambda ch. 4
   <https://letoverlambda.com/index.cl/guest/chap4.html>`_, which originally
   inspired ``#~m//`` and ``#~s///``.
