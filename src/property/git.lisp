@@ -21,6 +21,7 @@
 (defproplist installed :posix ()
   "Ensures that git(1) is installed."
   (:desc "Git installed")
+  (:check (remote-executable-find "git"))
   (os:etypecase
     (debianlike (apt:installed "git"))
     (freebsd (pkgng:installed "git"))))
