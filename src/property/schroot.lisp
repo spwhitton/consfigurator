@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2016, 2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2016, 2021, 2025  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -33,33 +33,31 @@ for example usage, via SCHROOT:OVERLAYS-IN-TMPFS."
   (:desc "schroots on host use union-type=overlay")
   (:hostattrs (push-hostattr 'uses-overlays t)))
 
-(defprop overlays-in-tmpfs :posix ()
-  "Configure schroot(1) such that all schroots with 'union-type=overlay' in
-their configuration will run their overlays in a tmpfs.  Unapplicable, so if
-the package you are working on FTBFS when overlays are in tmpfs, you can
+(defproplist overlays-in-tmpfs :posix ()
+  "Configure schroot(1) such that all schroots with 'union-type=overlay'
+(and the default 'union-overlay-directory=/var/lib/schroot/union/overlay')
+in their configuration will run their overlays in a tmpfs.  Unapplicable, so
+if the package you are working on FTBFS when overlays are in tmpfs, you can
 toggle this off for a host, and then toggle it back on again later.
 
-Implicitly sets SCHROOT:USES-OVERLAYS.
-
-Shell script from <https://wiki.debian.org/sbuild>."
+Implicitly sets SCHROOT:USES-OVERLAYS."
+  ;; Approach originally from <https://wiki.debian.org/sbuild>, though
+  ;; detailed material about schroot has been removed in favour of unshare.
   (:desc "schroot overlays in tmpfs")
   (:hostattrs (push-hostattr 'uses-overlays t))
-  (:apply
-   (file:has-content "/etc/schroot/setup.d/04tmpfs" #>>~EOF>>
-                     #!/bin/sh
+  (file:exists-with-content "/etc/schroot/setup.d/04tmpfs" #>>~EOF>>
+                            #!/bin/sh
 
-                     set -e
+                            set -e
 
-                     . "$SETUP_DATA_DIR/common-data"
-                     . "$SETUP_DATA_DIR/common-functions"
-                     . "$SETUP_DATA_DIR/common-config"
+                            . "$SETUP_DATA_DIR/common-data"
+                            root=/var/lib/schroot/union/overlay
 
-                     if [ $STAGE = "setup-start" ]; then
-                         mount -t tmpfs overlay /var/lib/schroot/union/overlay
-                     elif [ $STAGE = "setup-recover" ]; then
-                         mount -t tmpfs overlay /var/lib/schroot/union/overlay
-                     elif [ $STAGE = "setup-stop" ]; then
-                         umount -f /var/lib/schroot/union/overlay
-                     fi
-                     EOF :mode #o755))
-  (:unapply (file:does-not-exist "/etc/schroot/setup.d/04tmpfs")))
+                            if [ "x$STAGE" = xsetup-start ]; then
+                                mount -t tmpfs overlay $root
+                            elif [ "x$STAGE" = xsetup-recover ]; then
+                                mount -t tmpfs overlay $root
+                            elif [ "x$STAGE" = xsetup-stop ]; then
+                                umount -f $root
+                            fi
+                            EOF :mode #o755))
