@@ -69,6 +69,9 @@ because it might be required for other applications of this property."
    (os:required 'os:debianlike))
   (:apply
    (ignoring-hostattrs (available locale))
+   ;; From trixie /etc/locale.conf is the file to edit, but
+   ;; /etc/default/locale is a symlink there, so continue to use the latter,
+   ;; for compatibility.
    (with-change-if-changes-file-content ("/etc/default/locale")
      (mrun "update-locale"
            (mapcar (lambda (v) (strcat v "=" locale)) locale-variables))))
