@@ -304,6 +304,7 @@
            #:hostdeploy-these
            #:hostdeploy-these*
            #:localsudo
+           #:localsudon
            #:localhd
            #:continue-deploy*
            #:evals

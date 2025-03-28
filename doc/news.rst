@@ -23,6 +23,12 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.4.5 (unreleased)
+------------------
+
+- New ``LOCALSUDON`` macro, like ``LOCALSUDO`` except it assumes sudo has been
+  configured not to ask for a password.
+
 1.4.4 (2024-10-10)
 ------------------
 

@@ -229,16 +229,29 @@ You can then eval (NAME) to execute this deployment."
 
 It is assumed that on this system the shell command 'hostname -f' will return
 the full hostname, and that sudo is configured to ask for a password.  Useful
-for testing properties at the REPL.  See also EVALS."
+for testing properties at the REPL.  See also LOCALSUDON and EVALS."
+  (localsudo1 properties t))
+
+(defmacro localsudon (&rest properties)
+  "Deploy PROPERTIES to localhost using a :SUDO connection.
+
+This is like LOCALSUDO except that it assumes sudo is configured *not* to ask
+for a password."
+  (localsudo1 properties nil))
+
+(defun localsudo1 (properties passwd)
   (with-gensyms (username hostname host)
-    `(let* ((,username (parse-username-from-id
-                        (run-program '("id") :output :string)))
+    `(let* (,@(and passwd
+                   `((,username (parse-username-from-id
+                                 (run-program '("id") :output :string)))))
             (,hostname (hostname-f))
             (,host (or (symbol-value (find-symbol (string-upcase ,hostname)))
                        (make-host :hostattrs `(:hostname (,,hostname))
                                   :propspec (make-propspec :systems nil)))))
        (deploy-these*
-        `((:sudo :from ,(format nil "~A@~A" ,username ,hostname)))
+        ,(if passwd
+             ``((:sudo :from ,(format nil "~A@~A" ,username ,hostname)))
+             :sudo)
         ,host
         (let ((*host* (shallow-copy-host ,host)))
           (make-propspec :propspec (props eseqprops ,@properties)))))))
