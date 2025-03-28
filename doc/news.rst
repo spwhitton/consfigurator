@@ -29,6 +29,10 @@ you should review this document and see if your consfig needs updating.
 - New ``LOCALSUDON`` macro, like ``LOCALSUDO`` except it assumes sudo has been
   configured not to ask for a password.
 
+- CHROOT:OS-BOOTSTRAPPED and CHROOT:OS-BOOTSTRAPPED-FOR: When bootstrapping a
+  Debian system on a Debian-like system, in most cases use mmdebstrap(1), not
+  debootstrap(8).  Applying these properties still requires root.
+
 1.4.4 (2024-10-10)
 ------------------
 

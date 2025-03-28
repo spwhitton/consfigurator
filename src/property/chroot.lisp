@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021-2022  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021-2022, 2025  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -60,13 +60,51 @@
   (:check (remote-executable-find "debootstrap"))
   (package:installed nil '(:apt ("debootstrap"))))
 
+(defprop %mmdebstrapped :posix
+    (root host &rest options
+          &aux (tmp (merge-pathnames "mmdebstrap/"
+                                     (ensure-directory-pathname root))))
+  "Bootstrap The Universal Operating System to TARGET using mmdebstrap(1)."
+  ;; mmdebstrap doesn't have a directory like debootstrap/ which we could use
+  ;; to decide whether or not a previous invocation failed partway through.
+  ;; So we mmdebstrap to a temporary directory and then move its contents out.
+  (:check (declare (ignore options host))
+          (if (remote-exists-p tmp)
+              (progn (mount:unmounted-below-and-removed root) nil)
+              (remote-exists-p root)))
+  (:apply (destructuring-bind
+              (&key (apt.proxy (get-hostattrs-car :apt.proxy host))
+                 (apt.mirror (get-hostattrs :apt.mirrors host))
+                 include components variant keyring
+               &aux (os (get-hostattrs-car :os host)))
+              options
+            (file:directory-exists tmp)
+            (run "mmdebstrap" "--mode=root"
+                 #?"--arch=${(os:debian-architecture-string os)}"
+                 (and apt.proxy
+                      #?'--aptopt=Acquire::http { Proxy "${apt.proxy}"; }')
+                 (and include #?"--include=${include}")
+                 (and components #?"--components=${components}")
+                 (and variant #?"--variant=${variant}")
+                 (and keyring #?"--keyring=${keyring}")
+                 "--"
+                 (os:debian-suite os)
+                 (drop-trailing-slash (unix-namestring tmp))
+                 apt.mirror)
+            (mrun (format nil "mv -- ~A/* ~A"
+                          (sh-escape
+                           (drop-trailing-slash (unix-namestring tmp)))
+                          (sh-escape
+                           (ensure-trailing-slash (unix-namestring root)))))
+            (delete-remote-trees tmp))))
+
 (defpropspec %os-bootstrapper-installed :posix (host)
   (:desc "OS bootstrapper installed")
   (let ((host (preprocess-host host)))
     `(os:host-etypecase ,host
        (debian
         (os:typecase
-          (debianlike (apt:installed "debootstrap"))
+          (debianlike (apt:installed "debootstrap" "mmdebstrap"))
           (t (%debootstrap-manually-installed)))
         ;; Don't have an escape hatch like the :CHECK subroutine of
         ;; %DEBOOTSTRAP-MANUALLY-INSTALLED for the case where the
@@ -85,9 +123,19 @@
   ;; evaluate HOST once; can't use ONCE-ONLY because gensyms not serialisable
   ;; for sending to remote Lisp images
   (:desc (declare (ignore options root host)) "OS bootstrapped")
-  (let ((host host))
+  (let ((host host)
+        (debootstrapped `(%debootstrapped ,root ,host ,@options)))
     `(os:host-etypecase ,host
-       (debian (%debootstrapped ,root ,host ,@options)))))
+       (debian
+        ;; mmdebstrap if bootstrapping from OS:DEBIANLIKE and no
+        ;; debootstrap-specific options have been passed in OPTIONS.
+        ,(if (loop for (k) on options by #'cddr
+                   always (member k '(:include :components :variant :keyring
+                                      :apt.proxy :apt.mirror)))
+             `(os:typecase
+                (debianlike (%mmdebstrapped ,root ,host ,@options))
+                (t ,debootstrapped))
+             debootstrapped)))))
 
 (defmethod %make-child-host ((host unpreprocessed-host))
   (let ((propspec (host-propspec host)))
