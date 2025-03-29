@@ -428,6 +428,21 @@ visible to remote commands like ps(1) more readable."
    (#~s/(then|else|elif|fi|case|in|;;|do|done);/\1/g
     (format nil "~{~A~^; ~}" (lines script)))))
 
+(define-constant +posix-space+ (with-output-to-string (s)
+                                 (prin1 #\Space s)
+                                 (loop for i from #o11 upto #o15
+                                       do (princ (code-char i) s)))
+  :test #'string=)
+
+(defun posix-left-trim (string)
+  (string-left-trim +posix-space+ string))
+
+(defun posix-right-trim (string)
+  (string-right-trim +posix-space+ string))
+
+(defun posix-trim (string)
+  (string-trim +posix-space+ string))
+
 
 ;;;; Progress & debug printing
 

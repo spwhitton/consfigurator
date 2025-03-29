@@ -138,6 +138,9 @@
            #:add-change
            #:return-changes
            #:sh-script-to-single-line
+           #:posix-left-trim
+           #:posix-right-trim
+           #:posix-trim
 
            #:*consfigurator-debug-level*
            #:with-indented-inform

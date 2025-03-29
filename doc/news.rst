@@ -36,6 +36,8 @@ you should review this document and see if your consfig needs updating.
   Debian system on a Debian-like system, in most cases use mmdebstrap(1), not
   debootstrap(8).  Applying these properties still requires root.
 
+- New POSIX-LEFT-TRIM, POSIX-RIGHT-TRIM, POSIX-TRIM utilities.
+
 1.4.4 (2024-10-10)
 ------------------
 
