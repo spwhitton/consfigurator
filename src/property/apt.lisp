@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2017, 2021-2022  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2017, 2021-2022, 2025  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -307,13 +307,19 @@ only upgrade Debian stable."
     (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
             (nconc archive updates backports security))))
 
-(defproplist additional-sources :posix (basename content)
+(defpropspec additional-sources :posix (basename content)
   "Add additional apt source lines to a file in /etc/apt/sources.list.d named
 after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
   (declare (indent 1))
-  (on-change (file:exists-with-content
-              #?"/etc/apt/sources.list.d/${basename}.list" content)
-    (updated)))
+  (let ((deb822 (#!~/^deb(?:-src)? / (posix-left-trim (ensure-car content))))
+        (list-name #?"/etc/apt/sources.list.d/${basename}.list")
+        (deb822-name #?"/etc/apt/sources.list.d/${basename}.sources"))
+    `(on-change (with-unapply
+                  (file:does-not-exist ,(if deb822 list-name deb822-name))
+                  (file:exists-with-content ,(if deb822 deb822-name list-name)
+                    ,content)
+                  :unapply (file:does-not-exist ,list-name ,deb822-name))
+       (updated))))
 
 (defprop cache-cleaned :posix ()
   "Empty apt's cache to recover disk space."
@@ -324,7 +330,10 @@ after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
 (defproplist trusts-key :posix
     (fingerprint &optional (basename (remove #\Space fingerprint))
                  &aux (file #?"/etc/apt/trusted.gpg.d/${basename}.asc"))
-  "Have apt trust the PGP key identified by FINGERPRINT to sign apt archives."
+  "Have apt trust the PGP key identified by FINGERPRINT to sign apt archives.
+This facilty is deprecated in Debian trixie's apt.  Prefer supplying to
+APT:ADDITIONAL-SOURCES file text with Signed-By fields pointing to files under
+/etc/apt/keyrings.  Use FILE:DATA-UPLOADED to install the keys."
   (:desc #?"apt trusts PGP public key ${fingerprint}")
   (with-unapply
     (file:data-uploaded "--pgp-pubkey" (remove #\Space fingerprint) file)
