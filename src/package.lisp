@@ -566,6 +566,7 @@
                     #:uses-local-cacher
                     #:get-mirrors
                     #:standard-sources.list
+                    #:additional-suites
                     #:additional-sources
                     #:cache-cleaned
                     #:trusts-key

@@ -23,8 +23,18 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
-1.4.5 (unreleased)
+1.5.0 (unreleased)
 ------------------
+
+- API change: APT:SUITES-AVAILABLE-PINNED now requires that you also apply
+  APT:STANDARD-SOURCES.LIST to the host, or it adds only a pin, but no source.
+
+- APT properties now generate deb822-style sources configuration files.
+
+- APT:ADDITIONAL-SOURCES can now install deb822-style format files.
+  It can still install traditional one-line-style format files, too.
+
+- New APT:ADDITIONAL-SUITES property.
 
 - GIT:INSTALLED: Add a :CHECK subroutine.  This makes properties like
   GIT:CLONED usable by non-root in the case that Git is already installed.
@@ -35,8 +45,6 @@ you should review this document and see if your consfig needs updating.
 - CHROOT:OS-BOOTSTRAPPED and CHROOT:OS-BOOTSTRAPPED-FOR: When bootstrapping a
   Debian system on a Debian-like system, in most cases use mmdebstrap(1), not
   debootstrap(8).  Applying these properties still requires root.
-
-- APT:ADDITIONAL-SOURCES can now install deb822-style format files.
 
 - New POSIX-LEFT-TRIM, POSIX-RIGHT-TRIM, POSIX-TRIM utilities.
 

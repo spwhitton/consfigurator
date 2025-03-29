@@ -278,34 +278,77 @@ only upgrade Debian stable."
 (defmethod get-default-mirrors ((os os:debian))
   '("http://deb.debian.org/debian"))
 
-(defproplist standard-sources.list :posix ()
+(defprop standard-sources.list :posix ()
   (:desc "Standard sources.list")
-  (file:has-content
-      "/etc/apt/sources.list" (standard-sources-for (get-hostattrs-car :os))))
+  (:apply
+   ;; Migration: if we are about to delete sources.list and create the
+   ;; new sources.list.d/VENDOR.sources, first disable all old apt sources.
+   ;; This avoids apt failing due to conflicting Signed-By for a suite.
+   (when (remote-exists-every-p "/etc/apt/sources.list"
+                                "/etc/apt/sources.list.d")
+     (mrun "mv" "/etc/apt/sources.list.d" "/etc/apt/sources.list.d.old")
+     (file:directory-exists "/etc/apt/sources.list.d"))
+
+   (let ((os (get-hostattrs-car :os)))
+     (prog-changes
+       (add-change (file:does-not-exist "/etc/apt/sources.list"))
+       (add-change (file:exists-with-content
+                       (format nil "/etc/apt/sources.list.d/~A.sources"
+                               (etypecase os
+                                 (os:debian "debian")))
+                     (standard-sources-for os)))))))
 
 (defmethod standard-sources-for ((os os:debian))
-  (let* ((suite (os:debian-suite os))
-         (archive (mapcar (lambda (m) (list* m suite +sections+))
-                          (get-mirrors)))
-         (updates (and (subtypep (type-of os) 'os:debian-stable)
-                       (mapcar (lambda (m)
-                                 (list* m #?"${suite}-updates" +sections+))
-                               (get-mirrors))))
-         (old-suite-p (memstr= suite '("stretch" "jessie" "buster")))
-         (backports (and (subtypep (type-of os) 'os:debian-stable)
-                         (not old-suite-p)
-                         (mapcar (lambda (m)
-                                   (list* m #?"${suite}-backports" +sections+))
-                                 (get-mirrors))))
-         (security-suite
-           (if old-suite-p #?"${suite}/updates" #?"${suite}-security"))
-         (security (and (or (subtypep (type-of os) 'os:debian-stable)
-                            (subtypep (type-of os) 'os:debian-testing))
-                        (list
-                         (list* "http://security.debian.org/debian-security"
-                                security-suite +sections+)))))
-    (mapcan (lambda (l) (list #?"deb @{l}" #?"deb-src @{l}"))
-            (nconc archive updates backports security))))
+  (flet ((secp (suite)
+           (string-suffix-p suite "-security"))
+         (outlen (list)
+           (reduce (lambda (a n) (+ a (1+ (length n)))) list
+                   :initial-value 0)))
+    (let* ((suite (os:debian-suite os))
+           (old-suite-p (memstr= suite '("stretch" "buster")))
+           (additional-suites (reverse (get-hostattrs 'additional-suites)))
+           (archive-suites
+             (delete-duplicates
+              `(,suite
+                ,@(and (subtypep (type-of os) 'os:debian-stable)
+                       `(,#?"${suite}-updates"))
+                ,@(and (subtypep (type-of os) 'os:debian-stable)
+                       (not old-suite-p)
+                       `(,#?"${suite}-backports"))
+                ,@(remove-if #'secp additional-suites))
+              :test #'string= :from-end t))
+           (security-suites
+             `(,@(and (or (subtypep (type-of os) 'os:debian-stable)
+                          (subtypep (type-of os) 'os:debian-testing))
+                      (list (if old-suite-p
+                                #?"${suite}/updates"
+                                #?"${suite}-security")))
+               ,@(remove-if-not #'secp additional-suites))))
+      (format nil #>>~EOF>>
+              Types: deb deb-src
+              URIs: ~{~A~^ ~}
+              Suites:~:[~{ ~A~}~;~{~% ~A~}~]
+              Components: main contrib non-free-firmware non-free
+              Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg~:[~;
+
+              Types: deb deb-src
+              URIs: http://security.debian.org/debian-security
+              Suites:~:[~{ ~A~}~;~{~% ~A~}~]
+              Components: main contrib non-free-firmware non-free
+              Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg~]
+              EOF
+              (get-mirrors)
+              (> (outlen archive-suites) 63)
+              archive-suites
+              security-suites
+              (> (outlen security-suites) 63)
+              security-suites))))
+
+(defprop additional-suites :posix (&rest suites)
+  "Requests SUITES as additional apt suites that should be available.
+Be sure to also apply APT:STANDARD-SOURCES.LIST to effect the request."
+  (:hostattrs (os:required 'os:debianlike)
+              (push-hostattrs 'additional-suites suites)))
 
 (defpropspec additional-sources :posix (basename content)
   "Add additional apt source lines to a file in /etc/apt/sources.list.d named
@@ -370,43 +413,34 @@ APT:ADDITIONAL-SOURCES file text with Signed-By fields pointing to files under
 
 (defpropspec suites-available-pinned :posix (&rest pairs)
   "Where PAIRS is a list of even length of alternating Debian suite specifiers
-and apt pin priorities, add an apt source for the specified Debian suite and
-pin that suite to a given pin value (see apt_preferences(5)).  Unapply to drop
-the source and unpin the suite.
+and apt pin priorities, request an apt source for the specified Debian suite
+and pin that suite to a given pin value (see apt_preferences(5)).
+Unapply to stop requesting the source and unpin the suite.
+
+To effect the requests for the sources, also apply APT:STANDARD-SOURCES.LIST.
 
 A Debian suite specifier is either an instance of a subclass of OS:DEBIANLIKE
 or a list (TYPE &optional SUITE) where TYPE names a subclass of OS:DEBIANLIKE
-and SUITE is a string.  For example, '(os:debian-stable \"bullseye\").
-
-If the OS:DEBIAN is the host's OS, the suite is pinned, but no source is
-added.  That apt source should already be available, or you can use a property
-like APT:STANDARD-SOURCES.LIST."
+and SUITE is a string.  For example, '(os:debian-stable \"bullseye\")."
   (:desc (loop for (os pin) on pairs by #'cddr
                for suite = (os:debian-suite (suite-specifier-to-os os))
                collect #?{Debian "${suite}" pinned, priority ${pin}}
                  into accum
                finally (return (format nil "~{~A~^; ~}" accum))))
   (:hostattrs (os:required 'os:debian))
-  `(eseqprops
-    ,@(loop for (suite-specifier pin) on pairs by #'cddr
-            for os = (suite-specifier-to-os suite-specifier)
-            for suite = (os:debian-suite os)
-            do (check-type pin integer)
-            collect `(file:exists-with-content
-                      ,#?"/etc/apt/preferences.d/20${suite}.pref"
-                      ,(suite-pin-block "*" os pin))
-            unless (and
-                    (subtypep (type-of (get-hostattrs-car :os)) 'os:debian)
-                    (string= suite (os:debian-suite (get-hostattrs-car :os))))
-              ;; Unless we are pinning a backports suite, filter out any
-              ;; backports sources that were added by STANDARD-SOURCES-FOR.
-              ;; Probably don't want those to be pinned to the same value.
-              collect `(additional-sources
-                        ,suite ,(if (string-suffix-p suite "-backports")
-                                    (standard-sources-for os)
-                                    (loop for line in (standard-sources-for os)
-                                          unless (search "-backports" line)
-                                            collect line))))))
+  (loop for (suite-specifier pin) on pairs by #'cddr
+        for os = (suite-specifier-to-os suite-specifier)
+        for suite = (os:debian-suite os)
+        for pref-file = #?"/etc/apt/preferences.d/20${suite}.pref"
+        for cleanup = `(unapplied (additional-sources ,suite ""))
+        do (check-type pin integer)
+        collect `(file:exists-with-content ,pref-file
+                   ,(suite-pin-block "*" os pin))
+          into apply
+        collect cleanup into apply collect cleanup into unapply
+        collect `(additional-suites ,suite) into apply
+        collect `(file:does-not-exist ,pref-file) into unapply
+        finally (return `(with-unapply ,@apply :unapply ,@unapply))))
 
 (defpropspec pinned :posix (preferences &rest pairs)
   "Pins a list of packages, package wildcards and/or regular expressions,
