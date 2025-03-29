@@ -42,7 +42,7 @@ if ! dpkg-parsechangelog | grep -q "New upstream release."; then
     exit 1
 fi
 
-msg="release Consfigurator $version (-1 to Debian unstable)"
+msg="Release Consfigurator $version (-1 to Debian unstable)"
 git commit -s -m"$msg" -- $changed_files
 git tag -s -m"$msg" v$version
 
