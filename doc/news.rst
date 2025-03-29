@@ -26,6 +26,9 @@ you should review this document and see if your consfig needs updating.
 1.4.5 (unreleased)
 ------------------
 
+- GIT:INSTALLED: Add a :CHECK subroutine.  This makes properties like
+  GIT:CLONED usable by non-root in the case that Git is already installed.
+
 - New ``LOCALSUDON`` macro, like ``LOCALSUDO`` except it assumes sudo has been
   configured not to ask for a password.
 
