@@ -355,7 +355,9 @@ Be sure to also apply APT:STANDARD-SOURCES.LIST to effect the request."
 after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
   (declare (indent 1))
   (:desc #?"Additional apt sources '${basename}' installed")
-  (let ((deb822 (#!~/^deb(?:-src)? / (posix-left-trim (ensure-car content))))
+  (let ((deb822 (notany #~/^\S*deb(?:-src)? / (etypecase content
+                                                (string (lines content))
+                                                (list content))))
         (list-name #?"/etc/apt/sources.list.d/${basename}.list")
         (deb822-name #?"/etc/apt/sources.list.d/${basename}.sources"))
     `(on-change (with-unapply
