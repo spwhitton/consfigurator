@@ -311,6 +311,7 @@ only upgrade Debian stable."
   "Add additional apt source lines to a file in /etc/apt/sources.list.d named
 after BASENAME.  CONTENT is as the content argument to FILE:HAS-CONTENT."
   (declare (indent 1))
+  (:desc #?"Additional apt sources '${basename}' installed")
   (let ((deb822 (#!~/^deb(?:-src)? / (posix-left-trim (ensure-car content))))
         (list-name #?"/etc/apt/sources.list.d/${basename}.list")
         (deb822-name #?"/etc/apt/sources.list.d/${basename}.sources"))
