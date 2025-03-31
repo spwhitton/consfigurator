@@ -238,7 +238,7 @@ only FIREWALLD:HAS-DEFAULT-ZONE."
     (%firewall-cmd
      t :file #?"zones/${zone}.xml" :warning "ZONE_ALREADY_SET"
      :check `(,#?"--zone=${zone}" ,#?"--query-source=${source}")
-     :apply `(,#?"--zone=${zone}" ,#?"--add-source=${source}"))
+     :apply `(,#?"--zone=${zone}" ,#?"--change-source=${source}"))
     :unapply
     (%firewall-cmd
      t :file #?"zones/${zone}.xml" :warning "UNKNOWN_SOURCE"
