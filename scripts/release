@@ -47,4 +47,4 @@ git commit -s -m"$msg" -- $changed_files
 git tag -s -m"$msg" v$version
 
 git deborig
-dgit sbuild --run-piuparts --run-autopkgtest
+dgit sbuild --run-lintian --run-autopkgtest
