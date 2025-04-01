@@ -70,7 +70,9 @@
   ;; So we mmdebstrap to a temporary directory and then move its contents out.
   (:check (declare (ignore options host))
           (if (remote-exists-p tmp)
-              (progn (mount:unmounted-below-and-removed root) nil)
+              (progn (ignoring-hostattrs
+                      (mount:unmounted-below-and-removed root))
+                     nil)
               (remote-exists-p root)))
   (:apply (destructuring-bind
               (&key (apt.proxy (get-hostattrs-car :apt.proxy host))
