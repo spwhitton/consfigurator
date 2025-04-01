@@ -81,7 +81,7 @@
                &aux (os (get-hostattrs-car :os host)))
               options
             (file:directory-exists tmp)
-            (run "mmdebstrap" "--mode=root"
+            (run "mmdebstrap" "--mode=root" "--format=directory"
                  #?"--arch=${(os:debian-architecture-string os)}"
                  (and apt.proxy
                       #?'--aptopt=Acquire::http { Proxy "${apt.proxy}"; }')
