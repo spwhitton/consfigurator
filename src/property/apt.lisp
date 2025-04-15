@@ -281,17 +281,19 @@ only upgrade Debian stable."
 (defprop standard-sources.list :posix ()
   (:desc "Standard sources.list")
   (:apply
-   ;; Migration: if we are about to delete sources.list and create the
+   ;; Migration: if we are about to truncate sources.list and create the
    ;; new sources.list.d/VENDOR.sources, first disable all old apt sources.
    ;; This avoids apt failing due to conflicting Signed-By for a suite.
-   (when (remote-exists-every-p "/etc/apt/sources.list"
-                                "/etc/apt/sources.list.d")
+   (when (and (remote-exists-every-p "/etc/apt/sources.list"
+                                     "/etc/apt/sources.list.d")
+              (plusp
+               (nth-value 1 (remote-file-stats "/etc/apt/sources.list"))))
      (mrun "mv" "/etc/apt/sources.list.d" "/etc/apt/sources.list.d.old")
      (file:directory-exists "/etc/apt/sources.list.d"))
 
    (let ((os (get-hostattrs-car :os)))
      (prog-changes
-       (add-change (file:does-not-exist "/etc/apt/sources.list"))
+       (add-change (file:has-content "/etc/apt/sources.list" ""))
        (add-change (file:exists-with-content
                        (format nil "/etc/apt/sources.list.d/~A.sources"
                                (etypecase os
