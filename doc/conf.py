@@ -22,7 +22,7 @@ copyright = '2015-2018, 2020-2024, Sean Whitton, 2021-2022 David Bremner'
 author = 'Sean Whitton'
 
 # The full version, including alpha/beta/rc tags
-release = '1.5.1'
+release = '1.5.2'
 
 
 # -- General configuration ---------------------------------------------------
