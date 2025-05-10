@@ -113,7 +113,7 @@ restart Apache."
                         "CustomLog /var/log/apache2/access.log combined"
                         "ServerSignature on")))
          `(,(strcat "<IfFile " (unix-namestring
-                                (lets-encrypt:certificate-for domain))
+                                (lets-encrypt:fullchain-for domain))
                     ">")
            "<VirtualHost *:443>"
            ,(strcat "ServerName " domain ":443")
@@ -121,11 +121,9 @@ restart Apache."
            ,@initial
            "SSLEngine on"
            ,(strcat "SSLCertificateFile "
-                    (unix-namestring (lets-encrypt:certificate-for domain)))
+                    (unix-namestring (lets-encrypt:fullchain-for domain)))
            ,(strcat "SSLCertificateKeyFile "
                     (unix-namestring (lets-encrypt:privkey-for domain)))
-           ,(strcat "SSLCertificateChainFile "
-                    (unix-namestring (lets-encrypt:chain-for domain)))
            "SSLUseStapling on"
            ,@additional-config
            ,@additional-config-https
