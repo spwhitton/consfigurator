@@ -645,7 +645,7 @@ specification of POSIX ls(1))."
       ;; --reference for chmod(1) and chown(1) is not POSIX
       (flet ((dehyphen (s) (delete #\- s)))
         (multiple-value-bind (match groups)
-            (re:scan-to-strings #?/^.(...)(...)(...)..?[0-9]+ ([0-9]+) ([0-9]+) /
+            (re:scan-to-strings #?/^.(...)(...)(...)[ ]+[0-9]+[ ]+([0-9]+)[ ]+([0-9]+) /
                                 (run :env '(:LOCALE "C") "ls" "-nd" pathname))
           (unless match
             (error
