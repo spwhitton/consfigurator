@@ -112,7 +112,13 @@ To take advantage of the piuparts and autopkgtest support, add to your
                 :ensure-absolute t :defaults #P"/etc/schroot/chroot.d/")))
       options
     `(with-unapply
-         (installed)
+       (installed)
+
+       (desc
+        "Debian schroot bug #1110474 worked around"
+        (file:regex-replaced-lines "/etc/schroot/sbuild/fstab"
+                                   #?r#^/var/lib/sbuild/build\s+/build\s+#
+                                   "#\\&"))
 
        ;; ccache
        ,@(and use-ccache '((%sbuild-ccache-has-some-limits)
