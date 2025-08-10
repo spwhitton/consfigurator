@@ -23,6 +23,12 @@ In summary, you should always be able to upgrade to a release which only
 increments ``patch``, but if either of the other two components have changed,
 you should review this document and see if your consfig needs updating.
 
+1.5.3 (unreleased)
+------------------
+
+- Adapt WRITE-REMOTE-FILE to handle BusyBox's ls(1).
+  Thanks to David Bremner.
+
 1.5.0 (2025-03-29)
 ------------------
 
