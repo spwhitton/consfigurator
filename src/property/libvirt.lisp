@@ -22,8 +22,14 @@
   "Install basic libvirt components."
   (:desc "libvirt installed")
   (os:etypecase
-    (debianlike (apt:installed "libvirt-clients" "virtinst"
-                               "libvirt-daemon" "libvirt-daemon-system"))))
+    (debianlike
+     (os:debian-suite-case
+       ("bookworm"
+        (apt:installed "libvirt-clients" "virtinst"
+                       "libvirt-daemon" "libvirt-daemon-system"))
+       (t
+        (apt:installed "libvirt-clients" "virtinst" "virtiofsd"
+                       "libvirt-daemon" "libvirt-daemon-system"))))))
 
 (defprop %default-network-started :posix ()
   (:desc "libvirt's default network started")
