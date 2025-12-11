@@ -556,8 +556,7 @@ removed, and semicolon comment chars will be replaced with '#'."
                                        collect (list nil s k v)
                                        and do (setf (gethash pair keys) :done))
                          and do (setq current upcoming))))
-           (loop for pair being the hash-keys in keys using (hash-value v)
-                 for (s . k) = pair
+           (loop for (s . k) being the hash-keys in keys using (hash-value v)
                  unless (eql v :done)
                    collect (list nil s k v) into accum
                  finally (return
