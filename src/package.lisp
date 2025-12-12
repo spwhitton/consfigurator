@@ -719,6 +719,7 @@
                              (#:file  #:consfigurator.property.file)
                              (#:disk  #:consfigurator.property.disk))
            (:export #:volume-to-entry
+                    #:has-entries
                     #:has-entries-for-opened-volumes))
 
   (package :consfigurator.property.gnupg
