@@ -20,10 +20,6 @@
 
 ;;;; Methods on volumes to get strings for crypttab
 
-(defun get-lsblk-field (device field)
-  (let ((val (stripln (run "lsblk" "-ndo" field device))))
-    (if (string= val "") nil val)))
-
 (defun get-device-parent (device)
   (aand (#1~/^1\s+dependencies\s*:\s*\((\S+)\)$/
          (run "dmsetup" "deps" "-o" "blkdevname" device))
@@ -34,16 +30,10 @@
 
 (defmethod ct-source ((volume opened-luks-container))
   (with-slots (device-file) volume
-    (let ((parent
-            (or (get-device-parent device-file)
-                (failed-change
-                 "Could not determine parent device of ~A" device-file))))
-      (if-let ((partuuid (get-lsblk-field parent "PARTUUID")))
-        (strcat "PARTUUID=" partuuid)
-        (if-let ((uuid (get-lsblk-field parent "UUID")))
-          (strcat "UUID=" uuid)
-          (failed-change
-           "Could not determine crypttab source field for ~A" device-file))))))
+    (disk:get-partition-uuid
+     (or (get-device-parent device-file)
+         (failed-change "Could not determine parent device of ~A"
+                        device-file)))))
 
 (defmethod ct-keyfile ((volume opened-luks-container))
   (if (slot-boundp volume 'crypttab-keyfile)

@@ -699,7 +699,8 @@
                     #:debian-live-iso-built.
                     #:host-logical-volumes-exist
 
-                    #:volumes))
+                    #:volumes
+                    #:get-partition-uuid))
 
   (package :consfigurator.property.fstab
            (:use #:consfigurator.property.disk)

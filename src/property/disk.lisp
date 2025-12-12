@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021-2024  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021-2025  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -1290,3 +1290,13 @@ Example usage:
                            `(list ,@(mapcar #'parse contents))
                            (parse contents))))))))
     `(list ,@(mapcar #'parse volume-specifications))))
+
+(defun get-partition-uuid (device)
+  "Return string of the form \"PARTUUID=...\" or \"UUID=...\" for DEVICE.
+These values are as returned by lsblk(8).
+PARTUUID is preferred to UUID if both are available."
+  (destructuring-bind (partuuid uuid)
+      (split-string (stripln (run "lsblk" "-ndo" "PARTUUID,UUID" device)))
+    (cond ((plusp (length partuuid)) (strcat "PARTUUID=" partuuid))
+          ((plusp (length uuid)) (strcat "UUID=" uuid))
+          (t (failed-change "Could not determine a UUID for ~A" device)))))
