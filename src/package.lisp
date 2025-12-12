@@ -980,10 +980,13 @@
                     #:configured-from-parent))
 
   (package :consfigurator.property.swap
-           (:local-nicknames (#:cmd          #:consfigurator.property.cmd)
+           (:local-nicknames (#:file         #:consfigurator.property.file)
+                             (#:cmd          #:consfigurator.property.cmd)
                              (#:fstab        #:consfigurator.property.fstab)
-                             (#:os           #:consfigurator.property.os))
-           (:export #:has-swap-file))
+                             (#:os           #:consfigurator.property.os)
+                             (#:disk         #:consfigurator.property.disk))
+           (:export #:has-swap-file
+                    #:resume-configured))
 
   (package :consfigurator.property.lxc
            (:use #:consfigurator.util.linux-namespace #:cffi)

@@ -1,6 +1,6 @@
 ;;; Consfigurator -- Lisp declarative configuration management system
 
-;;; Copyright (C) 2021  Sean Whitton <spwhitton@spwhitton.name>
+;;; Copyright (C) 2021, 2025  Sean Whitton <spwhitton@spwhitton.name>
 
 ;;; This file is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -39,3 +39,28 @@ Current implementation assumes a non-CoW filesystem; see NOTES in swapon(8)."
     (cmd:single "swapon" location))
   (fstab:has-entries
    (strcat (unix-namestring location) " swap swap defaults 0 0")))
+
+(defproplist %resume-configured :posix (partition offset)
+  (on-change
+      (eseqprops
+       (file:exists-with-content "/etc/default/grub.d/resume.cfg"
+         `(,#?{GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT \
+               resume=${partition} resume_offset=${offset}"}))
+       (file:exists-with-content "/etc/initramfs-tools/conf.d/resume"
+         `(,#?"resume=${partition} resume_offset=${offset}")))
+    (cmd:single "update-initramfs" "-u")
+    (cmd:single "update-grub")))
+
+(defprop resume-configured :posix (&key (swap-file #P"/var/lib/swapfile"))
+  "Configure system to hibernate to and resume from SWAP-FILE.
+Only configuring GRUB is currently implemented."
+  (:desc "System resumes from ~A" swap-file)
+  (:apply
+   (unless (remote-test "-d" "/etc/default/grub.d")
+     (aborted-change "/etc/default/grub.d not a directory"))
+   (let ((device (or (#~#^/dev/\S+# (cadr (runlines "df" "-P" swap-file)))
+                     (aborted-change "Failed to parse df(1) output")))
+         (offset (or (#1~/^\s*0:\s+0\.\.\s+0:\s+(\d+)\.\./m
+                      (run "filefrag" "-v" swap-file))
+                     (aborted-change "Failed to parse filefrag(8) output"))))
+     (%resume-configured (disk:get-partition-uuid device) offset))))
