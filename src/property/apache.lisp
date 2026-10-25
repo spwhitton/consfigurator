@@ -102,8 +102,6 @@ restart Apache."
   `(with-unapply
      (network:aliases ,domain ,@aliases)
      (mod-enabled "ssl")
-     (conf-enabled "stapling"
-                   ("SSLStaplingCache shmcb:/tmp/stapling_cache(128000)"))
      (mod-enabled "rewrite")
      (site-enabled
       ,domain
@@ -124,7 +122,6 @@ restart Apache."
                     (unix-namestring (lets-encrypt:fullchain-for domain)))
            ,(strcat "SSLCertificateKeyFile "
                     (unix-namestring (lets-encrypt:privkey-for domain)))
-           "SSLUseStapling on"
            ,@additional-config
            ,@additional-config-https
            "</VirtualHost>" "</IfFile>"
