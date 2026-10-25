@@ -28,6 +28,9 @@ you should review this document and see if your consfig needs updating.
 
 - APACHE:HTTPS-VHOST no longer enables OCSP stapling.
 
+- GRUB:GRUB-INSTALLED now sets the ``grub2/force_efi_extra_removable`` debconf
+  template to the same value as its ``:FORCE-EXTRA-REMOVABLE`` parameter.
+
 1.5.4 (2026-01-10)
 ------------------
 

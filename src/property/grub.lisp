@@ -18,6 +18,12 @@
 (in-package :consfigurator.property.grub)
 (named-readtables:in-readtable :consfigurator)
 
+(defun target-to-deb (target)
+  (eswitch (target :test #'string=)
+    ("i386-pc" "grub-pc")
+    ("x86_64-efi" "grub-efi-amd64")
+    ("arm64-efi" "grub-efi-arm64")))
+
 (defmethod install-bootloader-propspec
     ((type (eql 'grub)) volume &rest args &key &allow-other-keys)
   `(grub-installed ,volume ,@args))
@@ -26,12 +32,7 @@
     ((type (eql 'grub)) volume &key (target "i386-pc") &allow-other-keys)
   `(os:etypecase
        (debianlike
-        (apt:installed
-         "initramfs-tools"
-         ,(eswitch (target :test #'string=)
-            ("i386-pc" "grub-pc")
-            ("x86_64-efi" "grub-efi-amd64")
-            ("arm64-efi" "grub-efi-arm64"))))))
+        (apt:installed "initramfs-tools" ,(target-to-deb target)))))
 
 (defprop grub-installed :posix
     (volume &key (target "i386-pc") force-extra-removable)
@@ -47,6 +48,10 @@
        (when os-prober (file:has-mode "/etc/grub.d/30_os-prober" #o644))
        (mrun :inform "update-grub")
        (when os-prober (file:has-mode "/etc/grub.d/30_os-prober" #o755)))
+     (mrun :input (format nil "~A grub2/force_efi_extra_removable boolean ~A~%"
+                          (target-to-deb target)
+                          (if force-extra-removable "true" "false"))
+           "debconf-set-selections")
      (mrun :inform "grub-install" (strcat "--target=" target)
            (and (string-suffix-p target "-efi") (not running-on-target)
                 "--no-nvram")
