@@ -101,7 +101,7 @@
                  (error "Could not determine PID for container ~A." name))))
     (apply #'establish-connection type remaining
            :name name :pid pid :uid uid :gid gid
-           (and (eql 'setns type) '(:posix-type nsenter-connection)))))
+           (and (eql 'setns type) (list :posix-type 'nsenter-connection)))))
 
 
 ;;;; :LXC-UNPRIV-ATTACH
@@ -180,7 +180,7 @@ enter containers\" in the Consfigurator manual for security implications."
     (apply #'establish-connection type remaining
            :owner owner :name name :pid pid :uid uid :gid gid
            (and (eql 'setns type)
-                '(:posix-type lxc-unpriv-attach-connection)))))
+                (list :posix-type 'lxc-unpriv-attach-connection)))))
 
 
 ;;;; 'SETNS
